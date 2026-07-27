@@ -14,11 +14,11 @@ export default function CodeBody({ content, highlight, theme = 'light' }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, inline, className, children, ...props }) {
+          code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const codeStr = String(children).replace(/\n$/, '');
 
-            if (!inline && match) {
+            if (match) {
               return highlight ? (
                 <SyntaxHighlighter
                   style={syntaxStyle}
@@ -37,15 +37,11 @@ export default function CodeBody({ content, highlight, theme = 'light' }) {
                   {codeStr}
                 </SyntaxHighlighter>
               ) : (
-                <pre><code className={className}>{children}</code></pre>
+                <code className={className}>{children}</code>
               );
             }
 
-            if (!inline && !match) {
-              return <pre><code {...props}>{children}</code></pre>;
-            }
-
-            return <code>{children}</code>;
+            return <code className={className} {...props}>{children}</code>;
           },
         }}
       >
