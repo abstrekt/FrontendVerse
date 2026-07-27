@@ -1,0 +1,181 @@
+import { shuffle } from './shuffle';
+
+export const EMPTY_PROGRESS = {
+  sessions: [],
+  answers: {},
+  stats: {
+    totalAnswered: 0,
+    totalCorrect: 0,
+    streakDays: 0,
+    lastPlayedDate: null,
+  },
+};
+
+const MAX_SESSIONS = 30;
+const WEAK_THRESHOLD = 70;
+const MIN_TOPIC_SAMPLES = 3;
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function updateStreak(stats) {
+  const today = todayKey();
+  const yesterday = yesterdayKey();
+  const last = stats.lastPlayedDate;
+
+  if (last === today) {
+    return stats.streakDays;
+  }
+  if (last === yesterday) {
+    return stats.streakDays + 1;
+  }
+  return 1;
+}
+
+export function recordAnswer(progress, question, correct) {
+  const id = String(question.id);
+  const prev = progress.answers[id] || {
+    correct: 0,
+    wrong: 0,
+    lastSeen: 0,
+    lastCorrect: null,
+  };
+
+  const now = Date.now();
+  const answers = {
+    ...progress.answers,
+    [id]: {
+      correct: prev.correct + (correct ? 1 : 0),
+      wrong: prev.wrong + (correct ? 0 : 1),
+      lastSeen: now,
+      lastCorrect: correct,
+    },
+  };
+
+  const stats = {
+    ...progress.stats,
+    totalAnswered: progress.stats.totalAnswered + 1,
+    totalCorrect: progress.stats.totalCorrect + (correct ? 1 : 0),
+    lastPlayedDate: todayKey(),
+    streakDays: updateStreak(progress.stats),
+  };
+
+  return { ...progress, answers, stats };
+}
+
+export function recordSession(progress, sessionMeta) {
+  const session = {
+    ts: Date.now(),
+    ...sessionMeta,
+  };
+
+  const sessions = [session, ...progress.sessions].slice(0, MAX_SESSIONS);
+  return { ...progress, sessions };
+}
+
+export function getTopicAccuracy(progress, questions) {
+  const topicMap = {};
+
+  for (const q of questions) {
+    const entry = progress.answers[String(q.id)];
+    if (!entry) continue;
+
+    const topics = q.topics?.length ? q.topics : ['untagged'];
+    for (const topic of topics) {
+      if (!topicMap[topic]) {
+        topicMap[topic] = { topic, correct: 0, total: 0 };
+      }
+      topicMap[topic].correct += entry.correct;
+      topicMap[topic].total += entry.correct + entry.wrong;
+    }
+  }
+
+  return Object.values(topicMap)
+    .map(({ topic, correct, total }) => ({
+      topic,
+      correct,
+      total,
+      pct: total > 0 ? Math.round((correct / total) * 100) : 0,
+    }))
+    .sort((a, b) => a.pct - b.pct || b.total - a.total);
+}
+
+export function getWeakTopics(progress, questions, limit = 3) {
+  return getTopicAccuracy(progress, questions)
+    .filter((t) => t.total >= MIN_TOPIC_SAMPLES && t.pct < WEAK_THRESHOLD)
+    .slice(0, limit);
+}
+
+export function getMissedQuestionIds(progress) {
+  return Object.entries(progress.answers)
+    .filter(([, entry]) => entry.lastCorrect === false || entry.wrong > entry.correct)
+    .map(([id]) => Number(id));
+}
+
+export function getBestPct(sessions) {
+  if (!sessions.length) return null;
+  return Math.max(...sessions.map((s) => s.pct));
+}
+
+export function getLifetimeAccuracy(stats) {
+  if (!stats.totalAnswered) return null;
+  return Math.round((stats.totalCorrect / stats.totalAnswered) * 100);
+}
+
+export function getQuestionsForWeakTopics(questions, weakTopics) {
+  if (!weakTopics.length) return [];
+  const weakSet = new Set(weakTopics.map((t) => t.topic));
+  return questions.filter((q) =>
+    (q.topics || []).some((t) => weakSet.has(t))
+  );
+}
+
+export function getQuestionsForReview(questions, progress) {
+  const missedIds = new Set(getMissedQuestionIds(progress));
+  return questions.filter((q) => missedIds.has(q.id));
+}
+
+function questionWeight(question, progress) {
+  const entry = progress.answers[String(question.id)];
+  if (!entry) return 4;
+
+  if (entry.lastCorrect === false) return 5;
+  if (entry.wrong > entry.correct) return 4;
+
+  const daysSince =
+    (Date.now() - entry.lastSeen) / (1000 * 60 * 60 * 24);
+  if (daysSince > 7) return 3;
+  if (daysSince > 3) return 2;
+
+  const accuracy = entry.correct / (entry.correct + entry.wrong);
+  if (accuracy < 0.5) return 3;
+  if (accuracy < 0.8) return 2;
+  return 1;
+}
+
+export function smartShuffle(pool, progress) {
+  if (!pool.length) return [];
+
+  const buckets = new Map();
+  for (const q of pool) {
+    const w = questionWeight(q, progress);
+    if (!buckets.has(w)) buckets.set(w, []);
+    buckets.get(w).push(q);
+  }
+
+  const weights = [...buckets.keys()].sort((a, b) => b - a);
+  const result = [];
+
+  for (const w of weights) {
+    result.push(...shuffle(buckets.get(w)));
+  }
+
+  return result;
+}

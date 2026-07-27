@@ -1,0 +1,12 @@
+# - Prefers `pnpm` as the package manager over npm or yarn. When a project needs a start/dev script, they expect `pnpm start` to work out of the box. Confidence: 0.7
+- Prefers `pnpm` as the package manager over npm or yarn. When a project needs a start/dev script, they expect `pnpm start` to work out of the box. Confidence: 0.7
+- Prefers JavaScript/Node-native tooling for JavaScript projects — questions the need for Python when a Node-based alternative (e.g., `npx serve`, `pnpm start`) could serve the same purpose. Confidence: 0.6
+- Prefers lighter/pastel color palettes over bold or highly-saturated colors in UI design. Confidence: 0.4
+- Prefers mid-tone, warm-neutral color palettes for UI — explicitly avoids extremes of very light or very dark themes. Uses muted earth tones (taupe, beige, warm gray) rather than bright white or deep navy backgrounds. Confidence: 0.8
+- Prefers centered, max-width-constrained container layouts for simple single-page applications. When explicitly asked, expects both horizontal and vertical ("dead center") centering. However, for more complex applications with multiple organizational axes (navigation, filters, content), prefers multi-column dashboard-style layouts with sidebars. Confidence: 0.75
+- Prefers toggle-able features (e.g., syntax highlighting on/off, theme switching) — values explicit user control over feature activation rather than always-on defaults. Confidence: 0.8
+- Prefers multi-column dashboard-style layouts for applications with multiple organizational axes (e.g., navigation sidebar, main content, filter panel). Values information-dense, simultaneously-visible panels over single-column or step-by-step flows when the data supports it. Confidence: 0.7
+- Prefers auto-accept permissions mode — does not want to be prompted for confirmation before file writes or command executions. Values fast, uninterrupted execution over step-by-step approval. Confidence: 0.8
+- Uses CSS transitions (max-height + opacity) for collapsible UI sections rather than conditional mount/unmount — keeps container dimensions stable so toggles never shift layout. Confidence: 0.7
+- Prefers React for frontend application development — when migrating or greenfielding a UI project, React is the go-to choice. Confidence: 0.6
+- Prefers Vite as the build tool / bundler for frontend projects over alternatives like webpack or CRA. Confidence: 0.6

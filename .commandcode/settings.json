@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "config",
+      "Shell(pnpm:*)",
+      "Shell(curl -s -o /dev/null -w %{http_code} http://localhost:64770/index.html)",
+      "Shell(curl -s -o /dev/null -w %{http_code} http://localhost:64770/questions.json)",
+      "Shell(curl -s -o /dev/null -w %{http_code} http://localhost:64770/app.js)",
+      "Shell(curl -s -o /dev/null -w %{http_code} http://localhost:64770/styles.css)",
+      "Shell(node tools/tag-questions.mjs)",
+      "Shell(node -e \"const d=require('./questions.json');console.log(JSON.stringify(d.questions.slice(0,5).map(q=>({id:q.id,question:q.question,topics:q.topics})),null,2))\")",
+      "Shell(node -e \"const d=JSON.parse(require('fs').readFileSync('questions.json','utf-8'));const topics=new Set();d.questions.forEach(q=>q.topics.forEach(t=>topics.add(t)));console.log([...topics].sort().join('\\n'))\")"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}
