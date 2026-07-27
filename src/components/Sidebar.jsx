@@ -8,8 +8,10 @@ export default function Sidebar({
   bestPct,
   weakTopics,
   missedCount,
+  mode,
   onPracticeWeak,
   onReviewMistakes,
+  onBackToAll,
   onClearProgress,
 }) {
   const count = filteredCount ?? totalQuestions;
@@ -38,8 +40,10 @@ export default function Sidebar({
         bestPct={bestPct}
         weakTopics={weakTopics}
         missedCount={missedCount}
+        mode={mode}
         onPracticeWeak={onPracticeWeak}
         onReviewMistakes={onReviewMistakes}
+        onBackToAll={onBackToAll}
         onClearProgress={onClearProgress}
       />
     </>

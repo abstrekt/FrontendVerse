@@ -1,24 +1,27 @@
 import { useState } from 'react';
 import CodeBody from './CodeBody';
+import DifficultyBadge from './DifficultyBadge';
 import OptionList from './OptionList';
 import Explanation from './Explanation';
 
 export default function QuizQuestion({
   question,
-  questionNumber,
-  totalQuestions,
+  remaining,
+  sessionTotal,
   score,
   answered,
   highlight,
   theme,
   onPick,
   onNext,
+  onSkip,
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const isLast = questionNumber === totalQuestions;
+  const isLast = remaining === 1;
+  const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
 
   function handlePick(key) {
     if (selected !== null) return;
@@ -26,22 +29,30 @@ export default function QuizQuestion({
     onPick(key === question.answer, question);
   }
 
-  function handleNext() {
-    if (selected === null) return;
-    onNext();
+  function resetQuestionView() {
     setSelected(null);
     setShowOptions(false);
     setShowExplanation(false);
   }
 
-  const progressPct = (questionNumber / totalQuestions) * 100;
+  function handleNext() {
+    onNext();
+    resetQuestionView();
+  }
+
+  function handleSkip() {
+    onSkip(question);
+    resetQuestionView();
+  }
 
   return (
     <div className="quiz-container">
       <div className="quiz-header">
         <div className="quiz-header-top">
-          <span className="progress">Question {questionNumber} of {totalQuestions}</span>
-          <span className="score-badge">Score {score}/{answered}</span>
+          <span className="progress">Remaining {remaining}/{sessionTotal}</span>
+          <span className="score-badge">
+            Answered {answered} · Score {score}/{answered}
+          </span>
         </div>
         <div className="quiz-progress-bar" aria-hidden="true">
           <div className="quiz-progress-fill" style={{ width: `${progressPct}%` }} />
@@ -50,6 +61,14 @@ export default function QuizQuestion({
 
       <div className="quiz-scroll">
         <div className="quiz-question-area">
+          {(question.difficulty || question.topics?.length > 0) && (
+            <div className="topic-badges">
+              <DifficultyBadge difficulty={question.difficulty} />
+              {question.topics?.map((topic) => (
+                <span key={topic} className="topic-badge">{topic}</span>
+              ))}
+            </div>
+          )}
           <h2 className="question-text">{question.question}</h2>
           {question.body && (
             <CodeBody content={question.body} highlight={highlight} theme={theme} />
@@ -106,10 +125,14 @@ export default function QuizQuestion({
       </div>
 
       <div className="quiz-footer">
-        <button type="button" className="next-btn" onClick={handleNext}>
-          {isLast ? 'Finish quiz →' : 'Next question →'}
-        </button>
-        <div className="keyboard-hint">Press <kbd>Enter</kbd> for next question</div>
+        <div className="quiz-footer-actions">
+          <button type="button" className="skip-btn" onClick={handleSkip}>
+            Skip
+          </button>
+          <button type="button" className="next-btn" onClick={handleNext}>
+            {isLast ? 'Finish quiz →' : 'Next question →'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,11 +3,19 @@ import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import FilterPanel from './components/FilterPanel';
 import QuizQuestion from './components/QuizQuestion';
+import QuestionListView from './components/QuestionListView';
 import Results from './components/Results';
 import MobileProgressBar from './components/MobileProgressBar';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import {
   EMPTY_PROGRESS,
+  EMPTY_SESSION,
+  createSession,
+  restoreQueue,
+  isRestorableSession,
+  sanitizeSessionQueue,
+  filterExcludedQuestions,
+  filterQuestions,
   recordAnswer,
   recordSession,
   getWeakTopics,
@@ -23,18 +31,33 @@ import questionsData from '../questions.json';
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
-  const [shuffled, setShuffled] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(0);
-  const [mode, setMode] = useState('all');
+  const [viewMode, setViewMode] = useState('quiz'); // 'quiz' | 'list'
 
   const [theme, setTheme] = useLocalStorage('quiz-theme', 'light');
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
-  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [quizSession, setQuizSession] = useLocalStorage('quiz-session', EMPTY_SESSION);
+  const [skippedIds, setSkippedIds] = useLocalStorage('quiz-skipped', []);
 
   const sessionRecordedRef = useRef(false);
+  const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
+
+  const shuffled = useMemo(
+    () => restoreQueue(quizSession, questions),
+    [quizSession, questions]
+  );
+  const sessionAnsweredIds = useMemo(
+    () => new Set(quizSession?.answeredIds ?? []),
+    [quizSession]
+  );
+  const score = quizSession?.score ?? 0;
+  const answered = quizSession?.answered ?? 0;
+  const currentIndex = quizSession?.currentIndex ?? 0;
+  const mode = quizSession?.mode ?? 'all';
+  const selectedTopics = quizSession?.selectedTopics ?? [];
+  const selectedDifficulties = quizSession?.selectedDifficulties ?? [];
+  const sessionTotal = quizSession?.sessionTotal ?? 0;
+  const remaining = shuffled.length - currentIndex;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -50,37 +73,54 @@ export default function App() {
     [progress]
   );
 
-  const filteredQuestions = useMemo(() => {
-    if (selectedTopics.length === 0) return questions;
-    return questions.filter((q) =>
-      selectedTopics.some((t) => (q.topics || []).includes(t))
-    );
-  }, [questions, selectedTopics]);
+  const filteredQuestions = useMemo(
+    () => filterQuestions(questions, { topics: selectedTopics, difficulties: selectedDifficulties }),
+    [questions, selectedTopics, selectedDifficulties]
+  );
 
   const basePool = useMemo(() => {
     if (mode === 'weak') {
       const weakPool = getQuestionsForWeakTopics(questions, weakTopics);
-      if (selectedTopics.length === 0) return weakPool;
-      return weakPool.filter((q) =>
-        selectedTopics.some((t) => (q.topics || []).includes(t))
-      );
+      return filterQuestions(weakPool, { topics: selectedTopics, difficulties: selectedDifficulties });
     }
     if (mode === 'review') {
       const reviewPool = getQuestionsForReview(questions, progress);
-      if (selectedTopics.length === 0) return reviewPool;
-      return reviewPool.filter((q) =>
-        selectedTopics.some((t) => (q.topics || []).includes(t))
-      );
+      return filterQuestions(reviewPool, { topics: selectedTopics, difficulties: selectedDifficulties });
     }
     return filteredQuestions;
-  }, [mode, questions, weakTopics, progress, filteredQuestions, selectedTopics]);
+  }, [mode, questions, weakTopics, progress, filteredQuestions, selectedTopics, selectedDifficulties]);
 
   const currentQuestion = shuffled.length > 0 ? shuffled[currentIndex] : null;
   const isFinished = shuffled.length > 0 && currentIndex >= shuffled.length;
+  const sessionCaughtUp =
+    basePool.length > 0 && shuffled.length === 0 && sessionAnsweredIds.size > 0;
+
+  const shufflePool = useCallback(
+    (pool, answeredIds, progressOverride = progress, excludedIds = skippedIdSet) => {
+      const source = pool.length > 0 ? pool : questions;
+      const excluded = new Set([...answeredIds, ...excludedIds]);
+      const unanswered = filterExcludedQuestions(source, excluded);
+      return {
+        queue: unanswered.length > 0 ? smartShuffle(unanswered, progressOverride) : [],
+        allAnswered: source.length > 0 && unanswered.length === 0,
+      };
+    },
+    [questions, progress, skippedIdSet]
+  );
 
   useEffect(() => {
-    setQuestions(questionsData.questions);
-    setShuffled(smartShuffle(questionsData.questions, progress));
+    const allQuestions = questionsData.questions;
+    setQuestions(allQuestions);
+
+    setQuizSession((saved) => {
+      const sanitized = sanitizeSessionQueue(saved, skippedIds);
+      if (isRestorableSession(sanitized, allQuestions)) {
+        return sanitized;
+      }
+      const { queue } = shufflePool(allQuestions, new Set(), progress, new Set(skippedIds));
+      return createSession({ queue, mode: 'all', topics: [], difficulties: [] });
+    });
+
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -89,62 +129,166 @@ export default function App() {
     if (!isFinished || sessionRecordedRef.current) return;
     sessionRecordedRef.current = true;
 
-    const pct = Math.round((score / shuffled.length) * 100);
+    const pct = sessionTotal > 0 ? Math.round((score / sessionTotal) * 100) : 0;
     setProgress((prev) =>
       recordSession(prev, {
         score,
-        total: shuffled.length,
+        total: sessionTotal,
         pct,
         mode,
         topics: selectedTopics,
-        questionIds: shuffled.map((q) => q.id),
+        difficulties: selectedDifficulties,
+        questionIds: quizSession?.queueIds ?? [],
       })
     );
-  }, [isFinished, score, shuffled, mode, selectedTopics, setProgress]);
+  }, [isFinished, score, sessionTotal, mode, selectedTopics, selectedDifficulties, quizSession, setProgress]);
 
-  const startQuiz = useCallback(
-    (pool, nextMode = 'all') => {
-      setMode(nextMode);
-      setShuffled(smartShuffle(pool.length > 0 ? pool : questions, progress));
-      setCurrentIndex(0);
-      setScore(0);
-      setAnswered(0);
+  const applySession = useCallback(
+    (pool, nextMode, topics, difficulties, { resetSession = false } = {}) => {
+      const answeredIds = resetSession
+        ? new Set()
+        : new Set(quizSession?.answeredIds ?? []);
+      const nextScore = resetSession ? 0 : (quizSession?.score ?? 0);
+      const nextAnswered = resetSession ? 0 : (quizSession?.answered ?? 0);
+      const nextSessionTotal = resetSession ? undefined : quizSession?.sessionTotal;
+
+      const { queue } = shufflePool(pool, answeredIds);
+
+      setQuizSession(
+        createSession({
+          queue,
+          mode: nextMode,
+          topics,
+          difficulties,
+          score: nextScore,
+          answered: nextAnswered,
+          answeredIds: [...answeredIds],
+          currentIndex: 0,
+          sessionTotal: resetSession ? queue.length : nextSessionTotal,
+        })
+      );
       sessionRecordedRef.current = false;
     },
-    [questions, progress]
+    [shufflePool, quizSession]
+  );
+
+  const startQuiz = useCallback(
+    (pool, nextMode = 'all', { resetSession = false, topics = selectedTopics, difficulties = selectedDifficulties } = {}) => {
+      applySession(pool, nextMode, topics, difficulties, { resetSession });
+    },
+    [applySession, selectedTopics, selectedDifficulties]
   );
 
   const handlePick = useCallback(
     (correct, question) => {
-      setAnswered((a) => a + 1);
-      if (correct) setScore((s) => s + 1);
       setProgress((prev) => recordAnswer(prev, question, correct));
+      setQuizSession((session) => {
+        if (!session) return session;
+        const answeredIds = session.answeredIds.includes(question.id)
+          ? session.answeredIds
+          : [...session.answeredIds, question.id];
+        return {
+          ...session,
+          answeredIds,
+          answered: session.answered + 1,
+          score: session.score + (correct ? 1 : 0),
+        };
+      });
     },
-    [setProgress]
+    [setProgress, setQuizSession]
   );
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((i) => i + 1);
-  }, []);
+    setQuizSession((session) => {
+      if (!session) return session;
+      return { ...session, currentIndex: session.currentIndex + 1 };
+    });
+  }, [setQuizSession]);
+
+  const handleSkip = useCallback(
+    (question) => {
+      setSkippedIds((ids) => (ids.includes(question.id) ? ids : [...ids, question.id]));
+      setQuizSession((session) => {
+        if (!session) return session;
+        const queueIds = session.queueIds.filter((id) => id !== question.id);
+        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length, 0));
+        return { ...session, queueIds, currentIndex };
+      });
+    },
+    [setSkippedIds, setQuizSession]
+  );
+
+  const handleUnskip = useCallback(
+    (questionId) => {
+      setSkippedIds((ids) => ids.filter((id) => id !== questionId));
+      setQuizSession((session) => {
+        if (!session) return session;
+        if (session.answeredIds.includes(questionId)) return session;
+        if (session.queueIds.includes(questionId)) return session;
+        return { ...session, queueIds: [...session.queueIds, questionId] };
+      });
+    },
+    [setSkippedIds, setQuizSession]
+  );
 
   const handleRestart = useCallback(() => {
-    startQuiz(basePool, mode);
+    startQuiz(basePool, mode, { resetSession: true });
   }, [basePool, mode, startQuiz]);
 
   const handleStartWeak = useCallback(() => {
     const pool = getQuestionsForWeakTopics(questions, weakTopics);
-    startQuiz(pool, 'weak');
+    startQuiz(pool, 'weak', { resetSession: true, topics: [], difficulties: [] });
   }, [questions, weakTopics, startQuiz]);
 
   const handleStartReview = useCallback(() => {
     const pool = getQuestionsForReview(questions, progress);
-    startQuiz(pool, 'review');
+    startQuiz(pool, 'review', { resetSession: true, topics: [], difficulties: [] });
   }, [questions, progress, startQuiz]);
+
+  const handleBackToAll = useCallback(() => {
+    startQuiz(filteredQuestions, 'all', { resetSession: true, topics: selectedTopics, difficulties: selectedDifficulties });
+  }, [filteredQuestions, selectedTopics, selectedDifficulties, startQuiz]);
+
+  const handleOpenQuestion = useCallback(
+    (questionId) => {
+      setViewMode('quiz');
+      setSkippedIds((ids) => ids.filter((id) => id !== questionId));
+      setQuizSession((session) => {
+        if (!session) return session;
+
+        const existingIndex = session.queueIds.indexOf(questionId);
+        if (existingIndex >= 0) {
+          return { ...session, currentIndex: existingIndex };
+        }
+
+        const question = questions.find((q) => q.id === questionId);
+        if (!question) return session;
+
+        const insertAt = Math.min(session.currentIndex, session.queueIds.length);
+        const queueIds = [
+          ...session.queueIds.slice(0, insertAt),
+          questionId,
+          ...session.queueIds.slice(insertAt),
+        ];
+
+        return {
+          ...session,
+          queueIds,
+          currentIndex: insertAt,
+          sessionTotal: Math.max(session.sessionTotal, queueIds.length),
+        };
+      });
+    },
+    [questions, setQuizSession, setSkippedIds]
+  );
 
   const handleClearProgress = useCallback(() => {
     if (!window.confirm('Clear all quiz progress and history?')) return;
     setProgress(EMPTY_PROGRESS);
-  }, [setProgress]);
+    const { queue } = shufflePool(filteredQuestions, new Set(), EMPTY_PROGRESS);
+    setQuizSession(createSession({ queue, mode: 'all', topics: [], difficulties: [] }));
+    sessionRecordedRef.current = false;
+  }, [shufflePool, filteredQuestions, setProgress, setQuizSession]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -159,38 +303,36 @@ export default function App() {
   }, [isFinished, loading]);
 
   function handleToggleTopic(topic) {
-    setSelectedTopics((prev) => {
-      const next = prev.includes(topic)
-        ? prev.filter((t) => t !== topic)
-        : [...prev, topic];
-      restartWithFilters(next, questions, mode);
-      return next;
-    });
+    const next = selectedTopics.includes(topic)
+      ? selectedTopics.filter((t) => t !== topic)
+      : [...selectedTopics, topic];
+    restartWithFilters(next, selectedDifficulties, questions, mode);
   }
 
-  function handleClearTopics() {
-    setSelectedTopics([]);
-    restartWithFilters([], questions, mode);
+  function handleToggleDifficulty(difficulty) {
+    const next = selectedDifficulties.includes(difficulty)
+      ? selectedDifficulties.filter((d) => d !== difficulty)
+      : [...selectedDifficulties, difficulty];
+    restartWithFilters(selectedTopics, next, questions, mode);
   }
 
-  function restartWithFilters(topics, allQuestions, currentMode) {
+  function handleClearFilters() {
+    restartWithFilters([], [], questions, mode);
+  }
+
+  function restartWithFilters(topics, difficulties, allQuestions, currentMode) {
     let pool;
     if (currentMode === 'weak') {
       pool = getQuestionsForWeakTopics(allQuestions, getWeakTopics(progress, allQuestions));
     } else if (currentMode === 'review') {
       pool = getQuestionsForReview(allQuestions, progress);
     } else {
-      pool =
-        topics.length === 0
-          ? allQuestions
-          : allQuestions.filter((q) => topics.some((t) => (q.topics || []).includes(t)));
+      pool = filterQuestions(allQuestions, { topics, difficulties });
     }
 
-    if (topics.length > 0) {
-      pool = pool.filter((q) => topics.some((t) => (q.topics || []).includes(t)));
-    }
+    pool = filterQuestions(pool, { topics, difficulties });
 
-    startQuiz(pool, currentMode);
+    startQuiz(pool, currentMode, { resetSession: false, topics, difficulties });
   }
 
   const lifetimeAccuracy = getLifetimeAccuracy(progress.stats);
@@ -201,22 +343,48 @@ export default function App() {
       return <div className="quiz-container loading"><p>Loading questions...</p></div>;
     }
 
+    if (viewMode === 'list') {
+      return (
+        <QuestionListView
+          questions={filteredQuestions}
+          progress={progress}
+          skippedIds={skippedIds}
+          currentQuestionId={currentQuestion?.id ?? null}
+          onOpenQuestion={handleOpenQuestion}
+          onUnskip={handleUnskip}
+        />
+      );
+    }
+
+    if (sessionCaughtUp) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>You&apos;ve answered all questions in this session. Start a new quiz to continue.</p>
+            <button onClick={handleRestart}>Start new quiz</button>
+          </div>
+        </div>
+      );
+    }
+
     if (basePool.length === 0) {
       const emptyMessage =
         mode === 'weak'
           ? 'Not enough data for weak-topic practice yet. Answer more questions first.'
           : mode === 'review'
             ? 'No missed questions to review. Great job!'
-            : 'No questions match the selected topics.';
+            : 'No questions match the selected filters.';
 
       return (
         <div className="quiz-container">
           <div className="filtered-empty">
             <p>{emptyMessage}</p>
             {mode !== 'all' ? (
-              <button onClick={() => startQuiz(filteredQuestions, 'all')}>Back to all questions</button>
+              <button onClick={handleBackToAll}>
+                Back to all questions
+              </button>
             ) : (
-              <button onClick={handleClearTopics}>Clear filters</button>
+              <button onClick={handleClearFilters}>Clear filters</button>
             )}
           </div>
         </div>
@@ -228,7 +396,7 @@ export default function App() {
         <div className="quiz-container">
           <Results
             score={score}
-            totalQuestions={shuffled.length}
+            totalQuestions={sessionTotal}
             sessionCount={progress.sessions.length}
             bestPct={bestPct}
             weakTopics={weakTopics}
@@ -246,14 +414,15 @@ export default function App() {
         <QuizQuestion
           key={currentIndex}
           question={currentQuestion}
-          questionNumber={currentIndex + 1}
-          totalQuestions={shuffled.length}
+          remaining={remaining}
+          sessionTotal={sessionTotal}
           score={score}
           answered={answered}
           highlight={syntaxHighlight}
           theme={theme}
           onPick={handlePick}
           onNext={handleNext}
+          onSkip={handleSkip}
         />
       );
     }
@@ -270,8 +439,10 @@ export default function App() {
           bestPct={bestPct}
           weakTopics={weakTopics}
           missedCount={missedCount}
+          mode={mode}
           onPracticeWeak={handleStartWeak}
           onReviewMistakes={handleStartReview}
+          onBackToAll={handleBackToAll}
           theme={theme}
           onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         />
@@ -280,30 +451,63 @@ export default function App() {
           <Sidebar
             totalQuestions={questions.length}
             filteredCount={
-              selectedTopics.length > 0 ? filteredQuestions.length : questions.length
+              selectedTopics.length > 0 || selectedDifficulties.length > 0
+                ? filteredQuestions.length
+                : questions.length
             }
             lifetimeAccuracy={lifetimeAccuracy}
             sessionCount={progress.sessions.length}
             bestPct={bestPct}
             weakTopics={weakTopics}
             missedCount={missedCount}
+            mode={mode}
             onPracticeWeak={handleStartWeak}
             onReviewMistakes={handleStartReview}
+            onBackToAll={handleBackToAll}
             onClearProgress={handleClearProgress}
           />
         }
-        center={centerContent()}
+        center={
+          <div className="center-with-toggle">
+            <div className="view-toggle" role="tablist" aria-label="View mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'quiz'}
+                className={`view-toggle-btn${viewMode === 'quiz' ? ' active' : ''}`}
+                onClick={() => setViewMode('quiz')}
+              >
+                Quiz
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'list'}
+                className={`view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
+                onClick={() => setViewMode('list')}
+              >
+                List
+              </button>
+            </div>
+            {centerContent()}
+          </div>
+        }
         panel={
-          <FilterPanel
-            questions={questions}
-            selectedTopics={selectedTopics}
-            onToggleTopic={handleToggleTopic}
-            onClear={handleClearTopics}
-            theme={theme}
-            onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            syntaxHighlight={syntaxHighlight}
-            onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
-          />
+          <div className="topics-panel">
+            <FilterPanel
+              questions={questions}
+              progress={progress}
+              selectedTopics={selectedTopics}
+              selectedDifficulties={selectedDifficulties}
+              onToggleTopic={handleToggleTopic}
+              onToggleDifficulty={handleToggleDifficulty}
+              onClear={handleClearFilters}
+              theme={theme}
+              onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              syntaxHighlight={syntaxHighlight}
+              onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
+            />
+          </div>
         }
       />
   );

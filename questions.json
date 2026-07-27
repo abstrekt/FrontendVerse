@@ -29,7 +29,8 @@
         "hoisting",
         "map/set",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 2,
@@ -55,7 +56,8 @@
         "event loop",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 3,
@@ -87,7 +89,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 4,
@@ -112,7 +115,8 @@
       "topics": [
         "coercion",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 5,
@@ -143,7 +147,8 @@
         "object methods",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 6,
@@ -175,7 +180,8 @@
       "explanation": "In JavaScript, all objects interact by _reference_ when setting them equal to each other.\n\nFirst, variable `c` holds a value to an object. Later, we assign `d` with the same reference that `c` has to the object.\n\n<img src=\"https://i.imgur.com/ko5k0fs.png\" width=\"200\">\n\nWhen you change one object, you change all of them.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 7,
@@ -205,7 +211,8 @@
         "classes",
         "generators",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 8,
@@ -235,7 +242,8 @@
         "classes",
         "error handling",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 9,
@@ -261,7 +269,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 10,
@@ -290,7 +299,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 11,
@@ -322,7 +332,8 @@
         "object methods",
         "prototypes",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 12,
@@ -353,7 +364,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 13,
@@ -381,7 +393,8 @@
       "explanation": "During the **capturing** phase, the event goes through the ancestor elements down to the target element. It then reaches the **target** element, and **bubbling** begins.\n\n<img src=\"https://i.imgur.com/N18oRgd.png\" width=\"200\">\n\n</p>",
       "topics": [
         "generators"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 14,
@@ -404,7 +417,8 @@
         "object methods",
         "prototypes",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 15,
@@ -434,7 +448,8 @@
         "coercion",
         "generators",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 16,
@@ -463,7 +478,8 @@
       "topics": [
         "generators",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 17,
@@ -488,7 +504,8 @@
       "topics": [
         "tagged templates",
         "template literals"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 18,
@@ -514,7 +531,8 @@
         "data types",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 19,
@@ -544,7 +562,8 @@
         "data types",
         "object methods",
         "spread/rest"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 20,
@@ -574,7 +593,8 @@
         "error handling",
         "object methods",
         "scope"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 21,
@@ -603,7 +623,8 @@
       "topics": [
         "generators",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 22,
@@ -629,7 +650,8 @@
       ],
       "answer": "B",
       "explanation": "The data stored in `sessionStorage` is removed after closing the _tab_.\n\nIf you used `localStorage`, the data would've been there forever, unless for example `localStorage.clear()` is invoked.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 23,
@@ -658,7 +680,8 @@
       "topics": [
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 24,
@@ -688,7 +711,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 25,
@@ -714,7 +738,8 @@
       ],
       "answer": "C",
       "explanation": "If you have two keys with the same name, the key will be replaced. It will still be in its first position, but with the last specified value.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 26,
@@ -740,7 +765,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 27,
@@ -766,7 +792,8 @@
       ],
       "answer": "C",
       "explanation": "The `continue` statement skips an iteration if a certain condition returns `true`.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 28,
@@ -796,7 +823,8 @@
         "classes",
         "object methods",
         "prototypes"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 29,
@@ -827,7 +855,8 @@
         "error handling",
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 30,
@@ -858,7 +887,8 @@
         "event loop",
         "generators",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 31,
@@ -884,7 +914,8 @@
       ],
       "answer": "C",
       "explanation": "The deepest nested element that caused the event is the target of the event. You can stop bubbling by `event.stopPropagation`\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 32,
@@ -912,7 +943,8 @@
       "explanation": "If we click `p`, we see two logs: `p` and `div`. During event propagation, there are 3 phases: capturing, targeting, and bubbling. By default, event handlers are executed in the bubbling phase (unless you set `useCapture` to `true`). It goes from the deepest nested element outwards.\n\n</p>",
       "topics": [
         "map/set"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 33,
@@ -941,7 +973,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 34,
@@ -972,7 +1005,8 @@
         "object methods",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 35,
@@ -1001,7 +1035,8 @@
       "topics": [
         "classes",
         "coercion"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 36,
@@ -1029,7 +1064,8 @@
       "explanation": "`typeof 1` returns `\"number\"`.\n`typeof \"number\"` returns `\"string\"`\n\n</p>",
       "topics": [
         "data types"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 37,
@@ -1057,7 +1093,8 @@
       "explanation": "When you set a value to an element in an array that exceeds the length of the array, JavaScript creates something called \"empty slots\". These actually have the value of `undefined`, but you will see something like:\n\n`[1, 2, 3, empty x 7, 11]`\n\ndepending on where you run it (it's different for every browser, node, etc.)\n\n</p>",
       "topics": [
         "map/set"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 38,
@@ -1088,7 +1125,8 @@
         "map/set",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 39,
@@ -1122,7 +1160,8 @@
         "spread/rest",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 40,
@@ -1151,7 +1190,8 @@
       "topics": [
         "array methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 41,
@@ -1179,7 +1219,8 @@
       "explanation": "`null` is falsy. `!null` returns `true`. `!true` returns `false`.\n\n`\"\"` is falsy. `!\"\"` returns `true`. `!true` returns `false`.\n\n`1` is truthy. `!1` returns `false`. `!false` returns `true`.\n\n</p>",
       "topics": [
         "coercion"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 42,
@@ -1209,7 +1250,8 @@
         "event loop",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 43,
@@ -1239,7 +1281,8 @@
         "array methods",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 44,
@@ -1264,12 +1307,13 @@
         }
       ],
       "answer": "C",
-      "explanation": "Regular functions cannot be stopped mid-way after invocation. However, a generator function can be \"stopped\" midway, and later continue from where it stopped. Every time a generator function encounters a `yield` keyword, the function yields the value specified after it. Note that the generator function in that case doesn’t _return_ the value, it _yields_ the value.\n\nFirst, we initialize the generator function with `i` equal to `10`. We invoke the generator function using the `next()` method. The first time we invoke the generator function, `i` is equal to `10`. It encounters the first `yield` keyword: it yields the value of `i`. The generator is now \"paused\", and `10` gets logged.\n\nThen, we invoke the function again with the `next()` method. It starts to continue where it stopped previously, still with `i` equal to `10`. Now, it encounters the next `yield` keyword, and yields `i * 2`. `i` is equal to `10`, so it returns `10 * 2`, which is `20`. This results in `10, 20`.\n\n</p>",
+      "explanation": "Regular functions cannot be stopped mid-way after invocation. However, a generator function can be \"stopped\" midway, and later continue from where it stopped. Every time a generator function encounters a `yield` keyword, the function yields the value specified after it. Note that the generator function in that case doesn\u2019t _return_ the value, it _yields_ the value.\n\nFirst, we initialize the generator function with `i` equal to `10`. We invoke the generator function using the `next()` method. The first time we invoke the generator function, `i` is equal to `10`. It encounters the first `yield` keyword: it yields the value of `i`. The generator is now \"paused\", and `10` gets logged.\n\nThen, we invoke the function again with the `next()` method. It starts to continue where it stopped previously, still with `i` equal to `10`. Now, it encounters the next `yield` keyword, and yields `i * 2`. `i` is equal to `10`, so it returns `10 * 2`, which is `20`. This results in `10, 20`.\n\n</p>",
       "topics": [
         "generators",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 45,
@@ -1300,7 +1344,8 @@
         "object methods",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 46,
@@ -1329,7 +1374,8 @@
       "topics": [
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 47,
@@ -1354,13 +1400,14 @@
         }
       ],
       "answer": "B",
-      "explanation": "With a `for-in` loop, we can iterate through object keys, in this case `name` and `age`. Under the hood, object keys are strings (if they're not a Symbol). On every loop, we set the value of `item` equal to the current key it’s iterating over. First, `item` is equal to `name`, and gets logged. Then, `item` is equal to `age`, which gets logged.\n\n</p>",
+      "explanation": "With a `for-in` loop, we can iterate through object keys, in this case `name` and `age`. Under the hood, object keys are strings (if they're not a Symbol). On every loop, we set the value of `item` equal to the current key it\u2019s iterating over. First, `item` is equal to `name`, and gets logged. Then, `item` is equal to `age`, which gets logged.\n\n</p>",
       "topics": [
         "map/set",
         "object methods",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 48,
@@ -1389,7 +1436,8 @@
       "topics": [
         "coercion",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 49,
@@ -1417,7 +1465,8 @@
       "explanation": "Only the first number in the string is returned. Based on the _radix_ (the second argument in order to specify what type of number we want to parse it to: base 10, hexadecimal, octal, binary, etc.), the `parseInt` checks whether the characters in the string are valid. Once it encounters a character that isn't a valid number in the radix, it stops parsing and ignores the following characters.\n\n`*` is not a valid number. It only parses `\"7\"` into the decimal `7`. `num` now holds the value of `7`.\n\n</p>",
       "topics": [
         "generators"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 50,
@@ -1442,14 +1491,15 @@
         }
       ],
       "answer": "C",
-      "explanation": "When mapping over the array, the value of `num` is equal to the element it’s currently looping over. In this case, the elements are numbers, so the condition of the if statement `typeof num === \"number\"` returns `true`. The map function creates a new array and inserts the values returned from the function.\n\nHowever, we don’t return a value. When we don’t return a value from the function, the function returns `undefined`. For every element in the array, the function block gets called, so for each element we return `undefined`.\n\n</p>",
+      "explanation": "When mapping over the array, the value of `num` is equal to the element it\u2019s currently looping over. In this case, the elements are numbers, so the condition of the if statement `typeof num === \"number\"` returns `true`. The map function creates a new array and inserts the values returned from the function.\n\nHowever, we don\u2019t return a value. When we don\u2019t return a value from the function, the function returns `undefined`. For every element in the array, the function block gets called, so for each element we return `undefined`.\n\n</p>",
       "topics": [
         "array methods",
         "data types",
         "generators",
         "map/set",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 51,
@@ -1477,7 +1527,8 @@
       "explanation": "Arguments are passed by _value_, unless their value is an object, then they're passed by _reference_. `birthYear` is passed by value, since it's a string, not an object. When we pass arguments by value, a _copy_ of that value is created (see question 46).\n\nThe variable `birthYear` has a reference to the value `\"1997\"`. The argument `year` also has a reference to the value `\"1997\"`, but it's not the same value as `birthYear` has a reference to. When we update the value of `year` by setting `year` equal to `\"1998\"`, we are only updating the value of `year`. `birthYear` is still equal to `\"1997\"`.\n\nThe value of `person` is an object. The argument `member` has a (copied) reference to the _same_ object. When we modify a property of the object `member` has a reference to, the value of `person` will also be modified, since they both have a reference to the same object. `person`'s `name` property is now equal to the value `\"Lydia\"`\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 52,
@@ -1507,7 +1558,8 @@
         "error handling",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 53,
@@ -1538,7 +1590,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 54,
@@ -1571,7 +1624,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 55,
@@ -1603,7 +1657,8 @@
         "object methods",
         "prototypes",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 56,
@@ -1633,7 +1688,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 57,
@@ -1662,7 +1718,8 @@
       "topics": [
         "error handling",
         "modules"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 58,
@@ -1693,7 +1750,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 59,
@@ -1723,7 +1781,8 @@
         "destructuring",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 60,
@@ -1753,7 +1812,8 @@
         "object methods",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 61,
@@ -1782,7 +1842,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 62,
@@ -1811,7 +1872,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 63,
@@ -1837,7 +1899,8 @@
       ],
       "answer": "A",
       "explanation": "The unary operator `++` _first returns_ the value of the operand, _then increments_ the value of the operand. The value of `num1` is `10`, since the `increaseNumber` function first returns the value of `num`, which is `10`, and only increments the value of `num` afterward.\n\n`num2` is `10`, since we passed `num1` to the `increasePassedNumber`. `number` is equal to `10`(the value of `num1`). Again, the unary operator `++` _first returns_ the value of the operand, _then increments_ the value of the operand. The value of `number` is `10`, so `num2` is equal to `10`.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 64,
@@ -1868,7 +1931,8 @@
         "object methods",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 65,
@@ -1898,7 +1962,8 @@
         "array methods",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 66,
@@ -1929,7 +1994,8 @@
         "error handling",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 67,
@@ -1958,7 +2024,8 @@
       "topics": [
         "modules",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 68,
@@ -1986,7 +2053,8 @@
       "explanation": "Every Symbol is entirely unique. The purpose of the argument passed to the Symbol is to give the Symbol a description. The value of the Symbol is not dependent on the passed argument. As we test equality, we are creating two entirely new symbols: the first `Symbol('foo')`, and the second `Symbol('foo')`. These two values are unique and not equal to each other, `Symbol('foo') === Symbol('foo')` returns `false`.\n\n</p>",
       "topics": [
         "symbols"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 69,
@@ -2015,16 +2083,17 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 70,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log('🥑' + '💻');\n```",
+      "body": "```javascript\nconsole.log('\ud83e\udd51' + '\ud83d\udcbb');\n```",
       "options": [
         {
           "key": "A",
-          "text": "`\"🥑💻\"`"
+          "text": "`\"\ud83e\udd51\ud83d\udcbb\"`"
         },
         {
           "key": "B",
@@ -2040,15 +2109,16 @@
         }
       ],
       "answer": "A",
-      "explanation": "With the `+` operator, you can concatenate strings. In this case, we are concatenating the string `\"🥑\"` with the string `\"💻\"`, resulting in `\"🥑💻\"`.\n\n</p>",
+      "explanation": "With the `+` operator, you can concatenate strings. In this case, we are concatenating the string `\"\ud83e\udd51\"` with the string `\"\ud83d\udcbb\"`, resulting in `\"\ud83e\udd51\ud83d\udcbb\"`.\n\n</p>",
       "topics": [
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 71,
       "question": "How can we log the values that are commented out after the console.log statement?",
-      "body": "```javascript\nfunction* startGame() {\n  const answer = yield 'Do you love JavaScript?';\n  if (answer !== 'Yes') {\n    return \"Oh wow... Guess we're done here\";\n  }\n  return 'JavaScript loves you back ❤️';\n}\n\nconst game = startGame();\nconsole.log(/* 1 */); // Do you love JavaScript?\nconsole.log(/* 2 */); // JavaScript loves you back ❤️\n```",
+      "body": "```javascript\nfunction* startGame() {\n  const answer = yield 'Do you love JavaScript?';\n  if (answer !== 'Yes') {\n    return \"Oh wow... Guess we're done here\";\n  }\n  return 'JavaScript loves you back \u2764\ufe0f';\n}\n\nconst game = startGame();\nconsole.log(/* 1 */); // Do you love JavaScript?\nconsole.log(/* 2 */); // JavaScript loves you back \u2764\ufe0f\n```",
       "options": [
         {
           "key": "A",
@@ -2068,12 +2138,13 @@
         }
       ],
       "answer": "C",
-      "explanation": "A generator function \"pauses\" its execution when it sees the `yield` keyword. First, we have to let the function yield the string \"Do you love JavaScript?\", which can be done by calling `game.next().value`.\n\nEvery line is executed, until it finds the first `yield` keyword. There is a `yield` keyword on the first line within the function: the execution stops with the first yield! _This means that the variable `answer` is not defined yet!_\n\nWhen we call `game.next(\"Yes\").value`, the previous `yield` is replaced with the value of the parameters passed to the `next()` function, `\"Yes\"` in this case. The value of the variable `answer` is now equal to `\"Yes\"`. The condition of the if-statement returns `false`, and `JavaScript loves you back ❤️` gets logged.\n\n</p>",
+      "explanation": "A generator function \"pauses\" its execution when it sees the `yield` keyword. First, we have to let the function yield the string \"Do you love JavaScript?\", which can be done by calling `game.next().value`.\n\nEvery line is executed, until it finds the first `yield` keyword. There is a `yield` keyword on the first line within the function: the execution stops with the first yield! _This means that the variable `answer` is not defined yet!_\n\nWhen we call `game.next(\"Yes\").value`, the previous `yield` is replaced with the value of the parameters passed to the `next()` function, `\"Yes\"` in this case. The value of the variable `answer` is now equal to `\"Yes\"`. The condition of the if-statement returns `false`, and `JavaScript loves you back \u2764\ufe0f` gets logged.\n\n</p>",
       "topics": [
         "generators",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 72,
@@ -2101,7 +2172,8 @@
       "explanation": "`String.raw` returns a string where the escapes (`\\n`, `\\v`, `\\t` etc.) are ignored! Backslashes can be an issue since you could end up with something like:\n\n`` const path = `C:\\Documents\\Projects\\table.html` ``\n\nWhich would result in:\n\n`\"C:DocumentsProjects able.html\"`\n\nWith `String.raw`, it would simply ignore the escape and print:\n\n`C:\\Documents\\Projects\\table.html`\n\nIn this case, the string is `Hello\\nworld`, which gets logged.\n\n</p>",
       "topics": [
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 73,
@@ -2133,7 +2205,8 @@
         "object methods",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 74,
@@ -2163,7 +2236,8 @@
         "array methods",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 75,
@@ -2193,7 +2267,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 76,
@@ -2227,7 +2302,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 77,
@@ -2247,7 +2323,8 @@
       "explanation": "A pure function is a function that _always_ returns the same result, if the same arguments are passed.\n\nThe `sum` function always returns the same result. If we pass `1` and `2`, it will _always_ return `3` without side effects. If we pass `5` and `10`, it will _always_ return `15`, and so on. This is the definition of a pure function.\n\n</p>",
       "topics": [
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 78,
@@ -2277,35 +2354,37 @@
         "generators",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 79,
       "question": "What is the output?",
-      "body": "```javascript\nconst myLifeSummedUp = ['☕', '💻', '🍷', '🍫'];\n\nfor (let item in myLifeSummedUp) {\n  console.log(item);\n}\n\nfor (let item of myLifeSummedUp) {\n  console.log(item);\n}\n```",
+      "body": "```javascript\nconst myLifeSummedUp = ['\u2615', '\ud83d\udcbb', '\ud83c\udf77', '\ud83c\udf6b'];\n\nfor (let item in myLifeSummedUp) {\n  console.log(item);\n}\n\nfor (let item of myLifeSummedUp) {\n  console.log(item);\n}\n```",
       "options": [
         {
           "key": "A",
-          "text": "`0` `1` `2` `3` and `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"`"
+          "text": "`0` `1` `2` `3` and `\"\u2615\"` `\"\ud83d\udcbb\"` `\"\ud83c\udf77\"` `\"\ud83c\udf6b\"`"
         },
         {
           "key": "B",
-          "text": "`\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` and `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"`"
+          "text": "`\"\u2615\"` `\"\ud83d\udcbb\"` `\"\ud83c\udf77\"` `\"\ud83c\udf6b\"` and `\"\u2615\"` `\"\ud83d\udcbb\"` `\"\ud83c\udf77\"` `\"\ud83c\udf6b\"`"
         },
         {
           "key": "C",
-          "text": "`\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` and `0` `1` `2` `3`"
+          "text": "`\"\u2615\"` `\"\ud83d\udcbb\"` `\"\ud83c\udf77\"` `\"\ud83c\udf6b\"` and `0` `1` `2` `3`"
         },
         {
           "key": "D",
-          "text": "`0` `1` `2` `3` and `{0: \"☕\", 1: \"💻\", 2: \"🍷\", 3: \"🍫\"}`"
+          "text": "`0` `1` `2` `3` and `{0: \"\u2615\", 1: \"\ud83d\udcbb\", 2: \"\ud83c\udf77\", 3: \"\ud83c\udf6b\"}`"
         }
       ],
       "answer": "A",
-      "explanation": "With a _for-in_ loop, we can iterate over **enumerable** properties. In an array, the enumerable properties are the \"keys\" of array elements, which are actually their indexes. You could see an array as:\n\n`{0: \"☕\", 1: \"💻\", 2: \"🍷\", 3: \"🍫\"}`\n\nWhere the keys are the enumerable properties. `0` `1` `2` `3` get logged.\n\nWith a _for-of_ loop, we can iterate over **iterables**. An array is an iterable. When we iterate over the array, the variable \"item\" is equal to the element it's currently iterating over, `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` get logged.\n\n</p>",
+      "explanation": "With a _for-in_ loop, we can iterate over **enumerable** properties. In an array, the enumerable properties are the \"keys\" of array elements, which are actually their indexes. You could see an array as:\n\n`{0: \"\u2615\", 1: \"\ud83d\udcbb\", 2: \"\ud83c\udf77\", 3: \"\ud83c\udf6b\"}`\n\nWhere the keys are the enumerable properties. `0` `1` `2` `3` get logged.\n\nWith a _for-of_ loop, we can iterate over **iterables**. An array is an iterable. When we iterate over the array, the variable \"item\" is equal to the element it's currently iterating over, `\"\u2615\"` `\"\ud83d\udcbb\"` `\"\ud83c\udf77\"` `\"\ud83c\udf6b\"` get logged.\n\n</p>",
       "topics": [
         "generators"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 80,
@@ -2334,7 +2413,8 @@
       "topics": [
         "generators",
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 81,
@@ -2363,39 +2443,41 @@
       "topics": [
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 82,
       "question": "What is the output?",
-      "body": "```javascript\nvar status = '😎';\n\nsetTimeout(() => {\n  const status = '😍';\n\n  const data = {\n    status: '🥑',\n    getStatus() {\n      return this.status;\n    },\n  };\n\n  console.log(data.getStatus());\n  console.log(data.getStatus.call(this));\n}, 0);\n```",
+      "body": "```javascript\nvar status = '\ud83d\ude0e';\n\nsetTimeout(() => {\n  const status = '\ud83d\ude0d';\n\n  const data = {\n    status: '\ud83e\udd51',\n    getStatus() {\n      return this.status;\n    },\n  };\n\n  console.log(data.getStatus());\n  console.log(data.getStatus.call(this));\n}, 0);\n```",
       "options": [
         {
           "key": "A",
-          "text": "`\"🥑\"` and `\"😍\"`"
+          "text": "`\"\ud83e\udd51\"` and `\"\ud83d\ude0d\"`"
         },
         {
           "key": "B",
-          "text": "`\"🥑\"` and `\"😎\"`"
+          "text": "`\"\ud83e\udd51\"` and `\"\ud83d\ude0e\"`"
         },
         {
           "key": "C",
-          "text": "`\"😍\"` and `\"😎\"`"
+          "text": "`\"\ud83d\ude0d\"` and `\"\ud83d\ude0e\"`"
         },
         {
           "key": "D",
-          "text": "`\"😎\"` and `\"😎\"`"
+          "text": "`\"\ud83d\ude0e\"` and `\"\ud83d\ude0e\"`"
         }
       ],
       "answer": "B",
-      "explanation": "The value of the `this` keyword is dependent on where you use it. In a **method**, like the `getStatus` method, the `this` keyword refers to _the object that the method belongs to_. The method belongs to the `data` object, so `this` refers to the `data` object. When we log `this.status`, the `status` property on the `data` object gets logged, which is `\"🥑\"`.\n\nWith the `call` method, we can change the object to which the `this` keyword refers. In **functions**, the `this` keyword refers to the _the object that the function belongs to_. We declared the `setTimeout` function on the _global object_, so within the `setTimeout` function, the `this` keyword refers to the _global object_. On the global object, there is a variable called _status_ with the value of `\"😎\"`. When logging `this.status`, `\"😎\"` gets logged.\n\n</p>",
+      "explanation": "The value of the `this` keyword is dependent on where you use it. In a **method**, like the `getStatus` method, the `this` keyword refers to _the object that the method belongs to_. The method belongs to the `data` object, so `this` refers to the `data` object. When we log `this.status`, the `status` property on the `data` object gets logged, which is `\"\ud83e\udd51\"`.\n\nWith the `call` method, we can change the object to which the `this` keyword refers. In **functions**, the `this` keyword refers to the _the object that the function belongs to_. We declared the `setTimeout` function on the _global object_, so within the `setTimeout` function, the `this` keyword refers to the _global object_. On the global object, there is a variable called _status_ with the value of `\"\ud83d\ude0e\"`. When logging `this.status`, `\"\ud83d\ude0e\"` gets logged.\n\n</p>",
       "topics": [
         "event loop",
         "generators",
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 83,
@@ -2425,7 +2507,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 84,
@@ -2455,7 +2538,8 @@
         "error handling",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 85,
@@ -2483,7 +2567,8 @@
       "explanation": "The value of `res` in the second `.then` is equal to the returned value of the previous `.then`. You can keep chaining `.then`s like this, where the value is passed to the next handler.\n\n</p>",
       "topics": [
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 86,
@@ -2513,7 +2598,8 @@
         "coercion",
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 87,
@@ -2542,7 +2628,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 88,
@@ -2572,7 +2659,8 @@
         "error handling",
         "map/set",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 89,
@@ -2602,7 +2690,8 @@
         "generators",
         "modules",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 90,
@@ -2633,7 +2722,8 @@
         "data types",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 91,
@@ -2664,7 +2754,8 @@
         "error handling",
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 92,
@@ -2698,7 +2789,8 @@
         "prototypes",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 93,
@@ -2728,7 +2820,8 @@
         "destructuring",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 94,
@@ -2759,7 +2852,8 @@
         "generators",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 95,
@@ -2789,7 +2883,8 @@
         "error handling",
         "generators",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 96,
@@ -2820,7 +2915,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 97,
@@ -2850,7 +2946,8 @@
         "object methods",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 98,
@@ -2883,7 +2980,8 @@
         "object methods",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 99,
@@ -2911,12 +3009,13 @@
       "explanation": "The variable `name` holds the value of a string, which is not a function, and thus cannot be invoked.\n\nTypeErrors get thrown when a value is not of the expected type. JavaScript expected `name` to be a function since we're trying to invoke it. It was a string however, so a TypeError gets thrown: name is not a function!\n\nSyntaxErrors get thrown when you've written something that isn't valid JavaScript, for example when you've written the word `return` as `retrun`.\nReferenceErrors get thrown when JavaScript isn't able to find a reference to a value that you're trying to access.\n\n</p>",
       "topics": [
         "error handling"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 100,
       "question": "What's the value of output?",
-      "body": "```javascript\n// 🎉✨ This is my 100th question! ✨🎉\n\nconst output = `${[] && 'Im'}possible!\nYou should${'' && `n't`} see a therapist after so much JavaScript lol`;\n```",
+      "body": "```javascript\n// \ud83c\udf89\u2728 This is my 100th question! \u2728\ud83c\udf89\n\nconst output = `${[] && 'Im'}possible!\nYou should${'' && `n't`} see a therapist after so much JavaScript lol`;\n```",
       "options": [
         {
           "key": "A",
@@ -2940,7 +3039,8 @@
       "topics": [
         "coercion",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 101,
@@ -2970,7 +3070,8 @@
         "coercion",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 102,
@@ -3001,7 +3102,8 @@
         "event loop",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 103,
@@ -3030,7 +3132,8 @@
       "topics": [
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 104,
@@ -3047,7 +3150,7 @@
         },
         {
           "key": "C",
-          "text": "`Promise {<fulfilled>: 5}`"
+          "text": "`Promise\u00a0{<fulfilled>: 5}`"
         },
         {
           "key": "D",
@@ -3060,7 +3163,8 @@
         "object methods",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 105,
@@ -3090,7 +3194,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 106,
@@ -3120,12 +3225,13 @@
         "error handling",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 107,
       "question": "What's its value?",
-      "body": "```javascript\nconsole.log('❤️' === '❤️');\n```",
+      "body": "```javascript\nconsole.log('\u2764\ufe0f' === '\u2764\ufe0f');\n```",
       "options": [
         {
           "key": "A",
@@ -3138,12 +3244,13 @@
       ],
       "answer": "A",
       "explanation": "Under the hood, emojis are unicodes. The unicodes for the heart emoji is `\"U+2764 U+FE0F\"`. These are always the same for the same emojis, so we're comparing two equal strings to each other, which returns true.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 108,
       "question": "Which of these methods modifies the original array?",
-      "body": "```javascript\nconst emojis = ['✨', '🥑', '😍'];\n\nemojis.map(x => x + '✨');\nemojis.filter(x => x !== '🥑');\nemojis.find(x => x !== '🥑');\nemojis.reduce((acc, cur) => acc + '✨');\nemojis.slice(1, 2, '✨');\nemojis.splice(1, 2, '✨');\n```",
+      "body": "```javascript\nconst emojis = ['\u2728', '\ud83e\udd51', '\ud83d\ude0d'];\n\nemojis.map(x => x + '\u2728');\nemojis.filter(x => x !== '\ud83e\udd51');\nemojis.find(x => x !== '\ud83e\udd51');\nemojis.reduce((acc, cur) => acc + '\u2728');\nemojis.slice(1, 2, '\u2728');\nemojis.splice(1, 2, '\u2728');\n```",
       "options": [
         {
           "key": "A",
@@ -3163,30 +3270,31 @@
         }
       ],
       "answer": "D",
-      "explanation": "With `splice` method, we modify the original array by deleting, replacing or adding elements. In this case, we removed 2 items from index 1 (we removed `'🥑'` and `'😍'`) and added the ✨ emoji instead.\n\n`map`, `filter` and `slice` return a new array, `find` returns an element, and `reduce` returns a reduced value.\n\n</p>",
+      "explanation": "With `splice` method, we modify the original array by deleting, replacing or adding elements. In this case, we removed 2 items from index 1 (we removed `'\ud83e\udd51'` and `'\ud83d\ude0d'`) and added the \u2728 emoji instead.\n\n`map`, `filter` and `slice` return a new array, `find` returns an element, and `reduce` returns a reduced value.\n\n</p>",
       "topics": [
         "array methods",
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 109,
       "question": "What's the output?",
-      "body": "```javascript\nconst food = ['🍕', '🍫', '🥑', '🍔'];\nconst info = { favoriteFood: food[0] };\n\ninfo.favoriteFood = '🍝';\n\nconsole.log(food);\n```",
+      "body": "```javascript\nconst food = ['\ud83c\udf55', '\ud83c\udf6b', '\ud83e\udd51', '\ud83c\udf54'];\nconst info = { favoriteFood: food[0] };\n\ninfo.favoriteFood = '\ud83c\udf5d';\n\nconsole.log(food);\n```",
       "options": [
         {
           "key": "A",
-          "text": "`['🍕', '🍫', '🥑', '🍔']`"
+          "text": "`['\ud83c\udf55', '\ud83c\udf6b', '\ud83e\udd51', '\ud83c\udf54']`"
         },
         {
           "key": "B",
-          "text": "`['🍝', '🍫', '🥑', '🍔']`"
+          "text": "`['\ud83c\udf5d', '\ud83c\udf6b', '\ud83e\udd51', '\ud83c\udf54']`"
         },
         {
           "key": "C",
-          "text": "`['🍝', '🍕', '🍫', '🥑', '🍔']`"
+          "text": "`['\ud83c\udf5d', '\ud83c\udf55', '\ud83c\udf6b', '\ud83e\udd51', '\ud83c\udf54']`"
         },
         {
           "key": "D",
@@ -3194,13 +3302,14 @@
         }
       ],
       "answer": "A",
-      "explanation": "We set the value of the `favoriteFood` property on the `info` object equal to the string with the pizza emoji, `'🍕'`. A string is a primitive data type. In JavaScript, primitive data types don't interact by reference.\n\nIn JavaScript, primitive data types (everything that's not an object) interact by _value_. In this case, we set the value of the `favoriteFood` property on the `info` object equal to the value of the first element in the `food` array, the string with the pizza emoji in this case (`'🍕'`). A string is a primitive data type, and interact by value (see my [blogpost](https://www.theavocoder.com/complete-javascript/2018/12/21/by-value-vs-by-reference) if you're interested in learning more)\n\nThen, we change the value of the `favoriteFood` property on the `info` object. The `food` array hasn't changed, since the value of `favoriteFood` was merely a _copy_ of the value of the first element in the array, and doesn't have a reference to the same spot in memory as the element on `food[0]`. When we log food, it's still the original array, `['🍕', '🍫', '🥑', '🍔']`.\n\n</p>",
+      "explanation": "We set the value of the `favoriteFood` property on the `info` object equal to the string with the pizza emoji, `'\ud83c\udf55'`. A string is a primitive data type. In JavaScript, primitive data types don't interact by reference.\n\nIn JavaScript, primitive data types (everything that's not an object) interact by _value_. In this case, we set the value of the `favoriteFood` property on the `info` object equal to the value of the first element in the `food` array, the string with the pizza emoji in this case (`'\ud83c\udf55'`). A string is a primitive data type, and interact by value (see my [blogpost](https://www.theavocoder.com/complete-javascript/2018/12/21/by-value-vs-by-reference) if you're interested in learning more)\n\nThen, we change the value of the `favoriteFood` property on the `info` object. The `food` array hasn't changed, since the value of `favoriteFood` was merely a _copy_ of the value of the first element in the array, and doesn't have a reference to the same spot in memory as the element on `food[0]`. When we log food, it's still the original array, `['\ud83c\udf55', '\ud83c\udf6b', '\ud83e\udd51', '\ud83c\udf54']`.\n\n</p>",
       "topics": [
         "data types",
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 110,
@@ -3229,7 +3338,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 111,
@@ -3260,7 +3370,8 @@
         "hoisting",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 112,
@@ -3290,7 +3401,8 @@
         "generators",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 113,
@@ -3320,7 +3432,8 @@
         "arrow functions",
         "template literals",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 114,
@@ -3352,7 +3465,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 115,
@@ -3383,7 +3497,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 116,
@@ -3413,7 +3528,8 @@
         "object methods",
         "spread/rest",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 117,
@@ -3441,20 +3557,21 @@
       "explanation": "With the spread operator `...`, we can _spread_ iterables to individual elements. The `sumValues` function receives three arguments: `x`, `y` and `z`. `...[1, 2, 3]` will result in `1, 2, 3`, which we pass to the `sumValues` function.\n\n</p>",
       "topics": [
         "spread/rest"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 118,
       "question": "What's the output?",
-      "body": "```javascript\nlet num = 1;\nconst list = ['🥳', '🤠', '🥰', '🤪'];\n\nconsole.log(list[(num += 1)]);\n```",
+      "body": "```javascript\nlet num = 1;\nconst list = ['\ud83e\udd73', '\ud83e\udd20', '\ud83e\udd70', '\ud83e\udd2a'];\n\nconsole.log(list[(num += 1)]);\n```",
       "options": [
         {
           "key": "A",
-          "text": "`🤠`"
+          "text": "`\ud83e\udd20`"
         },
         {
           "key": "B",
-          "text": "`🥰`"
+          "text": "`\ud83e\udd70`"
         },
         {
           "key": "C",
@@ -3466,8 +3583,9 @@
         }
       ],
       "answer": "B",
-      "explanation": "With the `+=` operator, we're incrementing the value of `num` by `1`. `num` had the initial value `1`, so `1 + 1` is `2`. The item on the second index in the `list` array is 🥰, `console.log(list[2])` prints 🥰.\n\n</p>",
-      "topics": []
+      "explanation": "With the `+=` operator, we're incrementing the value of `num` by `1`. `num` had the initial value `1`, so `1 + 1` is `2`. The item on the second index in the `list` array is \ud83e\udd70, `console.log(list[2])` prints \ud83e\udd70.\n\n</p>",
+      "topics": [],
+      "difficulty": "easy"
     },
     {
       "id": 119,
@@ -3497,7 +3615,8 @@
         "error handling",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 120,
@@ -3525,7 +3644,8 @@
       "explanation": "We passed the condition `groceries.indexOf(\"banana\")` to the if-statement. `groceries.indexOf(\"banana\")` returns `0`, which is a falsy value. Since the condition in the if-statement is falsy, the code in the `else` block runs, and `We don't have to buy bananas!` gets logged.\n\n</p>",
       "topics": [
         "coercion"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 121,
@@ -3556,7 +3676,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 122,
@@ -3586,7 +3707,8 @@
         "coercion",
         "data types",
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 123,
@@ -3617,7 +3739,8 @@
         "error handling",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 124,
@@ -3650,7 +3773,8 @@
         "object methods",
         "promises",
         "spread/rest"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 125,
@@ -3678,7 +3802,8 @@
       "explanation": "`myFunc` expects an object with properties `x`, `y` and `z` as its argument. Since we're only passing three separate numeric values (1, 2, 3) instead of one object with properties `x`, `y` and `z` ({x: 1, y: 2, z: 3}), `x`, `y` and `z` have their default value of `undefined`.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 126,
@@ -3706,37 +3831,39 @@
       "explanation": "With the `Intl.NumberFormat` method, we can format numeric values to any locale. We format the numeric value `130` to the `en-US` locale as a `unit` in `mile-per-hour`, which results in `130 mph`. The numeric value `300` to the `en-US` locale as a `currency` in `USD` results in `$300.00`.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 127,
       "question": "What's the output?",
-      "body": "```javascript\nconst spookyItems = ['👻', '🎃', '🕸'];\n({ item: spookyItems[3] } = { item: '💀' });\n\nconsole.log(spookyItems);\n```",
+      "body": "```javascript\nconst spookyItems = ['\ud83d\udc7b', '\ud83c\udf83', '\ud83d\udd78'];\n({ item: spookyItems[3] } = { item: '\ud83d\udc80' });\n\nconsole.log(spookyItems);\n```",
       "options": [
         {
           "key": "A",
-          "text": "`[\"👻\", \"🎃\", \"🕸\"]`"
+          "text": "`[\"\ud83d\udc7b\", \"\ud83c\udf83\", \"\ud83d\udd78\"]`"
         },
         {
           "key": "B",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", \"💀\"]`"
+          "text": "`[\"\ud83d\udc7b\", \"\ud83c\udf83\", \"\ud83d\udd78\", \"\ud83d\udc80\"]`"
         },
         {
           "key": "C",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", { item: \"💀\" }]`"
+          "text": "`[\"\ud83d\udc7b\", \"\ud83c\udf83\", \"\ud83d\udd78\", { item: \"\ud83d\udc80\" }]`"
         },
         {
           "key": "D",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", \"[object Object]\"]`"
+          "text": "`[\"\ud83d\udc7b\", \"\ud83c\udf83\", \"\ud83d\udd78\", \"[object Object]\"]`"
         }
       ],
       "answer": "B",
-      "explanation": "By destructuring objects, we can unpack values from the right-hand object, and assign the unpacked value to the value of the same property name on the left-hand object. In this case, we're assigning the value \"💀\" to `spookyItems[3]`. This means that we're modifying the `spookyItems` array, we're adding the \"💀\" to it. When logging `spookyItems`, `[\"👻\", \"🎃\", \"🕸\", \"💀\"]` gets logged.\n\n</p>",
+      "explanation": "By destructuring objects, we can unpack values from the right-hand object, and assign the unpacked value to the value of the same property name on the left-hand object. In this case, we're assigning the value \"\ud83d\udc80\" to `spookyItems[3]`. This means that we're modifying the `spookyItems` array, we're adding the \"\ud83d\udc80\" to it. When logging `spookyItems`, `[\"\ud83d\udc7b\", \"\ud83c\udf83\", \"\ud83d\udd78\", \"\ud83d\udc80\"]` gets logged.\n\n</p>",
       "topics": [
         "destructuring",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 128,
@@ -3764,7 +3891,8 @@
       "explanation": "With the `Number.isNaN` method, you can check if the value you pass is a _numeric value_ and equal to `NaN`. `name` is not a numeric value, so `Number.isNaN(name)` returns `false`. `age` is a numeric value, but is not equal to `NaN`, so `Number.isNaN(age)` returns `false`.\n\nWith the `isNaN` method, you can check if the value you pass is not a number. `name` is not a number, so `isNaN(name)` returns true. `age` is a number, so `isNaN(age)` returns `false`.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 129,
@@ -3795,7 +3923,8 @@
         "error handling",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 130,
@@ -3825,36 +3954,38 @@
         "async/await",
         "error handling",
         "promises"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 131,
       "question": "What's the output?",
-      "body": "```javascript\nconst emojis = ['🥑', ['✨', '✨', ['🍕', '🍕']]];\n\nconsole.log(emojis.flat(1));\n```",
+      "body": "```javascript\nconst emojis = ['\ud83e\udd51', ['\u2728', '\u2728', ['\ud83c\udf55', '\ud83c\udf55']]];\n\nconsole.log(emojis.flat(1));\n```",
       "options": [
         {
           "key": "A",
-          "text": "`['🥑', ['✨', '✨', ['🍕', '🍕']]]`"
+          "text": "`['\ud83e\udd51', ['\u2728', '\u2728', ['\ud83c\udf55', '\ud83c\udf55']]]`"
         },
         {
           "key": "B",
-          "text": "`['🥑', '✨', '✨', ['🍕', '🍕']]`"
+          "text": "`['\ud83e\udd51', '\u2728', '\u2728', ['\ud83c\udf55', '\ud83c\udf55']]`"
         },
         {
           "key": "C",
-          "text": "`['🥑', ['✨', '✨', '🍕', '🍕']]`"
+          "text": "`['\ud83e\udd51', ['\u2728', '\u2728', '\ud83c\udf55', '\ud83c\udf55']]`"
         },
         {
           "key": "D",
-          "text": "`['🥑', '✨', '✨', '🍕', '🍕']`"
+          "text": "`['\ud83e\udd51', '\u2728', '\u2728', '\ud83c\udf55', '\ud83c\udf55']`"
         }
       ],
       "answer": "B",
-      "explanation": "With the `flat` method, we can create a new, flattened array. The depth of the flattened array depends on the value that we pass. In this case, we passed the value `1` (which we didn't have to, that's the default value), meaning that only the arrays on the first depth will be concatenated. `['🥑']` and `['✨', '✨', ['🍕', '🍕']]` in this case. Concatenating these two arrays results in `['🥑', '✨', '✨', ['🍕', '🍕']]`.\n\n</p>",
+      "explanation": "With the `flat` method, we can create a new, flattened array. The depth of the flattened array depends on the value that we pass. In this case, we passed the value `1` (which we didn't have to, that's the default value), meaning that only the arrays on the first depth will be concatenated. `['\ud83e\udd51']` and `['\u2728', '\u2728', ['\ud83c\udf55', '\ud83c\udf55']]` in this case. Concatenating these two arrays results in `['\ud83e\udd51', '\u2728', '\u2728', ['\ud83c\udf55', '\ud83c\udf55']]`.\n\n</p>",
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 132,
@@ -3885,7 +4016,8 @@
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 133,
@@ -3916,7 +4048,8 @@
         "event loop",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 134,
@@ -3946,7 +4079,8 @@
         "generators",
         "modules",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 135,
@@ -3977,7 +4111,8 @@
         "object methods",
         "proxy",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 136,
@@ -4005,7 +4140,8 @@
       "explanation": "With `Object.seal` we can prevent new properties from being _added_, or existing properties to be _removed_.\n\nHowever, you can still modify the value of existing properties.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 137,
@@ -4034,7 +4170,8 @@
       "topics": [
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 138,
@@ -4060,7 +4197,8 @@
       ],
       "answer": "A",
       "explanation": "First, we invoked `myFunc()` without passing any arguments. Since we didn't pass arguments, `num` and `value` got their default values: num is `2`, and `value` is the returned value of the function `add`. To the `add` function, we pass `num` as an argument, which had the value of `2`. `add` returns `4`, which is the value of `value`.\n\nThen, we invoked `myFunc(3)` and passed the value `3` as the value for the argument `num`. We didn't pass an argument for `value`. Since we didn't pass a value for the `value` argument, it got the default value: the returned value of the `add` function. To `add`, we pass `num`, which has the value of `3`. `add` returns `6`, which is the value of `value`.\n\n</p>",
-      "topics": []
+      "topics": [],
+      "difficulty": "medium"
     },
     {
       "id": 139,
@@ -4090,12 +4228,13 @@
         "classes",
         "error handling",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 140,
       "question": "What's missing?",
-      "body": "```javascript\nconst teams = [\n  { name: 'Team 1', members: ['Paul', 'Lisa'] },\n  { name: 'Team 2', members: ['Laura', 'Tim'] },\n];\n\nfunction* getMembers(members) {\n  for (let i = 0; i < members.length; i++) {\n    yield members[i];\n  }\n}\n\nfunction* getTeams(teams) {\n  for (let i = 0; i < teams.length; i++) {\n    // ✨ SOMETHING IS MISSING HERE ✨\n  }\n}\n\nconst obj = getTeams(teams);\nobj.next(); // { value: \"Paul\", done: false }\nobj.next(); // { value: \"Lisa\", done: false }\n```",
+      "body": "```javascript\nconst teams = [\n  { name: 'Team 1', members: ['Paul', 'Lisa'] },\n  { name: 'Team 2', members: ['Laura', 'Tim'] },\n];\n\nfunction* getMembers(members) {\n  for (let i = 0; i < members.length; i++) {\n    yield members[i];\n  }\n}\n\nfunction* getTeams(teams) {\n  for (let i = 0; i < teams.length; i++) {\n    // \u2728 SOMETHING IS MISSING HERE \u2728\n  }\n}\n\nconst obj = getTeams(teams);\nobj.next(); // { value: \"Paul\", done: false }\nobj.next(); // { value: \"Lisa\", done: false }\n```",
       "options": [
         {
           "key": "A",
@@ -4120,7 +4259,8 @@
         "generators",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 141,
@@ -4150,24 +4290,25 @@
         "array methods",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 142,
       "question": "What's the output?",
-      "body": "```javascript\nclass Bird {\n  constructor() {\n    console.log(\"I'm a bird. 🦢\");\n  }\n}\n\nclass Flamingo extends Bird {\n  constructor() {\n    console.log(\"I'm pink. 🌸\");\n    super();\n  }\n}\n\nconst pet = new Flamingo();\n```",
+      "body": "```javascript\nclass Bird {\n  constructor() {\n    console.log(\"I'm a bird. \ud83e\udda2\");\n  }\n}\n\nclass Flamingo extends Bird {\n  constructor() {\n    console.log(\"I'm pink. \ud83c\udf38\");\n    super();\n  }\n}\n\nconst pet = new Flamingo();\n```",
       "options": [
         {
           "key": "A",
-          "text": "`I'm pink. 🌸`"
+          "text": "`I'm pink. \ud83c\udf38`"
         },
         {
           "key": "B",
-          "text": "`I'm pink. 🌸` `I'm a bird. 🦢`"
+          "text": "`I'm pink. \ud83c\udf38` `I'm a bird. \ud83e\udda2`"
         },
         {
           "key": "C",
-          "text": "`I'm a bird. 🦢` `I'm pink. 🌸`"
+          "text": "`I'm a bird. \ud83e\udda2` `I'm pink. \ud83c\udf38`"
         },
         {
           "key": "D",
@@ -4175,16 +4316,17 @@
         }
       ],
       "answer": "B",
-      "explanation": "We create the variable `pet` which is an instance of the `Flamingo` class. When we instantiate this instance, the `constructor` on `Flamingo` gets called. First, `\"I'm pink. 🌸\"` gets logged, after which we call `super()`. `super()` calls the constructor of the parent class, `Bird`. The constructor in `Bird` gets called, and logs `\"I'm a bird. 🦢\"`.\n\n</p>",
+      "explanation": "We create the variable `pet` which is an instance of the `Flamingo` class. When we instantiate this instance, the `constructor` on `Flamingo` gets called. First, `\"I'm pink. \ud83c\udf38\"` gets logged, after which we call `super()`. `super()` calls the constructor of the parent class, `Bird`. The constructor in `Bird` gets called, and logs `\"I'm a bird. \ud83e\udda2\"`.\n\n</p>",
       "topics": [
         "classes",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 143,
       "question": "Which of the options result(s) in an error?",
-      "body": "```javascript\nconst emojis = ['🎄', '🎅🏼', '🎁', '⭐'];\n\n/* 1 */ emojis.push('🦌');\n/* 2 */ emojis.splice(0, 2);\n/* 3 */ emojis = [...emojis, '🥂'];\n/* 4 */ emojis.length = 0;\n```",
+      "body": "```javascript\nconst emojis = ['\ud83c\udf84', '\ud83c\udf85\ud83c\udffc', '\ud83c\udf81', '\u2b50'];\n\n/* 1 */ emojis.push('\ud83e\udd8c');\n/* 2 */ emojis.splice(0, 2);\n/* 3 */ emojis = [...emojis, '\ud83e\udd42'];\n/* 4 */ emojis.length = 0;\n```",
       "options": [
         {
           "key": "A",
@@ -4210,7 +4352,8 @@
         "error handling",
         "generators",
         "spread/rest"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 144,
@@ -4242,7 +4385,8 @@
         "spread/rest",
         "symbols",
         "this"
-      ]
+      ],
+      "difficulty": "advance"
     },
     {
       "id": 145,
@@ -4271,37 +4415,39 @@
       "topics": [
         "array methods",
         "coercion"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 146,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getFruit(fruits) {\n\tconsole.log(fruits?.[1]?.[1])\n}\n\ngetFruit([['🍊', '🍌'], ['🍍']])\ngetFruit()\ngetFruit([['🍍'], ['🍊', '🍌']])\n```",
+      "body": "```javascript\nfunction getFruit(fruits) {\n\tconsole.log(fruits?.[1]?.[1])\n}\n\ngetFruit([['\ud83c\udf4a', '\ud83c\udf4c'], ['\ud83c\udf4d']])\ngetFruit()\ngetFruit([['\ud83c\udf4d'], ['\ud83c\udf4a', '\ud83c\udf4c']])\n```",
       "options": [
         {
           "key": "A",
-          "text": "`null`, `undefined`, 🍌"
+          "text": "`null`, `undefined`, \ud83c\udf4c"
         },
         {
           "key": "B",
-          "text": "`[]`, `null`, 🍌"
+          "text": "`[]`, `null`, \ud83c\udf4c"
         },
         {
           "key": "C",
-          "text": "`[]`, `[]`, 🍌"
+          "text": "`[]`, `[]`, \ud83c\udf4c"
         },
         {
           "key": "D",
-          "text": "`undefined`, `undefined`, 🍌"
+          "text": "`undefined`, `undefined`, \ud83c\udf4c"
         }
       ],
       "answer": "D",
-      "explanation": "The `?` allows us to optionally access deeper nested properties within objects. We're trying to log the item on index `1` within the subarray that's on index `1` of the `fruits` array. If the subarray on index `1` in the `fruits` array doesn't exist, it'll simply return `undefined`. If the subarray on index `1` in the `fruits` array exists, but this subarray doesn't have an item on its `1` index, it'll also return `undefined`. \n\nFirst, we're trying to log the second item in the `['🍍']` subarray of `[['🍊', '🍌'], ['🍍']]`. This subarray only contains one item, which means there is no item on index `1`, and returns `undefined`.\n\nThen, we're invoking the `getFruits` function without passing a value as an argument, which means that `fruits` has a value of `undefined` by default. Since we're conditionally chaining the item on index `1` of`fruits`, it returns `undefined` since this item on index `1` does not exist. \n\nLastly, we're trying to log the second item in the `['🍊', '🍌']` subarray of `['🍍'], ['🍊', '🍌']`. The item on index `1` within this subarray is `🍌`, which gets logged.\n\n</p>",
+      "explanation": "The `?` allows us to optionally access deeper nested properties within objects. We're trying to log the item on index `1` within the subarray that's on index `1` of the `fruits` array. If the subarray on index `1` in the `fruits` array doesn't exist, it'll simply return `undefined`. If the subarray on index `1` in the `fruits` array exists, but this subarray doesn't have an item on its `1` index, it'll also return `undefined`. \n\nFirst, we're trying to log the second item in the `['\ud83c\udf4d']` subarray of `[['\ud83c\udf4a', '\ud83c\udf4c'], ['\ud83c\udf4d']]`. This subarray only contains one item, which means there is no item on index `1`, and returns `undefined`.\n\nThen, we're invoking the `getFruits` function without passing a value as an argument, which means that `fruits` has a value of `undefined` by default. Since we're conditionally chaining the item on index `1` of`fruits`, it returns `undefined` since this item on index `1` does not exist. \n\nLastly, we're trying to log the second item in the `['\ud83c\udf4a', '\ud83c\udf4c']` subarray of `['\ud83c\udf4d'], ['\ud83c\udf4a', '\ud83c\udf4c']`. The item on index `1` within this subarray is `\ud83c\udf4c`, which gets logged.\n\n</p>",
       "topics": [
         "error handling",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 147,
@@ -4333,7 +4479,8 @@
         "object methods",
         "prototypes",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 148,
@@ -4361,50 +4508,52 @@
       "explanation": "The `updateUser` function updates the values of the `email` and `password` properties on user, if their values are passed to the function, after which the function returns the `user` object. The returned value of the `updateUser` function is the `user` object, which means that the value of updatedUser is a reference to the same `user` object that `user` points to. `updatedUser === user` equals `true`.\n\n</p>",
       "topics": [
         "object methods"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 149,
       "question": "What's the output?",
-      "body": "```javascript\nconst fruit = ['🍌', '🍊', '🍎']\n\nfruit.slice(0, 1)\nfruit.splice(0, 1)\nfruit.unshift('🍇')\n\nconsole.log(fruit)\n```",
+      "body": "```javascript\nconst fruit = ['\ud83c\udf4c', '\ud83c\udf4a', '\ud83c\udf4e']\n\nfruit.slice(0, 1)\nfruit.splice(0, 1)\nfruit.unshift('\ud83c\udf47')\n\nconsole.log(fruit)\n```",
       "options": [
         {
           "key": "A",
-          "text": "`['🍌', '🍊', '🍎']`"
+          "text": "`['\ud83c\udf4c', '\ud83c\udf4a', '\ud83c\udf4e']`"
         },
         {
           "key": "B",
-          "text": "`['🍊', '🍎']`"
+          "text": "`['\ud83c\udf4a', '\ud83c\udf4e']`"
         },
         {
           "key": "C",
-          "text": "`['🍇', '🍊', '🍎']`"
+          "text": "`['\ud83c\udf47', '\ud83c\udf4a', '\ud83c\udf4e']`"
         },
         {
           "key": "D",
-          "text": "`['🍇', '🍌', '🍊', '🍎']`"
+          "text": "`['\ud83c\udf47', '\ud83c\udf4c', '\ud83c\udf4a', '\ud83c\udf4e']`"
         }
       ],
       "answer": "C",
-      "explanation": "First, we invoke the `slice` method on the fruit array. The slice method does not modify the original array, but returns the value that it sliced off the array: the banana emoji.\nThen, we invoke the `splice` method on the fruit array. The splice method does modify the original array, which means that the fruit array now consists of `['🍊', '🍎']`.\nAt last, we invoke the `unshift` method on the `fruit` array, which modifies the original array by adding the provided value, ‘🍇’ in this case,  as the first element in the array.  The fruit array now consists of `['🍇', '🍊', '🍎']`.\n\n</p>",
+      "explanation": "First, we invoke the `slice` method on the fruit array. The slice method does not modify the original array, but returns the value that it sliced off the array: the banana emoji.\nThen, we invoke the `splice` method on the fruit array. The splice method does modify the original array, which means that the fruit array now consists of `['\ud83c\udf4a', '\ud83c\udf4e']`.\nAt last, we invoke the `unshift` method on the `fruit` array, which modifies the original array by adding the provided value, \u2018\ud83c\udf47\u2019 in this case,  as the first element in the array.  The fruit array now consists of `['\ud83c\udf47', '\ud83c\udf4a', '\ud83c\udf4e']`.\n\n</p>",
       "topics": [
         "array methods",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 150,
       "question": "What's the output?",
-      "body": "```javascript\nconst animals = {};\nlet dog = { emoji: '🐶' }\nlet cat = { emoji: '🐈' }\n\nanimals[dog] = { ...dog, name: \"Mara\" }\nanimals[cat] = { ...cat, name: \"Sara\" }\n\nconsole.log(animals[dog])\n```",
+      "body": "```javascript\nconst animals = {};\nlet dog = { emoji: '\ud83d\udc36' }\nlet cat = { emoji: '\ud83d\udc08' }\n\nanimals[dog] = { ...dog, name: \"Mara\" }\nanimals[cat] = { ...cat, name: \"Sara\" }\n\nconsole.log(animals[dog])\n```",
       "options": [
         {
           "key": "A",
-          "text": "`{ emoji: \"🐶\", name: \"Mara\" }`"
+          "text": "`{ emoji: \"\ud83d\udc36\", name: \"Mara\" }`"
         },
         {
           "key": "B",
-          "text": "`{ emoji: \"🐈\", name: \"Sara\" }`"
+          "text": "`{ emoji: \"\ud83d\udc08\", name: \"Sara\" }`"
         },
         {
           "key": "C",
@@ -4416,11 +4565,12 @@
         }
       ],
       "answer": "B",
-      "explanation": "Object keys are converted to strings. \n\nSince the value of  `dog` is an object,  `animals[dog]` actually means that we’re creating a new property called `\"[object Object]\"` equal to the new object. `animals[\"[object Object]\"]` is now equal to `{ emoji: \"🐶\", name: \"Mara\"}`.\n\n`cat` is also an object, which means that `animals[cat]` actually means that we’re overwriting the value of  `animals[\"[object Object]\"]` with the new cat properties. \n\nLogging `animals[dog]`, or actually `animals[\"[object Object]\"]` since converting the `dog` object to a string results `\"[object Object]\"`, returns the `{ emoji: \"🐈\", name: \"Sara\" }`.\n\n</p>",
+      "explanation": "Object keys are converted to strings. \n\nSince the value of  `dog` is an object,  `animals[dog]` actually means that we\u2019re creating a new property called `\"[object Object]\"` equal to the new object. `animals[\"[object Object]\"]` is now equal to `{ emoji: \"\ud83d\udc36\", name: \"Mara\"}`.\n\n`cat` is also an object, which means that `animals[cat]` actually means that we\u2019re overwriting the value of  `animals[\"[object Object]\"]` with the new cat properties. \n\nLogging `animals[dog]`, or actually `animals[\"[object Object]\"]` since converting the `dog` object to a string results `\"[object Object]\"`, returns the `{ emoji: \"\ud83d\udc08\", name: \"Sara\" }`.\n\n</p>",
       "topics": [
         "object methods",
         "spread/rest"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 151,
@@ -4451,7 +4601,8 @@
         "object methods",
         "scope",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 152,
@@ -4476,14 +4627,15 @@
         }
       ],
       "answer": "D",
-      "explanation": "The `Promise.all` method runs the passed promises in parallel. If one promise fails, the `Promise.all` method _rejects_ with the value of the rejected promise. In this case, `promise3` is rejected with the value `\"Third\"`. We’re catching the rejected value in the chained `catch` method on the `runPromises` invocation to catch any errors  within the `runPromises` function. Only `\"Third\"` gets logged, since `promise3` is rejected with this value.\n\n</p>",
+      "explanation": "The `Promise.all` method runs the passed promises in parallel. If one promise fails, the `Promise.all` method _rejects_ with the value of the rejected promise. In this case, `promise3` is rejected with the value `\"Third\"`. We\u2019re catching the rejected value in the chained `catch` method on the `runPromises` invocation to catch any errors  within the `runPromises` function. Only `\"Third\"` gets logged, since `promise3` is rejected with this value.\n\n</p>",
       "topics": [
         "async/await",
         "error handling",
         "object methods",
         "promises",
         "this"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 153,
@@ -4508,14 +4660,15 @@
         }
       ],
       "answer": "C",
-      "explanation": "The `fromEntries` method turns a 2d array into an object. The first element in each subarray will be the key, and the second element in each subarray will be the value. In this case, we’re mapping over the `keys` array, which returns an array that the first element is the item on the key array on the current index, and the second element is the item of the values array on the current index. \n\nThis creates an array of subarrays containing the correct keys and values, which results in `{ name: \"Lydia\", age: 22 }`\n\n</p>",
+      "explanation": "The `fromEntries` method turns a 2d array into an object. The first element in each subarray will be the key, and the second element in each subarray will be the value. In this case, we\u2019re mapping over the `keys` array, which returns an array that the first element is the item on the key array on the current index, and the second element is the item of the values array on the current index. \n\nThis creates an array of subarrays containing the correct keys and values, which results in `{ name: \"Lydia\", age: 22 }`\n\n</p>",
       "topics": [
         "array methods",
         "generators",
         "map/set",
         "object methods",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     },
     {
       "id": 154,
@@ -4546,7 +4699,8 @@
         "error handling",
         "map/set",
         "object methods"
-      ]
+      ],
+      "difficulty": "medium"
     },
     {
       "id": 155,
@@ -4576,7 +4730,8 @@
         "coercion",
         "data types",
         "this"
-      ]
+      ],
+      "difficulty": "easy"
     }
   ]
 }

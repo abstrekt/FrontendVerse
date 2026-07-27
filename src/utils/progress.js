@@ -11,6 +11,76 @@ export const EMPTY_PROGRESS = {
   },
 };
 
+export const EMPTY_SESSION = null;
+
+export const DIFFICULTY_LEVELS = ['easy', 'medium', 'advance'];
+
+export const DIFFICULTY_LABELS = {
+  easy: 'Easy',
+  medium: 'Medium',
+  advance: 'Advance',
+};
+
+export function createSession({
+  queue,
+  mode = 'all',
+  topics = [],
+  difficulties = [],
+  score = 0,
+  answered = 0,
+  answeredIds = [],
+  currentIndex = 0,
+  sessionTotal,
+}) {
+  return {
+    answeredIds,
+    score,
+    answered,
+    currentIndex,
+    queueIds: queue.map((q) => q.id),
+    sessionTotal: sessionTotal ?? queue.length,
+    mode,
+    selectedTopics: topics,
+    selectedDifficulties: difficulties,
+  };
+}
+
+export function filterQuestions(questions, { topics = [], difficulties = [] } = {}) {
+  return questions.filter((q) => {
+    const topicOk =
+      topics.length === 0 ||
+      topics.some((t) => (q.topics || []).includes(t));
+    const diffOk =
+      difficulties.length === 0 ||
+      difficulties.includes(q.difficulty);
+    return topicOk && diffOk;
+  });
+}
+
+export function restoreQueue(session, questions) {
+  if (!session?.queueIds?.length || !questions.length) return [];
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  return session.queueIds.map((id) => byId.get(id)).filter(Boolean);
+}
+
+export function isRestorableSession(session, questions) {
+  if (!session?.queueIds?.length) return false;
+  return restoreQueue(session, questions).length > 0;
+}
+
+export function filterExcludedQuestions(pool, excludedIds) {
+  const excluded = excludedIds instanceof Set ? excludedIds : new Set(excludedIds);
+  return pool.filter((q) => !excluded.has(q.id));
+}
+
+export function sanitizeSessionQueue(session, skippedIds) {
+  if (!session) return session;
+  const skipped = skippedIds instanceof Set ? skippedIds : new Set(skippedIds);
+  const queueIds = session.queueIds.filter((id) => !skipped.has(id));
+  const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
+  return { ...session, queueIds, currentIndex };
+}
+
 const MAX_SESSIONS = 30;
 const WEAK_THRESHOLD = 70;
 const MIN_TOPIC_SAMPLES = 3;
@@ -80,6 +150,61 @@ export function recordSession(progress, sessionMeta) {
   return { ...progress, sessions };
 }
 
+export function getTopicCompletion(progress, questions) {
+  const topicMap = new Map();
+
+  for (const q of questions) {
+    const topics = q.topics?.length ? q.topics : ['untagged'];
+    const answered = Boolean(progress?.answers?.[String(q.id)]);
+
+    for (const topic of topics) {
+      const prev = topicMap.get(topic) || { solved: 0, total: 0 };
+      topicMap.set(topic, {
+        solved: prev.solved + (answered ? 1 : 0),
+        total: prev.total + 1,
+      });
+    }
+  }
+
+  for (const [topic, { solved, total }] of topicMap) {
+    topicMap.set(topic, {
+      solved,
+      total,
+      pct: total > 0 ? Math.round((solved / total) * 100) : 0,
+    });
+  }
+
+  return topicMap;
+}
+
+export function getDifficultyCompletion(progress, questions) {
+  const diffMap = new Map(
+    DIFFICULTY_LEVELS.map((difficulty) => [difficulty, { solved: 0, total: 0, pct: 0 }])
+  );
+
+  for (const q of questions) {
+    const difficulty = q.difficulty;
+    if (!diffMap.has(difficulty)) continue;
+
+    const answered = Boolean(progress?.answers?.[String(q.id)]);
+    const prev = diffMap.get(difficulty);
+    diffMap.set(difficulty, {
+      solved: prev.solved + (answered ? 1 : 0),
+      total: prev.total + 1,
+    });
+  }
+
+  for (const [difficulty, { solved, total }] of diffMap) {
+    diffMap.set(difficulty, {
+      solved,
+      total,
+      pct: total > 0 ? Math.round((solved / total) * 100) : 0,
+    });
+  }
+
+  return diffMap;
+}
+
 export function getTopicAccuracy(progress, questions) {
   const topicMap = {};
 
@@ -117,6 +242,20 @@ export function getMissedQuestionIds(progress) {
   return Object.entries(progress.answers)
     .filter(([, entry]) => entry.lastCorrect === false || entry.wrong > entry.correct)
     .map(([id]) => Number(id));
+}
+
+/** @returns {'correct' | 'wrong' | 'skipped' | 'unanswered'} */
+export function getQuestionStatus(questionId, progress, skippedIds = []) {
+  const skipped = skippedIds instanceof Set ? skippedIds : new Set(skippedIds);
+  if (skipped.has(questionId)) return 'skipped';
+
+  const entry = progress?.answers?.[String(questionId)];
+  if (!entry) return 'unanswered';
+  if (entry.lastCorrect === false) return 'wrong';
+  if (entry.lastCorrect === true) return 'correct';
+  if (entry.wrong > entry.correct) return 'wrong';
+  if (entry.correct > 0) return 'correct';
+  return 'unanswered';
 }
 
 export function getBestPct(sessions) {
