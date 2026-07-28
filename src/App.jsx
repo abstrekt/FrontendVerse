@@ -2,11 +2,16 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import FilterPanel from './components/FilterPanel';
+import LearningsView from './components/LearningsView';
+import LearningsPanel from './components/LearningsPanel';
 import QuizQuestion from './components/QuizQuestion';
 import QuestionListView from './components/QuestionListView';
 import Results from './components/Results';
 import MobileProgressBar from './components/MobileProgressBar';
+import OutputQuizQuestion from './components/OutputQuizQuestion';
+import OutputResults from './components/OutputResults';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useAppRoute } from './hooks/useAppRoute';
 import {
   EMPTY_PROGRESS,
   EMPTY_SESSION,
@@ -26,20 +31,46 @@ import {
   getLifetimeAccuracy,
   smartShuffle,
 } from './utils/progress';
+import {
+  EMPTY_OUTPUT_PROGRESS,
+  EMPTY_OUTPUT_SESSION,
+  createOutputSession,
+  restoreOutputQueue,
+  isRestorableOutputSession,
+  buildOutputQueue,
+  recordOutputAnswer,
+  recordOutputSession,
+  getOutputBestPct,
+  getOutputLifetimeAccuracy,
+  getOutputMissedCount,
+  getOutputCompletedCount,
+  isOutputQuestionCompleted,
+} from './utils/outputProgress';
 import questionsData from '../questions.json';
+import learningsData from '../data/learnings.json';
+import outputQuestionsData from '../data/output-questions.json';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
-  const [viewMode, setViewMode] = useState('quiz'); // 'quiz' | 'list'
+  const [learnings, setLearnings] = useState([]);
+  const [outputQuestions, setOutputQuestions] = useState([]);
+  const [outputSourceUrl, setOutputSourceUrl] = useState('');
+  const { route, navigate, setSection, setViewMode, setLearningId } = useAppRoute();
+  const activeSection = route.section;
+  const viewMode = route.viewMode;
 
   const [theme, setTheme] = useLocalStorage('quiz-theme', 'light');
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
   const [quizSession, setQuizSession] = useLocalStorage('quiz-session', EMPTY_SESSION);
   const [skippedIds, setSkippedIds] = useLocalStorage('quiz-skipped', []);
+  const [outputProgress, setOutputProgress] = useLocalStorage('output-quiz-progress', EMPTY_OUTPUT_PROGRESS);
+  const [outputSession, setOutputSession] = useLocalStorage('output-quiz-session', EMPTY_OUTPUT_SESSION);
+  const [outputIncludeCompleted, setOutputIncludeCompleted] = useLocalStorage('output-quiz-include-completed', true);
 
   const sessionRecordedRef = useRef(false);
+  const outputSessionRecordedRef = useRef(false);
   const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
 
   const shuffled = useMemo(
@@ -59,9 +90,44 @@ export default function App() {
   const sessionTotal = quizSession?.sessionTotal ?? 0;
   const remaining = shuffled.length - currentIndex;
 
+  const outputShuffled = useMemo(
+    () => restoreOutputQueue(outputSession, outputQuestions),
+    [outputSession, outputQuestions]
+  );
+  const outputScore = outputSession?.score ?? 0;
+  const outputAnswered = outputSession?.answered ?? 0;
+  const outputCurrentIndex = outputSession?.currentIndex ?? 0;
+  const outputSessionTotal = outputSession?.sessionTotal ?? 0;
+  const outputRemaining = outputShuffled.length - outputCurrentIndex;
+  const currentOutputQuestion = outputShuffled.length > 0 ? outputShuffled[outputCurrentIndex] : null;
+  const isOutputFinished = outputShuffled.length > 0 && outputCurrentIndex >= outputShuffled.length;
+  const outputSessionCaughtUp =
+    outputQuestions.length > 0 && outputShuffled.length === 0;
+
+  const selectedLearning = useMemo(() => {
+    if (activeSection !== 'learnings') return null;
+    if (route.learningId) {
+      return learnings.find((item) => item.id === route.learningId) ?? learnings[0] ?? null;
+    }
+    return learnings[0] ?? null;
+  }, [learnings, route.learningId, activeSection]);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      navigate('/mcq', { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (activeSection !== 'learnings' || !learnings.length) return;
+    if (route.learningId && !learnings.some((item) => item.id === route.learningId)) {
+      setLearningId(learnings[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, learnings, setLearningId]);
 
   const weakTopics = useMemo(
     () => getWeakTopics(progress, questions),
@@ -108,9 +174,22 @@ export default function App() {
     [questions, progress, skippedIdSet]
   );
 
+  const buildOutputQuizQueue = useCallback(
+    (pool, progressOverride = outputProgress, includeCompleted = outputIncludeCompleted) => {
+      const source = pool.length > 0 ? pool : outputQuestions;
+      return buildOutputQueue(source, progressOverride, { includeCompleted });
+    },
+    [outputQuestions, outputProgress, outputIncludeCompleted]
+  );
+
   useEffect(() => {
     const allQuestions = questionsData.questions;
+    const allLearnings = learningsData.learnings;
+    const allOutputQuestions = outputQuestionsData.questions;
     setQuestions(allQuestions);
+    setLearnings(allLearnings);
+    setOutputQuestions(allOutputQuestions);
+    setOutputSourceUrl(outputQuestionsData.source);
 
     setQuizSession((saved) => {
       const sanitized = sanitizeSessionQueue(saved, skippedIds);
@@ -119,6 +198,16 @@ export default function App() {
       }
       const { queue } = shufflePool(allQuestions, new Set(), progress, new Set(skippedIds));
       return createSession({ queue, mode: 'all', topics: [], difficulties: [] });
+    });
+
+    setOutputSession((saved) => {
+      if (isRestorableOutputSession(saved, allOutputQuestions)) {
+        return saved;
+      }
+      const queue = buildOutputQueue(allOutputQuestions, outputProgress, {
+        includeCompleted: outputIncludeCompleted,
+      });
+      return createOutputSession({ queue });
     });
 
     setLoading(false);
@@ -142,6 +231,21 @@ export default function App() {
       })
     );
   }, [isFinished, score, sessionTotal, mode, selectedTopics, selectedDifficulties, quizSession, setProgress]);
+
+  useEffect(() => {
+    if (!isOutputFinished || outputSessionRecordedRef.current) return;
+    outputSessionRecordedRef.current = true;
+
+    const pct = outputSessionTotal > 0 ? Math.round((outputScore / outputSessionTotal) * 100) : 0;
+    setOutputProgress((prev) =>
+      recordOutputSession(prev, {
+        score: outputScore,
+        total: outputSessionTotal,
+        pct,
+        questionIds: outputSession?.queueIds ?? [],
+      })
+    );
+  }, [isOutputFinished, outputScore, outputSessionTotal, outputSession, setOutputProgress]);
 
   const applySession = useCallback(
     (pool, nextMode, topics, difficulties, { resetSession = false } = {}) => {
@@ -279,7 +383,7 @@ export default function App() {
         };
       });
     },
-    [questions, setQuizSession, setSkippedIds]
+    [questions, setQuizSession, setSkippedIds, setViewMode]
   );
 
   const handleClearProgress = useCallback(() => {
@@ -290,9 +394,85 @@ export default function App() {
     sessionRecordedRef.current = false;
   }, [shufflePool, filteredQuestions, setProgress, setQuizSession]);
 
+  const startOutputQuiz = useCallback(
+    ({ resetSession = false, includeCompleted: includeCompletedOverride } = {}) => {
+      const includeCompleted = includeCompletedOverride ?? outputIncludeCompleted;
+      const nextScore = resetSession ? 0 : (outputSession?.score ?? 0);
+      const nextAnswered = resetSession ? 0 : (outputSession?.answered ?? 0);
+      const nextSessionTotal = resetSession ? undefined : outputSession?.sessionTotal;
+
+      const queue = buildOutputQuizQueue(outputQuestions, outputProgress, includeCompleted);
+
+      setOutputSession(
+        createOutputSession({
+          queue,
+          score: nextScore,
+          answered: nextAnswered,
+          answeredIds: resetSession ? [] : [...(outputSession?.answeredIds ?? [])],
+          currentIndex: 0,
+          sessionTotal: resetSession ? queue.length : nextSessionTotal,
+        })
+      );
+      outputSessionRecordedRef.current = false;
+    },
+    [buildOutputQuizQueue, outputQuestions, outputProgress, outputIncludeCompleted, outputSession, setOutputSession]
+  );
+
+  const handleOutputCheck = useCallback(
+    (correct, question) => {
+      setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
+      setOutputSession((session) => {
+        if (!session) return session;
+        const answeredIds = session.answeredIds.includes(question.id)
+          ? session.answeredIds
+          : [...session.answeredIds, question.id];
+        return {
+          ...session,
+          answeredIds,
+          answered: session.answered + 1,
+          score: session.score + (correct ? 1 : 0),
+        };
+      });
+    },
+    [setOutputProgress, setOutputSession]
+  );
+
+  const handleOutputNext = useCallback(() => {
+    setOutputSession((session) => {
+      if (!session) return session;
+      return { ...session, currentIndex: session.currentIndex + 1 };
+    });
+  }, [setOutputSession]);
+
+  const handleOutputRestart = useCallback(() => {
+    startOutputQuiz({ resetSession: true });
+  }, [startOutputQuiz]);
+
+  const handleOutputIncludeCompletedChange = useCallback(
+    (value) => {
+      setOutputIncludeCompleted(value);
+      startOutputQuiz({ resetSession: true, includeCompleted: value });
+    },
+    [setOutputIncludeCompleted, startOutputQuiz]
+  );
+
+  const handleOutputClearProgress = useCallback(() => {
+    if (!window.confirm('Clear all output quiz progress and history?')) return;
+    setOutputProgress(EMPTY_OUTPUT_PROGRESS);
+    const queue = buildOutputQuizQueue(outputQuestions, EMPTY_OUTPUT_PROGRESS);
+    setOutputSession(createOutputSession({ queue }));
+    outputSessionRecordedRef.current = false;
+  }, [buildOutputQuizQueue, outputQuestions, setOutputProgress, setOutputSession]);
+
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Enter' && !isFinished && !loading) {
+      const target = e.target;
+      const isEditable =
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLInputElement ||
+        target?.isContentEditable;
+
+      if (e.key === 'Enter' && !isFinished && !loading && !isEditable) {
         e.preventDefault();
         const btn = document.querySelector('.next-btn');
         if (btn) btn.click();
@@ -337,6 +517,77 @@ export default function App() {
 
   const lifetimeAccuracy = getLifetimeAccuracy(progress.stats);
   const bestPct = getBestPct(progress.sessions);
+  const outputLifetimeAccuracy = getOutputLifetimeAccuracy(outputProgress.stats);
+  const outputBestPct = getOutputBestPct(outputProgress.sessions);
+  const outputMissedCount = getOutputMissedCount(outputProgress);
+  const outputCompletedCount = getOutputCompletedCount(outputProgress);
+
+  function outputContent() {
+    if (loading) {
+      return <div className="quiz-container loading"><p>Loading questions...</p></div>;
+    }
+
+    if (outputSessionCaughtUp) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>
+              {outputIncludeCompleted
+                ? 'No output questions available in this session. Start a new quiz to continue.'
+                : 'All output questions are completed. Turn on "Include completed questions" to keep practicing.'}
+            </p>
+            <button onClick={handleOutputRestart}>Start new quiz</button>
+          </div>
+        </div>
+      );
+    }
+
+    if (outputQuestions.length === 0) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>No output questions available.</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (isOutputFinished) {
+      return (
+        <div className="quiz-container">
+          <OutputResults
+            score={outputScore}
+            totalQuestions={outputSessionTotal}
+            sessionCount={outputProgress.sessions.length}
+            bestPct={outputBestPct}
+            missedCount={outputMissedCount}
+            onRestart={handleOutputRestart}
+          />
+        </div>
+      );
+    }
+
+    if (currentOutputQuestion) {
+      return (
+        <OutputQuizQuestion
+          key={outputCurrentIndex}
+          question={currentOutputQuestion}
+          remaining={outputRemaining}
+          sessionTotal={outputSessionTotal}
+          score={outputScore}
+          answered={outputAnswered}
+          isCompleted={isOutputQuestionCompleted(outputProgress, currentOutputQuestion.id)}
+          highlight={syntaxHighlight}
+          theme={theme}
+          sourceUrl={outputSourceUrl}
+          onCheck={handleOutputCheck}
+          onNext={handleOutputNext}
+        />
+      );
+    }
+
+    return null;
+  }
 
   function centerContent() {
     if (loading) {
@@ -449,7 +700,11 @@ export default function App() {
       }
       sidebar={
           <Sidebar
+            activeSection={activeSection}
+            onSectionChange={setSection}
             totalQuestions={questions.length}
+            learningsCount={learnings.length}
+            outputQuestionsCount={outputQuestions.length}
             filteredCount={
               selectedTopics.length > 0 || selectedDifficulties.length > 0
                 ? filteredQuestions.length
@@ -465,49 +720,124 @@ export default function App() {
             onReviewMistakes={handleStartReview}
             onBackToAll={handleBackToAll}
             onClearProgress={handleClearProgress}
+            outputLifetimeAccuracy={outputLifetimeAccuracy}
+            outputSessionCount={outputProgress.sessions.length}
+            outputBestPct={outputBestPct}
+            outputMissedCount={outputMissedCount}
+            outputCompletedCount={outputCompletedCount}
+            outputIncludeCompleted={outputIncludeCompleted}
+            onOutputIncludeCompletedChange={handleOutputIncludeCompletedChange}
+            onOutputRestart={handleOutputRestart}
+            onOutputClearProgress={handleOutputClearProgress}
+            theme={theme}
+            onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            syntaxHighlight={syntaxHighlight}
+            onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
           />
         }
         center={
           <div className="center-with-toggle">
-            <div className="view-toggle" role="tablist" aria-label="View mode">
+            <div className="section-toggle" role="tablist" aria-label="Section">
               <button
                 type="button"
                 role="tab"
-                aria-selected={viewMode === 'quiz'}
-                className={`view-toggle-btn${viewMode === 'quiz' ? ' active' : ''}`}
-                onClick={() => setViewMode('quiz')}
+                aria-selected={activeSection === 'mcq'}
+                className={`section-toggle-btn${activeSection === 'mcq' ? ' active' : ''}`}
+                onClick={() => setSection('mcq', { viewMode })}
               >
-                Quiz
+                MCQs
               </button>
               <button
                 type="button"
                 role="tab"
-                aria-selected={viewMode === 'list'}
-                className={`view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
-                onClick={() => setViewMode('list')}
+                aria-selected={activeSection === 'learnings'}
+                className={`section-toggle-btn${activeSection === 'learnings' ? ' active' : ''}`}
+                onClick={() => setSection('learnings')}
               >
-                List
+                Learnings
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeSection === 'output'}
+                className={`section-toggle-btn${activeSection === 'output' ? ' active' : ''}`}
+                onClick={() => setSection('output')}
+              >
+                Output
               </button>
             </div>
-            {centerContent()}
+
+            {activeSection === 'mcq' && (
+              <div className="view-toggle" role="tablist" aria-label="View mode">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === 'quiz'}
+                  className={`view-toggle-btn${viewMode === 'quiz' ? ' active' : ''}`}
+                  onClick={() => setViewMode('quiz')}
+                >
+                  Quiz
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === 'list'}
+                  className={`view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
+                  onClick={() => setViewMode('list')}
+                >
+                  List
+                </button>
+              </div>
+            )}
+
+            {activeSection === 'learnings' ? (
+              <LearningsView
+                learning={selectedLearning}
+                learnings={learnings}
+                selectedLearningId={selectedLearning?.id ?? null}
+                onSelectLearning={setLearningId}
+                highlight={syntaxHighlight}
+                theme={theme}
+              />
+            ) : activeSection === 'output' ? (
+              outputContent()
+            ) : (
+              centerContent()
+            )}
           </div>
         }
         panel={
-          <div className="topics-panel">
-            <FilterPanel
-              questions={questions}
-              progress={progress}
-              selectedTopics={selectedTopics}
-              selectedDifficulties={selectedDifficulties}
-              onToggleTopic={handleToggleTopic}
-              onToggleDifficulty={handleToggleDifficulty}
-              onClear={handleClearFilters}
-              theme={theme}
-              onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              syntaxHighlight={syntaxHighlight}
-              onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
-            />
-          </div>
+          activeSection === 'learnings' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={learnings}
+                selectedLearningId={selectedLearning?.id ?? null}
+                onSelect={setLearningId}
+              />
+            </div>
+          ) : activeSection === 'output' ? (
+            <div className="topics-panel output-panel">
+              <div className="panel-subheader output-panel-header">
+                <span>Javascript output</span>
+                <span className="learnings-count">{outputQuestions.length}</span>
+              </div>
+              <p className="output-panel-copy">
+                Predict console output for each snippet. Answers are validated by running the code in your browser.
+              </p>
+            </div>
+          ) : (
+            <div className="topics-panel">
+              <FilterPanel
+                questions={questions}
+                progress={progress}
+                selectedTopics={selectedTopics}
+                selectedDifficulties={selectedDifficulties}
+                onToggleTopic={handleToggleTopic}
+                onToggleDifficulty={handleToggleDifficulty}
+                onClear={handleClearFilters}
+              />
+            </div>
+          )
         }
       />
   );

@@ -9,10 +9,6 @@ export default function FilterPanel({
   onToggleTopic,
   onToggleDifficulty,
   onClear,
-  theme,
-  onToggleTheme,
-  syntaxHighlight,
-  onToggleHighlight,
 }) {
   const topicCompletion = useMemo(
     () => getTopicCompletion(progress, questions),
@@ -46,23 +42,6 @@ export default function FilterPanel({
 
   return (
     <>
-      <div className="panel-floating-controls">
-        <button
-          className={`panel-control-btn${syntaxHighlight ? ' active' : ''}`}
-          onClick={onToggleHighlight}
-          title="Toggle syntax highlighting"
-        >
-          {'{ }'}
-        </button>
-        <button
-          className="panel-control-btn"
-          onClick={onToggleTheme}
-          title="Toggle theme"
-        >
-          {theme === 'light' ? '☽' : '☀'}
-        </button>
-      </div>
-
       <div className="difficulty-panel">
         <div className="panel-subheader">
           <span>Difficulty</span>

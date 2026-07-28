@@ -1,0 +1,669 @@
+{
+  "source": "https://github.com/surbhidighe/Javascript-Output-Based-Questions",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet arr = [1, 2, 3, 4, 5, -6, 7];\narr.length = 0;\nconsole.log(arr);\n```",
+      "code": "let arr = [1, 2, 3, 4, 5, -6, 7];\narr.length = 0;\nconsole.log(arr);",
+      "expectedLines": [
+        "[]"
+      ],
+      "explanation": "The length of the array has been set to 0, so the array becomes empty.",
+      "readmeOutput": "[ ]",
+      "async": false
+    },
+    {
+      "id": 2,
+      "question": "What will be the output?",
+      "body": "```javascript\nx = 10;\nconsole.log(x);\nvar x;\n```",
+      "code": "x = 10;\nconsole.log(x);\nvar x;",
+      "expectedLines": [
+        "10"
+      ],
+      "explanation": "The declaration of the variable x is hoisted to the top of its scope.",
+      "readmeOutput": "10",
+      "async": false
+    },
+    {
+      "id": 3,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet a = { x: 1, y: 2 }\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);\n```",
+      "code": "let a = { x: 1, y: 2 }\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);",
+      "expectedLines": [
+        "{\"x\":3,\"y\":2}",
+        "{\"x\":3,\"y\":2}"
+      ],
+      "explanation": "'a' and 'b' both are pointing to the same reference.",
+      "readmeOutput": "{ x: 3, y: 2 } { x: 3, y: 2 }",
+      "async": false
+    },
+    {
+      "id": 4,
+      "question": "What will be the output?",
+      "body": "```javascript\nfor(var i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}\n```",
+      "code": "for(var i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}",
+      "expectedLines": [
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10",
+        "value is 10"
+      ],
+      "explanation": "\"var\" has a function scope, and there will be only one shared binding for the iterations. By the time the setTimeout function gets executed, the for loop has already completed and the value of the variable i is 10.",
+      "readmeOutput": "10 times, \"value is 10\"",
+      "async": true
+    },
+    {
+      "id": 5,
+      "question": "What will be the output?",
+      "body": "```javascript\nfor(let i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}\n```",
+      "code": "for(let i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}",
+      "expectedLines": [
+        "value is 0",
+        "value is 1",
+        "value is 2",
+        "value is 3",
+        "value is 4",
+        "value is 5",
+        "value is 6",
+        "value is 7",
+        "value is 8",
+        "value is 9"
+      ],
+      "explanation": "\"let\" has a block scope, and a new binding will be created for each iteration. Here, a new variable i is created and has a different value for each iteration of the loop.",
+      "readmeOutput": "10 times \"value is\" followed by the value of i in each iteration, from 0 to 9",
+      "async": true
+    },
+    {
+      "id": 6,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction hello() {\n  console.log(\"1\");\n    setTimeout(() => {\n        console.log(\"2\");\n    })\n  console.log(\"3\");\n}\nhello();\n```",
+      "code": "function hello() {\n  console.log(\"1\");\n    setTimeout(() => {\n        console.log(\"2\");\n    })\n  console.log(\"3\");\n}\nhello();",
+      "expectedLines": [
+        "1",
+        "3",
+        "2"
+      ],
+      "explanation": "console.log(\"1\") statement logs \"1\" to the console. Then setTimeout() function is set to execute the callback function in the next event loop iteration and logs \"3\" to the console.",
+      "readmeOutput": "\"1\" followed by \"3\", and then after a small delay, \"2\"",
+      "async": true
+    },
+    {
+      "id": 7,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet f = \"8\";\nlet a = 1;\nconsole.log((+f)+a+1);\n```",
+      "code": "let f = \"8\";\nlet a = 1;\nconsole.log((+f)+a+1);",
+      "expectedLines": [
+        "10"
+      ],
+      "explanation": "The expression (+f) is a shorthand way to convert the string value of f to a number. Therefore, (+f) evaluates to 8.",
+      "readmeOutput": "10",
+      "async": false
+    },
+    {
+      "id": 8,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet a = 10;\nif(true){\n   let a = 20;\n   console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");\n```",
+      "code": "let a = 10;\nif(true){\n   let a = 20;\n   console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");",
+      "expectedLines": [
+        "20 inside",
+        "10 outside"
+      ],
+      "explanation": "The variable \"a\" declared inside \"if\" has block scope and does not affect the value of the outer \"a\" variable.",
+      "readmeOutput": "20, \"inside\" and 10, \"outside\"",
+      "async": false
+    },
+    {
+      "id": 9,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a)\n```",
+      "code": "var a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a)",
+      "expectedLines": [
+        "pqr"
+      ],
+      "explanation": "Both the variables are declared using \"var\" keyword with the same name \"a\". The second variable declaration will override the first variable declaration.",
+      "readmeOutput": "\"pqr\"",
+      "async": false
+    },
+    {
+      "id": 10,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr1 = [1, 2, 3, 4];\nconst arr2 = [6, 7, 5];\nconst result = [...arr1, ...arr2];\nconsole.log(result);\n```",
+      "code": "const arr1 = [1, 2, 3, 4];\nconst arr2 = [6, 7, 5];\nconst result = [...arr1, ...arr2];\nconsole.log(result);",
+      "expectedLines": [
+        "[1,2,3,4,6,7,5]"
+      ],
+      "explanation": "Spread operator (...) concatenates the two arrays into \"result\" array.",
+      "readmeOutput": "[1, 2, 3, 4, 6, 7, 5]",
+      "async": false
+    },
+    {
+      "id": 11,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst person1 = { name: 'xyz', age: 21 };\nconst person2 = { city: 'abc', ...person1 };\nconsole.log(person2);\n```",
+      "code": "const person1 = { name: 'xyz', age: 21 };\nconst person2 = { city: 'abc', ...person1 };\nconsole.log(person2);",
+      "expectedLines": [
+        "{\"city\":\"abc\",\"name\":\"xyz\",\"age\":21}"
+      ],
+      "explanation": "Spread operator (...) copies all the properties from person1 into person2.",
+      "readmeOutput": "{ city: 'abc', name: 'xyz', age: 21 }",
+      "async": false
+    },
+    {
+      "id": 12,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(5 < 6 < 7);\n```",
+      "code": "console.log(5 < 6 < 7);",
+      "expectedLines": [
+        "true"
+      ],
+      "explanation": "In JavaScript, the",
+      "readmeOutput": "true",
+      "async": false
+    },
+    {
+      "id": 13,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(7 > 6 > 5);\n```",
+      "code": "console.log(7 > 6 > 5);",
+      "expectedLines": [
+        "false"
+      ],
+      "explanation": "In JavaScript, the > operator evaluates expressions from left to right. First, the expression 7 > 6 is evaluated, resulting in true because 7 is greater than 6. Then, the expression true > 5 is evaluated. In this case, JavaScript performs type coercion and converts true to the number 1. Therefore, the expression becomes 1 > 5, which is false.",
+      "readmeOutput": "false",
+      "async": false
+    },
+    {
+      "id": 14,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(0 == false);\nconsole.log(1 == true);\n```",
+      "code": "console.log(0 == false);\nconsole.log(1 == true);",
+      "expectedLines": [
+        "true",
+        "true"
+      ],
+      "explanation": "The == operator converts operands to a common type before making the comparison. In both the cases, the boolean value will be converted to a number, i.e., false is converted to 0 and true is converted to 1. So, the expression 0 == false is equivalent to 0 == 0 and 1 == true is equivalent to 1 == 1.",
+      "readmeOutput": "true, true",
+      "async": false
+    },
+    {
+      "id": 15,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log([11, 2, 31] + [4, 5, 6]);\n```",
+      "code": "console.log([11, 2, 31] + [4, 5, 6]);",
+      "expectedLines": [
+        "11,2,314,5,6"
+      ],
+      "explanation": "The + operator is used for both addition and string concatenation. When you try to concatenate two arrays using the + operator, the arrays are converted to strings and then concatenated together. In this case, the arrays [11, 2, 31] and [4, 5, 6] are converted to strings as \"11,2,31\" and \"4,5,6\" respectively. Then, the two strings are concatenated, resulting in \"11,2,314,5,6\".",
+      "readmeOutput": "\"11,2,314,5,6\"",
+      "async": false
+    },
+    {
+      "id": 16,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log({} == {}); \nconsole.log({} === {});\n```",
+      "code": "console.log({} == {}); \nconsole.log({} === {});",
+      "expectedLines": [
+        "false",
+        "false"
+      ],
+      "explanation": "When you compare objects using == or ===, it checks if they refer to the exact same object. So even if they are looking same, they are pointing to different memory locations.",
+      "readmeOutput": "false, false",
+      "async": false
+    },
+    {
+      "id": 17,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x)\n```",
+      "code": "let x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x)",
+      "expectedLines": [
+        "5",
+        "6"
+      ],
+      "explanation": "The post-increment operator increments and returns the value before incrementing.",
+      "readmeOutput": "5, 6",
+      "async": false
+    },
+    {
+      "id": 18,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x)\n```",
+      "code": "let x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x)",
+      "expectedLines": [
+        "6",
+        "6"
+      ],
+      "explanation": "The pre-increment operator increments and returns the value after incrementing.",
+      "readmeOutput": "6, 6",
+      "async": false
+    },
+    {
+      "id": 19,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log('apple'.split(''));\n```",
+      "code": "console.log('apple'.split(''));",
+      "expectedLines": [
+        "[\"a\",\"p\",\"p\",\"l\",\"e\"]"
+      ],
+      "explanation": "split method is used to split a string into an array of substrings based on a specified separator.",
+      "readmeOutput": "[ 'a', 'p', 'p', 'l', 'e' ]",
+      "async": false
+    },
+    {
+      "id": 20,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr = [2,3,5,2,8,10,5];\nconsole.log(arr.indexOf(5))\n```",
+      "code": "const arr = [2,3,5,2,8,10,5];\nconsole.log(arr.indexOf(5))",
+      "expectedLines": [
+        "2"
+      ],
+      "explanation": "indexOf method returns the index of the first occurrence of the specified element in the array.",
+      "readmeOutput": "2",
+      "async": false
+    },
+    {
+      "id": 21,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst array = [8, 18, 28, 38];\nconst result = array.map(element => element + 2)\n               .filter((element) => element > 25);\nconsole.log(result);\n```",
+      "code": "const array = [8, 18, 28, 38];\nconst result = array.map(element => element + 2)\n               .filter((element) => element > 25);\nconsole.log(result);",
+      "expectedLines": [
+        "[30,40]"
+      ],
+      "explanation": "The code increments each element in the array by 2 using map and filters out elements greater than 25 using filter.",
+      "readmeOutput": "[ 30, 40 ]",
+      "async": false
+    },
+    {
+      "id": 22,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction checkValue(value){\n    var result = Array.isArray(value);\n    console.log(result);\n}\ncheckValue([1,2,3]);\n```",
+      "code": "function checkValue(value){\n    var result = Array.isArray(value);\n    console.log(result);\n}\ncheckValue([1,2,3]);",
+      "expectedLines": [
+        "true"
+      ],
+      "explanation": "Array.isArray() method is used to check if the provided value is an array.",
+      "readmeOutput": "true",
+      "async": false
+    },
+    {
+      "id": 23,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction sum(a=5, b=7){\n    return a+b;\n}\nconsole.log(sum(undefined, 20));\n```",
+      "code": "function sum(a=5, b=7){\n    return a+b;\n}\nconsole.log(sum(undefined, 20));",
+      "expectedLines": [
+        "25"
+      ],
+      "explanation": "Here, undefined is passed as the value for parameter a, and 20 is passed for parameter b. When any parameter is undefined, the default value is used.",
+      "readmeOutput": "25",
+      "async": false
+    },
+    {
+      "id": 24,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(10 + \"5\");\nconsole.log(\"5\" + 10);\n```",
+      "code": "console.log(10 + \"5\");\nconsole.log(\"5\" + 10);",
+      "expectedLines": [
+        "105",
+        "510"
+      ],
+      "explanation": "Since one operand is a string, the + operator performs string concatenation.",
+      "readmeOutput": "105, 510",
+      "async": false
+    },
+    {
+      "id": 25,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(10 - \"5\");\nconsole.log(\"5\" - 10);\n```",
+      "code": "console.log(10 - \"5\");\nconsole.log(\"5\" - 10);",
+      "expectedLines": [
+        "5",
+        "-5"
+      ],
+      "explanation": "In JavaScript, when the subtraction operator - is used, the operands are converted to numbers before performing the subtraction",
+      "readmeOutput": "5, -5",
+      "async": false
+    },
+    {
+      "id": 26,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(printName());\nfunction printName(){\n    return \"Hi my name is Bob\"\n}\n```",
+      "code": "console.log(printName());\nfunction printName(){\n    return \"Hi my name is Bob\"\n}",
+      "expectedLines": [
+        "Hi my name is Bob"
+      ],
+      "explanation": "Regular functions are hoisted to the top. And you can access and call them even before they are declared.",
+      "readmeOutput": "Hi my name is Bob",
+      "async": false
+    },
+    {
+      "id": 27,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(printName());\nconst printName = () => {\n    return \"Hi my name is Bob\"\n}\n```",
+      "code": "console.log(printName());\nconst printName = () => {\n    return \"Hi my name is Bob\"\n}",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'printName' before initialization"
+      ],
+      "explanation": "Arrow functions cannot be accessed before they are initialised.",
+      "readmeOutput": "ReferenceError: Cannot access 'printName' before initialization",
+      "async": false
+    },
+    {
+      "id": 28,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age); \nconsole.log(cloneUserDetails.address.city);\n```",
+      "code": "const userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age); \nconsole.log(cloneUserDetails.address.city);",
+      "expectedLines": [
+        "20",
+        "Banglore"
+      ],
+      "explanation": "",
+      "readmeOutput": "20, \"Banglore\"",
+      "async": false
+    },
+    {
+      "id": 29,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction hello(){\n\tconsole.log(name);\n\tconsole.log(age);\n\tvar name = \"Alice\";\n\tlet age = 21;\n}\nhello();\n```",
+      "code": "function hello(){\n\tconsole.log(name);\n\tconsole.log(age);\n\tvar name = \"Alice\";\n\tlet age = 21;\n}\nhello();",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'age' before initialization"
+      ],
+      "explanation": "The variable name (declared with var) is hoisted to the top, so JavaScript knows it exists, but it hasn't been assigned a value yet, so it prints undefined\n\nThe variable age (declared with let) is also hoisted to the top of its scope, but unlike var, it is not initialized until the line where it is declared.",
+      "readmeOutput": "undefined, ReferenceError: can't access lexical declaration 'age' before initialization\"",
+      "async": false
+    },
+    {
+      "id": 30,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr1 = [1,2,3];\nconst arr2 = [1,2,3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);\n```",
+      "code": "const arr1 = [1,2,3];\nconst arr2 = [1,2,3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);",
+      "expectedLines": [
+        "true",
+        "false"
+      ],
+      "explanation": "Javascript compiler performs type conversion. In this case, it converts the array arr1 and the string str to their string representations and then compares them.\n\nIn Javascript arrays are objects and objects are compared by reference. In this case, arr1 and arr2 are pointing to 2 different memory locations",
+      "readmeOutput": "true, false",
+      "async": false
+    },
+    {
+      "id": 31,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst a = {x : 1};\nconst b = {x : 1};\nconsole.log(a === b);\nconsole.log(a.x === b.x)\n```",
+      "code": "const a = {x : 1};\nconst b = {x : 1};\nconsole.log(a === b);\nconsole.log(a.x === b.x)",
+      "expectedLines": [
+        "false",
+        "true"
+      ],
+      "explanation": "This compares whether a and b refer to the exact same object in memory. They are two different objects in memory, so the comparison evaluates to false\n\nThis compares the x property of objects a and b. Since both a.x and b.x have the same value i.e., 1, so the comparison evaluates to true.",
+      "readmeOutput": "false, true",
+      "async": false
+    },
+    {
+      "id": 32,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr = [10, -1, 2];\narr.sort((a, b) => a - b);\nconsole.log(arr);\n```",
+      "code": "const arr = [10, -1, 2];\narr.sort((a, b) => a - b);\nconsole.log(arr);",
+      "expectedLines": [
+        "[-1,2,10]"
+      ],
+      "explanation": "The compare function (a, b) => a - b sorts the numbers numerically in ascending order.",
+      "readmeOutput": "[-1, 2, 10]",
+      "async": false
+    },
+    {
+      "id": 33,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr = [11, 0, '', false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);\n```",
+      "code": "const arr = [11, 0, '', false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);",
+      "expectedLines": [
+        "[11,2,1]"
+      ],
+      "explanation": "filter(Boolean) removes all falsy values (0, \"\" (empty string), false, null, undefined, and NaN) from the array and keeps truthy ones.",
+      "readmeOutput": "[11, 2, 1]",
+      "async": false
+    },
+    {
+      "id": 34,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar x = 0;\nvar y = 10;\nif(x){\n  console.log(x);\n}\nif(y){\n  console.log(y);\n}\n```",
+      "code": "var x = 0;\nvar y = 10;\nif(x){\n  console.log(x);\n}\nif(y){\n  console.log(y);\n}",
+      "expectedLines": [
+        "10"
+      ],
+      "explanation": "x = 0 is falsy and doesn't trigger the console.log(x), while y = 10 is truthy and triggers the console.log(y).",
+      "readmeOutput": "10",
+      "async": false
+    },
+    {
+      "id": 35,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst obj = {\n\tvar1: 1,\n\tvar2: 2\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);\n```",
+      "code": "const obj = {\n\tvar1: 1,\n\tvar2: 2\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);",
+      "expectedLines": [
+        "1 2"
+      ],
+      "explanation": "Object destructuring extracts the values of var1 and var2 from obj object and prints them using console.log(var1, var2)",
+      "readmeOutput": "1, 2",
+      "async": false
+    },
+    {
+      "id": 36,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst user = { \n\tname: \"Surbhi dighe\", \n\tcountry: \"India\" \n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);\n```",
+      "code": "const user = { \n\tname: \"Surbhi dighe\", \n\tcountry: \"India\" \n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);",
+      "expectedLines": [
+        "ReferenceError: name is not defined"
+      ],
+      "explanation": "The name property from user is assigned to a local variable fullname.\n\nIt gives an error because name was assigned to a local variable fullname and therefore name is not directly accessible.",
+      "readmeOutput": "Surbhi Dighe, ReferenceError: name is not defined",
+      "async": false
+    },
+    {
+      "id": 37,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst person = {\n  firstName: 'Surbhi',\n};\nconst { lastName=\"dighe\" } = person;\nconsole.log(lastName);\n```",
+      "code": "const person = {\n  firstName: 'Surbhi',\n};\nconst { lastName=\"dighe\" } = person;\nconsole.log(lastName);",
+      "expectedLines": [
+        "dighe"
+      ],
+      "explanation": "The lastName property is not defined in the person object and the destructuring syntax provides a default value (\"dighe\") to be used when the property is missing.",
+      "readmeOutput": "dighe",
+      "async": false
+    },
+    {
+      "id": 38,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst person = {\n  firstName: 'Surbhi',\n};\nconst { firstName=\"Henry\"} = person;\nconsole.log(firstName);\n```",
+      "code": "const person = {\n  firstName: 'Surbhi',\n};\nconst { firstName=\"Henry\"} = person;\nconsole.log(firstName);",
+      "expectedLines": [
+        "Surbhi"
+      ],
+      "explanation": "The `firstName` property in the `person` object has the value 'Surbhi'. The default value \"Henry\" is ignored because it only applies when the property does not exist or is `undefined`",
+      "readmeOutput": "Surbhi",
+      "async": false
+    },
+    {
+      "id": 39,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar a = 10;\nlet a = 20;\nconsole.log(a)\n```",
+      "code": "var a = 10;\nlet a = 20;\nconsole.log(a)",
+      "expectedLines": [
+        "SyntaxError: Identifier 'a' has already been declared"
+      ],
+      "explanation": "In Javascript, we cannot redeclare a variable with let if it has already been declared in the same scope.",
+      "readmeOutput": "SyntaxError: Identifier 'a' has already been declared",
+      "async": false
+    },
+    {
+      "id": 40,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst arr = [\"A\",\"B\",\"C\",\"D\",\"E\"]\nconsole.log(Object.keys(arr));\n```",
+      "code": "const arr = [\"A\",\"B\",\"C\",\"D\",\"E\"]\nconsole.log(Object.keys(arr));",
+      "expectedLines": [
+        "[\"0\",\"1\",\"2\",\"3\",\"4\"]"
+      ],
+      "explanation": "In JavaScript, arrays are a special type of object. Object.keys() on an array returns an array of strings representing the indices of the array elements.",
+      "readmeOutput": "[ '0', '1', '2', '3', '4' ]",
+      "async": false
+    },
+    {
+      "id": 41,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction modify(obj) {\n    obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n    obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);\n```",
+      "code": "function modify(obj) {\n    obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n    obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);",
+      "expectedLines": [
+        "Updated",
+        "Updated"
+      ],
+      "explanation": "JS does not allow true pass by reference. It uses call by value for primitives (numbers, strings, booleans, null, undefined and symbols) and call by sharing for objects and arrays.",
+      "readmeOutput": "Output of the first console log will be \"Updated\". Output of the second console log will also be \"Updated\".",
+      "async": false
+    },
+    {
+      "id": 42,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet a={ x:1, y: {alpha:10,beta:20} };\nlet b = {...a};\n\nb.x=101;\nb.y.alpha=1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);\n```",
+      "code": "let a={ x:1, y: {alpha:10,beta:20} };\nlet b = {...a};\n\nb.x=101;\nb.y.alpha=1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);",
+      "expectedLines": [
+        "1",
+        "1001"
+      ],
+      "explanation": "The spread operator provides a shallow copy operation and any objects that are deeply nested in the variable a will still be shared between a as well as b. To make an actual deep copy, use the method structuredClone(a)",
+      "readmeOutput": "First console log will output \"1\". Second console log will output \"1001\".",
+      "async": false
+    },
+    {
+      "id": 43,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log('Start');\n\nsetTimeout(() => {\n  console.log('setTimeout');\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise');\n});\n\nconsole.log('End');\n```",
+      "code": "console.log('Start');\n\nsetTimeout(() => {\n  console.log('setTimeout');\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise');\n});\n\nconsole.log('End');",
+      "expectedLines": [
+        "Start",
+        "End",
+        "Promise",
+        "setTimeout"
+      ],
+      "explanation": "The execution order is Synchronous code first, then Microtasks run and the Microtask queue is emptied, then the Macrotasks run in the Task queue/ Callback queue. All the callbacks in the .then(), .catch() and .finally() get into the microtask queue and the other asynchronous operations, go into the WebAPIs first and when they are completed, the callbacks in them go to task queue.",
+      "readmeOutput": "The console will output in this order -> Start, End, Promise, setTimeout",
+      "async": true
+    },
+    {
+      "id": 44,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar array = [1,2,3,4,5];\ndelete array[2];\nconsole.log(array.length);\n```",
+      "code": "var array = [1,2,3,4,5];\ndelete array[2];\nconsole.log(array.length);",
+      "expectedLines": [
+        "5"
+      ],
+      "explanation": "\"delete\" removes the element but does not reindex the array or change its length. It leaves undefined holes in the array",
+      "readmeOutput": "5",
+      "async": false
+    },
+    {
+      "id": 45,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet x = [\"a\",\"b\",\"c\"];\nlet y = [\"a\",\"b\",\"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);\n```",
+      "code": "let x = [\"a\",\"b\",\"c\"];\nlet y = [\"a\",\"b\",\"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);",
+      "expectedLines": [
+        "false",
+        "true",
+        "false"
+      ],
+      "explanation": "x and y are two different arrays stored at different memory locations\n\nz is assigned to y, so both refer to the same memory location\n\nz and x are two different arrays stored at different memory locations",
+      "readmeOutput": "false, true, false (In JS arrays are objects, and objects are compared by reference, not by value)",
+      "async": false
+    },
+    {
+      "id": 46,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet x; \nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);\n```",
+      "code": "let x; \nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);",
+      "expectedLines": [
+        "undefined",
+        "20",
+        "John"
+      ],
+      "explanation": "Since x is declared but not assigned any value yet, so this logs undefined\n\nNow x has been assigned a value 20, so this logs 20\n\nNow the value of x has been changed to \"John\", so this logs John",
+      "readmeOutput": "undefined, 20, John",
+      "async": false
+    },
+    {
+      "id": 47,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet text;\nswitch (1) {\n  case 0:\n    text = \"This is zero\";\n    break;\n  case 1:\n    text = \"This is one\";\n  case 2:\n    text = \"This is two\";\n    break;\n  default:\n    text = \"No matches found!\";\n}\nconsole.log(text);\n```",
+      "code": "let text;\nswitch (1) {\n  case 0:\n    text = \"This is zero\";\n    break;\n  case 1:\n    text = \"This is one\";\n  case 2:\n    text = \"This is two\";\n    break;\n  default:\n    text = \"No matches found!\";\n}\nconsole.log(text);",
+      "expectedLines": [
+        "This is two"
+      ],
+      "explanation": "switch(1) means JS looks for a case that matches 1. It finds case 1 & sets text as \"This is one\". But there is no break, so it keeps going (falls through) into case 2 & overwrites the value.",
+      "readmeOutput": "This is two",
+      "async": false
+    },
+    {
+      "id": 48,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst user = {\n    name: 'Aman Bhoria!',\n    logMessage() {\n        console.log(this.name); // What is logged? \n    }\n}; \nsetTimeout(user.logMessage, 1000);\n```",
+      "code": "const user = {\n    name: 'Aman Bhoria!',\n    logMessage() {\n        console.log(this.name); // What is logged? \n    }\n}; \nsetTimeout(user.logMessage, 1000);",
+      "expectedLines": [
+        "undefined"
+      ],
+      "explanation": "We've passed the reference in setTimeout not the actual function so as a result it doesn't have the user's context while executing. To get the name we've to pass a callback like: setTimeout(() => user.logMessage(), 1000);",
+      "readmeOutput": "undefined",
+      "async": true
+    },
+    {
+      "id": 49,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst obj1 = { a: 1, b: 2 };\nconst obj2 = { b: 3, c: 4 };\n\nconst finalObj = Object.assign({}, obj1, obj2);\nconsole.log(finalObj);\n```",
+      "code": "const obj1 = { a: 1, b: 2 };\nconst obj2 = { b: 3, c: 4 };\n\nconst finalObj = Object.assign({}, obj1, obj2);\nconsole.log(finalObj);",
+      "expectedLines": [
+        "{\"a\":1,\"b\":3,\"c\":4}"
+      ],
+      "explanation": "When two or more objects are merged: If keys conflict (i.e., the same key exists in multiple objects), the value from the later object overwrites the earlier one.",
+      "readmeOutput": "{ a: 1, b: 3, c: 4 }",
+      "async": false
+    },
+    {
+      "id": 50,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet a = {};\nlet b = { key: \"abc\" };\nlet c = { key: \"efg\" };\n\na[b] = 111;\na[c] = 222;\nconsole.log(a[b]);\n```",
+      "code": "let a = {};\nlet b = { key: \"abc\" };\nlet c = { key: \"efg\" };\n\na[b] = 111;\na[c] = 222;\nconsole.log(a[b]);",
+      "expectedLines": [
+        "222"
+      ],
+      "explanation": "In JavaScript, using an object as a key in a normal object turns it into a string. That string is usually \"[object Object]\". So, two different objects like b and c become the same key -> a[b] = 111 & a[c] = 222 becomes a[\"[object Object]\"] = 111 & a[\"[object Object]\"] = 222. Hence, the second value (222) replaces the first one.",
+      "readmeOutput": "222",
+      "async": false
+    },
+    {
+      "id": 51,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction printName(firstName, lastName) {\n    firstName = \"Aman\";\n    lastName = \"Bhoria\";\n    return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name)\n```",
+      "code": "function printName(firstName, lastName) {\n    firstName = \"Aman\";\n    lastName = \"Bhoria\";\n    return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name)",
+      "expectedLines": [
+        "Aman Bhoria"
+      ],
+      "explanation": "In non-strict mode, the arguments object (an array-like object) holds the values passed to the function. When you change the function parameters, the corresponding values in the arguments object are updated as well. In strict mode, this link is removed. As a result, function prints the original values that were passed.",
+      "readmeOutput": "Aman Bhoria",
+      "async": false
+    },
+    {
+      "id": 52,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet x = true + false; \nlet y = x + 1;\n\nconsole.log(x, y);\n```",
+      "code": "let x = true + false; \nlet y = x + 1;\n\nconsole.log(x, y);",
+      "expectedLines": [
+        "1 2"
+      ],
+      "explanation": "When + operator is used with boolean values, JavaScript performs implicit type coercion: true is converted to 1 and false is converted to 0.",
+      "readmeOutput": "1, 2",
+      "async": false
+    }
+  ]
+}

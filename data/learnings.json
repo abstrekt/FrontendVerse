@@ -1,0 +1,10 @@
+{
+  "learnings": [
+    {
+      "id": 1,
+      "title": "How does `this` behave inside the callback of setTimeout, if it is arrow or function expression?",
+      "tags": ["this", "setTimeout", "arrow functions", "scope"],
+      "answer": "The behavior of `this` inside a `setTimeout` callback comes down to one fundamental difference in JavaScript: arrow functions use **lexical scoping** for `this`, while regular functions use **dynamic scoping** (based on how they are called).\n\nHere is exactly how they behave, side-by-side.\n\n## 1. Arrow Function (`() => {}`)\n\nAn arrow function does not have its own `this` context. Instead, it inherits `this` from the surrounding scope exactly where you wrote the code. It doesn't matter that `setTimeout` is executing it later; the arrow function remembers the `this` of its parent.\n\n```javascript\nconst user = {\n  name: 'Alice',\n  greet: function() {\n    // 'this' here refers to the 'user' object\n    setTimeout(() => {\n      // The arrow function inherits 'this' from the greet() method\n      console.log(`Hello, ${this.name}`);\n    }, 100);\n  }\n};\n\nuser.greet(); // Output: \"Hello, Alice\"\n```\n\n## 2. Regular Function Expression (`function() {}`)\n\nA regular function's `this` is determined by how it is called. When you pass a regular function to `setTimeout`, the JavaScript engine executes it later in a completely different context.\n\nBecause it is executed as a standalone function (not as a method on your object), it loses its original context. By default, `setTimeout` will bind `this` to the global object (`window` in browsers, or the global object in Node.js).\n\n```javascript\nconst user = {\n  name: 'Alice',\n  greet: function() {\n    // 'this' here refers to the 'user' object\n    setTimeout(function() {\n      // 'this' has been reset to the global window object!\n      console.log(`Hello, ${this.name}`);\n    }, 100);\n  }\n};\n\n// Assuming 'window.name' is not set\nuser.greet(); // Output: \"Hello, undefined\" (or \"\" in some browsers)\n```"
+    }
+  ]
+}

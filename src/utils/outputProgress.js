@@ -1,0 +1,152 @@
+import { shuffle } from './shuffle';
+
+export const EMPTY_OUTPUT_PROGRESS = {
+  sessions: [],
+  answers: {},
+  stats: {
+    totalAnswered: 0,
+    totalCorrect: 0,
+    streakDays: 0,
+    lastPlayedDate: null,
+  },
+};
+
+export const EMPTY_OUTPUT_SESSION = null;
+
+export function createOutputSession({
+  queue,
+  score = 0,
+  answered = 0,
+  answeredIds = [],
+  currentIndex = 0,
+  sessionTotal,
+}) {
+  return {
+    answeredIds,
+    score,
+    answered,
+    currentIndex,
+    queueIds: queue.map((q) => q.id),
+    sessionTotal: sessionTotal ?? queue.length,
+  };
+}
+
+export function restoreOutputQueue(session, questions) {
+  if (!session?.queueIds?.length || !questions.length) return [];
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  return session.queueIds.map((id) => byId.get(id)).filter(Boolean);
+}
+
+export function isRestorableOutputSession(session, questions) {
+  if (!session?.queueIds?.length) return false;
+  return restoreOutputQueue(session, questions).length > 0;
+}
+
+export function filterExcludedOutputQuestions(pool, excludedIds) {
+  const excluded = excludedIds instanceof Set ? excludedIds : new Set(excludedIds);
+  return pool.filter((q) => !excluded.has(q.id));
+}
+
+export function isOutputQuestionCompleted(progress, questionId) {
+  return progress.answers[String(questionId)]?.lastCorrect === true;
+}
+
+export function getOutputCompletedIds(progress) {
+  return Object.entries(progress.answers)
+    .filter(([, entry]) => entry.lastCorrect === true)
+    .map(([id]) => Number(id));
+}
+
+export function getOutputCompletedCount(progress) {
+  return getOutputCompletedIds(progress).length;
+}
+
+export function buildOutputQueue(pool, progress, { includeCompleted = true } = {}) {
+  const source = includeCompleted
+    ? pool
+    : filterExcludedOutputQuestions(pool, getOutputCompletedIds(progress));
+  return shuffle(source);
+}
+
+const MAX_SESSIONS = 30;
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function updateStreak(stats) {
+  const today = todayKey();
+  const yesterday = yesterdayKey();
+  const last = stats.lastPlayedDate;
+
+  if (last === today) {
+    return stats.streakDays;
+  }
+  if (last === yesterday) {
+    return stats.streakDays + 1;
+  }
+  return 1;
+}
+
+export function recordOutputAnswer(progress, question, correct) {
+  const id = String(question.id);
+  const prev = progress.answers[id] || {
+    correct: 0,
+    wrong: 0,
+    lastSeen: 0,
+    lastCorrect: null,
+  };
+
+  const now = Date.now();
+  const answers = {
+    ...progress.answers,
+    [id]: {
+      correct: prev.correct + (correct ? 1 : 0),
+      wrong: prev.wrong + (correct ? 0 : 1),
+      lastSeen: now,
+      lastCorrect: correct,
+    },
+  };
+
+  const stats = {
+    ...progress.stats,
+    totalAnswered: progress.stats.totalAnswered + 1,
+    totalCorrect: progress.stats.totalCorrect + (correct ? 1 : 0),
+    lastPlayedDate: todayKey(),
+    streakDays: updateStreak(progress.stats),
+  };
+
+  return { ...progress, answers, stats };
+}
+
+export function recordOutputSession(progress, sessionMeta) {
+  const session = {
+    ts: Date.now(),
+    ...sessionMeta,
+  };
+
+  const sessions = [session, ...progress.sessions].slice(0, MAX_SESSIONS);
+  return { ...progress, sessions };
+}
+
+export function getOutputBestPct(sessions) {
+  if (!sessions.length) return null;
+  return Math.max(...sessions.map((s) => s.pct));
+}
+
+export function getOutputLifetimeAccuracy(stats) {
+  if (!stats.totalAnswered) return null;
+  return Math.round((stats.totalCorrect / stats.totalAnswered) * 100);
+}
+
+export function getOutputMissedCount(progress) {
+  return Object.entries(progress.answers)
+    .filter(([, entry]) => entry.lastCorrect === false || entry.wrong > entry.correct)
+    .length;
+}

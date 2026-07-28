@@ -10,3 +10,5 @@
 - Uses CSS transitions (max-height + opacity) for collapsible UI sections rather than conditional mount/unmount — keeps container dimensions stable so toggles never shift layout. Confidence: 0.7
 - Prefers React for frontend application development — when migrating or greenfielding a UI project, React is the go-to choice. Confidence: 0.6
 - Prefers Vite as the build tool / bundler for frontend projects over alternatives like webpack or CRA. Confidence: 0.6
+- Prefers a two-phase plan-then-implement workflow: first a plan file is created (by a separate pass), then implementation follows the plan strictly. During implementation, expects the plan file to remain untouched and todos to be pre-created — does not want them regenerated. Values clean separation of planning and execution phases. Confidence: 0.85
+- Prefers interactive, runtime-validated learning exercises — wants answers to be actually executed (e.g., running JavaScript code in a runtime) rather than statically compared to a stored answer key. Values real execution feedback over pre-computed answer matching. Confidence: 0.6
