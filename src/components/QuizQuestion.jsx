@@ -3,6 +3,7 @@ import CodeBody from './CodeBody';
 import DifficultyBadge from './DifficultyBadge';
 import OptionList from './OptionList';
 import Explanation from './Explanation';
+import StarButton from './StarButton';
 
 export default function QuizQuestion({
   question,
@@ -15,6 +16,9 @@ export default function QuizQuestion({
   onPick,
   onNext,
   onSkip,
+  onArchive,
+  isStarred = false,
+  onToggleStar,
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -40,6 +44,11 @@ export default function QuizQuestion({
     resetQuestionView();
   }
 
+  function handleArchive() {
+    onArchive(question);
+    resetQuestionView();
+  }
+
   function handleSkip() {
     onSkip(question);
     resetQuestionView();
@@ -50,9 +59,14 @@ export default function QuizQuestion({
       <div className="quiz-header">
         <div className="quiz-header-top">
           <span className="progress">Remaining {remaining}/{sessionTotal}</span>
-          <span className="score-badge">
-            Answered {answered} · Score {score}/{answered}
-          </span>
+          <div className="quiz-header-badges">
+            <span className="score-badge">
+              Answered {answered} · Score {score}/{answered}
+            </span>
+            {onToggleStar && (
+              <StarButton isStarred={isStarred} onToggle={onToggleStar} />
+            )}
+          </div>
         </div>
         <div className="quiz-progress-bar" aria-hidden="true">
           <div className="quiz-progress-fill" style={{ width: `${progressPct}%` }} />
@@ -128,6 +142,9 @@ export default function QuizQuestion({
         <div className="quiz-footer-actions">
           <button type="button" className="skip-btn" onClick={handleSkip}>
             Skip
+          </button>
+          <button type="button" className="archive-btn" onClick={handleArchive}>
+            Archive
           </button>
           <button type="button" className="next-btn" onClick={handleNext}>
             {isLast ? 'Finish quiz →' : 'Next question →'}

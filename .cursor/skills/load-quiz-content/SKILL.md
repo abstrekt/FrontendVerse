@@ -12,12 +12,14 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 
 ## Architecture
 
-| Section   | Data file                                      | Loaded in   | UI component         |
-| --------- | ---------------------------------------------- | ----------- | -------------------- |
-| MCQ       | `questions.json`                               | `App.jsx`   | `QuizQuestion`       |
-| Learnings | `data/learnings.json` (+ optional merge files) | `App.jsx`   | `LearningsView`      |
-| Coding    | `data/coding-questions.json`                   | `App.jsx`   | `CodingChallenge`    |
-| Output    | `data/output-questions.json`                   | `App.jsx`   | `OutputQuizQuestion` |
+| Section         | Data file                                      | Loaded in   | UI component         |
+| --------------- | ---------------------------------------------- | ----------- | -------------------- |
+| MCQ             | `questions.json`                               | `App.jsx`   | `QuizQuestion`       |
+| Learnings (JS)  | `data/learnings.json` (+ merge files)          | `App.jsx`   | `LearningsView`      |
+| React Learnings | `data/react-learnings.json`                    | `App.jsx`   | `LearningsView`      |
+| HLD             | `data/hld-learnings.json`                      | `App.jsx`   | `LearningsView`      |
+| Coding          | `data/coding-questions.json`                   | `App.jsx`   | `CodingChallenge`    |
+| Output          | `data/output-questions.json`                   | `App.jsx`   | `OutputQuizQuestion` |
 
 ## ID conventions
 
@@ -27,13 +29,15 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 
 ## Tagging
 
-| Section   | Field    | Pattern                                      |
-| --------- | -------- | -------------------------------------------- |
-| Learnings | `tags`   | `["category", ...conceptTags]`               |
-| Coding    | `topics` | same values as learnings `tags`              |
-| MCQ       | `topics` | concept tags + `difficulty`                  |
+| Section   | Field     | Pattern                                      |
+| --------- | --------- | -------------------------------------------- |
+| Learnings | `tags`    | concept tags only (`React`, `event loop`, …) |
+| Learnings | `company` | optional — renders as distinct company badge |
+| Coding    | `topics`  | same values as learnings `tags`              |
+| MCQ       | `topics`  | concept tags + `difficulty`                  |
 
-- Use a primary category tag first (e.g. `polyfill`), then 1–3 concept tags (`Array`, `Promise`, `this`).
+- Do **not** put internal metadata in `tags` (no `companies`, `interview`, or company slug).
+- Use `company` (e.g. `"Tekion"`) for interview/company-sourced content; UI shows it separately from topic badges.
 - MCQ difficulty: `easy` | `medium` | `hard` | `advance`.
 
 ## Learnings schema
@@ -44,6 +48,18 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
   "title": "Array.map() polyfill",
   "tags": ["polyfill", "Array", "iteration"],
   "answer": "Markdown with ```code``` blocks, examples, and follow-ups."
+}
+```
+
+Interview / company entry:
+
+```json
+{
+  "id": 1,
+  "title": "React Collapsible List",
+  "company": "Tekion",
+  "tags": ["React", "UI"],
+  "answer": "..."
 }
 ```
 

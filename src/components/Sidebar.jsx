@@ -7,8 +7,11 @@ export default function Sidebar({
   totalQuestions,
   filteredCount,
   learningsCount,
+  reactLearningsCount,
+  hldLearningsCount,
   outputQuestionsCount,
   codingQuestionsCount,
+  archivedCount,
   lifetimeAccuracy,
   sessionCount,
   bestPct,
@@ -36,10 +39,16 @@ export default function Sidebar({
   const count = filteredCount ?? totalQuestions;
 
   const subtitle =
-    activeSection === "mcq"
+    activeSection === "archived"
+      ? `${archivedCount} archived item${archivedCount !== 1 ? "s" : ""}`
+      : activeSection === "mcq"
       ? `${count} question${count !== 1 ? "s" : ""} available`
       : activeSection === "learnings"
         ? `${learningsCount} learning${learningsCount !== 1 ? "s" : ""} available`
+        : activeSection === "react-learnings"
+          ? `${reactLearningsCount} learning${reactLearningsCount !== 1 ? "s" : ""} available`
+          : activeSection === "hld"
+            ? `${hldLearningsCount} learning${hldLearningsCount !== 1 ? "s" : ""} available`
         : activeSection === "coding"
           ? `${codingQuestionsCount} challenge${codingQuestionsCount !== 1 ? "s" : ""} available`
           : `${outputQuestionsCount} question${outputQuestionsCount !== 1 ? "s" : ""} available`;
@@ -76,6 +85,28 @@ export default function Sidebar({
             <li>
               <button
                 type="button"
+                className={activeSection === "react-learnings" ? "active" : ""}
+                onClick={() => onSectionChange("react-learnings")}
+              >
+                <span className="nav-icon">RL</span>
+                <span>React Learnings</span>
+                <span className="nav-count">{reactLearningsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "hld" ? "active" : ""}
+                onClick={() => onSectionChange("hld")}
+              >
+                <span className="nav-icon">HD</span>
+                <span>HLD</span>
+                <span className="nav-count">{hldLearningsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
                 className={activeSection === "coding" ? "active" : ""}
                 onClick={() => onSectionChange("coding")}
               >
@@ -93,6 +124,17 @@ export default function Sidebar({
                 <span className="nav-icon">OP</span>
                 <span>Javascript output</span>
                 <span className="nav-count">{outputQuestionsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "archived" ? "active" : ""}
+                onClick={() => onSectionChange("archived")}
+              >
+                <span className="nav-icon">AR</span>
+                <span>Archived</span>
+                <span className="nav-count">{archivedCount}</span>
               </button>
             </li>
           </ul>

@@ -4,6 +4,7 @@ import { getQuestionStatus } from '../utils/progress';
 
 const STATUS_FILTERS = [
   { id: 'all', label: 'All' },
+  { id: 'starred', label: 'Starred' },
   { id: 'unanswered', label: 'Unanswered' },
   { id: 'correct', label: 'Correct' },
   { id: 'wrong', label: 'Wrong' },
@@ -21,27 +22,35 @@ export default function QuestionListView({
   questions,
   progress,
   skippedIds,
+  starredIds = [],
   currentQuestionId,
   onOpenQuestion,
   onUnskip,
 }) {
   const [statusFilter, setStatusFilter] = useState('all');
 
+  const starredSet = useMemo(() => new Set(starredIds), [starredIds]);
+
   const rows = useMemo(() => {
     return questions.map((q) => ({
       question: q,
       status: getQuestionStatus(q.id, progress, skippedIds),
+      isStarred: starredSet.has(q.id),
     }));
-  }, [questions, progress, skippedIds]);
+  }, [questions, progress, skippedIds, starredSet]);
 
   const counts = useMemo(() => {
-    const next = { all: rows.length, unanswered: 0, correct: 0, wrong: 0, skipped: 0 };
-    for (const row of rows) next[row.status] += 1;
+    const next = { all: rows.length, starred: 0, unanswered: 0, correct: 0, wrong: 0, skipped: 0 };
+    for (const row of rows) {
+      if (row.isStarred) next.starred += 1;
+      next[row.status] += 1;
+    }
     return next;
   }, [rows]);
 
   const visible = useMemo(() => {
     if (statusFilter === 'all') return rows;
+    if (statusFilter === 'starred') return rows.filter((row) => row.isStarred);
     return rows.filter((row) => row.status === statusFilter);
   }, [rows, statusFilter]);
 
@@ -75,7 +84,7 @@ export default function QuestionListView({
           </div>
         ) : (
           <ul className="question-list">
-            {visible.map(({ question, status }) => {
+            {visible.map(({ question, status, isStarred }) => {
               const topics = question.topics?.length ? question.topics : ['untagged'];
               const isCurrent = question.id === currentQuestionId;
 
@@ -88,6 +97,7 @@ export default function QuestionListView({
                   >
                     <span className="question-list-meta">
                       <span className="question-list-id">#{question.id}</span>
+                      {isStarred && <span className="list-star-indicator" aria-label="Starred">★</span>}
                       <span className={`question-list-status status-${status}`}>
                         {STATUS_LABELS[status]}
                       </span>

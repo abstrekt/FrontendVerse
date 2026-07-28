@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import CodeEditor from './CodeEditor';
 import DifficultyBadge from './DifficultyBadge';
 import { runCodingTests } from '../utils/codingRunner';
+import StarButton from './StarButton';
 
 function formatTestCase(tc) {
   if (tc.input?.promises !== undefined) {
@@ -38,6 +39,9 @@ export default function CodingChallenge({
   theme,
   onCheck,
   onNext,
+  onArchive,
+  isStarred = false,
+  onToggleStar,
 }) {
   const [code, setCode] = useState(question.template);
   const [checking, setChecking] = useState(false);
@@ -100,6 +104,7 @@ export default function CodingChallenge({
               {question.topics?.map((topic) => (
                 <span key={topic} className="topic-badge">{topic}</span>
               ))}
+              {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
             </div>
           </div>
 
@@ -214,6 +219,9 @@ export default function CodingChallenge({
           )}
 
           <div className="coding-footer-actions">
+            <button type="button" className="archive-btn" onClick={() => onArchive(question)}>
+              Archive
+            </button>
             <button
               type="button"
               className="next-btn"

@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 import { DIFFICULTY_LEVELS, DIFFICULTY_LABELS, getDifficultyCompletion, getTopicCompletion } from '../utils/progress';
+import StarredFilterToggle from './StarredFilterToggle';
 
 export default function FilterPanel({
   questions,
   progress,
   selectedTopics,
   selectedDifficulties,
+  starredOnly = false,
+  starredCount = 0,
+  onStarredOnlyChange,
   onToggleTopic,
   onToggleDifficulty,
   onClear,
@@ -38,10 +42,17 @@ export default function FilterPanel({
   }, [difficultyCompletion]);
 
   const hasActiveFilters =
-    selectedTopics.length > 0 || selectedDifficulties.length > 0;
+    selectedTopics.length > 0 || selectedDifficulties.length > 0 || starredOnly;
 
   return (
     <>
+      <StarredFilterToggle
+        checked={starredOnly}
+        count={starredCount}
+        onChange={onStarredOnlyChange}
+        hint={starredOnly ? 'Only starred questions appear in quiz and list.' : 'All active questions are included.'}
+      />
+
       <div className="difficulty-panel">
         <div className="panel-subheader">
           <span>Difficulty</span>

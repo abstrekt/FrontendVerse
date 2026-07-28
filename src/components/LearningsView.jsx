@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import CodeBody from './CodeBody';
+import LearningBadges from './LearningBadges';
+import StarButton from './StarButton';
 
 function stripMarkdown(text) {
   return text.replace(/`([^`]+)`/g, '$1');
@@ -10,6 +12,9 @@ export default function LearningsView({
   learnings,
   selectedLearningId,
   onSelectLearning,
+  onArchive,
+  isStarred = false,
+  onToggleStar,
   highlight,
   theme,
 }) {
@@ -50,14 +55,20 @@ export default function LearningsView({
 
       <div className="learning-header">
         <div className="learning-content">
-          {learning.tags?.length > 0 && (
-            <div className="topic-badges learning-tags">
-              {learning.tags.map((tag) => (
-                <span key={tag} className="topic-badge">{tag}</span>
-              ))}
+          <LearningBadges company={learning.company} tags={learning.tags} />
+          <div className="learning-title-row">
+            <h2 className="learning-title">{stripMarkdown(learning.title)}</h2>
+            <div className="learning-title-actions">
+              {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
+              <button
+                type="button"
+                className="archive-btn learning-archive-btn"
+                onClick={() => onArchive(learning)}
+              >
+                Archive
+              </button>
             </div>
-          )}
-          <h2 className="learning-title">{stripMarkdown(learning.title)}</h2>
+          </div>
         </div>
       </div>
 

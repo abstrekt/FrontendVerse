@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CodeBody from './CodeBody';
 import { runOutputCode } from '../utils/jsRunner';
 import { compareOutputAnswer, formatExpectedOutput } from '../utils/outputCompare';
+import StarButton from './StarButton';
 
 export default function OutputQuizQuestion({
   question,
@@ -15,6 +16,9 @@ export default function OutputQuizQuestion({
   sourceUrl,
   onCheck,
   onNext,
+  onArchive,
+  isStarred = false,
+  onToggleStar,
 }) {
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
@@ -71,6 +75,7 @@ export default function OutputQuizQuestion({
               Answered {answered}
               {answered > 0 ? ` · Score ${score}/${answered}` : ''}
             </span>
+            {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
           </div>
         </div>
         <div className="quiz-progress-bar" aria-hidden="true">
@@ -142,6 +147,9 @@ export default function OutputQuizQuestion({
               disabled={checking}
             >
               {checking ? 'Running code...' : 'Check answer'}
+            </button>
+            <button type="button" className="archive-btn" onClick={() => onArchive(question)}>
+              Archive
             </button>
             <button
               type="button"

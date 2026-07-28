@@ -14,6 +14,24 @@ export function parseRoute(pathname) {
     };
   }
 
+  if (parts[0] === 'react-learnings') {
+    const parsedId = parts[1] ? Number(parts[1]) : null;
+    return {
+      section: 'react-learnings',
+      viewMode: 'quiz',
+      learningId: Number.isFinite(parsedId) ? parsedId : null,
+    };
+  }
+
+  if (parts[0] === 'hld') {
+    const parsedId = parts[1] ? Number(parts[1]) : null;
+    return {
+      section: 'hld',
+      viewMode: 'quiz',
+      learningId: Number.isFinite(parsedId) ? parsedId : null,
+    };
+  }
+
   if (parts[0] === 'output') {
     return { section: 'output', viewMode: 'quiz', learningId: null };
   }
@@ -29,6 +47,14 @@ export function parseRoute(pathname) {
 export function buildRoute({ section = 'mcq', viewMode = 'quiz', learningId = null } = {}) {
   if (section === 'learnings') {
     return learningId ? `/learnings/${learningId}` : '/learnings';
+  }
+
+  if (section === 'react-learnings') {
+    return learningId ? `/react-learnings/${learningId}` : '/react-learnings';
+  }
+
+  if (section === 'hld') {
+    return learningId ? `/hld/${learningId}` : '/hld';
   }
 
   if (section === 'output') {

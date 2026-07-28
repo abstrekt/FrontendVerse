@@ -49,5 +49,27 @@ export function useAppRoute() {
     [navigate]
   );
 
-  return { route, navigate, setSection, setViewMode, setLearningId };
+  const setReactLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'react-learnings', learningId }), options);
+    },
+    [navigate]
+  );
+
+  const setHldLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'hld', learningId }), options);
+    },
+    [navigate]
+  );
+
+  return {
+    route,
+    navigate,
+    setSection,
+    setViewMode,
+    setLearningId,
+    setReactLearningId,
+    setHldLearningId,
+  };
 }
