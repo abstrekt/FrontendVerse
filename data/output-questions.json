@@ -163,7 +163,7 @@
       "expectedLines": [
         "true"
       ],
-      "explanation": "In JavaScript, the",
+      "explanation": "In JavaScript, the < operator evaluates expressions from left to right. First, the expression 5 < 6 is evaluated, resulting in true because 5 is less than 6. Then, the expression true < 7 is evaluated. In this case, JavaScript performs type coercion and converts true to the number 1. Therefore, the expression becomes 1 < 7, which is true.",
       "readmeOutput": "true",
       "async": false
     },
@@ -374,7 +374,7 @@
       "expectedLines": [
         "ReferenceError: Cannot access 'age' before initialization"
       ],
-      "explanation": "The variable name (declared with var) is hoisted to the top, so JavaScript knows it exists, but it hasn't been assigned a value yet, so it prints undefined\n\nThe variable age (declared with let) is also hoisted to the top of its scope, but unlike var, it is not initialized until the line where it is declared.",
+      "explanation": "The variable name (declared with var) is hoisted to the top, so JavaScript knows it exists, but it hasn't been assigned a value yet, so it prints undefined\n\nThe variable age (declared with let) is also hoisted to the top of its scope, but unlike var, it is not initialized until the line where it is declared.</b>",
       "readmeOutput": "undefined, ReferenceError: can't access lexical declaration 'age' before initialization\"",
       "async": false
     },
@@ -387,7 +387,7 @@
         "true",
         "false"
       ],
-      "explanation": "Javascript compiler performs type conversion. In this case, it converts the array arr1 and the string str to their string representations and then compares them.\n\nIn Javascript arrays are objects and objects are compared by reference. In this case, arr1 and arr2 are pointing to 2 different memory locations",
+      "explanation": "Javascript compiler performs type conversion. In this case, it converts the array arr1 and the string str to their string representations and then compares them.\n\nIn Javascript arrays are objects and objects are compared by reference. In this case, arr1 and arr2 are pointing to 2 different memory locations</b>",
       "readmeOutput": "true, false",
       "async": false
     },
@@ -400,7 +400,7 @@
         "false",
         "true"
       ],
-      "explanation": "This compares whether a and b refer to the exact same object in memory. They are two different objects in memory, so the comparison evaluates to false\n\nThis compares the x property of objects a and b. Since both a.x and b.x have the same value i.e., 1, so the comparison evaluates to true.",
+      "explanation": "This compares whether a and b refer to the exact same object in memory. They are two different objects in memory, so the comparison evaluates to false\n\nThis compares the x property of objects a and b. Since both a.x and b.x have the same value i.e., 1, so the comparison evaluates to true.</b>",
       "readmeOutput": "false, true",
       "async": false
     },
@@ -521,7 +521,7 @@
         "Updated",
         "Updated"
       ],
-      "explanation": "JS does not allow true pass by reference. It uses call by value for primitives (numbers, strings, booleans, null, undefined and symbols) and call by sharing for objects and arrays.",
+      "explanation": "JS does not allow true pass by reference. It uses call by value for primitives (numbers, strings, booleans, null, undefined and symbols) and call by sharing for objects and arrays. <br> If you modify an object's properties inside a function, the changes will reflect outside the function but if you reassign the object completely inside the function, the original reference will remain unchanged outside.",
       "readmeOutput": "Output of the first console log will be \"Updated\". Output of the second console log will also be \"Updated\".",
       "async": false
     },

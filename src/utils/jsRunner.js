@@ -1,3 +1,5 @@
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+
 function formatConsoleArg(value) {
   if (typeof value === 'string') return value;
   if (typeof value === 'symbol') return value.toString();

@@ -1,0 +1,562 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "title": "Sequential Promise Resolution",
+      "difficulty": "hard",
+      "topics": [
+        "Promises",
+        "async/await"
+      ],
+      "description": "Implement a function `sequentialResolution` that takes in an array of **promises**, `promises`, and an array of **indices**, `order`. The promises should be resolved in the order of the indices in the `order` array. After each promise is resolved, push the returned value from the promise to a global array `resolvedPromises`.\n\nIf a promise fails to resolve, the function should throw an error, and no further promises should be resolved. The error message should be **\"Error Thrown\"** (without quotes). The function should not return anything.\n\nEach promise `i` uses a variable, `promises[i]` provided in the input. It resolves and returns `promises[i]` if it is not equal to 0. If it is equal to 0, the function rejects and returns an error message **\"Error\"** (without quotes).\n\nFor example, if `order = [2, 1, 3]`, `promises = [1, 2, 1]`, then the second promise should be resolved first, followed by the first and third promises. Here, no promise is rejected. Promises are resolved as `[2, 1, 1]`.\n\n### Function Signature\n\n```javascript\nfunction sequentialResolution(promises, order) {\n  // Your code here\n}\n```\n\n### Parameters\n\n- `promises[promises[0], ...promises[n-1]]`: an array of promises\n- `order[order[0], ...order[n-1]]`: an array of 1-based indices\n\n### Constraints\n\n- `1 ≤ n, promises[i] ≤ 100`\n- Array `order` is a permutation of integers 1 to n.\n- It is guaranteed that either one or no promise is rejected.\n\n### Sample Case 0\n\n**Input:** `promises = [1, 2, 0, 1]`, `order = [2, 1, 3, 4]`\n\n**Output:**\n```\n2\n1\nError Thrown\n```\n\n**Explanation:** The second promise should be resolved first followed by the first. The third promise is rejected, and an error is thrown with the message \"Error Thrown\".\n\n### Sample Case 1\n\n**Input:** `promises = [3, 4, 1, 3]`, `order = [1, 4, 2, 3]`\n\n**Output:**\n```\n3\n3\n4\n1\n```\n\n**Explanation:** The first promise should be resolved first followed by the fourth, the second, and the third. No promise is rejected.",
+      "functionName": "sequentialResolution",
+      "template": "async function sequentialResolution(promises, order) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "input": {
+            "promises": [
+              1,
+              2,
+              0,
+              1
+            ],
+            "order": [
+              2,
+              1,
+              3,
+              4
+            ]
+          },
+          "expected": {
+            "resolvedPromises": [
+              2,
+              1
+            ],
+            "error": "Error Thrown"
+          }
+        },
+        {
+          "input": {
+            "promises": [
+              3,
+              4,
+              1,
+              3
+            ],
+            "order": [
+              1,
+              4,
+              2,
+              3
+            ]
+          },
+          "expected": {
+            "resolvedPromises": [
+              3,
+              3,
+              4,
+              1
+            ],
+            "error": null
+          }
+        }
+      ],
+      "explanation": "### Approach\n\nIterate through the `order` array and resolve each promise at the specified index (1-based, so subtract 1). For each resolved promise, push its value to `resolvedPromises`. If a promise rejects, catch the error and throw a new error with the message **\"Error Thrown\"**.\n\n### Solution\n\n```javascript\nasync function sequentialResolution(promises, order) {\n  for (const idx of order) {\n    try {\n      const value = await promises[idx - 1];\n      resolvedPromises.push(value);\n    } catch (err) {\n      throw new Error('Error Thrown');\n    }\n  }\n}\n```\n\n### Key Points\n- The `order` array uses **1-based indexing** — use `promises[idx - 1]` to access the correct promise.\n- On rejection, throw `new Error('Error Thrown')` — not the original error.\n- Use `await` inside a `try/catch` to handle each promise individually.\n- After a rejection, no further promises in the order should be processed.",
+      "runner": "sequentialResolution"
+    },
+    {
+      "id": 2,
+      "title": "Array.map() polyfill",
+      "difficulty": "easy",
+      "topics": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "runner": "expression",
+      "functionName": "myMap",
+      "description": "Implement `Array.prototype.myMap` that mirrors native `Array.map()`.\n\nHere **this** points to the array itself — the object before the dot.\n\n### Example\n\n```javascript\nconsole.log([1, 2, 3].myMap(x => x * 2));\n// [2, 4, 6]\n```\n\nComplete the implementation in the editor.",
+      "template": "Array.prototype.myMap = function (callback, thisArg) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "const arr = [1, 2, 3];",
+          "code": "arr.myMap(x => x * 2)",
+          "expected": [
+            2,
+            4,
+            6
+          ]
+        },
+        {
+          "setup": "const arr = [1, , 3]; const result = arr.myMap(x => x * 2);",
+          "code": "result.length === 3 && 0 in result && !(1 in result) && result[0] === 2 && result[2] === 6",
+          "expected": true
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nArray.prototype.myMap = function (callback, thisArg) {\n  const result = [];\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      result[i] = callback.call(thisArg, this[i], i, this);\n    }\n  }\n  return result;\n};\n```"
+    },
+    {
+      "id": 3,
+      "title": "Array.filter() polyfill",
+      "difficulty": "easy",
+      "topics": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "runner": "expression",
+      "functionName": "myFilter",
+      "description": "Implement `Array.prototype.myFilter` that mirrors native `Array.filter()`.\n\nReturn a new array with elements where the callback returns a truthy value. Skip sparse holes using `i in this`.\n\n### Signature\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) { }\n```\n\nComplete the implementation in the editor.",
+      "template": "Array.prototype.myFilter = function (callback, thisArg) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "const arr = [1, 2, 3, 4];",
+          "code": "arr.myFilter(x => x % 2 === 0)",
+          "expected": [
+            2,
+            4
+          ]
+        },
+        {
+          "setup": "const arr = [1, , 3];",
+          "code": "arr.myFilter(x => x > 0)",
+          "expected": [
+            1,
+            3
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) {\n  const result = [];\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      if (callback.call(thisArg, this[i], i, this)) result.push(this[i]);\n    }\n  }\n  return result;\n};\n```"
+    },
+    {
+      "id": 4,
+      "title": "Array.reduce() polyfill",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "runner": "expression",
+      "functionName": "myReduce",
+      "description": "Implement `Array.prototype.myReduce` that mirrors native `Array.reduce()`.\n\n### Example\n\n```javascript\n[1, 2, 3].myReduce((a, b) => a + b, 0);\n// 6\n```\n\nSupport both with and without an `initialValue`. Complete the implementation in the editor.",
+      "template": "Array.prototype.myReduce = function (callback, initialValue) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "[1, 2, 3].myReduce((a, b) => a + b, 0)",
+          "expected": 6
+        },
+        {
+          "setup": "",
+          "code": "[1, 2, 3].myReduce((a, b) => a + b)",
+          "expected": 6
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nArray.prototype.myReduce = function (callback, initialValue) {\n  let accumulator = initialValue;\n  let start = 0;\n  if (accumulator === undefined) { accumulator = this[0]; start = 1; }\n  for (let i = start; i < this.length; i++) {\n    if (i in this) accumulator = callback(accumulator, this[i], i, this);\n  }\n  return accumulator;\n};\n```"
+    },
+    {
+      "id": 5,
+      "title": "Function.call() polyfill",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "runner": "expression",
+      "functionName": "myCall",
+      "description": "Implement `Function.prototype.myCall` that invokes a function with a given `this` value and arguments.\n\n### Signature\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) { }\n```\n\nPreserve `this` context. Default `context` to `globalThis` when nullish. Complete the implementation in the editor.",
+      "template": "Function.prototype.myCall = function (context, ...args) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "function add(a, b) { return this.x + a + b; }",
+          "code": "add.myCall({ x: 10 }, 1, 2)",
+          "expected": 13
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) {\n  context = context || globalThis;\n  const key = Symbol();\n  context[key] = this;\n  const result = context[key](...args);\n  delete context[key];\n  return result;\n};\n```"
+    },
+    {
+      "id": 6,
+      "title": "Function.apply() polyfill",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "runner": "expression",
+      "functionName": "myApply",
+      "description": "Implement `Function.prototype.myApply` — like `myCall`, but arguments are passed as an array.\n\n### Signature\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) { }\n```\n\nComplete the implementation in the editor.",
+      "template": "Function.prototype.myApply = function (context, args = []) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "function add(a, b) { return this.x + a + b; }",
+          "code": "add.myApply({ x: 10 }, [1, 2])",
+          "expected": 13
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) {\n  context = context || globalThis;\n  const key = Symbol();\n  context[key] = this;\n  const result = context[key](...args);\n  delete context[key];\n  return result;\n};\n```"
+    },
+    {
+      "id": 7,
+      "title": "Function.bind() polyfill",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "runner": "expression",
+      "functionName": "myBind",
+      "description": "Implement `Function.prototype.myBind` that returns a function with a fixed `this` and optional preset arguments.\n\n### Example\n\n```javascript\nfunction greet(city) {\n  console.log(this.name, city);\n}\n\nconst user = { name: \"John\" };\nconst fn = greet.myBind(user);\nfn(\"London\"); // John London\n```\n\nComplete the implementation in the editor.",
+      "template": "Function.prototype.myBind = function (context, ...presetArgs) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "function greet(city) { return this.name + \" \" + city; }",
+          "code": "greet.myBind({ name: \"John\" })(\"London\")",
+          "expected": "John London"
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nFunction.prototype.myBind = function (context, ...presetArgs) {\n  const fn = this;\n  return function (...laterArgs) {\n    return fn.apply(context, [...presetArgs, ...laterArgs]);\n  };\n};\n```"
+    },
+    {
+      "id": 8,
+      "title": "Deep Copy",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "objects",
+        "recursion"
+      ],
+      "runner": "expression",
+      "functionName": "deepCopy",
+      "description": "Implement `deepCopy(obj)` that creates an independent clone of objects and arrays.\n\n### Example\n\n```javascript\nconst a = { x: 1, y: { z: 2 } };\nconst b = deepCopy(a);\nb.y.z = 100;\nconsole.log(a.y.z); // 2\n```\n\nMutating the copy must not affect the original. Complete the implementation in the editor.",
+      "template": "function deepCopy(obj) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const obj = { x: 1, y: { z: 2 } }; const copy = deepCopy(obj); copy.y.z = 100;",
+          "code": "obj.y.z",
+          "expected": 2
+        },
+        {
+          "setup": "const obj = { a: [1, { b: 2 }] };",
+          "code": "deepCopy(obj)",
+          "expected": {
+            "a": [
+              1,
+              {
+                "b": 2
+              }
+            ]
+          }
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction deepCopy(obj) {\n  if (obj === null || typeof obj !== \"object\") return obj;\n  const copy = Array.isArray(obj) ? [] : {};\n  for (const key in obj) {\n    if (Object.hasOwn(obj, key)) copy[key] = deepCopy(obj[key]);\n  }\n  return copy;\n}\n```"
+    },
+    {
+      "id": 9,
+      "title": "Deep Merge",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "objects",
+        "recursion"
+      ],
+      "runner": "expression",
+      "functionName": "deepMerge",
+      "description": "Implement `deepMerge(target, source)` that deeply merges `source` into `target`.\n\n### Example\n\n```javascript\ndeepMerge({ a: 1, b: { c: 2 } }, { b: { d: 3 } });\n// { a: 1, b: { c: 2, d: 3 } }\n```\n\nArrays should be concatenated. Complete the implementation in the editor.",
+      "template": "function deepMerge(target, source) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const obj1 = { a: 1, b: { c: 2 } }; const obj2 = { b: { d: 3 } };",
+          "code": "deepMerge(obj1, obj2)",
+          "expected": {
+            "a": 1,
+            "b": {
+              "c": 2,
+              "d": 3
+            }
+          }
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction deepMerge(target, source) {\n  if (Array.isArray(target) && Array.isArray(source)) return [...target, ...source];\n  const result = { ...target };\n  for (const key in source) {\n    if (typeof source[key] === \"object\" && source[key] !== null && key in target) {\n      result[key] = deepMerge(target[key], source[key]);\n    } else result[key] = source[key];\n  }\n  return result;\n}\n```"
+    },
+    {
+      "id": 10,
+      "title": "Flatten Array (infinite)",
+      "difficulty": "easy",
+      "topics": [
+        "polyfill",
+        "Array",
+        "recursion"
+      ],
+      "runner": "expression",
+      "functionName": "flatten",
+      "description": "Implement `flatten(arr)` that flattens a nested array to any depth.\n\n### Example\n\n```javascript\nflatten([1, [2, [3, [4]]]]);\n// [1, 2, 3, 4]\n```\n\nComplete the implementation in the editor.",
+      "template": "function flatten(arr) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "flatten([1, [2, [3, [4]]]])",
+          "expected": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction flatten(arr) {\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item)) result.push(...flatten(item));\n    else result.push(item);\n  }\n  return result;\n}\n```"
+    },
+    {
+      "id": 11,
+      "title": "Flatten with Level",
+      "difficulty": "medium",
+      "topics": [
+        "polyfill",
+        "Array",
+        "recursion"
+      ],
+      "runner": "expression",
+      "functionName": "flattenDepth",
+      "description": "Implement `flatten(arr, depth = 1)` that flattens only up to the given depth.\n\n### Example\n\n```javascript\nflatten([1, [2, [3, [4]]]], 2);\n// [1, 2, 3, [4]]\n```\n\nComplete the implementation in the editor.",
+      "template": "function flatten(arr, depth = 1) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "flatten([1, [2, [3, [4]]]], 2)",
+          "expected": [
+            1,
+            2,
+            3,
+            [
+              4
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "flatten([1, [2, 3]], 1)",
+          "expected": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction flatten(arr, depth = 1) {\n  if (depth === 0) return arr.slice();\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item)) result.push(...flatten(item, depth - 1));\n    else result.push(item);\n  }\n  return result;\n}\n```"
+    },
+    {
+      "id": 12,
+      "title": "Debounce",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "timing",
+        "closures"
+      ],
+      "runner": "timer",
+      "functionName": "debounce",
+      "description": "Implement `debounce(fn, delay)` that delays calling `fn` until `delay` ms have passed since the last invocation.\n\n### Example\n\n```javascript\nwindow.addEventListener(\"resize\", debounce(() => {\n  console.log(\"resize\");\n}, 300));\n```\n\nComplete the implementation in the editor.",
+      "template": "function debounce(fn, delay) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "let count = 0; const fn = () => count++; const debounced = debounce(fn, 100);",
+          "calls": [
+            {
+              "expr": "debounced()",
+              "advance": 0
+            },
+            {
+              "expr": "debounced()",
+              "advance": 10
+            },
+            {
+              "expr": "debounced()",
+              "advance": 10
+            }
+          ],
+          "code": "count",
+          "expected": 1
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction debounce(fn, delay) {\n  let timer;\n  return function (...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn.apply(this, args), delay);\n  };\n}\n```"
+    },
+    {
+      "id": 13,
+      "title": "Throttle",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "timing",
+        "closures"
+      ],
+      "runner": "timer",
+      "functionName": "throttle",
+      "description": "Implement `throttle(fn, delay)` that invokes `fn` at most once per `delay` ms window.\n\nRapid calls within the window should be ignored. Complete the implementation in the editor.",
+      "template": "function throttle(fn, delay) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "let count = 0; const fn = () => count++; const throttled = throttle(fn, 100);",
+          "calls": [
+            {
+              "expr": "throttled()",
+              "advance": 0
+            },
+            {
+              "expr": "throttled()",
+              "advance": 50
+            },
+            {
+              "expr": "throttled()",
+              "advance": 150
+            }
+          ],
+          "code": "count",
+          "expected": 2
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction throttle(fn, delay) {\n  let waiting = false;\n  return function (...args) {\n    if (waiting) return;\n    waiting = true;\n    fn.apply(this, args);\n    setTimeout(() => { waiting = false; }, delay);\n  };\n}\n```"
+    },
+    {
+      "id": 14,
+      "title": "Promise Polyfill",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "runner": "asyncExpression",
+      "functionName": "MyPromise",
+      "description": "Implement a basic `MyPromise` class with `then` and `catch`.\n\nSupport resolving, rejecting, and chaining. Handlers registered while `pending` should run once settled.\n\nComplete the implementation in the editor.",
+      "template": "class MyPromise {\n  constructor(executor) {\n    // Write your code here\n  }\n\n  then(onFulfilled, onRejected) {\n    // Write your code here\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await new MyPromise((resolve) => resolve(42))",
+          "expected": 42
+        },
+        {
+          "setup": "",
+          "code": "await new MyPromise((_, reject) => reject(\"err\")).catch(e => e)",
+          "expected": "err"
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nclass MyPromise {\n  constructor(executor) {\n    this.state = \"pending\";\n    this.value = undefined;\n    this.handlers = [];\n\n    const resolve = (value) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"fulfilled\";\n      this.value = value;\n      this.handlers.forEach(h => h.onFulfilled(value));\n    };\n\n    const reject = (reason) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"rejected\";\n      this.value = reason;\n      this.handlers.forEach(h => h.onRejected(reason));\n    };\n\n    executor(resolve, reject);\n  }\n\n  then(onFulfilled, onRejected) {\n    return new MyPromise((resolve, reject) => {\n      const fulfilled = value => {\n        try {\n          resolve(onFulfilled ? onFulfilled(value) : value);\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      const rejected = reason => {\n        try {\n          if (onRejected) {\n            resolve(onRejected(reason));\n          } else {\n            reject(reason);\n          }\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      if (this.state === \"fulfilled\") {\n        fulfilled(this.value);\n      } else if (this.state === \"rejected\") {\n        rejected(this.value);\n      } else {\n        this.handlers.push({\n          onFulfilled: fulfilled,\n          onRejected: rejected\n        });\n      }\n    });\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n```"
+    },
+    {
+      "id": 15,
+      "title": "Promise.all() polyfill",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "runner": "asyncExpression",
+      "functionName": "promiseAll",
+      "description": "Implement `promiseAll(promises)` that resolves when all promises settle successfully.\n\nReject on the first failure. Return results in input order. Empty array resolves to `[]`.\n\nComplete the implementation in the editor.",
+      "template": "function promiseAll(promises) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await promiseAll([Promise.resolve(1), 2, Promise.resolve(3)])",
+          "expected": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "setup": "",
+          "code": "await promiseAll([])",
+          "expected": []
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAll(promises) {\n  return new Promise((resolve, reject) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = value;\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        })\n        .catch(reject);\n    });\n  });\n}\n```"
+    },
+    {
+      "id": 16,
+      "title": "Promise.race() polyfill",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "runner": "asyncExpression",
+      "functionName": "promiseRace",
+      "description": "Implement `promiseRace(promises)` that settles with the first promise to fulfill or reject.\n\nComplete the implementation in the editor.",
+      "template": "function promiseRace(promises) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await promiseRace([Promise.resolve(\"fast\"), Promise.reject(\"slow\")])",
+          "expected": "fast"
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction promiseRace(promises) {\n  return new Promise((resolve, reject) => {\n    for (const promise of promises) {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(reject);\n    }\n  });\n}\n```"
+    },
+    {
+      "id": 17,
+      "title": "Promise.any() polyfill",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "runner": "asyncExpression",
+      "functionName": "promiseAny",
+      "description": "Implement `promiseAny(promises)` that resolves with the first fulfilled promise.\n\nIf all reject, reject with `AggregateError`. Empty input rejects with `AggregateError([])`.\n\nComplete the implementation in the editor.",
+      "template": "function promiseAny(promises) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await promiseAny([Promise.reject(\"a\"), Promise.resolve(42)])",
+          "expected": 42
+        },
+        {
+          "setup": "",
+          "code": "await promiseAny([Promise.reject(\"a\"), Promise.reject(\"b\")]).catch(e => e instanceof AggregateError)",
+          "expected": true
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAny(promises) {\n  return new Promise((resolve, reject) => {\n    const errors = [];\n    let rejected = 0;\n\n    if (promises.length === 0) {\n      reject(new AggregateError([]));\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(err => {\n          errors[index] = err;\n          rejected++;\n\n          if (rejected === promises.length) {\n            reject(new AggregateError(errors));\n          }\n        });\n    });\n  });\n}\n```"
+    },
+    {
+      "id": 18,
+      "title": "Promise.allSettled() polyfill",
+      "difficulty": "hard",
+      "topics": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "runner": "asyncExpression",
+      "functionName": "promiseAllSettled",
+      "description": "Implement `promiseAllSettled(promises)` that waits for every promise and never rejects.\n\nReturn `{ status: \"fulfilled\", value }` or `{ status: \"rejected\", reason }` per index.\n\nComplete the implementation in the editor.",
+      "template": "function promiseAllSettled(promises) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await promiseAllSettled([Promise.resolve(1), Promise.reject(\"err\")])",
+          "expected": [
+            {
+              "status": "fulfilled",
+              "value": 1
+            },
+            {
+              "status": "rejected",
+              "reason": "err"
+            }
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise(resolve => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = {\n            status: \"fulfilled\",\n            value\n          };\n        })\n        .catch(reason => {\n          result[index] = {\n            status: \"rejected\",\n            reason\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```"
+    }
+  ]
+}

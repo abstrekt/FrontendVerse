@@ -154,7 +154,7 @@ function extractCode(block) {
 
 function extractDetails(block) {
   const outputMatch = block.match(/<b>Output<\/b>\s*:\s*([^<]+)/i);
-  const reasonMatches = [...block.matchAll(/<b>Reason(?:\s+for[^<]*)?<\/b>\s*:\s*([^<]+)/gi)];
+  const reasonMatches = [...block.matchAll(/<b>Reason(?:\s+for[^<]*)?<\/b>\s*:\s*([\s\S]*?)<\/li>/gi)];
 
   const readmeOutput = outputMatch?.[1]?.trim().replace(/\s+/g, ' ') ?? '';
   const explanation = reasonMatches

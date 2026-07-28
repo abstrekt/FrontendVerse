@@ -8,6 +8,7 @@ export default function Sidebar({
   filteredCount,
   learningsCount,
   outputQuestionsCount,
+  codingQuestionsCount,
   lifetimeAccuracy,
   sessionCount,
   bestPct,
@@ -39,7 +40,9 @@ export default function Sidebar({
       ? `${count} question${count !== 1 ? "s" : ""} available`
       : activeSection === "learnings"
         ? `${learningsCount} learning${learningsCount !== 1 ? "s" : ""} available`
-        : `${outputQuestionsCount} question${outputQuestionsCount !== 1 ? "s" : ""} available`;
+        : activeSection === "coding"
+          ? `${codingQuestionsCount} challenge${codingQuestionsCount !== 1 ? "s" : ""} available`
+          : `${outputQuestionsCount} question${outputQuestionsCount !== 1 ? "s" : ""} available`;
 
   return (
     <div className="sidebar-inner">
@@ -68,6 +71,17 @@ export default function Sidebar({
                 <span className="nav-icon">LR</span>
                 <span>Javascript learnings</span>
                 <span className="nav-count">{learningsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "coding" ? "active" : ""}
+                onClick={() => onSectionChange("coding")}
+              >
+                <span className="nav-icon">CD</span>
+                <span>Javascript coding</span>
+                <span className="nav-count">{codingQuestionsCount}</span>
               </button>
             </li>
             <li>

@@ -19,6 +19,7 @@ export const DIFFICULTY_LABELS = {
   easy: 'Easy',
   medium: 'Medium',
   advance: 'Advance',
+  hard: 'Hard',
 };
 
 export function createSession({

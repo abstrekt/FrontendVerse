@@ -1,0 +1,183 @@
+{
+  "learnings": [
+    {
+      "id": 2,
+      "title": "Array.map() polyfill",
+      "tags": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "answer": "Interview-quality implementation of `Array.map()`. Simplified but correct for the vast majority of use cases.\n\n## Implementation\n\n```javascript\nArray.prototype.myMap = function (callback, thisArg) {\n  const result = [];\n\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      result[i] = callback.call(thisArg, this[i], i, this);\n    }\n  }\n\n  return result;\n};\n```\n\nHere **this** points to the object before the dot, which is the array itself.\n\n## Example\n\n```javascript\nconsole.log([1, 2, 3].myMap(x => x * 2));\n// [2, 4, 6]\n```\n\n## Interview follow-ups\n\n- Handle sparse arrays correctly (`i in this`).\n- Preserve `thisArg` when provided as the second argument."
+    },
+    {
+      "id": 3,
+      "title": "Array.filter() polyfill",
+      "tags": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "answer": "Implement `Array.prototype.myFilter` mirroring native `Array.filter()`.\n\n## Implementation\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) {\n  const result = [];\n\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      if (callback.call(thisArg, this[i], i, this)) {\n        result.push(this[i]);\n      }\n    }\n  }\n\n  return result;\n};\n```\n\n## Interview follow-ups\n\n- Handle sparse arrays correctly (`i in this`) — do not invoke the callback for holes.\n- Preserve `thisArg` via `callback.call(thisArg, ...)`."
+    },
+    {
+      "id": 4,
+      "title": "Array.reduce() polyfill",
+      "tags": [
+        "polyfill",
+        "Array",
+        "iteration"
+      ],
+      "answer": "Implement `Array.prototype.myReduce` mirroring native `Array.reduce()`.\n\n## Implementation\n\n```javascript\nArray.prototype.myReduce = function (callback, initialValue) {\n  let accumulator = initialValue;\n  let start = 0;\n\n  if (accumulator === undefined) {\n    accumulator = this[0];\n    start = 1;\n  }\n\n  for (let i = start; i < this.length; i++) {\n    if (i in this) {\n      accumulator = callback(accumulator, this[i], i, this);\n    }\n  }\n\n  return accumulator;\n};\n```\n\n## Example\n\n```javascript\n[1, 2, 3].myReduce((a, b) => a + b, 0);\n// 6\n```\n\n## Interview follow-ups\n\n- Handle sparse arrays correctly (`i in this`).\n- Support calling without `initialValue` — use `this[0]` as the starting accumulator."
+    },
+    {
+      "id": 5,
+      "title": "Function.call() polyfill",
+      "tags": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "answer": "Implement `Function.prototype.myCall` mirroring native `Function.call()`.\n\n## Implementation\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) {\n  context = context || globalThis;\n\n  const key = Symbol();\n\n  context[key] = this;\n\n  const result = context[key](...args);\n\n  delete context[key];\n\n  return result;\n};\n```\n\n## Interview follow-ups\n\n- Preserve `this` context by invoking the function on `context`.\n- Default `context` to `globalThis` when nullish.\n- Clean up the temporary Symbol property after invocation."
+    },
+    {
+      "id": 6,
+      "title": "Function.apply() polyfill",
+      "tags": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "answer": "Implement `Function.prototype.myApply` mirroring native `Function.apply()`.\n\n## Implementation\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) {\n  context = context || globalThis;\n\n  const key = Symbol();\n\n  context[key] = this;\n\n  const result = context[key](...args);\n\n  delete context[key];\n\n  return result;\n};\n```\n\n## Interview follow-ups\n\n- Same `this`-binding approach as `call`, but arguments arrive as an array.\n- Default `args` to an empty array."
+    },
+    {
+      "id": 7,
+      "title": "Function.bind() polyfill",
+      "tags": [
+        "polyfill",
+        "Function",
+        "this"
+      ],
+      "answer": "Implement `Function.prototype.myBind` mirroring native `Function.bind()`.\n\n## Implementation\n\n```javascript\nFunction.prototype.myBind = function (context, ...presetArgs) {\n  const fn = this;\n\n  return function (...laterArgs) {\n    return fn.apply(context, [...presetArgs, ...laterArgs]);\n  };\n};\n```\n\n## Example\n\n```javascript\nfunction greet(city) {\n  console.log(this.name, city);\n}\n\nconst user = { name: \"John\" };\n\nconst fn = greet.myBind(user);\n\nfn(\"London\");\n// John London\n```\n\n## Interview follow-ups\n\n- Preserve `this` context in the returned function.\n- Support partial application via `presetArgs`.\n- A full polyfill also supports `new` with bound functions (out of scope for basic version)."
+    },
+    {
+      "id": 8,
+      "title": "Deep Copy",
+      "tags": [
+        "polyfill",
+        "objects",
+        "recursion"
+      ],
+      "answer": "Deep copy for objects and arrays. Handles nested structures.\n\n## Implementation\n\n```javascript\nfunction deepCopy(obj) {\n  if (obj === null || typeof obj !== \"object\") {\n    return obj;\n  }\n\n  const copy = Array.isArray(obj) ? [] : {};\n\n  for (const key in obj) {\n    if (Object.hasOwn(obj, key)) {\n      copy[key] = deepCopy(obj[key]);\n    }\n  }\n\n  return copy;\n}\n```\n\n## Example\n\n```javascript\nconst a = {\n  x: 1,\n  y: { z: 2 }\n};\n\nconst b = deepCopy(a);\n\nb.y.z = 100;\n\nconsole.log(a.y.z);\n// 2\n```\n\n## Interview follow-ups\n\n- Use `Object.hasOwn` to avoid copying inherited properties.\n- Handle circular references with a `WeakMap` in a full implementation."
+    },
+    {
+      "id": 9,
+      "title": "Deep Merge",
+      "tags": [
+        "polyfill",
+        "objects",
+        "recursion"
+      ],
+      "answer": "Deep merge two objects. Arrays are concatenated.\n\n## Implementation\n\n```javascript\nfunction deepMerge(target, source) {\n  if (Array.isArray(target) && Array.isArray(source)) {\n    return [...target, ...source];\n  }\n\n  const result = { ...target };\n\n  for (const key in source) {\n    if (\n      typeof source[key] === \"object\" &&\n      source[key] !== null &&\n      key in target\n    ) {\n      result[key] = deepMerge(target[key], source[key]);\n    } else {\n      result[key] = source[key];\n    }\n  }\n\n  return result;\n}\n```\n\n## Example\n\n```javascript\nconst obj1 = { a: 1, b: { c: 2 } };\nconst obj2 = { b: { d: 3 } };\n\nconsole.log(deepMerge(obj1, obj2));\n// { a: 1, b: { c: 2, d: 3 } }\n```\n\n## Interview follow-ups\n\n- Recursively merge nested objects when both sides have an object at the same key.\n- Concatenate arrays rather than deep-merging them in this simplified version."
+    },
+    {
+      "id": 10,
+      "title": "Flatten Array (infinite)",
+      "tags": [
+        "polyfill",
+        "Array",
+        "recursion"
+      ],
+      "answer": "Flatten an array to any depth (infinite recursion).\n\n## Implementation\n\n```javascript\nfunction flatten(arr) {\n  const result = [];\n\n  for (const item of arr) {\n    if (Array.isArray(item)) {\n      result.push(...flatten(item));\n    } else {\n      result.push(item);\n    }\n  }\n\n  return result;\n}\n```\n\n## Example\n\n```javascript\nflatten([1, [2, [3, [4]]]]);\n// [1, 2, 3, 4]\n```\n\n## Interview follow-ups\n\n- Recursive approach vs iterative with a stack.\n- Contrast with depth-limited flatten (see Flatten with Level)."
+    },
+    {
+      "id": 11,
+      "title": "Flatten with Level",
+      "tags": [
+        "polyfill",
+        "Array",
+        "recursion"
+      ],
+      "answer": "Flatten an array up to a given depth.\n\n## Implementation\n\n```javascript\nfunction flatten(arr, depth = 1) {\n  if (depth === 0) return arr.slice();\n\n  const result = [];\n\n  for (const item of arr) {\n    if (Array.isArray(item)) {\n      result.push(...flatten(item, depth - 1));\n    } else {\n      result.push(item);\n    }\n  }\n\n  return result;\n}\n```\n\n## Example\n\n```javascript\nflatten([1, [2, [3, [4]]]], 2);\n// [1, 2, 3, [4]]\n```\n\n## Interview follow-ups\n\n- `depth === 0` should return a shallow copy without flattening.\n- Default `depth` to `1` to match common API expectations."
+    },
+    {
+      "id": 12,
+      "title": "Debounce",
+      "tags": [
+        "polyfill",
+        "timing",
+        "closures"
+      ],
+      "answer": "Debounce delays execution until after a quiet period.\n\n## Implementation\n\n```javascript\nfunction debounce(fn, delay) {\n  let timer;\n\n  return function (...args) {\n    clearTimeout(timer);\n\n    timer = setTimeout(() => {\n      fn.apply(this, args);\n    }, delay);\n  };\n}\n```\n\n## Example\n\n```javascript\nwindow.addEventListener(\n  \"resize\",\n  debounce(() => {\n    console.log(\"resize\");\n  }, 300)\n);\n```\n\n## Interview follow-ups\n\n- Compare leading vs trailing debounce implementations.\n- Implement configurable options (leading, trailing, maxWait).\n- Preserve `this` and arguments in the delayed callback."
+    },
+    {
+      "id": 13,
+      "title": "Throttle",
+      "tags": [
+        "polyfill",
+        "timing",
+        "closures"
+      ],
+      "answer": "Throttle limits how often a function can run.\n\n## Implementation\n\n```javascript\nfunction throttle(fn, delay) {\n  let waiting = false;\n\n  return function (...args) {\n    if (waiting) return;\n\n    waiting = true;\n\n    fn.apply(this, args);\n\n    setTimeout(() => {\n      waiting = false;\n    }, delay);\n  };\n}\n```\n\n## Interview follow-ups\n\n- Compare leading vs trailing throttle implementations.\n- Contrast with debounce — throttle fires at most once per window.\n- Preserve `this` and arguments when invoking `fn`."
+    },
+    {
+      "id": 14,
+      "title": "Promise Polyfill",
+      "tags": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "answer": "Basic `MyPromise` polyfill with `then` and `catch`.\n\n## Implementation\n\n```javascript\nclass MyPromise {\n  constructor(executor) {\n    this.state = \"pending\";\n    this.value = undefined;\n    this.handlers = [];\n\n    const resolve = (value) => {\n      if (this.state !== \"pending\") return;\n\n      this.state = \"fulfilled\";\n      this.value = value;\n\n      this.handlers.forEach(h => h.onFulfilled(value));\n    };\n\n    const reject = (reason) => {\n      if (this.state !== \"pending\") return;\n\n      this.state = \"rejected\";\n      this.value = reason;\n\n      this.handlers.forEach(h => h.onRejected(reason));\n    };\n\n    executor(resolve, reject);\n  }\n\n  then(onFulfilled, onRejected) {\n    return new MyPromise((resolve, reject) => {\n      const fulfilled = value => {\n        try {\n          resolve(onFulfilled ? onFulfilled(value) : value);\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      const rejected = reason => {\n        try {\n          if (onRejected) {\n            resolve(onRejected(reason));\n          } else {\n            reject(reason);\n          }\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      if (this.state === \"fulfilled\") {\n        fulfilled(this.value);\n      } else if (this.state === \"rejected\") {\n        rejected(this.value);\n      } else {\n        this.handlers.push({\n          onFulfilled: fulfilled,\n          onRejected: rejected\n        });\n      }\n    });\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n```\n\n## Interview follow-ups\n\n- Queue handlers while state is `pending`.\n- A spec-compliant version schedules handlers as microtasks."
+    },
+    {
+      "id": 15,
+      "title": "Promise.all() polyfill",
+      "tags": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "answer": "Implement `promiseAll` mirroring `Promise.all()`.\n\n## Implementation\n\n```javascript\nfunction promiseAll(promises) {\n  return new Promise((resolve, reject) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = value;\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        })\n        .catch(reject);\n    });\n  });\n}\n```\n\n## Interview follow-ups\n\n- Explain why `Promise.resolve()` wraps each item (handles non-promise values).\n- Reject immediately on the first failure.\n- Preserve result order matching input order."
+    },
+    {
+      "id": 16,
+      "title": "Promise.race() polyfill",
+      "tags": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "answer": "Implement `promiseRace` mirroring `Promise.race()`.\n\n## Implementation\n\n```javascript\nfunction promiseRace(promises) {\n  return new Promise((resolve, reject) => {\n    for (const promise of promises) {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(reject);\n    }\n  });\n}\n```\n\n## Interview follow-ups\n\n- First settled promise wins — fulfilled or rejected.\n- Explain why `Promise.resolve()` is used on each item."
+    },
+    {
+      "id": 17,
+      "title": "Promise.any() polyfill",
+      "tags": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "answer": "Implement `promiseAny` mirroring `Promise.any()`.\n\n## Implementation\n\n```javascript\nfunction promiseAny(promises) {\n  return new Promise((resolve, reject) => {\n    const errors = [];\n    let rejected = 0;\n\n    if (promises.length === 0) {\n      reject(new AggregateError([]));\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(err => {\n          errors[index] = err;\n          rejected++;\n\n          if (rejected === promises.length) {\n            reject(new AggregateError(errors));\n          }\n        });\n    });\n  });\n}\n```\n\n## Interview follow-ups\n\n- Resolves with the first fulfilled promise.\n- Rejects with `AggregateError` when all promises fail.\n- Empty input rejects immediately with `AggregateError([])`."
+    },
+    {
+      "id": 18,
+      "title": "Promise.allSettled() polyfill",
+      "tags": [
+        "polyfill",
+        "Promise",
+        "async"
+      ],
+      "answer": "Implement `promiseAllSettled` mirroring `Promise.allSettled()`.\n\n## Implementation\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise(resolve => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = {\n            status: \"fulfilled\",\n            value\n          };\n        })\n        .catch(reason => {\n          result[index] = {\n            status: \"rejected\",\n            reason\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```\n\n## Interview follow-ups\n\n- Never rejects the outer promise.\n- Each entry is `{ status, value }` or `{ status, reason }`.\n- Result order matches input order."
+    },
+    {
+      "id": 19,
+      "title": "Common JavaScript Polyfill Interview Follow-ups",
+      "tags": [
+        "polyfill",
+        "interview"
+      ],
+      "answer": "After implementing common JavaScript polyfills, interviewers frequently ask you to:\n\n- Handle sparse arrays correctly (`i in this`).\n- Preserve `this` context in `call`, `apply`, and `bind`.\n- Support constructor behavior in a full `bind` polyfill (`new` with bound functions).\n- Handle circular references in `deepCopy` / `deepMerge` using a `WeakMap`.\n- Explain why `Promise.resolve()` is used inside promise combinators.\n- Compare leading vs. trailing debounce/throttle implementations and implement configurable options.\n\nMastering these implementations and their edge cases covers a large fraction of JavaScript coding interview questions."
+    }
+  ]
+}

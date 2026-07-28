@@ -10,6 +10,8 @@ import Results from './components/Results';
 import MobileProgressBar from './components/MobileProgressBar';
 import OutputQuizQuestion from './components/OutputQuizQuestion';
 import OutputResults from './components/OutputResults';
+import CodingChallenge from './components/CodingChallenge';
+import CodingResults from './components/CodingResults';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAppRoute } from './hooks/useAppRoute';
 import {
@@ -48,7 +50,19 @@ import {
 } from './utils/outputProgress';
 import questionsData from '../questions.json';
 import learningsData from '../data/learnings.json';
+import polyfillLearningsData from '../data/polyfill-learnings.json';
 import outputQuestionsData from '../data/output-questions.json';
+import scopeOutputQuestionsData from '../data/scope-output-questions.json';
+import codingQuestionsData from '../data/coding-questions.json';
+import {
+  EMPTY_CODING_PROGRESS,
+  loadCodingProgress,
+  saveCodingProgress,
+  recordCodingAnswer,
+  recordCodingSession,
+  getCodingStats,
+  buildCodingQueue,
+} from './utils/codingProgress';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -68,9 +82,15 @@ export default function App() {
   const [outputProgress, setOutputProgress] = useLocalStorage('output-quiz-progress', EMPTY_OUTPUT_PROGRESS);
   const [outputSession, setOutputSession] = useLocalStorage('output-quiz-session', EMPTY_OUTPUT_SESSION);
   const [outputIncludeCompleted, setOutputIncludeCompleted] = useLocalStorage('output-quiz-include-completed', true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
+  const [panelCollapsed, setPanelCollapsed] = useLocalStorage('layout-panel-collapsed', false);
+  const [codingProgress, setCodingProgress] = useState(() => loadCodingProgress());
+  const [codingSession, setCodingSession] = useLocalStorage('coding-quiz-session', null);
+  const [codingQuestions, setCodingQuestions] = useState([]);
 
   const sessionRecordedRef = useRef(false);
   const outputSessionRecordedRef = useRef(false);
+  const codingSessionRecordedRef = useRef(false);
   const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
 
   const shuffled = useMemo(
@@ -103,6 +123,22 @@ export default function App() {
   const isOutputFinished = outputShuffled.length > 0 && outputCurrentIndex >= outputShuffled.length;
   const outputSessionCaughtUp =
     outputQuestions.length > 0 && outputShuffled.length === 0;
+
+  const codingShuffled = useMemo(
+    () => {
+      if (!codingSession?.queueIds || !codingQuestions.length) return [];
+      const byId = new Map(codingQuestions.map((q) => [q.id, q]));
+      return codingSession.queueIds.map((id) => byId.get(id)).filter(Boolean);
+    },
+    [codingSession, codingQuestions]
+  );
+  const codingScore = codingSession?.score ?? 0;
+  const codingAnswered = codingSession?.answered ?? 0;
+  const codingCurrentIndex = codingSession?.currentIndex ?? 0;
+  const codingSessionTotal = codingSession?.sessionTotal ?? 0;
+  const codingRemaining = codingShuffled.length - codingCurrentIndex;
+  const currentCodingQuestion = codingShuffled.length > 0 ? codingShuffled[codingCurrentIndex] : null;
+  const isCodingFinished = codingShuffled.length > 0 && codingCurrentIndex >= codingShuffled.length;
 
   const selectedLearning = useMemo(() => {
     if (activeSection !== 'learnings') return null;
@@ -184,12 +220,17 @@ export default function App() {
 
   useEffect(() => {
     const allQuestions = questionsData.questions;
-    const allLearnings = learningsData.learnings;
-    const allOutputQuestions = outputQuestionsData.questions;
+    const allLearnings = [...learningsData.learnings, ...polyfillLearningsData.learnings];
+    const allOutputQuestions = [
+      ...outputQuestionsData.questions,
+      ...scopeOutputQuestionsData.questions,
+    ];
+    const allCodingQuestions = codingQuestionsData.questions;
     setQuestions(allQuestions);
     setLearnings(allLearnings);
     setOutputQuestions(allOutputQuestions);
     setOutputSourceUrl(outputQuestionsData.source);
+    setCodingQuestions(allCodingQuestions);
 
     setQuizSession((saved) => {
       const sanitized = sanitizeSessionQueue(saved, skippedIds);
@@ -208,6 +249,23 @@ export default function App() {
         includeCompleted: outputIncludeCompleted,
       });
       return createOutputSession({ queue });
+    });
+
+    setCodingSession((saved) => {
+      if (saved?.queueIds?.length && allCodingQuestions.length) {
+        const byId = new Map(allCodingQuestions.map((q) => [q.id, q]));
+        const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
+        if (restored.length > 0 && saved.currentIndex < restored.length) return saved;
+      }
+      const queue = buildCodingQueue(allCodingQuestions);
+      return {
+        answeredIds: [],
+        score: 0,
+        answered: 0,
+        currentIndex: 0,
+        queueIds: queue.map((q) => q.id),
+        sessionTotal: queue.length,
+      };
     });
 
     setLoading(false);
@@ -246,6 +304,23 @@ export default function App() {
       })
     );
   }, [isOutputFinished, outputScore, outputSessionTotal, outputSession, setOutputProgress]);
+
+  useEffect(() => {
+    if (!isCodingFinished || codingSessionRecordedRef.current) return;
+    codingSessionRecordedRef.current = true;
+
+    const pct = codingSessionTotal > 0 ? Math.round((codingScore / codingSessionTotal) * 100) : 0;
+    setCodingProgress((prev) => {
+      const updated = recordCodingSession(prev, {
+        score: codingScore,
+        total: codingSessionTotal,
+        pct,
+        questionIds: codingSession?.queueIds ?? [],
+      });
+      saveCodingProgress(updated);
+      return updated;
+    });
+  }, [isCodingFinished, codingScore, codingSessionTotal, codingSession, setCodingProgress]);
 
   const applySession = useCallback(
     (pool, nextMode, topics, difficulties, { resetSession = false } = {}) => {
@@ -464,13 +539,59 @@ export default function App() {
     outputSessionRecordedRef.current = false;
   }, [buildOutputQuizQueue, outputQuestions, setOutputProgress, setOutputSession]);
 
+  const handleCodingCheck = useCallback(
+    (correct, question) => {
+      setCodingProgress((prev) => {
+        const updated = recordCodingAnswer(prev, question.id, correct);
+        saveCodingProgress(updated);
+        return updated;
+      });
+      setCodingSession((session) => {
+        if (!session) return session;
+        const answeredIds = session.answeredIds.includes(question.id)
+          ? session.answeredIds
+          : [...session.answeredIds, question.id];
+        return {
+          ...session,
+          answeredIds,
+          answered: session.answered + 1,
+          score: session.score + (correct ? 1 : 0),
+        };
+      });
+    },
+    [setCodingProgress, setCodingSession]
+  );
+
+  const handleCodingNext = useCallback(() => {
+    setCodingSession((session) => {
+      if (!session) return session;
+      return { ...session, currentIndex: session.currentIndex + 1 };
+    });
+  }, [setCodingSession]);
+
+  const handleCodingRestart = useCallback(() => {
+    const queue = buildCodingQueue(codingQuestions);
+    setCodingSession({
+      answeredIds: [],
+      score: 0,
+      answered: 0,
+      currentIndex: 0,
+      queueIds: queue.map((q) => q.id),
+      sessionTotal: queue.length,
+    });
+    codingSessionRecordedRef.current = false;
+  }, [codingQuestions, setCodingSession]);
+
+  const codingStats = useMemo(() => getCodingStats(codingProgress), [codingProgress]);
+
   useEffect(() => {
     function onKeyDown(e) {
       const target = e.target;
       const isEditable =
         target instanceof HTMLTextAreaElement ||
         target instanceof HTMLInputElement ||
-        target?.isContentEditable;
+        target?.isContentEditable ||
+        target?.closest?.('.monaco-editor');
 
       if (e.key === 'Enter' && !isFinished && !loading && !isEditable) {
         e.preventDefault();
@@ -582,6 +703,55 @@ export default function App() {
           sourceUrl={outputSourceUrl}
           onCheck={handleOutputCheck}
           onNext={handleOutputNext}
+        />
+      );
+    }
+
+    return null;
+  }
+
+  function codingContent() {
+    if (loading) {
+      return <div className="quiz-container loading"><p>Loading questions...</p></div>;
+    }
+
+    if (codingQuestions.length === 0) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>No coding questions available.</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (isCodingFinished) {
+      return (
+        <div className="quiz-container">
+          <CodingResults
+            score={codingScore}
+            totalQuestions={codingSessionTotal}
+            sessionCount={codingProgress.sessions.length}
+            bestPct={codingStats.bestPct}
+            onRestart={handleCodingRestart}
+          />
+        </div>
+      );
+    }
+
+    if (currentCodingQuestion) {
+      return (
+        <CodingChallenge
+          key={codingCurrentIndex}
+          question={currentCodingQuestion}
+          remaining={codingRemaining}
+          sessionTotal={codingSessionTotal}
+          score={codingScore}
+          answered={codingAnswered}
+          highlight={syntaxHighlight}
+          theme={theme}
+          onCheck={handleCodingCheck}
+          onNext={handleCodingNext}
         />
       );
     }
@@ -705,6 +875,7 @@ export default function App() {
             totalQuestions={questions.length}
             learningsCount={learnings.length}
             outputQuestionsCount={outputQuestions.length}
+            codingQuestionsCount={codingQuestions.length}
             filteredCount={
               selectedTopics.length > 0 || selectedDifficulties.length > 0
                 ? filteredQuestions.length
@@ -759,6 +930,15 @@ export default function App() {
               <button
                 type="button"
                 role="tab"
+                aria-selected={activeSection === 'coding'}
+                className={`section-toggle-btn${activeSection === 'coding' ? ' active' : ''}`}
+                onClick={() => setSection('coding')}
+              >
+                Coding
+              </button>
+              <button
+                type="button"
+                role="tab"
                 aria-selected={activeSection === 'output'}
                 className={`section-toggle-btn${activeSection === 'output' ? ' active' : ''}`}
                 onClick={() => setSection('output')}
@@ -799,6 +979,8 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'coding' ? (
+              codingContent()
             ) : activeSection === 'output' ? (
               outputContent()
             ) : (
@@ -814,6 +996,16 @@ export default function App() {
                 selectedLearningId={selectedLearning?.id ?? null}
                 onSelect={setLearningId}
               />
+            </div>
+          ) : activeSection === 'coding' ? (
+            <div className="topics-panel coding-panel">
+              <div className="panel-subheader">
+                <span>Javascript Coding</span>
+                <span className="learnings-count">{codingQuestions.length}</span>
+              </div>
+              <p className="output-panel-copy">
+                Solve algorithm and data structure problems by writing JavaScript code. Test cases validate your solution.
+              </p>
             </div>
           ) : activeSection === 'output' ? (
             <div className="topics-panel output-panel">
@@ -839,6 +1031,10 @@ export default function App() {
             </div>
           )
         }
+        sidebarCollapsed={sidebarCollapsed}
+        panelCollapsed={panelCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+        onTogglePanel={() => setPanelCollapsed((v) => !v)}
       />
   );
 }

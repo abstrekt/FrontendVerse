@@ -1,0 +1,78 @@
+{
+  "questions": [
+    {
+      "id": 53,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x); // ???\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y); // ???\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z); // ???\n  }\n  console.log(\"D:\", y); // ???\n  console.log(\"E:\", z); // ???\n}\n\ntestScope();\nconsole.log(\"F:\", x); // ???\n```",
+      "code": "var x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x);\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y);\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z);\n  }\n  console.log(\"D:\", y);\n  console.log(\"E:\", z);\n}\n\ntestScope();\nconsole.log(\"F:\", x);",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'y' before initialization"
+      ],
+      "explanation": "A prints `undefined` because the inner `var x` is hoisted to the top of `testScope`, shadowing the global `x` before it is assigned. At B, the block's `let y = 5` creates a new binding that shadows the outer `let y = 3`. The inner `y` is in the temporal dead zone, so accessing it throws a ReferenceError. C–F never run. If B succeeded, C would log `6` (inner `const z`), D would log `3`, E would log `4`, and F would log `1` (global `x`).",
+      "readmeOutput": "ReferenceError: Cannot access 'y' before initialization",
+      "async": false
+    },
+    {
+      "id": 54,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar x = 1;\n{\n  var x = 2;\n  console.log(x);\n}\nconsole.log(x);\n```",
+      "code": "var x = 1;\n{\n  var x = 2;\n  console.log(x);\n}\nconsole.log(x);",
+      "expectedLines": [
+        "2",
+        "2"
+      ],
+      "explanation": "`var` is function-scoped, not block-scoped. The `var x = 2` inside the block reassigns the same binding as the outer `var x = 1`, so both logs print `2`.",
+      "readmeOutput": "2, 2",
+      "async": false
+    },
+    {
+      "id": 55,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(typeof undeclaredVar);\nconsole.log(typeof x);\nvar x = 1;\nconsole.log(typeof y);\nlet y = 2;\n```",
+      "code": "console.log(typeof undeclaredVar);\nconsole.log(typeof x);\nvar x = 1;\nconsole.log(typeof y);\nlet y = 2;",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'y' before initialization"
+      ],
+      "explanation": "The first log prints `undefined` because `typeof` on an undeclared variable does not throw. The second prints `undefined` because `var x` is hoisted but not yet initialized. The third log tries to read `y` while the inner `let y` is still in the temporal dead zone, so it throws a ReferenceError even though `typeof y` would have been safe.",
+      "readmeOutput": "ReferenceError: Cannot access 'y' before initialization",
+      "async": false
+    },
+    {
+      "id": 56,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst z = 4;\n{\n  console.log(z);\n  const z = 6;\n  console.log(z);\n}\nconsole.log(z);\n```",
+      "code": "const z = 4;\n{\n  console.log(z);\n  const z = 6;\n  console.log(z);\n}\nconsole.log(z);",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'z' before initialization"
+      ],
+      "explanation": "The block's `const z = 6` shadows the outer `const z = 4` for the entire block scope. At the first `console.log(z)`, the inner binding exists but is still in the temporal dead zone, so JavaScript throws a ReferenceError before any value is printed.",
+      "readmeOutput": "ReferenceError: Cannot access 'z' before initialization",
+      "async": false
+    },
+    {
+      "id": 57,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction test() {\n  var x = 1;\n  {\n    let x = 2;\n    console.log(x);\n  }\n  console.log(x);\n}\ntest();\n```",
+      "code": "function test() {\n  var x = 1;\n  {\n    let x = 2;\n    console.log(x);\n  }\n  console.log(x);\n}\ntest();",
+      "expectedLines": [
+        "2",
+        "1"
+      ],
+      "explanation": "Inside the block, `let x = 2` creates a separate block-scoped binding that shadows the function-scoped `var x = 1`. The first log uses the inner binding (`2`). After the block, only the `var` binding remains, so the second log prints `1`.",
+      "readmeOutput": "2, 1",
+      "async": false
+    },
+    {
+      "id": 58,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction test(a = b, b = 2) {\n  console.log(a, b);\n}\ntest();\n```",
+      "code": "function test(a = b, b = 2) {\n  console.log(a, b);\n}\ntest();",
+      "expectedLines": [
+        "ReferenceError: Cannot access 'b' before initialization"
+      ],
+      "explanation": "Default parameter expressions are evaluated left to right in their own scope. When `a = b` runs, `b` has been declared by the later parameter `b = 2` but is still in the temporal dead zone, so accessing it throws a ReferenceError.",
+      "readmeOutput": "ReferenceError: Cannot access 'b' before initialization",
+      "async": false
+    }
+  ]
+}
