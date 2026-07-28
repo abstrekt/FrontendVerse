@@ -14,3 +14,17 @@
 - Prefers action buttons (like "Check answer" and "Show explanation") to always be enabled and visible, regardless of whether prerequisite input has been provided. Dislikes conditionally disabling or hiding buttons based on form/answer state — prefers letting users click anytime and handling the outcome (empty input, re-check, etc.) gracefully rather than preemptively blocking interaction. Confidence: 0.85
 - Prefers comprehensive, multi-format learning applications — values having multiple exercise types (MCQ, output prediction, coding challenges) coexist within a single platform rather than splitting them across separate specialized tools. Confidence: 0.65
 - Uses established, well-known platform UX patterns (e.g., LeetCode, HackerRank) as design references when building coding challenge interfaces — prefers modeling after proven, familiar solutions rather than designing novel layouts from scratch. Confidence: 0.65
+- Prefers user progress and submissions to be persisted durably — values maintaining history of all previous attempts, not just the latest one. Expects submissions to never be lost across sessions. Confidence: 0.85
+- Prefers deep/full-text search that matches across all fields (title, content, tags, companies) rather than shallow title-only matching. Expects a Cmd+K-style global search with rich result cards showing matching strings highlighted. Confidence: 0.9
+- Prefers archive/hide functionality on items across all categories, with the ability to unarchive later. Values content curation (hiding seen/irrelevant items) over viewing fixed, un-curated content sets. Confidence: 0.85
+- Prefers star/bookmark functionality on items with the ability to filter by starred status across all sections. Confidence: 0.85
+- Prefers mark-as-solved/completed tracking on items across all sections — values a third state beyond archive and star that indicates the user has completed/finished an item. Confidence: 0.85
+- Prefers Monaco Editor or equivalent rich code editing experience with syntax highlighting and autocomplete built into coding challenge interfaces. Confidence: 0.85
+- Expects syntax highlighting to be applied to all code displays, not just the editor — including explanation panels, read-only code snippets, and answer displays. Confidence: 0.8
+- Prefers collapsible sidebars that collapse to icon-only navigation (still functional for page switching) rather than fully hiding. For secondary panels, prefers near-complete hiding with a small persistent toggle button to reopen. Confidence: 0.8
+- Prefers storing source provenance (URL, origin) on all loaded/ingested content items to enable future deduplication and traceability. Confidence: 0.85
+- Prefers automatic deduplication when loading content — expects the system to detect and skip near-duplicate items by title, code body, or function signature before writing. Confidence: 0.85
+- Prefers comprehensive, well-structured AI-generated answers (described as "Gemini-style") — values thorough explanations with examples over minimal or placeholder text. Confidence: 0.8
+- Prefers clean, non-redundant UI badges/tags — dislikes duplicate labels (e.g., both "companies" and "interview" badges when one suffices). Confidence: 0.75
+- Values continuous improvement of agent workflows — wants to capture process learnings from conversations and codify them into agentmd, skills, or commands for future reuse. Confidence: 0.8
+- Prefers tagging interview-sourced content with company metadata (e.g., "Tekion") to enable filtering by company. Confidence: 0.8

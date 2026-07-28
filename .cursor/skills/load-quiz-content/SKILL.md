@@ -40,6 +40,18 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 - Use `company` (e.g. `"Tekion"`) for interview/company-sourced content; UI shows it separately from topic badges.
 - MCQ difficulty: `easy` | `medium` | `hard` | `advance`.
 
+## Provenance (`source`)
+
+JSON has no comments. Persist origin with a short **`source`** string on **every new entry** (and file-level `"source"` for single-origin supplemental files — see `data/output-questions.json`).
+
+Examples: `"https://…"`, `"Tekion interview notes"`, `"user paste: event loop"`, `"user request: debounce polyfill"`.
+
+Keep `source` short (citation only). Full material goes in content fields. UI may ignore per-item `source`.
+
+## Deduping
+
+Before adding, scan the target file(s) (and Coding↔Learnings twins) for the same title, `functionName` / API, or essentially identical code/`body`. Skip near-duplicates and report existing ids unless the user asked to replace/update.
+
 ## Learnings schema
 
 ```json
@@ -47,6 +59,7 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
   "id": 2,
   "title": "Array.map() polyfill",
   "tags": ["polyfill", "Array", "iteration"],
+  "source": "https://example.com/polyfills",
   "answer": "Markdown with ```code``` blocks, examples, and follow-ups."
 }
 ```
@@ -59,6 +72,7 @@ Interview / company entry:
   "title": "React Collapsible List",
   "company": "Tekion",
   "tags": ["React", "UI"],
+  "source": "Tekion interview notes",
   "answer": "..."
 }
 ```
@@ -79,6 +93,7 @@ const allLearnings = [...learningsData.learnings, ...polyfillLearningsData.learn
   "title": "Array.map() polyfill",
   "difficulty": "easy",
   "topics": ["polyfill", "Array", "iteration"],
+  "source": "https://example.com/polyfills",
   "runner": "expression",
   "functionName": "myMap",
   "description": "Markdown problem statement",
@@ -152,18 +167,19 @@ Rules:
 
 - Root [`questions.json`](../../../questions.json).
 - Helper scripts: [`tools/fetch-questions.mjs`](../../../tools/fetch-questions.mjs), [`tools/tag-questions.mjs`](../../../tools/tag-questions.mjs).
-- Schema: `question`, `body` (markdown code fence), `options[{key,text}]`, `answer`, `explanation`, `topics`, `difficulty`.
+- Schema: `question`, `body` (markdown code fence), `options[{key,text}]`, `answer`, `explanation`, `topics`, `difficulty`, `source`.
 
 ## Checklist for adding a content batch
 
 1. Choose section(s): Learnings only, Coding only, or both (linked by matching id + tags).
-2. Pick next available id(s) in the target JSON file.
-3. Write data with correct schema, tags, and test cases.
-4. If supplemental file: import + merge in `App.jsx`.
-5. If new runner needed: extend `codingRunner.js`; keep result shape `{ passed, input, expected, got }`.
-6. If UI assumes a specific shape: update `CodingChallenge.jsx` generically, not per question.
-7. Run `pnpm dev`; spot-check render + test execution.
-8. Do not commit unless asked.
+2. Dedupe against existing entries (title / code / `functionName`); skip or update — don’t silently duplicate.
+3. Pick next available id(s) in the target JSON file for **new** items only.
+4. Write data with correct schema, tags, `source`, and test cases.
+5. If supplemental file: import + merge in `App.jsx`; set file-level `source` when the batch shares one origin.
+6. If new runner needed: extend `codingRunner.js`; keep result shape `{ passed, input, expected, got }`.
+7. If UI assumes a specific shape: update `CodingChallenge.jsx` generically, not per question.
+8. Run `pnpm dev`; spot-check render + test execution.
+9. Do not commit unless asked.
 
 ## Reference example: polyfill batch
 

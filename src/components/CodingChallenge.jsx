@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import CodeBody from './CodeBody';
 import CodeEditor from './CodeEditor';
 import DifficultyBadge from './DifficultyBadge';
 import { runCodingTests } from '../utils/codingRunner';
+import {
+  loadCodingSubmissions,
+  saveCodingDraft,
+  recordCodingSubmission,
+  getInitialCode,
+} from '../utils/codingSubmissions';
 import StarButton from './StarButton';
+import CompletedButton from './CompletedButton';
 
 function formatTestCase(tc) {
   if (tc.input?.promises !== undefined) {
@@ -29,6 +37,15 @@ function formatValue(value) {
   }
 }
 
+function formatSubmissionTime(ts) {
+  return new Date(ts).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 export default function CodingChallenge({
   question,
   remaining,
@@ -42,16 +59,30 @@ export default function CodingChallenge({
   onArchive,
   isStarred = false,
   onToggleStar,
+  isCompleted = false,
+  onToggleCompleted,
 }) {
-  const [code, setCode] = useState(question.template);
+  const submissionsRef = useRef(loadCodingSubmissions());
+  const [code, setCode] = useState(() => getInitialCode(submissionsRef.current, question));
+  const [submissionHistory, setSubmissionHistory] = useState(
+    () => submissionsRef.current.byQuestion[String(question.id)]?.history ?? []
+  );
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState(false);
   const [testResults, setTestResults] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showSubmissions, setShowSubmissions] = useState(false);
   const [allPassed, setAllPassed] = useState(false);
 
   const isLast = remaining === 1;
   const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      submissionsRef.current = saveCodingDraft(submissionsRef.current, question.id, code);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [code, question.id]);
 
   async function handleRunTests() {
     if (checking) return;
@@ -61,6 +92,14 @@ export default function CodingChallenge({
       setTestResults(results);
       const passedAll = passed === total;
       setAllPassed(passedAll);
+
+      submissionsRef.current = recordCodingSubmission(submissionsRef.current, question.id, code, {
+        passed: passedAll,
+        passedCount: passed,
+        totalCount: total,
+      });
+      setSubmissionHistory(submissionsRef.current.byQuestion[String(question.id)]?.history ?? []);
+
       if (!checked) {
         setChecked(true);
         onCheck(passedAll, question);
@@ -70,8 +109,13 @@ export default function CodingChallenge({
     }
   }
 
+  function handleLoadSubmission(submission) {
+    setCode(submission.code);
+    setTestResults(null);
+    setAllPassed(false);
+  }
+
   function handleNext() {
-    setCode(question.template);
     setTestResults(null);
     setAllPassed(false);
     setShowExplanation(false);
@@ -84,6 +128,7 @@ export default function CodingChallenge({
         <div className="quiz-header-top">
           <span className="progress">Remaining {remaining}/{sessionTotal}</span>
           <div className="quiz-header-badges">
+            {isCompleted && <span className="completed-badge">Completed</span>}
             <span className="score-badge">
               Answered {answered}
               {answered > 0 ? ` · Score ${score}/${answered}` : ''}
@@ -104,6 +149,7 @@ export default function CodingChallenge({
               {question.topics?.map((topic) => (
                 <span key={topic} className="topic-badge">{topic}</span>
               ))}
+              {onToggleCompleted && <CompletedButton isCompleted={isCompleted} onToggle={onToggleCompleted} />}
               {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
             </div>
           </div>
@@ -145,9 +191,7 @@ export default function CodingChallenge({
 
               {showExplanation && (
                 <div className="explanation-panel expanded coding-explanation-panel">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {question.explanation}
-                  </ReactMarkdown>
+                  <CodeBody content={question.explanation} highlight={highlight} theme={theme} />
                 </div>
               )}
             </div>
@@ -159,7 +203,43 @@ export default function CodingChallenge({
             <label className="coding-editor-label" htmlFor={`coding-editor-${question.id}`}>
               Code
             </label>
+            {submissionHistory.length > 0 && (
+              <button
+                type="button"
+                className={`toggle-btn coding-submissions-toggle${showSubmissions ? ' open' : ''}`}
+                onClick={() => setShowSubmissions(!showSubmissions)}
+              >
+                <span className="chevron">{showSubmissions ? '\u25BE' : '\u25B8'}</span>
+                {submissionHistory.length} previous submission{submissionHistory.length === 1 ? '' : 's'}
+              </button>
+            )}
           </div>
+
+          {showSubmissions && submissionHistory.length > 0 && (
+            <ul className="coding-submissions-list">
+              {submissionHistory.map((submission, i) => (
+                <li key={submission.ts} className="coding-submission-item">
+                  <div className="coding-submission-meta">
+                    <span className="coding-submission-time">{formatSubmissionTime(submission.ts)}</span>
+                    <span className={submission.passed ? 'test-pass' : 'test-fail'}>
+                      {submission.passed
+                        ? 'All passed'
+                        : `${submission.passedCount}/${submission.totalCount} passed`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="coding-submission-load-btn"
+                    onClick={() => handleLoadSubmission(submission)}
+                    disabled={code === submission.code}
+                  >
+                    {i === 0 && code === submission.code ? 'Current' : 'Load'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <CodeEditor
             id={`coding-editor-${question.id}`}
             value={code}

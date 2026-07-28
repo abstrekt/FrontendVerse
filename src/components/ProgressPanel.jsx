@@ -1,3 +1,5 @@
+import IncludeCompletedToggle from './IncludeCompletedToggle';
+
 const MODE_LABELS = {
   weak: 'Practicing weak topics',
   review: 'Reviewing mistakes',
@@ -14,9 +16,12 @@ export default function ProgressPanel({
   onReviewMistakes,
   onBackToAll,
   onClearProgress,
+  completedCount = 0,
+  includeCompleted = true,
+  onIncludeCompletedChange,
 }) {
   const hasWeakTopics = weakTopics.length > 0;
-  const hasData = sessionCount > 0 || lifetimeAccuracy !== null;
+  const hasData = sessionCount > 0 || lifetimeAccuracy !== null || completedCount > 0;
   const inSpecialMode = mode !== 'all';
 
   return (
@@ -52,7 +57,18 @@ export default function ProgressPanel({
               <span className="progress-stat-label">best</span>
             </div>
           )}
+          <div className="progress-stat">
+            <span className="progress-stat-value">{completedCount}</span>
+            <span className="progress-stat-label">completed</span>
+          </div>
         </div>
+      )}
+
+      {onIncludeCompletedChange && (
+        <IncludeCompletedToggle
+          checked={includeCompleted}
+          onChange={onIncludeCompletedChange}
+        />
       )}
 
       {hasWeakTopics && (

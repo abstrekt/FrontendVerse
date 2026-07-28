@@ -1,4 +1,5 @@
 import { shuffle } from './shuffle';
+import { filterExcludedCompleted } from './completed';
 
 const MAX_SESSIONS = 30;
 
@@ -93,6 +94,9 @@ export function getCodingStats(progress) {
   return { lifetimeAccuracy, sessionCount: progress.sessions.length, bestPct };
 }
 
-export function buildCodingQueue(pool) {
-  return shuffle(pool);
+export function buildCodingQueue(pool, completed, { includeCompleted = true, section = 'coding' } = {}) {
+  const source = includeCompleted
+    ? pool
+    : filterExcludedCompleted(pool, section, completed);
+  return shuffle(source);
 }

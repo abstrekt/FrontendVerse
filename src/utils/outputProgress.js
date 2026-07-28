@@ -1,4 +1,5 @@
 import { shuffle } from './shuffle';
+import { filterExcludedCompleted } from './completed';
 
 export const EMPTY_OUTPUT_PROGRESS = {
   sessions: [],
@@ -61,10 +62,10 @@ export function getOutputCompletedCount(progress) {
   return getOutputCompletedIds(progress).length;
 }
 
-export function buildOutputQueue(pool, progress, { includeCompleted = true } = {}) {
+export function buildOutputQueue(pool, completed, { includeCompleted = true, section = 'output' } = {}) {
   const source = includeCompleted
     ? pool
-    : filterExcludedOutputQuestions(pool, getOutputCompletedIds(progress));
+    : filterExcludedCompleted(pool, section, completed);
   return shuffle(source);
 }
 

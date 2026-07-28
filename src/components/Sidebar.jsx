@@ -1,5 +1,6 @@
 import ProgressPanel from "./ProgressPanel";
 import OutputSidebarStats from "./OutputSidebarStats";
+import CodingSidebarStats from "./CodingSidebarStats";
 
 export default function Sidebar({
   activeSection,
@@ -22,6 +23,15 @@ export default function Sidebar({
   onReviewMistakes,
   onBackToAll,
   onClearProgress,
+  mcqCompletedCount,
+  mcqIncludeCompleted,
+  onMcqIncludeCompletedChange,
+  codingSessionCount,
+  codingBestPct,
+  codingCompletedCount,
+  codingIncludeCompleted,
+  onCodingIncludeCompletedChange,
+  onCodingRestart,
   outputLifetimeAccuracy,
   outputSessionCount,
   outputBestPct,
@@ -35,8 +45,12 @@ export default function Sidebar({
   onToggleTheme,
   syntaxHighlight,
   onToggleHighlight,
+  onOpenSearch,
 }) {
   const count = filteredCount ?? totalQuestions;
+  const searchShortcut = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)
+    ? '⌘K'
+    : 'Ctrl+K';
 
   const subtitle =
     activeSection === "archived"
@@ -155,6 +169,23 @@ export default function Sidebar({
               onReviewMistakes={onReviewMistakes}
               onBackToAll={onBackToAll}
               onClearProgress={onClearProgress}
+              completedCount={mcqCompletedCount}
+              includeCompleted={mcqIncludeCompleted}
+              onIncludeCompletedChange={onMcqIncludeCompletedChange}
+            />
+          </>
+        )}
+
+        {activeSection === "coding" && (
+          <>
+            <div className="sidebar-divider" />
+            <CodingSidebarStats
+              sessionCount={codingSessionCount}
+              bestPct={codingBestPct}
+              completedCount={codingCompletedCount}
+              includeCompleted={codingIncludeCompleted}
+              onIncludeCompletedChange={onCodingIncludeCompletedChange}
+              onRestart={onCodingRestart}
             />
           </>
         )}
@@ -180,6 +211,16 @@ export default function Sidebar({
       <div className="sidebar-controls">
         <button
           type="button"
+          className="sidebar-search-btn"
+          onClick={onOpenSearch}
+          title="Search"
+        >
+          <span>Search</span>
+          <kbd className="sidebar-search-kbd">{searchShortcut}</kbd>
+        </button>
+        <div className="sidebar-controls-row">
+        <button
+          type="button"
           className={`panel-control-btn${syntaxHighlight ? " active" : ""}`}
           onClick={onToggleHighlight}
           title="Toggle syntax highlighting"
@@ -194,6 +235,7 @@ export default function Sidebar({
         >
           {theme === "light" ? "☽" : "☀"}
         </button>
+        </div>
       </div>
     </div>
   );

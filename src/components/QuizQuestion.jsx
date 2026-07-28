@@ -4,6 +4,7 @@ import DifficultyBadge from './DifficultyBadge';
 import OptionList from './OptionList';
 import Explanation from './Explanation';
 import StarButton from './StarButton';
+import CompletedButton from './CompletedButton';
 
 export default function QuizQuestion({
   question,
@@ -19,6 +20,8 @@ export default function QuizQuestion({
   onArchive,
   isStarred = false,
   onToggleStar,
+  isCompleted = false,
+  onToggleCompleted,
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -60,9 +63,13 @@ export default function QuizQuestion({
         <div className="quiz-header-top">
           <span className="progress">Remaining {remaining}/{sessionTotal}</span>
           <div className="quiz-header-badges">
+            {isCompleted && <span className="completed-badge">Completed</span>}
             <span className="score-badge">
               Answered {answered} · Score {score}/{answered}
             </span>
+            {onToggleCompleted && (
+              <CompletedButton isCompleted={isCompleted} onToggle={onToggleCompleted} />
+            )}
             {onToggleStar && (
               <StarButton isStarred={isStarred} onToggle={onToggleStar} />
             )}

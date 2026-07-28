@@ -5,6 +5,7 @@ import StarredFilterToggle from './StarredFilterToggle';
 export default function FilterPanel({
   questions,
   progress,
+  completedIds = [],
   selectedTopics,
   selectedDifficulties,
   starredOnly = false,
@@ -15,13 +16,13 @@ export default function FilterPanel({
   onClear,
 }) {
   const topicCompletion = useMemo(
-    () => getTopicCompletion(progress, questions),
-    [progress, questions]
+    () => getTopicCompletion(progress, questions, completedIds),
+    [progress, questions, completedIds]
   );
 
   const difficultyCompletion = useMemo(
-    () => getDifficultyCompletion(progress, questions),
-    [progress, questions]
+    () => getDifficultyCompletion(progress, questions, completedIds),
+    [progress, questions, completedIds]
   );
 
   const topicRows = useMemo(() => {

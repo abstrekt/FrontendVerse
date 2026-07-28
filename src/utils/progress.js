@@ -151,12 +151,13 @@ export function recordSession(progress, sessionMeta) {
   return { ...progress, sessions };
 }
 
-export function getTopicCompletion(progress, questions) {
+export function getTopicCompletion(progress, questions, completedIds = null) {
   const topicMap = new Map();
+  const completedSet = completedIds instanceof Set ? completedIds : new Set(completedIds ?? []);
 
   for (const q of questions) {
     const topics = q.topics?.length ? q.topics : ['untagged'];
-    const answered = Boolean(progress?.answers?.[String(q.id)]);
+    const answered = Boolean(progress?.answers?.[String(q.id)]) || completedSet.has(q.id);
 
     for (const topic of topics) {
       const prev = topicMap.get(topic) || { solved: 0, total: 0 };
@@ -178,16 +179,17 @@ export function getTopicCompletion(progress, questions) {
   return topicMap;
 }
 
-export function getDifficultyCompletion(progress, questions) {
+export function getDifficultyCompletion(progress, questions, completedIds = null) {
   const diffMap = new Map(
     DIFFICULTY_LEVELS.map((difficulty) => [difficulty, { solved: 0, total: 0, pct: 0 }])
   );
+  const completedSet = completedIds instanceof Set ? completedIds : new Set(completedIds ?? []);
 
   for (const q of questions) {
     const difficulty = q.difficulty;
     if (!diffMap.has(difficulty)) continue;
 
-    const answered = Boolean(progress?.answers?.[String(q.id)]);
+    const answered = Boolean(progress?.answers?.[String(q.id)]) || completedSet.has(q.id);
     const prev = diffMap.get(difficulty);
     diffMap.set(difficulty, {
       solved: prev.solved + (answered ? 1 : 0),

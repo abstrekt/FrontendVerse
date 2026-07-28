@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import CodeBody from './CodeBody';
 import LearningBadges from './LearningBadges';
 import StarButton from './StarButton';
+import CompletedButton from './CompletedButton';
 
 function stripMarkdown(text) {
   return text.replace(/`([^`]+)`/g, '$1');
@@ -15,6 +16,8 @@ export default function LearningsView({
   onArchive,
   isStarred = false,
   onToggleStar,
+  isCompleted = false,
+  onToggleCompleted,
   highlight,
   theme,
 }) {
@@ -59,6 +62,8 @@ export default function LearningsView({
           <div className="learning-title-row">
             <h2 className="learning-title">{stripMarkdown(learning.title)}</h2>
             <div className="learning-title-actions">
+              {isCompleted && <span className="completed-badge">Completed</span>}
+              {onToggleCompleted && <CompletedButton isCompleted={isCompleted} onToggle={onToggleCompleted} />}
               {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
               <button
                 type="button"

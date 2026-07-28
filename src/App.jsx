@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import FilterPanel from './components/FilterPanel';
 import LearningsView from './components/LearningsView';
 import LearningsPanel from './components/LearningsPanel';
+import CodingPanel from './components/CodingPanel';
 import QuizQuestion from './components/QuizQuestion';
 import QuestionListView from './components/QuestionListView';
 import Results from './components/Results';
@@ -13,6 +14,7 @@ import OutputResults from './components/OutputResults';
 import CodingChallenge from './components/CodingChallenge';
 import CodingResults from './components/CodingResults';
 import ArchivedView from './components/ArchivedView';
+import CommandPalette from './components/CommandPalette';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAppRoute } from './hooks/useAppRoute';
 import {
@@ -46,8 +48,6 @@ import {
   getOutputBestPct,
   getOutputLifetimeAccuracy,
   getOutputMissedCount,
-  getOutputCompletedCount,
-  isOutputQuestionCompleted,
 } from './utils/outputProgress';
 import questionsData from '../questions.json';
 import learningsData from '../data/learnings.json';
@@ -84,7 +84,18 @@ import {
   toggleStarId,
   getStarredCount,
 } from './utils/starred';
+import {
+  EMPTY_COMPLETED,
+  isCompleted,
+  markCompletedId,
+  toggleCompletedId,
+  getCompletedCount,
+  getCompletedSet,
+  syncCompletedFromProgress,
+  syncOutputCompletedFromProgress,
+} from './utils/completed';
 import StarredFilterToggle from './components/StarredFilterToggle';
+import { buildSearchIndex } from './utils/searchIndex';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -106,6 +117,9 @@ export default function App() {
   const [outputProgress, setOutputProgress] = useLocalStorage('output-quiz-progress', EMPTY_OUTPUT_PROGRESS);
   const [outputSession, setOutputSession] = useLocalStorage('output-quiz-session', EMPTY_OUTPUT_SESSION);
   const [outputIncludeCompleted, setOutputIncludeCompleted] = useLocalStorage('output-quiz-include-completed', true);
+  const [mcqIncludeCompleted, setMcqIncludeCompleted] = useLocalStorage('mcq-include-completed', true);
+  const [codingIncludeCompleted, setCodingIncludeCompleted] = useLocalStorage('coding-include-completed', true);
+  const [completed, setCompleted] = useLocalStorage('quiz-completed', EMPTY_COMPLETED);
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
   const [panelCollapsed, setPanelCollapsed] = useLocalStorage('layout-panel-collapsed', false);
   const [codingProgress, setCodingProgress] = useState(() => loadCodingProgress());
@@ -114,6 +128,8 @@ export default function App() {
   const [archived, setArchived] = useLocalStorage('quiz-archived', EMPTY_ARCHIVED);
   const [starred, setStarred] = useLocalStorage('quiz-starred', EMPTY_STARRED);
   const [starredFilter, setStarredFilter] = useLocalStorage('quiz-starred-filter', EMPTY_STARRED_FILTER);
+  const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
+  const completedSyncedRef = useRef(false);
 
   const activeQuestions = useMemo(
     () => filterActive(questions, 'mcq', archived),
@@ -171,11 +187,34 @@ export default function App() {
     [activeOutputQuestions, starredFilter.output, starred]
   );
   const mcqStarredCount = useMemo(() => getStarredCount(starred, 'mcq'), [starred]);
+  const mcqCompletedCount = useMemo(() => getCompletedCount(completed, 'mcq'), [completed]);
+  const codingCompletedCount = useMemo(() => getCompletedCount(completed, 'coding'), [completed]);
+  const outputCompletedCount = useMemo(() => getCompletedCount(completed, 'output'), [completed]);
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
   const outputStarredCount = useMemo(() => getStarredCount(starred, 'output'), [starred]);
+
+  const searchDocs = useMemo(
+    () =>
+      buildSearchIndex({
+        mcq: activeQuestions,
+        learnings: activeLearnings,
+        reactLearnings: activeReactLearnings,
+        hld: activeHldLearnings,
+        coding: activeCodingQuestions,
+        output: activeOutputQuestions,
+      }),
+    [
+      activeQuestions,
+      activeLearnings,
+      activeReactLearnings,
+      activeHldLearnings,
+      activeCodingQuestions,
+      activeOutputQuestions,
+    ]
+  );
 
   const sessionRecordedRef = useRef(false);
   const outputSessionRecordedRef = useRef(false);
@@ -227,6 +266,8 @@ export default function App() {
   const codingRemaining = codingShuffled.length - codingCurrentIndex;
   const currentCodingQuestion = codingShuffled.length > 0 ? codingShuffled[codingCurrentIndex] : null;
   const isCodingFinished = codingShuffled.length > 0 && codingCurrentIndex >= codingShuffled.length;
+  const codingSessionCaughtUp =
+    starredActiveCodingQuestions.length > 0 && codingShuffled.length === 0;
 
   const selectedLearning = useMemo(() => {
     if (activeSection !== 'learnings') return null;
@@ -316,24 +357,27 @@ export default function App() {
     basePool.length > 0 && shuffled.length === 0 && sessionAnsweredIds.size > 0;
 
   const shufflePool = useCallback(
-    (pool, answeredIds, progressOverride = progress, excludedIds = mcqExcludedSet) => {
+    (pool, answeredIds, progressOverride = progress, excludedIds = mcqExcludedSet, includeCompleted = mcqIncludeCompleted) => {
       const source = pool.length > 0 ? pool : starredActiveQuestions;
-      const excluded = new Set([...answeredIds, ...excludedIds]);
+      const completedExcluded = includeCompleted
+        ? []
+        : [...getCompletedSet(completed, 'mcq')];
+      const excluded = new Set([...answeredIds, ...excludedIds, ...completedExcluded]);
       const unanswered = filterExcludedQuestions(source, excluded);
       return {
         queue: unanswered.length > 0 ? smartShuffle(unanswered, progressOverride) : [],
         allAnswered: source.length > 0 && unanswered.length === 0,
       };
     },
-    [starredActiveQuestions, progress, mcqExcludedSet]
+    [starredActiveQuestions, progress, mcqExcludedSet, mcqIncludeCompleted, completed]
   );
 
   const buildOutputQuizQueue = useCallback(
-    (pool, progressOverride = outputProgress, includeCompleted = outputIncludeCompleted) => {
+    (pool, includeCompleted = outputIncludeCompleted) => {
       const source = pool.length > 0 ? pool : starredActiveOutputQuestions;
-      return buildOutputQueue(source, progressOverride, { includeCompleted });
+      return buildOutputQueue(source, completed, { includeCompleted });
     },
-    [starredActiveOutputQuestions, outputProgress, outputIncludeCompleted]
+    [starredActiveOutputQuestions, completed, outputIncludeCompleted]
   );
 
   const removeFromSessionQueue = useCallback((session, id) => {
@@ -394,7 +438,7 @@ export default function App() {
       if (isRestorableOutputSession(session, starredOutput)) {
         return session;
       }
-      const queue = buildOutputQueue(starredOutput, outputProgress, {
+      const queue = buildOutputQueue(starredOutput, completed, {
         includeCompleted: outputIncludeCompleted,
       });
       return createOutputSession({ queue });
@@ -412,7 +456,9 @@ export default function App() {
         const restored = session.queueIds.map((id) => byId.get(id)).filter(Boolean);
         if (restored.length > 0 && session.currentIndex < restored.length) return session;
       }
-      const queue = buildCodingQueue(starredCoding);
+      const queue = buildCodingQueue(starredCoding, completed, {
+        includeCompleted: codingIncludeCompleted,
+      });
       return {
         answeredIds: [],
         score: 0,
@@ -426,6 +472,17 @@ export default function App() {
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (completedSyncedRef.current) return;
+    completedSyncedRef.current = true;
+    setCompleted((prev) => {
+      let next = syncOutputCompletedFromProgress(prev, outputProgress);
+      next = syncCompletedFromProgress(next, 'mcq', progress);
+      next = syncCompletedFromProgress(next, 'coding', codingProgress);
+      return next;
+    });
+  }, [outputProgress, progress, codingProgress, setCompleted]);
 
   useEffect(() => {
     if (!isFinished || sessionRecordedRef.current) return;
@@ -516,6 +573,9 @@ export default function App() {
   const handlePick = useCallback(
     (correct, question) => {
       setProgress((prev) => recordAnswer(prev, question, correct));
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
+      }
       setQuizSession((session) => {
         if (!session) return session;
         const answeredIds = session.answeredIds.includes(question.id)
@@ -529,7 +589,7 @@ export default function App() {
         };
       });
     },
-    [setProgress, setQuizSession]
+    [setProgress, setQuizSession, setCompleted]
   );
 
   const handleNext = useCallback(() => {
@@ -616,11 +676,135 @@ export default function App() {
     [starredActiveQuestions, setQuizSession, setSkippedIds, setViewMode]
   );
 
+  const jumpToSessionItem = useCallback((setSession, pool, itemId, createSessionFromIds) => {
+    setSession((session) => {
+      const existingIndex = session?.queueIds?.indexOf(itemId) ?? -1;
+      if (existingIndex >= 0) {
+        return { ...session, currentIndex: existingIndex };
+      }
+
+      const item = pool.find((entry) => entry.id === itemId);
+      if (!item) return session;
+
+      if (!session?.queueIds?.length) {
+        return createSessionFromIds([itemId]);
+      }
+
+      const insertAt = Math.min(session.currentIndex, session.queueIds.length);
+      const queueIds = [
+        ...session.queueIds.slice(0, insertAt),
+        itemId,
+        ...session.queueIds.slice(insertAt),
+      ];
+
+      return {
+        ...session,
+        queueIds,
+        currentIndex: insertAt,
+        sessionTotal: Math.max(session.sessionTotal ?? queueIds.length, queueIds.length),
+      };
+    });
+  }, []);
+
+  const handleOpenCodingQuestion = useCallback(
+    (questionId) => {
+      jumpToSessionItem(
+        setCodingSession,
+        activeCodingQuestions,
+        questionId,
+        (queueIds) => ({
+          answeredIds: [],
+          score: 0,
+          answered: 0,
+          currentIndex: 0,
+          queueIds,
+          sessionTotal: queueIds.length,
+        })
+      );
+    },
+    [activeCodingQuestions, jumpToSessionItem, setCodingSession]
+  );
+
+  const handleOpenOutputQuestion = useCallback(
+    (questionId) => {
+      jumpToSessionItem(
+        setOutputSession,
+        activeOutputQuestions,
+        questionId,
+        (queueIds) => createOutputSession({ queue: activeOutputQuestions.filter((q) => queueIds.includes(q.id)) })
+      );
+    },
+    [activeOutputQuestions, jumpToSessionItem, setOutputSession]
+  );
+
+  const handleSearchSelect = useCallback(
+    (result) => {
+      const { section, id } = result;
+
+      if (section === 'learnings') {
+        setSection('learnings', { learningId: id });
+        return;
+      }
+      if (section === 'react-learnings') {
+        setSection('react-learnings', { learningId: id });
+        return;
+      }
+      if (section === 'hld') {
+        setSection('hld', { learningId: id });
+        return;
+      }
+      if (section === 'mcq') {
+        setSection('mcq');
+        setViewMode('quiz');
+        setSkippedIds((ids) => ids.filter((skippedId) => skippedId !== id));
+        jumpToSessionItem(
+          setQuizSession,
+          activeQuestions,
+          id,
+          (queueIds) =>
+            createSession({
+              queue: activeQuestions.filter((question) => queueIds.includes(question.id)),
+              mode: 'all',
+              topics: [],
+              difficulties: [],
+            })
+        );
+        return;
+      }
+      if (section === 'coding') {
+        setSection('coding');
+        handleOpenCodingQuestion(id);
+        return;
+      }
+      if (section === 'output') {
+        setSection('output');
+        handleOpenOutputQuestion(id);
+      }
+    },
+    [
+      activeQuestions,
+      handleOpenCodingQuestion,
+      handleOpenOutputQuestion,
+      jumpToSessionItem,
+      setQuizSession,
+      setSection,
+      setSkippedIds,
+      setViewMode,
+    ]
+  );
+
   const handleToggleStar = useCallback(
     (section, id) => {
       setStarred((prev) => toggleStarId(prev, section, id));
     },
     [setStarred]
+  );
+
+  const handleToggleCompleted = useCallback(
+    (section, id) => {
+      setCompleted((prev) => toggleCompletedId(prev, section, id));
+    },
+    [setCompleted]
   );
 
   const getMcqPoolForMode = useCallback(
@@ -712,7 +896,7 @@ export default function App() {
     (value) => {
       setStarredFilter((prev) => ({ ...prev, coding: value }));
       const pool = value ? filterStarred(activeCodingQuestions, 'coding', starred) : activeCodingQuestions;
-      const queue = buildCodingQueue(pool);
+      const queue = buildCodingQueue(pool, completed, { includeCompleted: codingIncludeCompleted });
       setCodingSession({
         answeredIds: [],
         score: 0,
@@ -723,18 +907,18 @@ export default function App() {
       });
       codingSessionRecordedRef.current = false;
     },
-    [setStarredFilter, activeCodingQuestions, starred, setCodingSession]
+    [setStarredFilter, activeCodingQuestions, starred, completed, codingIncludeCompleted, setCodingSession]
   );
 
   const handleOutputStarredFilterChange = useCallback(
     (value) => {
       setStarredFilter((prev) => ({ ...prev, output: value }));
       const pool = value ? filterStarred(activeOutputQuestions, 'output', starred) : activeOutputQuestions;
-      const queue = buildOutputQueue(pool, outputProgress, { includeCompleted: outputIncludeCompleted });
+      const queue = buildOutputQueue(pool, completed, { includeCompleted: outputIncludeCompleted });
       setOutputSession(createOutputSession({ queue }));
       outputSessionRecordedRef.current = false;
     },
-    [setStarredFilter, activeOutputQuestions, starred, outputProgress, outputIncludeCompleted, setOutputSession]
+    [setStarredFilter, activeOutputQuestions, starred, completed, outputIncludeCompleted, setOutputSession]
   );
 
   const handleArchiveMcq = useCallback(
@@ -830,7 +1014,6 @@ export default function App() {
 
       const queue = buildOutputQuizQueue(
         poolOverride ?? starredActiveOutputQuestions,
-        outputProgress,
         includeCompleted
       );
 
@@ -846,12 +1029,15 @@ export default function App() {
       );
       outputSessionRecordedRef.current = false;
     },
-    [buildOutputQuizQueue, starredActiveOutputQuestions, outputProgress, outputIncludeCompleted, outputSession, setOutputSession]
+    [buildOutputQuizQueue, starredActiveOutputQuestions, outputIncludeCompleted, outputSession, setOutputSession]
   );
 
   const handleOutputCheck = useCallback(
     (correct, question) => {
       setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'output', question.id));
+      }
       setOutputSession((session) => {
         if (!session) return session;
         const answeredIds = session.answeredIds.includes(question.id)
@@ -865,7 +1051,7 @@ export default function App() {
         };
       });
     },
-    [setOutputProgress, setOutputSession]
+    [setOutputProgress, setOutputSession, setCompleted]
   );
 
   const handleOutputNext = useCallback(() => {
@@ -890,10 +1076,42 @@ export default function App() {
   const handleOutputClearProgress = useCallback(() => {
     if (!window.confirm('Clear all output quiz progress and history?')) return;
     setOutputProgress(EMPTY_OUTPUT_PROGRESS);
-    const queue = buildOutputQuizQueue(starredActiveOutputQuestions, EMPTY_OUTPUT_PROGRESS);
+    const queue = buildOutputQuizQueue(starredActiveOutputQuestions);
     setOutputSession(createOutputSession({ queue }));
     outputSessionRecordedRef.current = false;
   }, [buildOutputQuizQueue, starredActiveOutputQuestions, setOutputProgress, setOutputSession]);
+
+  const handleMcqIncludeCompletedChange = useCallback(
+    (value) => {
+      setMcqIncludeCompleted(value);
+      const { queue } = shufflePool(basePool, new Set(), progress, mcqExcludedSet, value);
+      setQuizSession(createSession({
+        queue,
+        mode,
+        topics: selectedTopics,
+        difficulties: selectedDifficulties,
+      }));
+      sessionRecordedRef.current = false;
+    },
+    [setMcqIncludeCompleted, shufflePool, basePool, progress, mcqExcludedSet, mode, selectedTopics, selectedDifficulties, setQuizSession]
+  );
+
+  const handleCodingIncludeCompletedChange = useCallback(
+    (value) => {
+      setCodingIncludeCompleted(value);
+      const queue = buildCodingQueue(starredActiveCodingQuestions, completed, { includeCompleted: value });
+      setCodingSession({
+        answeredIds: [],
+        score: 0,
+        answered: 0,
+        currentIndex: 0,
+        queueIds: queue.map((q) => q.id),
+        sessionTotal: queue.length,
+      });
+      codingSessionRecordedRef.current = false;
+    },
+    [setCodingIncludeCompleted, starredActiveCodingQuestions, completed, setCodingSession]
+  );
 
   const handleCodingCheck = useCallback(
     (correct, question) => {
@@ -902,6 +1120,9 @@ export default function App() {
         saveCodingProgress(updated);
         return updated;
       });
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
+      }
       setCodingSession((session) => {
         if (!session) return session;
         const answeredIds = session.answeredIds.includes(question.id)
@@ -915,7 +1136,7 @@ export default function App() {
         };
       });
     },
-    [setCodingProgress, setCodingSession]
+    [setCodingProgress, setCodingSession, setCompleted]
   );
 
   const handleCodingNext = useCallback(() => {
@@ -926,7 +1147,9 @@ export default function App() {
   }, [setCodingSession]);
 
   const handleCodingRestart = useCallback(() => {
-    const queue = buildCodingQueue(starredActiveCodingQuestions);
+    const queue = buildCodingQueue(starredActiveCodingQuestions, completed, {
+      includeCompleted: codingIncludeCompleted,
+    });
     setCodingSession({
       answeredIds: [],
       score: 0,
@@ -936,7 +1159,7 @@ export default function App() {
       sessionTotal: queue.length,
     });
     codingSessionRecordedRef.current = false;
-  }, [starredActiveCodingQuestions, setCodingSession]);
+  }, [starredActiveCodingQuestions, completed, codingIncludeCompleted, setCodingSession]);
 
   const codingStats = useMemo(() => getCodingStats(codingProgress), [codingProgress]);
 
@@ -949,6 +1172,14 @@ export default function App() {
         target?.isContentEditable ||
         target?.closest?.('.monaco-editor');
 
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchPaletteOpen((open) => !open);
+        return;
+      }
+
+      if (searchPaletteOpen) return;
+
       if (e.key === 'Enter' && !isFinished && !loading && !isEditable) {
         e.preventDefault();
         const btn = document.querySelector('.next-btn');
@@ -957,7 +1188,7 @@ export default function App() {
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isFinished, loading]);
+  }, [isFinished, loading, searchPaletteOpen]);
 
   function handleToggleTopic(topic) {
     const next = selectedTopics.includes(topic)
@@ -997,7 +1228,6 @@ export default function App() {
   const outputLifetimeAccuracy = getOutputLifetimeAccuracy(outputProgress.stats);
   const outputBestPct = getOutputBestPct(outputProgress.sessions);
   const outputMissedCount = getOutputMissedCount(outputProgress);
-  const outputCompletedCount = getOutputCompletedCount(outputProgress);
 
   function outputContent() {
     if (loading) {
@@ -1069,7 +1299,7 @@ export default function App() {
           sessionTotal={outputSessionTotal}
           score={outputScore}
           answered={outputAnswered}
-          isCompleted={isOutputQuestionCompleted(outputProgress, currentOutputQuestion.id)}
+          isCompleted={isCompleted(currentOutputQuestion.id, 'output', completed)}
           highlight={syntaxHighlight}
           theme={theme}
           sourceUrl={outputSourceUrl}
@@ -1078,6 +1308,7 @@ export default function App() {
           onArchive={handleArchiveOutput}
           isStarred={isStarred(currentOutputQuestion.id, 'output', starred)}
           onToggleStar={() => handleToggleStar('output', currentOutputQuestion.id)}
+          onToggleCompleted={() => handleToggleCompleted('output', currentOutputQuestion.id)}
         />
       );
     }
@@ -1088,6 +1319,23 @@ export default function App() {
   function codingContent() {
     if (loading) {
       return <div className="quiz-container loading"><p>Loading questions...</p></div>;
+    }
+
+    if (codingSessionCaughtUp) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>
+              {starredFilter.coding && starredActiveCodingQuestions.length === 0
+                ? 'No starred coding challenges yet.'
+                : codingIncludeCompleted
+                  ? 'No coding challenges available in this session. Start a new quiz to continue.'
+                  : 'All coding challenges are completed. Turn on "Include completed questions" to keep practicing.'}
+            </p>
+            <button onClick={handleCodingRestart}>Start new quiz</button>
+          </div>
+        </div>
+      );
     }
 
     if (starredActiveCodingQuestions.length === 0) {
@@ -1144,6 +1392,8 @@ export default function App() {
           onArchive={handleArchiveCoding}
           isStarred={isStarred(currentCodingQuestion.id, 'coding', starred)}
           onToggleStar={() => handleToggleStar('coding', currentCodingQuestion.id)}
+          isCompleted={isCompleted(currentCodingQuestion.id, 'coding', completed)}
+          onToggleCompleted={() => handleToggleCompleted('coding', currentCodingQuestion.id)}
         />
       );
     }
@@ -1163,6 +1413,7 @@ export default function App() {
           progress={progress}
           skippedIds={skippedIds}
           starredIds={starred.mcq}
+          completedIds={completed.mcq}
           currentQuestionId={currentQuestion?.id ?? null}
           onOpenQuestion={handleOpenQuestion}
           onUnskip={handleUnskip}
@@ -1174,7 +1425,11 @@ export default function App() {
       return (
         <div className="quiz-container">
           <div className="filtered-empty">
-            <p>You&apos;ve answered all questions in this session. Start a new quiz to continue.</p>
+            <p>
+              {mcqIncludeCompleted
+                ? "You've answered all questions in this session. Start a new quiz to continue."
+                : 'All questions are completed. Turn on "Include completed questions" to keep practicing.'}
+            </p>
             <button onClick={handleRestart}>Start new quiz</button>
           </div>
         </div>
@@ -1244,6 +1499,8 @@ export default function App() {
           onArchive={handleArchiveMcq}
           isStarred={isStarred(currentQuestion.id, 'mcq', starred)}
           onToggleStar={() => handleToggleStar('mcq', currentQuestion.id)}
+          isCompleted={isCompleted(currentQuestion.id, 'mcq', completed)}
+          onToggleCompleted={() => handleToggleCompleted('mcq', currentQuestion.id)}
         />
       );
     }
@@ -1252,7 +1509,14 @@ export default function App() {
   }
 
   return (
-    <Layout
+    <>
+      <CommandPalette
+        open={searchPaletteOpen}
+        docs={searchDocs}
+        onClose={() => setSearchPaletteOpen(false)}
+        onSelect={handleSearchSelect}
+      />
+      <Layout
       mobileProgress={
         <MobileProgressBar
           lifetimeAccuracy={lifetimeAccuracy}
@@ -1292,6 +1556,15 @@ export default function App() {
             onReviewMistakes={handleStartReview}
             onBackToAll={handleBackToAll}
             onClearProgress={handleClearProgress}
+            mcqCompletedCount={mcqCompletedCount}
+            mcqIncludeCompleted={mcqIncludeCompleted}
+            onMcqIncludeCompletedChange={handleMcqIncludeCompletedChange}
+            codingSessionCount={codingProgress.sessions.length}
+            codingBestPct={codingStats.bestPct}
+            codingCompletedCount={codingCompletedCount}
+            codingIncludeCompleted={codingIncludeCompleted}
+            onCodingIncludeCompletedChange={handleCodingIncludeCompletedChange}
+            onCodingRestart={handleCodingRestart}
             outputLifetimeAccuracy={outputLifetimeAccuracy}
             outputSessionCount={outputProgress.sessions.length}
             outputBestPct={outputBestPct}
@@ -1305,6 +1578,7 @@ export default function App() {
             onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             syntaxHighlight={syntaxHighlight}
             onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
+            onOpenSearch={() => setSearchPaletteOpen(true)}
           />
         }
         center={
@@ -1398,6 +1672,8 @@ export default function App() {
                 onArchive={handleArchiveLearning}
                 isStarred={selectedLearning ? isStarred(selectedLearning.id, 'learnings', starred) : false}
                 onToggleStar={() => selectedLearning && handleToggleStar('learnings', selectedLearning.id)}
+                isCompleted={selectedLearning ? isCompleted(selectedLearning.id, 'learnings', completed) : false}
+                onToggleCompleted={() => selectedLearning && handleToggleCompleted('learnings', selectedLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
@@ -1410,6 +1686,8 @@ export default function App() {
                 onArchive={handleArchiveReactLearning}
                 isStarred={selectedReactLearning ? isStarred(selectedReactLearning.id, 'react-learnings', starred) : false}
                 onToggleStar={() => selectedReactLearning && handleToggleStar('react-learnings', selectedReactLearning.id)}
+                isCompleted={selectedReactLearning ? isCompleted(selectedReactLearning.id, 'react-learnings', completed) : false}
+                onToggleCompleted={() => selectedReactLearning && handleToggleCompleted('react-learnings', selectedReactLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
@@ -1422,6 +1700,8 @@ export default function App() {
                 onArchive={handleArchiveHldLearning}
                 isStarred={selectedHldLearning ? isStarred(selectedHldLearning.id, 'hld', starred) : false}
                 onToggleStar={() => selectedHldLearning && handleToggleStar('hld', selectedHldLearning.id)}
+                isCompleted={selectedHldLearning ? isCompleted(selectedHldLearning.id, 'hld', completed) : false}
+                onToggleCompleted={() => selectedHldLearning && handleToggleCompleted('hld', selectedHldLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
@@ -1461,6 +1741,7 @@ export default function App() {
               <LearningsPanel
                 learnings={starredActiveLearnings}
                 starredIds={starred.learnings}
+                completedIds={completed.learnings}
                 selectedLearningId={selectedLearning?.id ?? null}
                 starredOnly={starredFilter.learnings}
                 starredCount={learningsStarredCount}
@@ -1474,6 +1755,7 @@ export default function App() {
               <LearningsPanel
                 learnings={starredActiveReactLearnings}
                 starredIds={starred['react-learnings']}
+                completedIds={completed['react-learnings']}
                 selectedLearningId={selectedReactLearning?.id ?? null}
                 starredOnly={starredFilter['react-learnings']}
                 starredCount={reactLearningsStarredCount}
@@ -1487,6 +1769,7 @@ export default function App() {
               <LearningsPanel
                 learnings={starredActiveHldLearnings}
                 starredIds={starred.hld}
+                completedIds={completed.hld}
                 selectedLearningId={selectedHldLearning?.id ?? null}
                 starredOnly={starredFilter.hld}
                 starredCount={hldStarredCount}
@@ -1497,20 +1780,16 @@ export default function App() {
             </div>
           ) : activeSection === 'coding' ? (
             <div className="topics-panel coding-panel">
-              <div className="panel-subheader">
-                <span>Javascript Coding</span>
-                <span className="learnings-count">
-                  {starredFilter.coding ? starredActiveCodingQuestions.length : activeCodingQuestions.length}
-                </span>
-              </div>
-              <p className="output-panel-copy">
-                Solve algorithm and data structure problems by writing JavaScript code. Test cases validate your solution.
-              </p>
-              <StarredFilterToggle
-                checked={starredFilter.coding}
-                count={codingStarredCount}
-                onChange={handleCodingStarredFilterChange}
-                hint={starredFilter.coding ? 'Only starred challenges appear in the quiz.' : 'All active challenges are included.'}
+              <CodingPanel
+                questions={starredActiveCodingQuestions}
+                starredIds={starred.coding}
+                completedIds={completed.coding}
+                selectedQuestionId={currentCodingQuestion?.id ?? null}
+                starredOnly={starredFilter.coding}
+                starredCount={codingStarredCount}
+                onStarredOnlyChange={handleCodingStarredFilterChange}
+                onSelect={handleOpenCodingQuestion}
+                title="Javascript Coding"
               />
             </div>
           ) : activeSection === 'output' ? (
@@ -1536,6 +1815,7 @@ export default function App() {
               <FilterPanel
                 questions={starredFilter.mcq ? starredActiveQuestions : activeQuestions}
                 progress={progress}
+                completedIds={completed.mcq}
                 selectedTopics={selectedTopics}
                 selectedDifficulties={selectedDifficulties}
                 starredOnly={starredFilter.mcq}
@@ -1553,5 +1833,6 @@ export default function App() {
         onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
         onTogglePanel={() => setPanelCollapsed((v) => !v)}
       />
+    </>
   );
 }

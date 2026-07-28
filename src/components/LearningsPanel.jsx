@@ -7,6 +7,7 @@ function stripMarkdown(text) {
 export default function LearningsPanel({
   learnings,
   starredIds = [],
+  completedIds = [],
   selectedLearningId,
   starredOnly = false,
   starredCount = 0,
@@ -15,6 +16,7 @@ export default function LearningsPanel({
   title = 'Javascript learnings',
 }) {
   const starredSet = new Set(starredIds);
+  const completedSet = new Set(completedIds);
 
   return (
     <div className="learnings-panel-body">
@@ -48,6 +50,7 @@ export default function LearningsPanel({
                 <span className="learning-nav-meta">
                   <span className="learning-nav-id">#{item.id}</span>
                   {starredSet.has(item.id) && <span className="learning-nav-star" aria-label="Starred">★</span>}
+                  {completedSet.has(item.id) && <span className="learning-nav-completed" aria-label="Completed">✓</span>}
                 </span>
                 <span className="learning-nav-title">{stripMarkdown(item.title)}</span>
               </button>

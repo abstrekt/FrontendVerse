@@ -3,6 +3,7 @@ import CodeBody from './CodeBody';
 import { runOutputCode } from '../utils/jsRunner';
 import { compareOutputAnswer, formatExpectedOutput } from '../utils/outputCompare';
 import StarButton from './StarButton';
+import CompletedButton from './CompletedButton';
 
 export default function OutputQuizQuestion({
   question,
@@ -19,6 +20,7 @@ export default function OutputQuizQuestion({
   onArchive,
   isStarred = false,
   onToggleStar,
+  onToggleCompleted,
 }) {
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
@@ -75,6 +77,9 @@ export default function OutputQuizQuestion({
               Answered {answered}
               {answered > 0 ? ` · Score ${score}/${answered}` : ''}
             </span>
+            {onToggleCompleted && (
+              <CompletedButton isCompleted={isCompleted} onToggle={onToggleCompleted} />
+            )}
             {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
           </div>
         </div>
