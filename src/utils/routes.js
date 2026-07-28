@@ -40,6 +40,10 @@ export function parseRoute(pathname) {
     return { section: 'coding', viewMode: 'quiz', learningId: null };
   }
 
+  if (parts[0] === 'archived') {
+    return { section: 'archived', viewMode: 'quiz', learningId: null };
+  }
+
   const viewMode = parts[1] === 'list' ? 'list' : 'quiz';
   return { section: 'mcq', viewMode, learningId: null };
 }
@@ -63,6 +67,10 @@ export function buildRoute({ section = 'mcq', viewMode = 'quiz', learningId = nu
 
   if (section === 'coding') {
     return '/coding';
+  }
+
+  if (section === 'archived') {
+    return '/archived';
   }
 
   return viewMode === 'list' ? '/mcq/list' : '/mcq';

@@ -48,9 +48,36 @@ Examples: `"https://…"`, `"Tekion interview notes"`, `"user paste: event loop"
 
 Keep `source` short (citation only). Full material goes in content fields. UI may ignore per-item `source`.
 
-## Deduping
+## Section routing
 
-Before adding, scan the target file(s) (and Coding↔Learnings twins) for the same title, `functionName` / API, or essentially identical code/`body`. Skip near-duplicates and report existing ids unless the user asked to replace/update.
+**Default: one section only.**
+
+- **Pure explanation** → **Learnings** (`answer` field)
+- **Pure implementation / coding problem** → **Coding** (`description`, `template`, `testCases`; reference solution in `explanation`)
+
+Do **not** auto-add both unless the user explicitly asks.
+
+- **Paired loads (opt-in):** when the user asks for both, match `id`, title, and `tags` ↔ `topics` across Learnings + Coding.
+
+## Deduping (compare → merge, don’t discard blindly)
+
+Before adding, scan the target file(s) for the same title, `functionName` / API, or essentially identical code/`body`. When adding a paired batch, also scan the twin section.
+
+**Never skip a match without reading both sides.** Compare the incoming material to the existing entry’s content fields (`answer`, `explanation`, `description`, `testCases`, `options`, solution quality, edge-case coverage, clarity). Then choose one action:
+
+| Verdict | Action |
+| ------- | ------ |
+| Incoming is worse or equal (same ideas, thinner/worse explained) | **Skip** — report `skipped duplicate → id N (file)` |
+| Incoming is clearly better (clearer explanation, fuller solution, better tests/examples, fixes errors) | **Update** — keep existing `id`; merge best of both into that entry; refresh `source` |
+| Overlap but each has unique value (extra edge cases, alternate approach, missing examples) | **Merge** — keep `id`; fold unique bits into existing fields; don’t create a second entry |
+| Same topic, clearly different angle | **Add** — new id; distinct title |
+
+Merge rules:
+- Keep the existing `id` on update/merge; never invent a parallel duplicate.
+- Prefer the clearer prose; keep correct technical detail from either side.
+- Coding: prefer broader/correct `testCases`; keep a solid `template`; put the best reference solution in `explanation`.
+- Learnings/MCQ: prefer well-structured markdown with examples; don’t drop unique insights from the existing entry.
+- Report outcomes: `updated id N`, `merged into id N`, or `skipped duplicate → id N`.
 
 ## Learnings schema
 
@@ -171,8 +198,8 @@ Rules:
 
 ## Checklist for adding a content batch
 
-1. Choose section(s): Learnings only, Coding only, or both (linked by matching id + tags).
-2. Dedupe against existing entries (title / code / `functionName`); skip or update — don’t silently duplicate.
+1. Choose **one section** by default (Learnings, Coding, MCQ, or Output). Dual-section (linked Learnings + Coding) only when the user explicitly requests it.
+2. Dedupe against existing entries (title / code / `functionName`); **compare content** — skip only if equal/worse; otherwise update or merge into the existing `id`.
 3. Pick next available id(s) in the target JSON file for **new** items only.
 4. Write data with correct schema, tags, `source`, and test cases.
 5. If supplemental file: import + merge in `App.jsx`; set file-level `source` when the batch shares one origin.
@@ -183,7 +210,7 @@ Rules:
 
 ## Reference example: polyfill batch
 
-The canonical dual-section import:
+The canonical **paired** batch (opt-in — not the `/load` default). Use this pattern only when the user explicitly asks for Learnings + Coding together:
 
 | File | Content |
 | ---- | ------- |

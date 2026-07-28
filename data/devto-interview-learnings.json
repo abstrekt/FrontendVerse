@@ -1,0 +1,508 @@
+{
+  "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+  "learnings": [
+    {
+      "id": 83,
+      "title": "undefined vs null",
+      "tags": [
+        "core",
+        "types",
+        "primitives"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Similarities\n\nBoth `undefined` and `null` are JavaScript's **7 primitive types**:\n\n```javascript\nlet primitiveTypes = ['string', 'number', 'null', 'undefined', 'boolean', 'symbol', 'bigint'];\n```\n\nBoth are **falsy** values — evaluated as `false` when converted to boolean:\n\n```javascript\nconsole.log(!!null);        // false\nconsole.log(!!undefined);   // false\nconsole.log(Boolean(null));      // false\nconsole.log(Boolean(undefined)); // false\n```\n\n## Differences\n\n**`undefined`** is the **default value** assigned by the JS engine:\n\n- Variable declared but not assigned a value\n- Function with no explicit `return`\n- Accessing a non-existent object property\n\n```javascript\nlet _thisIsUndefined;\nconst doNothing = () => {};\nconst someObj = { a: 'ay', b: 'bee', c: 'si' };\n\nconsole.log(_thisIsUndefined);  // undefined\nconsole.log(doNothing());       // undefined\nconsole.log(someObj['d']);      // undefined\n```\n\n**`null`** is an **explicitly assigned** value representing \"no value\":\n\n```javascript\nfs.readFile('path/to/file', (e, data) => {\n  console.log(e); // null when no error occurred\n  if (e) { console.log(e); }\n  console.log(data);\n});\n```\n\n## Comparison\n\n```javascript\nconsole.log(null == undefined);  // true  (abstract equality)\nconsole.log(null === undefined); // false (strict equality)\n```"
+    },
+    {
+      "id": 84,
+      "title": "Falsy values in JavaScript",
+      "tags": [
+        "core",
+        "types",
+        "coercion"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## The 6 Falsy Values\n\n```javascript\nconst falsyValues = ['', 0, null, undefined, NaN, false];\n```\n\nFalsy values are values that evaluate to `false` when converted to boolean.\n\n## Checking if a value is falsy\n\nUse the `Boolean` function or the **Double NOT** (`!!`) operator:\n\n```javascript\nconsole.log(!!null);      // false\nconsole.log(!!undefined); // false\nconsole.log(!!'');        // false\nconsole.log(!!0);         // false\nconsole.log(!!NaN);       // false\nconsole.log(!!false);     // false\n\nconsole.log(!!' ');       // true  (non-empty string)\nconsole.log(!!{});        // true  (object)\nconsole.log(!![]);        // true  (array)\nconsole.log(!!1);         // true  (non-zero number)\nconsole.log(!![].length); // false (0 is falsy)\n```"
+    },
+    {
+      "id": 85,
+      "title": "Wrapper Objects",
+      "tags": [
+        "core",
+        "types",
+        "primitives"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Primitives with methods?\n\nPrimitive values like `string`, `number`, and `boolean` (except `null` and `undefined`) have properties and methods even though they are not objects:\n\n```javascript\nlet name = 'marko';\nconsole.log(typeof name);      // \"string\"\nconsole.log(name.toUpperCase()); // \"MARKO\"\n```\n\nThis works because the primitive is **temporarily coerced** into a **Wrapper Object**:\n\n```javascript\n// Behind the scenes:\nconsole.log(new String(name).toUpperCase()); // \"MARKO\"\n```\n\nThe newly created object is immediately discarded after accessing the property or calling the method.\n\n## Wrapper Object types\n\n| Primitive | Wrapper Object |\n|-----------|---------------|\n| `string`  | `String`      |\n| `number`  | `Number`      |\n| `boolean` | `Boolean`     |\n| `symbol`  | `Symbol`      |\n| `bigint`  | `BigInt`      |\n\n`null` and `undefined` have **no wrapper objects** — they have no properties or methods."
+    },
+    {
+      "id": 86,
+      "title": "NaN — Not a Number",
+      "tags": [
+        "core",
+        "types",
+        "numbers"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is NaN?\n\n`NaN` stands for **\"Not A Number\"**. It results from operations that fail to produce a valid number:\n\n```javascript\nlet a;\nconsole.log(parseInt('abc'));   // NaN\nconsole.log(parseInt(null));    // NaN (note: Number(null) is 0)\nconsole.log(parseInt(undefined)); // NaN\nconsole.log(parseInt(++a));     // NaN\nconsole.log({} * 10);           // NaN\nconsole.log('abc' - 2);         // NaN\nconsole.log(0 / 0);             // NaN\nconsole.log('10a' * 10);        // NaN\n```\n\n## Checking for NaN — the gotcha\n\nThe built-in `isNaN()` has weird behavior:\n\n```javascript\nconsole.log(isNaN());           // true\nconsole.log(isNaN(undefined));  // true\nconsole.log(isNaN({}));         // true\nconsole.log(isNaN(String('a'))); // true\nconsole.log(isNaN(() => {}));   // true\n```\n\nAll return `true` even though these values are not `NaN`.\n\n## The correct way\n\nUse `Number.isNaN()` (ES6) or leverage the fact that `NaN` is the **only value not equal to itself**:\n\n```javascript\n// ES6\nconsole.log(Number.isNaN(NaN));   // true\nconsole.log(Number.isNaN('abc')); // false\n\n// Custom helper\nfunction checkIfNaN(value) {\n  return value !== value;\n}\n```"
+    },
+    {
+      "id": 87,
+      "title": "typeof null returns \"object\"",
+      "tags": [
+        "core",
+        "types",
+        "operators"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Why `typeof null === 'object'`?\n\nThis is a **legacy bug** from the first implementation of JavaScript. The type tag for objects was `0`, and `null` was represented as the NULL pointer (`0x00`), causing `typeof` to return `\"object\"`.\n\nA fix was proposed (changing to `typeof null === 'null'`) but was **rejected** because it would break too many existing projects.\n\n## How to correctly check for null\n\nUse **strict equality** (`===`):\n\n```javascript\nfunction isNull(value) {\n  return value === null;\n}\n\nconsole.log(null === null);       // true\nconsole.log(undefined === null);  // false\nconsole.log(0 === null);          // false\nconsole.log(false === null);      // false\n```"
+    },
+    {
+      "id": 88,
+      "title": "&& and || operators — Logical AND and OR",
+      "tags": [
+        "operators",
+        "short-circuit"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Logical AND (`&&`)\n\nThe `&&` operator finds the **first falsy** expression and returns it. If no falsy expression is found, it returns the **last expression**. It uses **short-circuiting** to avoid unnecessary work.\n\n```javascript\nconsole.log(false && 1 && []);  // false\nconsole.log(' ' && true && 5);  // 5\n```\n\nPractical use — conditional execution without `if`:\n\n```javascript\n// Instead of:\nif (conMobile) {\n  conMobile.release();\n}\n\n// Use:\nconMobile && conMobile.release();\n```\n\n## Logical OR (`||`)\n\nThe `||` operator finds the **first truthy** expression and returns it. Also short-circuits.\n\n```javascript\nconsole.log(null || 1 || undefined); // 1\n```\n\nBefore ES6 default parameters, `||` was used for defaults:\n\n```javascript\nfunction logName(name) {\n  var n = name || 'Mark';\n  console.log(n);\n}\nlogName(); // \"Mark\"\n```\n\n> **Note:** These operators return the **last evaluated operand**, not necessarily a boolean. `0 || 0 || 0` returns `0`, and `1 && 1 && 1` returns `1`."
+    },
+    {
+      "id": 89,
+      "title": "== vs === — Abstract vs Strict Equality",
+      "tags": [
+        "operators",
+        "coercion",
+        "comparison"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## The core difference\n\n- `==` (abstract equality) compares **by value** after performing **type coercion**\n- `===` (strict equality) compares **by value and type** without coercion\n\n## How `==` works (the algorithm)\n\nFor `x == y`, JavaScript follows these steps:\n\n1. If `x` and `y` have the **same type** → use `===`\n2. If `x` is `null` and `y` is `undefined` → `true`\n3. If `x` is `undefined` and `y` is `null` → `true`\n4. If `x` is `number` and `y` is `string` → `x == toNumber(y)`\n5. If `x` is `string` and `y` is `number` → `toNumber(x) == y`\n6. If `x` is `boolean` → `toNumber(x) == y`\n7. If `y` is `boolean` → `x == toNumber(y)`\n8. If `x` is `string`/`symbol`/`number` and `y` is `object` → `x == toPrimitive(y)`\n9. If `x` is `object` and `y` is `string`/`symbol`/`number` → `toPrimitive(x) == y`\n10. Return `false`\n\n## Examples — `==`\n\n| `x` | `y` | `x == y` | Why |\n|-----|-----|----------|-----|\n| `5` | `5` | `true` | Same type (rule 1) |\n| `1` | `'1'` | `true` | `'1'` → `1` (rule 4) |\n| `null` | `undefined` | `true` | Rule 2 |\n| `0` | `false` | `true` | `false` → `0` (rule 7) |\n| `'1,2'` | `[1,2]` | `true` | `[1,2].toString()` → `'1,2'` (rule 8) |\n| `'[object Object]'` | `{}` | `true` | `{}.toString()` → `'[object Object]'` (rule 10) |\n\n## Same examples — `===`\n\n| `x` | `y` | `x === y` |\n|-----|-----|-----------|\n| `5` | `5` | `true` |\n| `1` | `'1'` | `false` |\n| `null` | `undefined` | `false` |\n| `0` | `false` | `false` |\n| `'1,2'` | `[1,2]` | `false` |\n| `'[object Object]'` | `{}` | `false` |"
+    },
+    {
+      "id": 90,
+      "title": "Object comparison — why {} !== {}",
+      "tags": [
+        "objects",
+        "comparison",
+        "reference"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Primitives vs Objects\n\nJavaScript compares **primitives by value** and **objects by reference** (memory address).\n\n```javascript\nlet a = { a: 1 };\nlet b = { a: 1 };\nlet c = a;\n\nconsole.log(a === b); // false — different references\nconsole.log(a === c); // true  — same reference\n```\n\nEven though `a` and `b` have identical properties, they are stored at **different memory locations**.\n\n## Accessing properties on undefined\n\n```javascript\nconst obj = {};\nconsole.log(obj.someprop.x); // TypeError!\n```\n\n`obj.someprop` is `undefined` (property doesn't exist), and you can't access `.x` on `undefined`."
+    },
+    {
+      "id": 91,
+      "title": "!! — Double NOT operator",
+      "tags": [
+        "operators",
+        "coercion"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What it does\n\nThe `!!` operator coerces the value on its right side into a **boolean**. It's a shorthand for `Boolean(value)`.\n\n```javascript\nconsole.log(!!null);      // false\nconsole.log(!!undefined); // false\nconsole.log(!!'');        // false\nconsole.log(!!0);         // false\nconsole.log(!!NaN);       // false\nconsole.log(!!' ');       // true\nconsole.log(!!{});        // true\nconsole.log(!![]);        // true\nconsole.log(!!1);         // true\nconsole.log(!![].length); // false\n```\n\n## How it works\n\nThe first `!` converts to boolean and negates it. The second `!` negates it back, giving the original boolean value:\n\n```javascript\n!value   // converts to boolean and flips\n!!value  // flips back → original boolean\n```"
+    },
+    {
+      "id": 92,
+      "title": "Comma operator",
+      "tags": [
+        "operators",
+        "expressions"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What it does\n\nThe `,` (comma) operator evaluates multiple expressions **left-to-right** and returns the value of the **rightmost expression**.\n\n```javascript\nlet x = 5;\n\nx = (x++, x = addFive(x), x *= 2, x -= 5, x += 10);\n\nfunction addFive(num) {\n  return num + 5;\n}\n\nconsole.log(x); // 27\n```\n\n## Step-by-step execution\n\n1. `x++` → `x` becomes `6`\n2. `x = addFive(x)` → `x` becomes `11`\n3. `x *= 2` → `x` becomes `22`\n4. `x -= 5` → `x` becomes `17`\n5. `x += 10` → `x` becomes `27` (returned)\n\n> The comma operator is rarely used in practice. It's most common in minified code and `for` loop declarations."
+    },
+    {
+      "id": 93,
+      "title": "Implicit vs Explicit Coercion",
+      "tags": [
+        "coercion",
+        "types",
+        "operators"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Implicit Coercion\n\n**Implicit coercion** happens automatically — JavaScript converts the type without you explicitly asking:\n\n```javascript\nconsole.log(1 + '6');    // \"16\" — number 1 coerced to string\nconsole.log(false + true); // 1 — both coerced to numbers (0 + 1)\nconsole.log(6 * '2');    // 12 — string '2' coerced to number\n```\n\n## Explicit Coercion\n\n**Explicit coercion** is when you intentionally convert a value:\n\n```javascript\nconsole.log(1 + parseInt('6')); // 7 — manual string→number\nconsole.log(String(123));       // \"123\" — manual number→string\nconsole.log(Boolean(0));        // false — manual number→boolean\nconsole.log(Number('42'));      // 42 — manual string→number\n```\n\n## Unary plus — fastest string→number\n\nAccording to MDN, the `+` (unary plus) operator is the **fastest** way to convert a string to a number because it performs no operations if the value is already a number:\n\n```javascript\nconst num = +'42';  // 42\n```"
+    },
+    {
+      "id": 94,
+      "title": "Check if a number is even without using %",
+      "tags": [
+        "operators",
+        "bitwise",
+        "numbers"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Using Bitwise AND (`&`)\n\nThe `&` operator compares each bit of two numbers. Since odd numbers always have the last bit set to `1`, `num & 1` returns `1` for odd numbers and `0` for even numbers:\n\n```javascript\nfunction isEven(num) {\n  if (num & 1) {\n    return false;\n  } else {\n    return true;\n  }\n}\n```\n\n## How it works\n\n| Decimal | Binary | `& 1` result |\n|---------|--------|-------------|\n| 0 | 000 | 0 (even) |\n| 1 | 001 | 1 (odd) |\n| 2 | 010 | 0 (even) |\n| 3 | 011 | 1 (odd) |\n| 4 | 100 | 0 (even) |\n| 5 | 101 | 1 (odd) |\n\nFor `5 & 1`: `101` & `001` = `001` = `1` (odd).\nFor `4 & 1`: `100` & `001` = `000` = `0` (even).\n\n## Alternative: Recursive approach\n\n```javascript\nfunction isEven(num) {\n  if (num < 0 || num === 1) return false;\n  if (num === 0) return true;\n  return isEven(num - 2);\n}\n```"
+    },
+    {
+      "id": 95,
+      "title": "What is the DOM?",
+      "tags": [
+        "DOM",
+        "browser",
+        "API"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Document Object Model\n\n**DOM** stands for **Document Object Model** — an interface (API) for HTML and XML documents.\n\nWhen the browser parses an HTML document, it creates a **tree-like structure** from it — this is the DOM. It's used for interacting with and modifying the document structure, elements, and nodes.\n\n## Example\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Document Object Model</title>\n</head>\n<body>\n  <div>\n    <p>\n      <span></span>\n    </p>\n    <label></label>\n    <input>\n  </div>\n</body>\n</html>\n```\n\nThe DOM equivalent is a tree:\n\n```\ndocument\n └── html\n      ├── head\n      │    ├── meta\n      │    └── title\n      └── body\n           └── div\n                ├── p\n                │    └── span\n                ├── label\n                └── input\n```\n\nThe `document` object in JavaScript represents the DOM. It provides methods to select elements, update content, and manage events."
+    },
+    {
+      "id": 96,
+      "title": "Event Propagation — Bubbling and Capturing",
+      "tags": [
+        "DOM",
+        "events",
+        "browser"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Three phases of event propagation\n\nWhen an event occurs on a DOM element, it goes through three phases:\n\n1. **Capturing Phase** — event starts from `window` and travels down to the target element\n2. **Target Phase** — event has reached the target element\n3. **Bubbling Phase** — event bubbles up from target to `window`\n\n## Event Bubbling\n\nThe default behavior (`useCapture = false`). The event fires on the target element first, then bubbles up through ancestors:\n\n```javascript\n// Clicking .child logs: child → parent → grandparent → html → document → window\naddEvent(child, 'click', () => console.log('child'));\naddEvent(parent, 'click', () => console.log('parent'));\naddEvent(grandparent, 'click', () => console.log('grandparent'));\n```\n\n## Event Capturing\n\nWhen `useCapture = true` (3rd param to `addEventListener`), the event fires during the capturing phase — top-down:\n\n```javascript\n// Clicking .child logs: window → document → html → grandparent → parent → child\naddEvent(child, 'click', () => console.log('child'), true);\naddEvent(parent, 'click', () => console.log('parent'), true);\naddEvent(grandparent, 'click', () => console.log('grandparent'), true);\n```"
+    },
+    {
+      "id": 97,
+      "title": "event.preventDefault() vs event.stopPropagation()",
+      "tags": [
+        "DOM",
+        "events",
+        "browser"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## `event.preventDefault()`\n\nPrevents the **default browser behavior** of an element:\n\n- On a `<form>` — prevents submission\n- On an `<a>` — prevents navigation\n- On `contextmenu` — prevents the context menu\n\n## `event.stopPropagation()`\n\nStops the event from propagating through the DOM — prevents it from firing in the **bubbling** or **capturing** phase on parent elements.\n\n## Checking if preventDefault was called\n\nUse `event.defaultPrevented` — returns `true` if `preventDefault()` was called on the element:\n\n```javascript\nelement.addEventListener('click', (e) => {\n  e.preventDefault();\n  console.log(e.defaultPrevented); // true\n});\n```"
+    },
+    {
+      "id": 98,
+      "title": "event.target vs event.currentTarget",
+      "tags": [
+        "DOM",
+        "events",
+        "browser"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## `event.target`\n\nThe element that **triggered** the event — the innermost element that was clicked/interacted with.\n\n## `event.currentTarget`\n\nThe element on which the event handler is **explicitly attached** (`this` in the handler).\n\n## Example\n\n```html\n<div onclick=\"clickFunc(event)\">\n  <div>\n    <div>\n      <button>Button</button>\n    </div>\n  </div>\n</div>\n```\n\n```javascript\nfunction clickFunc(event) {\n  console.log(event.target);        // <button> — the element clicked\n  console.log(event.currentTarget); // <div>   — where handler is attached\n}\n```\n\n- Click the button → `target` is the `<button>`, `currentTarget` is the outer `<div>`\n- **`target`** = the deepest element that received the click\n- **`currentTarget`** = the element that owns the handler"
+    },
+    {
+      "id": 99,
+      "title": "Hoisting",
+      "tags": [
+        "execution context",
+        "scope",
+        "variables"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is Hoisting?\n\nHoisting describes how variable and function **declarations** are moved to the top of their scope during the **compilation phase**.\n\n## Execution Context — Two Phases\n\n1. **Compilation Phase** — gets all `function` declarations and `var` variables, hoists them to the top of their scope. `var` variables get a default value of `undefined`.\n2. **Execution Phase** — assigns values to hoisted variables and executes/invokes functions.\n\n## What gets hoisted?\n\n- ✅ **Function declarations** — fully hoisted (body available)\n- ✅ **`var` variables** — hoisted with initial value `undefined`\n- ❌ **`let` / `const`** — hoisted but NOT initialized (Temporal Dead Zone)\n- ❌ **Function expressions / Arrow functions** — treated as variables, not function declarations\n\n## Example\n\n```javascript\nconsole.log(y);              // undefined\nconsole.log(greet('Mark'));  // \"Hello Mark!\"\n\ny = 1;\nconsole.log(y);              // 1\n\nfunction greet(name) {\n  return 'Hello ' + name + '!';\n}\n\nvar y;\n```\n\n## Function Expression vs Declaration\n\n```javascript\nhoistedFunc();    // Works — function declaration is hoisted\nnotHoistedFunc(); // TypeError — variable exists but is undefined\n\nfunction hoistedFunc() {\n  console.log('I am hoisted');\n}\n\nvar notHoistedFunc = function() {\n  console.log('I will not be hoisted!');\n};\n```\n\n## Why `b` becomes global\n\n```javascript\nfunction myFunc() {\n  let a = b = 0;  // Same as: let a = (b = 0)\n}\nmyFunc();\n```\n\nThe assignment operator has right-to-left associativity. `b = 0` runs first — `b` is **not declared** anywhere, so it becomes a **global variable**. Then `a` gets the result (`0`). Always declare variables explicitly:\n\n```javascript\nfunction myFunc() {\n  let a, b;\n  a = b = 0;\n}\n```"
+    },
+    {
+      "id": 100,
+      "title": "Scope and Scope Chain",
+      "tags": [
+        "scope",
+        "execution context",
+        "variables"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is Scope?\n\n**Scope** is the area where variables and functions are validly accessible. JavaScript has three types:\n\n### 1. Global Scope\nVariables declared in the global namespace are accessible everywhere:\n\n```javascript\nvar g = 'global';\n\nfunction globalFunc() {\n  function innerFunc() {\n    console.log(g); // can access \"g\"\n  }\n  innerFunc();\n}\n```\n\n### 2. Function Scope\nVariables declared inside a function are only accessible within it:\n\n```javascript\nfunction myFavoriteFunc(a) {\n  if (true) {\n    var b = 'Hello ' + a;\n  }\n  return b; // b accessible here (var is function-scoped)\n}\nmyFavoriteFunc('World');\nconsole.log(a); // ReferenceError\n```\n\n### 3. Block Scope (ES6)\nVariables declared with `let` or `const` inside `{}` are only accessible within that block:\n\n```javascript\nfunction testBlock() {\n  if (true) {\n    let z = 5;\n  }\n  return z; // ReferenceError\n}\n```\n\n## Scope Chain\n\nWhen accessing a variable, JavaScript searches from the **innermost scope outward** until it finds the variable or reaches the global scope. It stops at the **nearest match**:\n\n```javascript\nvar variable1 = 'Comrades';\nvar variable2 = 'Sayonara';\n\nfunction outer() {\n  var variable1 = 'World';\n  function inner() {\n    var variable2 = 'Hello';\n    console.log(variable2 + ' ' + variable1);\n  }\n  inner();\n}\nouter(); // \"Hello World\"\n```\n\nThe lookup: `inner`'s scope → `outer`'s scope → global scope. Finds `variable2` in `inner`, `variable1` in `outer`."
+    },
+    {
+      "id": 101,
+      "title": "Closures",
+      "tags": [
+        "closures",
+        "scope",
+        "functions"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is a Closure?\n\nA **closure** is the ability of a function to **remember and access** variables from its lexical scope even when the function is executed outside that scope.\n\n## Simple example\n\n```javascript\nvar globalVar = 'abc';\n\nfunction a() {\n  console.log(globalVar);\n}\n\na(); // \"abc\" — globalVar is in a's closure\n```\n\n## Complex example\n\n```javascript\nvar globalVar = 'global';\nvar outerVar = 'outer';\n\nfunction outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    console.log(globalVar, outerParam, innerParam);\n  }\n  return innerFunc;\n}\n\nconst x = outerFunc(outerVar);\nouterVar = 'outer-2';\nglobalVar = 'guess';\nx('inner'); // \"guess outer inner\"\n```\n\n**Why \"outer\" and not \"outer-2\"?** `outerParam` captured the value of `outerVar` **at the time `outerFunc` was called**, which was `\"outer\"`. But `globalVar` was reassigned **before `x()` was called**, so the closure sees the updated value `\"guess\"`.\n\n## The classic loop problem\n\n```javascript\nconst arrFuncs = [];\nfor (var i = 0; i < 5; i++) {\n  arrFuncs.push(function() {\n    return i;\n  });\n}\n\nconsole.log(i);          // 5\narrFuncs.forEach(fn => console.log(fn())); // all log 5\n```\n\n`var i` is function-scoped (global here). All functions close over the **same `i`** — its final value `5`.\n\n### Fixes:\n\n1. Use `let` (block-scoped — each iteration gets its own `i`):\n```javascript\nfor (let i = 0; i < 5; i++) { ... }\n```\n\n2. Use an IIFE to capture each value:\n```javascript\nfor (var i = 0; i < 5; i++) {\n  (function(currentIndex) {\n    arrFuncs.push(function() { return currentIndex; });\n  })(i);\n}\n```"
+    },
+    {
+      "id": 102,
+      "title": "\"use strict\"",
+      "tags": [
+        "strict mode",
+        "ES5",
+        "error handling"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is Strict Mode?\n\n`\"use strict\"` is an ES5 feature that enables **Strict Mode** in functions or entire scripts. It helps catch bugs early by adding restrictions.\n\n## Key Restrictions\n\n**Assigning to undeclared variables:**\n```javascript\nfunction returnY() {\n  'use strict';\n  y = 123;     // ReferenceError: y is not defined\n  return y;\n}\n```\n\n**Assigning to read-only globals:**\n```javascript\n'use strict';\nvar NaN = NaN;           // TypeError\nvar undefined = undefined; // TypeError\nvar Infinity = 'and beyond'; // TypeError\n```\n\n**Deleting undeletable properties:**\n```javascript\n'use strict';\nconst obj = {};\nObject.defineProperty(obj, 'x', { value: '1' });\ndelete obj.x; // TypeError\n```\n\n**Duplicate parameter names:**\n```javascript\n'use strict';\nfunction someFunc(a, b, b, c) {} // SyntaxError\n```\n\n**`eval` doesn't leak variables:**\n```javascript\n'use strict';\neval('var x = 1;');\nconsole.log(x); // ReferenceError\n```\n\n**`this` defaults to `undefined`:**\n```javascript\n'use strict';\nfunction showMeThis() {\n  return this;\n}\nshowMeThis(); // undefined (not window)\n```"
+    },
+    {
+      "id": 103,
+      "title": "var, let, and const",
+      "tags": [
+        "variables",
+        "scope",
+        "ES6"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## `var` — Function Scoped\n\nVariables declared with `var` are accessible throughout the entire function, even if declared inside a block:\n\n```javascript\nfunction giveMeX(showX) {\n  if (showX) {\n    var x = 5;\n  }\n  return x;\n}\nconsole.log(giveMeX(false)); // undefined (hoisted, default value)\nconsole.log(giveMeX(true));  // 5\n```\n\nInterpreted as:\n```javascript\nfunction giveMeX(showX) {\n  var x; // hoisted with undefined\n  if (showX) {\n    x = 5;\n  }\n  return x;\n}\n```\n\n## `let` and `const` — Block Scoped\n\nAccessible only within the `{}` where declared. Not initialized until the declaration line (Temporal Dead Zone):\n\n```javascript\nfunction giveMeX(showX) {\n  if (showX) {\n    let x = 5;\n  }\n  return x; // ReferenceError — x not accessible outside block\n}\n```\n\n## `let` vs `const`\n\n- **`let`** — can be reassigned\n- **`const`** — cannot be reassigned, but objects/arrays are still **mutable**:\n\n```javascript\nconst obj = { name: 'Mark' };\nobj.name = 'John';   // OK — mutating property\nobj = {};            // TypeError — reassignment\n```"
+    },
+    {
+      "id": 104,
+      "title": "this in JavaScript",
+      "tags": [
+        "this",
+        "functions",
+        "context"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is `this`?\n\n`this` refers to the **object that is currently executing or invoking the function**. Its value depends entirely on **how the function is called**.\n\n## The 4 Invocation Patterns\n\n### 1. Function Invocation\nWhen called as a standalone function, `this` is the global object (`window`) or `undefined` in strict mode:\n\n```javascript\nfunction add(a, b) {\n  console.log(this); // window\n  return a + b;\n}\nadd(1, 5);\n```\n\n### 2. Method Invocation\nWhen called as a method of an object, `this` is that object:\n\n```javascript\nconst details = {\n  name: 'Marko',\n  getName() {\n    return this.name;\n  }\n};\ndetails.getName(); // 'Marko' — this = details\n```\n\n**Gotcha — losing context:**\n```javascript\nvar name = 'Ford Ranger';\nvar getCarName = carDetails.getName;\ngetCarName(); // 'Ford Ranger' — this = window\n\n// Fix with apply/call:\ngetCarName.apply(carDetails); // 'Ford Mustang'\n```\n\n### 3. Constructor Invocation (`new`)\nWhen called with `new`, `this` is a newly created empty object:\n\n```javascript\nfunction Employee(name, position, yearHired) {\n  // this = {} (created by new)\n  this.name = name;\n  this.position = position;\n  this.yearHired = yearHired;\n  // implicitly returns this\n}\nconst emp = new Employee('Marko', 'Developer', 2017);\n```\n\n### 4. Explicit Binding (`call` / `apply` / `bind`)\nManually set `this`:\n\n```javascript\nreduceAdd.apply(obj1, [1, 2, 3, 4, 5]); // this = obj1\nreduceAdd.call(obj2, 1, 2, 3, 4, 5);   // this = obj2\n```\n\n## Inner functions lose `this`\n\n```javascript\nconst myFavoriteObj = {\n  name: 'Marko Polo',\n  guessThis() {\n    function getThis() {\n      console.log(this); // window (not myFavoriteObj!)\n    }\n    getThis();\n  }\n};\n```\n\n### Fix 1: Save `this` in a variable\n```javascript\nguessThis() {\n  const self = this;\n  function getName() { console.log(self.name); }\n  getName();\n}\n```\n\n### Fix 2: Arrow functions (lexical `this`)\n```javascript\nguessThis() {\n  const getName = () => {\n    console.log(this.name); // this = myFavoriteObj\n  };\n  getName();\n}\n```"
+    },
+    {
+      "id": 105,
+      "title": "new keyword",
+      "tags": [
+        "constructor",
+        "this",
+        "objects",
+        "prototype"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What `new` does (4 steps)\n\n```javascript\nfunction Employee(name, position, yearHired) {\n  this.name = name;\n  this.position = position;\n  this.yearHired = yearHired;\n}\n\nconst emp = new Employee('Marko Polo', 'Software Developer', 2017);\n```\n\nWhen `new Employee(...)` is called:\n\n1. **Creates an empty object** — `{}`\n2. **Assigns `this`** to that empty object — `this = {}`\n3. **Sets up prototype** — the new object inherits from `Employee.prototype`\n4. **Returns `this`** — if no explicit `return` statement is found\n\n## What happens without `new`?\n\n```javascript\nconst emp = Employee('Marko', 'Dev', 2017);\n// this = window (or undefined in strict mode)\n// window.name = 'Marko' — polluting global scope!\n// emp is undefined (no return)\n```"
+    },
+    {
+      "id": 106,
+      "title": "IIFE — Immediately Invoked Function Expression",
+      "tags": [
+        "functions",
+        "scope",
+        "closures",
+        "patterns"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is an IIFE?\n\nAn **IIFE** is a function that executes immediately after its creation. The syntax wraps the function in parentheses (Grouping Operator) to make it an expression, then invokes it with `()`:\n\n```javascript\n// Valid IIFE forms\n(function() {\n  // code\n}());\n\n(function() {\n  // code\n})();\n\n(function named(params) {\n  // code\n})();\n\n(() => {\n  // code\n})();\n```\n\n## Why use IIFEs?\n\n### 1. Avoid global namespace pollution\n\n```javascript\nconst graphUtility = (function() {\n  function createGraph() { /* ... */ }\n  function drawGraph() { /* ... */ }\n\n  return { createGraph, drawGraph };\n})();\n\n// Only graphUtility is global — createGraph and drawGraph are private\n```\n\n### 2. Module pattern / initialization\n\n```javascript\nconst utility = (function() {\n  return {\n    // public API\n  };\n})();\n```\n\n### 3. Capturing loop variables (before `let`)\n\n```javascript\nvar li = document.querySelectorAll('.list-group > li');\nfor (var i = 0; i < li.length; i++) {\n  (function(currentIndex) {\n    li[currentIndex].addEventListener('click', function() {\n      console.log(currentIndex);\n    });\n  })(i);\n}\n```\n\nEach IIFE creates a **new scope** capturing the current value of `i`."
+    },
+    {
+      "id": 107,
+      "title": "Functional Programming, Higher-Order Functions, and First-Class Objects",
+      "tags": [
+        "functional programming",
+        "functions",
+        "patterns"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Functional Programming\n\n**Functional Programming** is a **declarative** paradigm where programs are built with **pure functions** — functions that compute a value without mutating their arguments or causing side effects.\n\nJavaScript's Array methods `map`, `filter`, and `reduce` are prime examples:\n\n```javascript\n// map — transforms each element\nconst words = ['Functional', 'Procedural', 'Object-Oriented'];\nconst wordsLength = words.map(word => word.length);\n\n// filter — keeps elements that pass a test\nconst data = [\n  { name: 'Mark', isRegistered: true },\n  { name: 'Mary', isRegistered: false },\n];\nconst registeredUsers = data.filter(user => user.isRegistered);\n\n// reduce — reduces array to a single value\nconst strs = ['I', ' ', 'am', ' ', 'Iron', ' ', 'Man'];\nconst result = strs.reduce((acc, currentStr) => acc + currentStr, '');\n// \"I am Iron Man\"\n```\n\n## Higher-Order Functions\n\nA function that **receives** another function as an argument, **returns** a function, or both:\n\n```javascript\nfunction higherOrderFunction(param, callback) {\n  return callback(param);\n}\n```\n\n## First-Class Objects (Functions)\n\nIn JavaScript, functions are **first-class objects** — they can be treated like any other value:\n\n- Assigned to variables\n- Stored as object properties (methods)\n- Stored in arrays\n- Passed as arguments to other functions\n- Returned from other functions\n\nThe only thing that separates functions from other values: **functions can be invoked**."
+    },
+    {
+      "id": 108,
+      "title": "arguments object",
+      "tags": [
+        "functions",
+        "parameters",
+        "ES6"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is `arguments`?\n\nThe `arguments` object is an **array-like** collection of all parameter values passed to a function. It has a `length` property and index-based access, but lacks array methods like `forEach`, `map`, `filter`, etc.\n\n```javascript\nfunction one() {\n  return arguments; // { 0: ..., 1: ..., length: 2 }\n}\none(1, 2);\n```\n\n## Converting to an array\n\n```javascript\nfunction one() {\n  return Array.prototype.slice.call(arguments);\n}\n```\n\n## Arrow functions DON'T have `arguments`\n\n```javascript\nconst four = () => arguments;\nfour(); // ReferenceError: arguments is not defined\n```\n\nUse **rest parameters** instead:\n\n```javascript\nconst four = (...args) => args;\nfour(1, 2, 3); // [1, 2, 3]\n```"
+    },
+    {
+      "id": 109,
+      "title": "Arrow functions",
+      "tags": [
+        "arrow functions",
+        "ES6",
+        "functions",
+        "this"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Syntax\n\nArrow functions provide a shorter syntax by omitting the `function` keyword:\n\n```javascript\n// ES5\nvar getCurrentDate = function() {\n  return new Date();\n};\n\n// ES6\nconst getCurrentDate = () => new Date(); // implicit return\n\n// With parameters\nconst greet = (name) => `Hello ${name}`;\nconst greet2 = name => `Hello ${name}`; // single param — parens optional\n```\n\n## Key Differences from Regular Functions\n\n### 1. No own `this`\nArrow functions capture `this` from the **enclosing lexical scope**:\n\n```javascript\nconst data = {\n  result: 0,\n  nums: [1, 2, 3, 4, 5],\n  computeResult() {\n    const addAll = () => {\n      return this.nums.reduce((total, cur) => total + cur, 0);\n    };\n    this.result = addAll(); // this = data object\n  }\n};\n```\n\n### 2. No `arguments` object\nUse rest parameters instead:\n\n```javascript\nconst getArgs = (...rest) => rest;\n```\n\n### 3. Cannot be used as constructors\n`new` with an arrow function throws a TypeError.\n\n### 4. No `prototype` property\nArrow functions don't have a `.prototype`."
+    },
+    {
+      "id": 110,
+      "title": "Callback functions",
+      "tags": [
+        "callbacks",
+        "async",
+        "functions"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is a Callback?\n\nA **callback** is a function passed as an argument to another function, to be executed **later** — after an event occurs or an async operation completes.\n\n```javascript\nconst btnAdd = document.getElementById('btnAdd');\nbtnAdd.addEventListener('click', function clickCallback(e) {\n  // executes when button is clicked\n});\n```\n\n## Common Use Cases\n\nArray methods all use callbacks:\n\n```javascript\n[1, 2, 3].map(x => x * 2);      // callback: x => x * 2\n[1, 2, 3].filter(x => x > 1);   // callback: x => x > 1\n[1, 2, 3].reduce((a, b) => a + b, 0); // callback: (a, b) => a + b\n```\n\nAsync operations (Node.js callback pattern):\n\n```javascript\nfs.readFile('file.txt', (err, data) => {\n  if (err) throw err;\n  console.log(data);\n});\n```\n\n## The Analogy\n\nYou call someone, they don't answer, you leave a message expecting them to **call you back**. The act of calling is the **event**, and their return call is the **callback**."
+    },
+    {
+      "id": 111,
+      "title": "Memoization",
+      "tags": [
+        "memoization",
+        "optimization",
+        "caching",
+        "functions"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is Memoization?\n\n**Memoization** is an optimization technique where a function **remembers** previously computed results. When called with the same arguments, it returns the cached result instead of recomputing.\n\n**Trade-off:** Saves computation time but consumes more memory for the cache.\n\n## Basic implementation (single argument)\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(param) {\n    if (cache[param]) {\n      console.log('cached');\n      return cache[param];\n    } else {\n      let result = fn(param);\n      cache[param] = result;\n      console.log('not cached');\n      return result;\n    }\n  };\n}\n\nconst toUpper = (str = '') => str.toUpperCase();\nconst toUpperMemoized = memoize(toUpper);\n\ntoUpperMemoized('abcdef'); // not cached → 'ABCDEF'\ntoUpperMemoized('abcdef'); // cached     → 'ABCDEF'\n```\n\n## Multi-argument implementation\n\n```javascript\nconst slice = Array.prototype.slice;\n\nfunction memoize(fn) {\n  const cache = {};\n  return (...args) => {\n    const params = slice.call(args);\n    if (cache[params]) {\n      console.log('cached');\n      return cache[params];\n    } else {\n      let result = fn(...args);\n      cache[params] = result;\n      console.log('not cached');\n      return result;\n    }\n  };\n}\n\nconst makeFullName = (fName, lName) => `${fName} ${lName}`;\nconst memoizedMakeFullName = memoize(makeFullName);\n\nmemoizedMakeFullName('Marko', 'Polo'); // not cached\nmemoizedMakeFullName('Marko', 'Polo'); // cached\n```"
+    },
+    {
+      "id": 112,
+      "title": "ECMAScript and ES6 Features",
+      "tags": [
+        "ECMAScript",
+        "ES6",
+        "standards",
+        "history"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is ECMAScript?\n\n**ECMAScript** is the **standard** (specification) for scripting languages. JavaScript follows the ECMAScript specification — it's the **blueprint** of JavaScript.\n\n## ES6 / ECMAScript 2015 — Key Features\n\n| Feature | Description |\n|---------|-------------|\n| **Arrow Functions** | Shorter syntax, lexical `this` |\n| **Classes** | Syntactic sugar over prototypal inheritance |\n| **Template Literals** | Backtick strings with `${}` interpolation |\n| **Enhanced Object Literals** | Shorthand properties and methods |\n| **Object Destructuring** | Extract properties into variables |\n| **Promises** | Native async handling |\n| **Generators** | `function*` with `yield` |\n| **Modules** | `import` / `export` syntax |\n| **Symbol** | New primitive type |\n| **Proxies** | Intercept object operations |\n| **Set / Map** | New collection types |\n| **Default Parameters** | `function(a = 1)` |\n| **Rest / Spread** | `...` operator |\n| **`let` and `const`** | Block-scoped variables |"
+    },
+    {
+      "id": 113,
+      "title": "Classes in JavaScript",
+      "tags": [
+        "classes",
+        "ES6",
+        "OOP",
+        "prototype"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Classes are Syntactic Sugar\n\nClasses provide a cleaner syntax for constructor functions and prototypal inheritance:\n\n```javascript\n// ES5 — Constructor Function\nfunction Person(firstName, lastName, age, address) {\n  this.firstName = firstName;\n  this.lastName = lastName;\n  this.age = age;\n  this.address = address;\n}\n\nPerson.self = function() { return this; };\nPerson.prototype.toString = function() { return '[object Person]'; };\nPerson.prototype.getFullName = function() {\n  return this.firstName + ' ' + this.lastName;\n};\n\n// ES6 — Class\nclass Person {\n  constructor(firstName, lastName, age, address) {\n    this.firstName = firstName;\n    this.lastName = lastName;\n    this.age = age;\n    this.address = address;\n  }\n\n  static self() { return this; }\n  toString() { return '[object Person]'; }\n  getFullName() { return `${this.firstName} ${this.lastName}`; }\n}\n```\n\n## Inheritance\n\n```javascript\n// ES5\nEmployee.prototype = Object.create(Person.prototype);\nfunction Employee(firstName, lastName, age, address, jobTitle, yearStarted) {\n  Person.call(this, firstName, lastName, age, address);\n  this.jobTitle = jobTitle;\n  this.yearStarted = yearStarted;\n}\n\n// ES6\nclass Employee extends Person {\n  constructor(firstName, lastName, age, address, jobTitle, yearStarted) {\n    super(firstName, lastName, age, address);\n    this.jobTitle = jobTitle;\n    this.yearStarted = yearStarted;\n  }\n\n  describe() {\n    return `I am ${this.getFullName()}, ${this.jobTitle} since ${this.yearStarted}`;\n  }\n\n  toString() { // override\n    return '[object Employee]';\n  }\n}\n```\n\n## Proof it's still prototypes\n\n```javascript\nclass Something {}\nconst s = new Something();\n\nconsole.log(typeof Something);            // \"function\"\nconsole.log(s.toString === Object.prototype.toString); // true\n```"
+    },
+    {
+      "id": 114,
+      "title": "Template Literals",
+      "tags": [
+        "strings",
+        "ES6",
+        "syntax"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What are Template Literals?\n\nTemplate literals use **backticks** (`` ` ``) instead of quotes, enabling:\n\n### 1. String Interpolation\n\n```javascript\n// ES5\nfunction greet(name) {\n  return 'Hello ' + name + '!';\n}\n\n// ES6\nconst greet = name => `Hello ${name}!`;\n```\n\n### 2. Multi-line Strings\n\n```javascript\n// ES5\nvar lastWords = '\\n'\n  + ' I \\n'\n  + ' Am \\n'\n  + 'Iron Man \\n';\n\n// ES6\nlet lastWords = `\nI\nAm\nIron Man\n`;\n```\n\n### 3. No Escape for Quotes\n\n```javascript\n// ES5\nvar greet = 'Hi I\\'m Mark';\n\n// ES6\nlet greet = `Hi I'm Mark`;\n```\n\n### 4. Embedded Expressions\n\nAny valid JavaScript expression can go inside `${}`:\n\n```javascript\nconst a = 10, b = 20;\nconsole.log(`Sum: ${a + b}`);            // \"Sum: 30\"\nconsole.log(`Uppercase: ${'hello'.toUpperCase()}`); // \"Uppercase: HELLO\"\n```"
+    },
+    {
+      "id": 115,
+      "title": "Object Destructuring",
+      "tags": [
+        "destructuring",
+        "ES6",
+        "objects",
+        "arrays"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is Destructuring?\n\nA cleaner way to **extract** values from objects and arrays into variables.\n\n## Object Destructuring\n\n```javascript\nconst employee = {\n  firstName: 'Marko',\n  lastName: 'Polo',\n  position: 'Software Developer',\n  yearHired: 2017\n};\n\n// Old way\nvar firstName = employee.firstName;\nvar lastName = employee.lastName;\n\n// New way\nlet { firstName, lastName, position, yearHired } = employee;\n```\n\n### Renaming variables\n\n```javascript\nlet { firstName: fName, lastName: lName } = employee;\nconsole.log(fName); // 'Marko'\n```\n\n### Default values\n\n```javascript\nlet { firstName = 'Mark', middleName = 'N/A' } = employee;\n```\n\n## Array Destructuring\n\n```javascript\nconst [first, ...others] = [1, 2, 3, 4, 5];\nconsole.log(first);  // 1\nconsole.log(others); // [2, 3, 4, 5]\n```"
+    },
+    {
+      "id": 116,
+      "title": "ES6 Modules",
+      "tags": [
+        "modules",
+        "ES6",
+        "import/export"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Why Modules?\n\nModules split code into multiple maintainable files, avoiding one massive file. Before ES6, two module systems dominated:\n\n- **CommonJS** — Node.js (`require` / `module.exports`)\n- **AMD** — Browsers (Asynchronous Module Definition)\n\n## Named Exports\n\n```javascript\n// helpers.js\nexport function isNull(val) {\n  return val === null;\n}\n\nexport function isUndefined(val) {\n  return val === undefined;\n}\n\nexport function isNullOrUndefined(val) {\n  return isNull(val) || isUndefined(val);\n}\n```\n\n## Named Imports\n\n```javascript\nimport * as helpers from './helpers.js'; // namespace import\n// or\nimport { isNull, isUndefined, isNullOrUndefined as isValid } from './helpers.js';\n```\n\n## Default Export\n\n```javascript\n// helpers.js\nclass Helpers {\n  static isNull(val) { return val === null; }\n  static isUndefined(val) { return val === undefined; }\n  static isNullOrUndefined(val) {\n    return this.isNull(val) || this.isUndefined(val);\n  }\n}\n\nexport default Helpers;\n```\n\n## Default Import\n\n```javascript\nimport Helpers from './helpers.js';\nconsole.log(Helpers.isNull(null));\n```\n\n## CommonJS comparison\n\n```javascript\n// CommonJS export\nmodule.exports = Helpers;\n// CommonJS import\nconst Helpers = require('./helpers.js');\n```"
+    },
+    {
+      "id": 117,
+      "title": "Set object",
+      "tags": [
+        "Set",
+        "ES6",
+        "collections",
+        "data structures"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is a Set?\n\nA `Set` stores **unique** values (primitives or object references). A value can only appear **once** in a Set. Duplicates are silently ignored.\n\n## Creating Sets\n\n```javascript\nconst set1 = new Set();\nconst set2 = new Set(['a', 'b', 'c', 'd', 'd', 'e']);\n// set2 has 5 elements: 'a', 'b', 'c', 'd', 'e' (second 'd' is ignored)\n```\n\n## API\n\n```javascript\n// Add (chainable)\nset2.add('f');\nset2.add('g').add('h').add('i').add('j').add('k').add('k');\n// last 'k' is ignored — already exists\n\n// Delete — returns boolean\nset2.delete('k'); // true\nset2.delete('z'); // false\n\n// Check membership\nset2.has('a'); // true\nset2.has('z'); // false\n\n// Size\nset2.size; // 10\n\n// Clear all\nset2.clear();\n```\n\n## Common Use Case — Remove array duplicates\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5, 6, 6, 7, 8, 8, 5];\nconst uniqueNums = [...new Set(numbers)];\n// [1, 2, 3, 4, 5, 6, 7, 8]\n```"
+    },
+    {
+      "id": 118,
+      "title": "Spread operator vs Rest parameter",
+      "tags": [
+        "spread",
+        "rest",
+        "ES6",
+        "operators"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Same syntax, opposite purpose\n\nBoth use `...`, but in **opposite contexts**:\n\n| | Spread | Rest |\n|---|--------|------|\n| **Purpose** | **Gives / spreads** individual items | **Gathers / collects** items into an array |\n| **Where** | Function calls, array/object literals | Function parameters, destructuring |\n\n## Spread Operator — \"spread out\"\n\nExpands an iterable into individual elements:\n\n```javascript\n// Function arguments\nfunction add(a, b) { return a + b; }\nconst nums = [5, 6];\nconst sum = add(...nums); // add(5, 6) → 11\n\n// Array literals\nconst arr1 = [1, 2];\nconst arr2 = [3, 4];\nconst combined = [...arr1, ...arr2]; // [1, 2, 3, 4]\n\n// Object literals (ES2018)\nconst obj1 = { a: 1, b: 2 };\nconst obj2 = { c: 3 };\nconst merged = { ...obj1, ...obj2 }; // { a: 1, b: 2, c: 3 }\n```\n\n## Rest Parameter — \"gather the rest\"\n\nCollects remaining arguments/items into an array:\n\n```javascript\n// Function parameters\nfunction add(...rest) {\n  return rest.reduce((total, current) => total + current);\n}\nconsole.log(add(1, 2));          // 3\nconsole.log(add(1, 2, 3, 4, 5)); // 15\n\n// Array destructuring\nconst [first, ...others] = [1, 2, 3, 4, 5];\nconsole.log(first);  // 1\nconsole.log(others); // [2, 3, 4, 5]\n```"
+    },
+    {
+      "id": 119,
+      "title": "Default Parameters",
+      "tags": [
+        "parameters",
+        "ES6",
+        "functions",
+        "destructuring"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What are Default Parameters?\n\nES6 lets you define default values for function parameters directly in the signature:\n\n```javascript\n// ES5\nfunction add(a, b) {\n  a = a || 0;\n  b = b || 0;\n  return a + b;\n}\n\n// ES6\nfunction add(a = 0, b = 0) {\n  return a + b;\n}\n\nadd(1);    // 1\nadd();     // 0\n```\n\n## With Destructuring\n\n```javascript\nfunction getFirst([first, ...rest] = [0, 1]) {\n  return first;\n}\ngetFirst();           // 0\ngetFirst([10,20,30]); // 10\n\nfunction getArr({ nums } = { nums: [1, 2, 3, 4] }) {\n  return nums;\n}\ngetArr();                       // [1, 2, 3, 4]\ngetArr({ nums: [5,4,3,2,1] }); // [5, 4, 3, 2, 1]\n```\n\n## Using earlier parameters\n\n```javascript\nfunction doSomethingWithValue(\n  value = 'Hello World',\n  callback = () => { console.log(value); }\n) {\n  callback();\n}\ndoSomethingWithValue(); // \"Hello World\"\n```"
+    },
+    {
+      "id": 120,
+      "title": "Promises",
+      "tags": [
+        "Promise",
+        "async",
+        "ES6"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Why Promises?\n\nPromises solve **Callback Hell** — deeply nested callbacks that become unreadable:\n\n```javascript\n// Callback Hell\nfs.readFile('somefile.txt', function(e, data) {\n  fs.readdir('directory', function(e, files) {\n    fs.mkdir('directory', function(e) {\n      // ...\n    });\n  });\n});\n\n// With Promises\npromReadFile('file/path')\n  .then(data => promReaddir('directory'))\n  .then(data => promMkdir('directory'))\n  .catch(e => console.log(e));\n```\n\n## Promise States\n\n| State | Description |\n|-------|-------------|\n| **Pending** | Initial state — operation not complete |\n| **Fulfilled** | Operation completed successfully |\n| **Rejected** | Operation failed with a reason |\n| **Settled** | Either fulfilled or rejected (terminal) |\n\n## Creating a Promise\n\n```javascript\nconst myPromiseAsync = (...args) => {\n  return new Promise((resolve, reject) => {\n    doSomeAsync(...args, (error, data) => {\n      if (error) {\n        reject(error);\n      } else {\n        resolve(data);\n      }\n    });\n  });\n};\n\nmyPromiseAsync()\n  .then(result => console.log(result))\n  .catch(reason => console.log(reason));\n```\n\n## Promisify — Convert callback to Promise\n\n```javascript\nconst toPromise = (asyncFuncWithCallback) => {\n  return (...args) => {\n    return new Promise((res, rej) => {\n      asyncFuncWithCallback(...args, (e, result) => {\n        return e ? rej(e) : res(result);\n      });\n    });\n  };\n};\n\nconst promReadFile = toPromise(fs.readFile);\n```"
+    },
+    {
+      "id": 121,
+      "title": "async/await",
+      "tags": [
+        "async/await",
+        "Promise",
+        "async",
+        "ES2017"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is async/await?\n\n`async/await` is syntactic sugar built on top of **Promises**. It makes asynchronous code look and behave like synchronous code.\n\n## Comparison\n\n```javascript\n// Using Promises\nfunction callApi() {\n  return fetch('url/to/api/endpoint')\n    .then(resp => resp.json())\n    .then(data => {\n      // do something with data\n    })\n    .catch(err => {\n      // handle error\n    });\n}\n\n// Using async/await\nasync function callApi() {\n  try {\n    const resp = await fetch('url/to/api/endpoint');\n    const data = await resp.json();\n    // do something with data\n  } catch (e) {\n    // handle error\n  }\n}\n```\n\n## Key Rules\n\n### 1. `async` functions always return a Promise\n\n```javascript\nconst giveMeOne = async () => 1;\ngiveMeOne().then(num => console.log(num)); // 1\n```\n\n### 2. `await` only works inside `async` functions\n\n```javascript\n// ❌ SyntaxError\nfunction getOne() {\n  const num = await giveMeOne();\n}\n\n// ✅\nasync function getTwo() {\n  const num1 = await giveMeOne();\n  const num2 = await giveMeOne();\n  return num1 + num2; // 2\n}\n```\n\n### 3. Sequential execution\n\nEach `await` pauses execution until the Promise resolves:\n\n```javascript\nasync function getTwo() {\n  const num1 = await giveMeOne(); // waits for this\n  const num2 = await giveMeOne(); // then runs this\n  return num1 + num2;\n}\n```\n\nFor parallel execution, use `Promise.all`:\n\n```javascript\nconst [num1, num2] = await Promise.all([giveMeOne(), giveMeOne()]);\n```"
+    },
+    {
+      "id": 122,
+      "title": "AJAX",
+      "tags": [
+        "AJAX",
+        "async",
+        "browser",
+        "HTTP"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is AJAX?\n\n**AJAX** stands for **Asynchronous JavaScript and XML**. It's a set of technologies that enable sending/receiving data from a server **without reloading the page**.\n\n## Technologies involved\n\n| Technology | Role |\n|------------|------|\n| **HTML** | Web page structure |\n| **CSS** | Styling |\n| **JavaScript** | Behavior, DOM updates |\n| **XMLHttpRequest API** | Send and retrieve data |\n| **Server-side language** | PHP, Python, Node.js, etc. |\n\n## Modern AJAX\n\nToday, `XMLHttpRequest` is largely replaced by the `fetch` API:\n\n```javascript\n// Old way\nconst xhr = new XMLHttpRequest();\nxhr.open('GET', '/api/data');\nxhr.onload = () => {\n  if (xhr.status === 200) {\n    console.log(JSON.parse(xhr.responseText));\n  }\n};\nxhr.send();\n\n// Modern way\nfetch('/api/data')\n  .then(res => res.json())\n  .then(data => console.log(data));\n```"
+    },
+    {
+      "id": 123,
+      "title": "Prototype and Prototype Chain",
+      "tags": [
+        "prototype",
+        "inheritance",
+        "objects"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## What is a Prototype?\n\nA **prototype** is a blueprint object that provides fallback properties and methods when they don't exist on the current object. It's the foundation of JavaScript's **Prototypal Inheritance**.\n\n```javascript\nconst o = {};\nconsole.log(o.toString()); // \"[object Object]\"\n```\n\n`o` doesn't have `toString`, but it works — because it looks up the **Prototype Chain** until it finds `Object.prototype.toString`.\n\n```javascript\nconsole.log(o.toString === Object.prototype.toString); // true\n```\n\n## The Prototype Chain\n\n```\no → Object.prototype → null\n```\n\nThe chain ends at `null` after `Object.prototype`.\n\n## Creating an object WITHOUT a prototype\n\n```javascript\nconst o1 = {};\nconsole.log(o1.toString()); // \"[object Object]\"\n\nconst o2 = Object.create(null); // no prototype\nconsole.log(o2.toString()); // TypeError: o2.toString is not a function\n```\n\n`Object.create(null)` creates a truly \"empty\" object — useful for dictionaries/maps (before `Map` existed)."
+    },
+    {
+      "id": 124,
+      "title": "Check if value is an Array",
+      "tags": [
+        "Array",
+        "types",
+        "checking"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Using `Array.isArray()`\n\nThe most reliable way:\n\n```javascript\nconsole.log(Array.isArray(5));              // false\nconsole.log(Array.isArray(''));             // false\nconsole.log(Array.isArray(null));           // false\nconsole.log(Array.isArray({ length: 5 }));  // false (array-like, not array)\nconsole.log(Array.isArray([]));             // true\n```\n\n## Polyfill (if `Array.isArray` not available)\n\n```javascript\nfunction isArray(value) {\n  return Object.prototype.toString.call(value) === '[object Array]';\n}\n```\n\n## Why not `typeof`?\n\n`typeof []` returns `\"object\"` — it can't distinguish arrays from plain objects.\n\n## Why not `instanceof`?\n\n`[] instanceof Array` works within a single realm (frame/window) but **fails across iframes** because each frame has its own `Array` constructor."
+    },
+    {
+      "id": 125,
+      "title": "Check if a property exists in an object",
+      "tags": [
+        "objects",
+        "properties",
+        "prototype"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Three ways to check\n\n### 1. `in` operator\n\n```javascript\nconst o = { prop: 'bwahahah', prop2: 'hweasa' };\n\nconsole.log('prop' in o);   // true\nconsole.log('prop1' in o);  // false\nconsole.log('toString' in o); // true — checks prototype chain!\n```\n\n### 2. `hasOwnProperty()`\n\n```javascript\nconsole.log(o.hasOwnProperty('prop2'));   // true\nconsole.log(o.hasOwnProperty('prop1'));   // false\nconsole.log(o.hasOwnProperty('toString')); // false — ignores prototype\n```\n\n### 3. Bracket notation\n\n```javascript\nconsole.log(o['prop']);   // 'bwahahah'\nconsole.log(o['prop1']);  // undefined\n```\n\n## `in` vs `hasOwnProperty` — the key difference\n\n| | `in` | `hasOwnProperty` |\n|---|------|-----------------|\n| Checks own properties | ✅ | ✅ |\n| Checks prototype chain | ✅ | ❌ |\n\nUse `hasOwnProperty` when you only care about the object's **own** properties. Use `in` when inherited properties matter too."
+    },
+    {
+      "id": 126,
+      "title": "Ways of creating objects",
+      "tags": [
+        "objects",
+        "constructor",
+        "patterns"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## Three Ways to Create Objects\n\n### 1. Object Literal\n\n```javascript\nconst o = {\n  name: 'Mark',\n  greeting() {\n    return `Hi, I'm ${this.name}`;\n  }\n};\n\no.greeting(); // \"Hi, I'm Mark\"\n```\n\n### 2. Constructor Function (with `new`)\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nPerson.prototype.greeting = function() {\n  return `Hi, I'm ${this.name}`;\n};\n\nconst mark = new Person('Mark');\nmark.greeting(); // \"Hi, I'm Mark\"\n```\n\n### 3. `Object.create()`\n\n```javascript\nconst n = {\n  greeting() {\n    return `Hi, I'm ${this.name}`;\n  }\n};\n\nconst o = Object.create(n); // n becomes o's prototype\no.name = 'Mark';\nconsole.log(o.greeting()); // \"Hi, I'm Mark\"\n```\n\n## Comparison\n\n| Method | Prototype setup | Use case |\n|--------|----------------|----------|\n| Object literal | `Object.prototype` | Simple one-off objects |\n| Constructor + `new` | `Function.prototype` → custom | Multiple instances with shared methods |\n| `Object.create()` | Explicit | Fine-grained prototypal inheritance |"
+    },
+    {
+      "id": 127,
+      "title": "Object.seal vs Object.freeze",
+      "tags": [
+        "objects",
+        "immutability"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "answer": "## `Object.freeze()`\n\nMakes an object **completely immutable**:\n\n- ❌ Cannot add new properties\n- ❌ Cannot delete existing properties\n- ❌ Cannot modify existing property values\n- ❌ Cannot change property descriptors\n\n## `Object.seal()`\n\nPrevents adding/removing properties, but allows modifying **existing** ones:\n\n- ❌ Cannot add new properties\n- ❌ Cannot delete existing properties\n- ✅ Can modify existing property values\n- ❌ Cannot reconfigure property descriptors (e.g., `writable` → `false`)\n\n## Quick comparison\n\n| Action | `freeze` | `seal` |\n|--------|----------|--------|\n| Add property | ❌ | ❌ |\n| Delete property | ❌ | ❌ |\n| Change value | ❌ | ✅ |\n| Change descriptor | ❌ | ❌ |\n\n```javascript\nconst obj = { x: 1 };\n\nObject.seal(obj);\nobj.x = 2;    // ✅ works\nobj.y = 3;    // ❌ silently ignored (strict mode: TypeError)\ndelete obj.x; // ❌ silently ignored\n\nObject.freeze(obj);\nobj.x = 3;    // ❌ silently ignored (strict mode: TypeError)\n```"
+    }
+  ]
+}

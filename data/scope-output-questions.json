@@ -1,7 +1,7 @@
 {
   "questions": [
     {
-      "id": 53,
+      "id": 66,
       "question": "What will be the output?",
       "body": "```javascript\nvar x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x); // ???\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y); // ???\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z); // ???\n  }\n  console.log(\"D:\", y); // ???\n  console.log(\"E:\", z); // ???\n}\n\ntestScope();\nconsole.log(\"F:\", x); // ???\n```",
       "code": "var x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x);\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y);\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z);\n  }\n  console.log(\"D:\", y);\n  console.log(\"E:\", z);\n}\n\ntestScope();\nconsole.log(\"F:\", x);",
@@ -13,7 +13,7 @@
       "async": false
     },
     {
-      "id": 54,
+      "id": 67,
       "question": "What will be the output?",
       "body": "```javascript\nvar x = 1;\n{\n  var x = 2;\n  console.log(x);\n}\nconsole.log(x);\n```",
       "code": "var x = 1;\n{\n  var x = 2;\n  console.log(x);\n}\nconsole.log(x);",
@@ -26,7 +26,7 @@
       "async": false
     },
     {
-      "id": 55,
+      "id": 68,
       "question": "What will be the output?",
       "body": "```javascript\nconsole.log(typeof undeclaredVar);\nconsole.log(typeof x);\nvar x = 1;\nconsole.log(typeof y);\nlet y = 2;\n```",
       "code": "console.log(typeof undeclaredVar);\nconsole.log(typeof x);\nvar x = 1;\nconsole.log(typeof y);\nlet y = 2;",
@@ -38,7 +38,7 @@
       "async": false
     },
     {
-      "id": 56,
+      "id": 69,
       "question": "What will be the output?",
       "body": "```javascript\nconst z = 4;\n{\n  console.log(z);\n  const z = 6;\n  console.log(z);\n}\nconsole.log(z);\n```",
       "code": "const z = 4;\n{\n  console.log(z);\n  const z = 6;\n  console.log(z);\n}\nconsole.log(z);",
@@ -50,7 +50,7 @@
       "async": false
     },
     {
-      "id": 57,
+      "id": 70,
       "question": "What will be the output?",
       "body": "```javascript\nfunction test() {\n  var x = 1;\n  {\n    let x = 2;\n    console.log(x);\n  }\n  console.log(x);\n}\ntest();\n```",
       "code": "function test() {\n  var x = 1;\n  {\n    let x = 2;\n    console.log(x);\n  }\n  console.log(x);\n}\ntest();",
@@ -63,7 +63,7 @@
       "async": false
     },
     {
-      "id": 58,
+      "id": 71,
       "question": "What will be the output?",
       "body": "```javascript\nfunction test(a = b, b = 2) {\n  console.log(a, b);\n}\ntest();\n```",
       "code": "function test(a = b, b = 2) {\n  console.log(a, b);\n}\ntest();",

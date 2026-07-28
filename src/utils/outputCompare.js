@@ -72,14 +72,6 @@ export function compareOutputAnswer(userAnswer, runtimeResult, fallbackLines = [
     return { correct: true, expectedParts, userParts };
   }
 
-  if (expectedParts.length === 1 && userParts.length === 1) {
-    const user = userParts[0];
-    const expected = expectedParts[0];
-    if (user.includes(expected) || expected.includes(user)) {
-      return { correct: true, expectedParts, userParts };
-    }
-  }
-
   return { correct: false, expectedParts, userParts };
 }
 

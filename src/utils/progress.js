@@ -18,7 +18,7 @@ export const DIFFICULTY_LEVELS = ['easy', 'medium', 'advance'];
 export const DIFFICULTY_LABELS = {
   easy: 'Easy',
   medium: 'Medium',
-  advance: 'Advance',
+  advance: 'Advanced',
   hard: 'Hard',
 };
 

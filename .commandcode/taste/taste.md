@@ -23,8 +23,10 @@
 - Expects syntax highlighting to be applied to all code displays, not just the editor — including explanation panels, read-only code snippets, and answer displays. Confidence: 0.8
 - Prefers collapsible sidebars that collapse to icon-only navigation (still functional for page switching) rather than fully hiding. For secondary panels, prefers near-complete hiding with a small persistent toggle button to reopen. Confidence: 0.8
 - Prefers storing source provenance (URL, origin) on all loaded/ingested content items to enable future deduplication and traceability. Confidence: 0.85
-- Prefers automatic deduplication when loading content — expects the system to detect and skip near-duplicate items by title, code body, or function signature before writing. Confidence: 0.85
+- Prefers automatic deduplication when loading content — detect near-duplicates by title, code body, or function signature, then compare explanations/solutions/tests: skip only if equal or worse; if incoming is better or has unique value, update or merge into the existing id rather than discarding or creating a second entry. Confidence: 0.9
 - Prefers comprehensive, well-structured AI-generated answers (described as "Gemini-style") — values thorough explanations with examples over minimal or placeholder text. Confidence: 0.8
 - Prefers clean, non-redundant UI badges/tags — dislikes duplicate labels (e.g., both "companies" and "interview" badges when one suffices). Confidence: 0.75
 - Values continuous improvement of agent workflows — wants to capture process learnings from conversations and codify them into agentmd, skills, or commands for future reuse. Confidence: 0.8
 - Prefers tagging interview-sourced content with company metadata (e.g., "Tekion") to enable filtering by company. Confidence: 0.8
+- Prefers unrestricted shell command access for the coding agent — wants all shell commands allowed rather than a curated/restricted allowlist. Values maximum agent capability over security lockdown of command execution. Confidence: 0.7
+- Content classification taxonomy: pure explanations belong in "Learning", pure implementation/coding problems belong in "Coding". Expects loaded content to be routed to the correct category based on whether it is primarily explanatory or primarily an implementation exercise. Confidence: 0.85

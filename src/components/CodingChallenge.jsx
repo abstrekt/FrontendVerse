@@ -73,6 +73,7 @@ export default function CodingChallenge({
   const [showExplanation, setShowExplanation] = useState(false);
   const [showSubmissions, setShowSubmissions] = useState(false);
   const [allPassed, setAllPassed] = useState(false);
+  const scoredPassRef = useRef(false);
 
   const isLast = remaining === 1;
   const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
@@ -91,7 +92,6 @@ export default function CodingChallenge({
       const { passed, total, results } = await runCodingTests(code, question);
       setTestResults(results);
       const passedAll = passed === total;
-      setAllPassed(passedAll);
 
       submissionsRef.current = recordCodingSubmission(submissionsRef.current, question.id, code, {
         passed: passedAll,
@@ -103,7 +103,12 @@ export default function CodingChallenge({
       if (!checked) {
         setChecked(true);
         onCheck(passedAll, question);
+        if (passedAll) scoredPassRef.current = true;
+      } else if (passedAll && !scoredPassRef.current) {
+        onCheck(passedAll, question, { isRetry: true });
+        scoredPassRef.current = true;
       }
+      setAllPassed(passedAll);
     } finally {
       setChecking(false);
     }

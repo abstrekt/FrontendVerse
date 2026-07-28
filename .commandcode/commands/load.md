@@ -1,6 +1,6 @@
 ---
 name: load-quiz-content
-description: Ingest a source, dedupe against existing content, auto-route into quiz sections, and store provenance on each entry
+description: Ingest a source, compare duplicates and merge/update when better, auto-route into quiz sections, and store provenance on each entry
 ---
 
 # Load Quiz Content
@@ -20,17 +20,17 @@ Schemas, IDs, runners, merges, and verification live there. This command owns **
 1. Treat everything after `/load` as source material (and any attached files/links).
 2. If the source is a URL, fetch it (or ask only if fetch fails).
 3. Skim existing tags/topics in the target file(s) so new tags stay consistent with the corpus.
-4. **Dedupe** — search existing content before writing (see below). Skip or merge duplicates; never silently re-add.
-5. Pick next available id(s) only for items that will actually be added.
-6. Write content with a **`source`** field on every new entry (see below). Do **not** commit unless asked.
+4. **Dedupe** — search existing content before writing (see below). On a match, **compare** explanations/solutions/tests; skip, update, or merge — never silently re-add, never discard without comparing.
+5. Pick next available id(s) only for items that will actually be **added** (not updated/merged).
+6. Write content with a **`source`** field on every new or updated entry (see below). Do **not** commit unless asked.
 
-Ask the user only when the source is empty, contradictory (e.g. “add as MCQ and Coding only” with no material), or unsafe to guess (wrong language / not JS-quiz related). Prefer a one-line plan (“→ Learnings + Coding, tags X; skipped 1 duplicate”) then proceed, rather than a questionnaire.
+Ask the user only when the source is empty, contradictory (e.g. “add as MCQ and Coding only” with no material), or unsafe to guess (wrong language / not JS-quiz related). Prefer a one-line plan (“→ Coding, tags X; updated 1 duplicate, skipped 1”) then proceed, rather than a questionnaire.
 
 ---
 
 ## Deduplicate before loading
 
-Before writing, scan the **target section file(s)** and obvious twins (e.g. Coding when adding Learnings on the same topic).
+Before writing, scan the **target section file(s)**. When the user requests a Learnings + Coding pair, also scan the twin section for duplicates.
 
 | Match signal | Treat as duplicate when… |
 | ------------ | ------------------------ |
@@ -40,14 +40,31 @@ Before writing, scan the **target section file(s)** and obvious twins (e.g. Codi
 | MCQ stem | Same question text + same essential code in `body` |
 | Output | Same `code` (or same normalized console snippet) |
 
-**Actions:**
+**Do not discard on title/API match alone.** Open the existing entry and compare quality:
 
-- **Exact / near duplicate** → skip that item; report `skipped duplicate → existing id N (file)`.
-- **Same topic, clearly different angle** → allow; use a distinct title.
-- **Batch** → dedupe within the incoming batch too, then against the corpus.
-- **Do not** add a second “Array.map() polyfill” Learning or Coding if one already exists unless the user explicitly asks to replace/update.
+| Compare these fields | What “better” looks like |
+| -------------------- | ------------------------ |
+| Learnings `answer` | Clearer structure, more accurate, better examples/code fences, fewer gaps |
+| Coding `explanation` + solution | Correctness, edge cases, readability |
+| Coding `testCases` / `description` / `template` | More/better tests, clearer prompt, solid stub |
+| MCQ `explanation` / `options` | Better distractors, correct key, clearer why |
+| Output expected behavior | Correct `expectedLines`, proper `async` |
 
-When updating an existing entry on request, keep the same `id` and refresh `source`.
+**Actions (pick one per match):**
+
+| Verdict | Action | Report |
+| ------- | ------ | ------ |
+| Incoming ≤ existing (same or worse) | **Skip** — leave existing entry alone | `skipped duplicate → id N (file)` |
+| Incoming clearly better | **Update** — keep `id`; replace/improve weak fields; refresh `source` | `updated id N (file) — <why>` |
+| Both have unique value | **Merge** — keep `id`; fold unique bits into existing fields (don’t drop good existing prose for weaker new text) | `merged into id N (file) — <what was kept/added>` |
+| Same topic, different angle | **Add** — new id, distinct title | as a normal add |
+
+Rules:
+
+- **Batch** → dedupe within the incoming batch too, then against the corpus (same compare → skip/update/merge).
+- **Never** add a second “Array.map() polyfill” (or equivalent) when one already exists — update or merge that `id` instead.
+- On update/merge, keep the same `id`; refresh `source` to the incoming citation (optionally note prior origin in the report, not in the JSON).
+- Prefer merge over blind overwrite when the existing entry has unique examples, tests, or caveats the new source lacks.
 
 ---
 
@@ -69,7 +86,7 @@ Rules:
 
 - Put `source` on **each item** you add (Learnings, Coding, MCQ, Output, React, HLD).
 - For a **new supplemental JSON file**, also set a file-level `"source"` next to the array key when the whole file shares one origin.
-- Linked Learnings + Coding pair → **same** `source` string on both.
+- When user requests a Learnings + Coding pair → use the **same** `source` string on both.
 - Do **not** put the full pasted article into `source` (keep it short). Full text belongs in `answer` / `description` / etc.
 - UI may ignore `source`; it is for agents and future re-loads. Do not render it unless a view already does (Output file-level link is fine as-is).
 
@@ -77,19 +94,24 @@ Rules:
 
 ## Decide section(s)
 
-Classify by **shape of the source**, not by user wording alone.
+**Default: one section only.** Use this split:
 
-| Source looks like… | Put in | Also consider |
-| ------------------ | ------ | ------------- |
-| Concept explanation, article, interview write-up, “how X works”, notes with prose | **Learnings** | Pair **Coding** if it’s implementable (polyfill, util, algorithm) |
-| “Implement / write a function / polyfill / code this”, stubs, LeetCode-style prompt | **Coding** | Pair **Learnings** with reference solution + explanation |
-| Multiple choice with options A–D (or clear distractors) | **MCQ** | — |
-| “What is the output?” + a runnable snippet, no options | **Output** | Prefer build script / existing Output pipeline when sourcing a batch README |
-| React-specific concept (hooks, reconciliation, components) | **React Learnings** (`data/react-learnings.json`) | — |
-| System design / HLD | **HLD** (`data/hld-learnings.json`) | — |
-| Company interview notes (named company, round, “asked at …”) | Learnings file that fits topic; set **`company`** | Coding if they asked to implement |
+- **Pure explanation** (how/why something works, concepts, articles, interview notes) → **Learnings**
+- **Pure implementation** (write a function, polyfill, stub, coding problem, BFE/LeetCode prompt) → **Coding**
 
-**Linked pair rule:** If the source is both teachable and practiceable (polyfills, debounce, Promise helpers, flatten, deep clone, etc.), add **both** Learnings + Coding with matching `id`, title, and `tags` ↔ `topics`. Prefer this over Learnings-only unless the user said “notes only” / “no coding”.
+Classify by **shape of the source**, not by user wording alone. Do **not** auto-add Learnings + Coding together unless the user explicitly asks (e.g. “add both”, “pair them”, “like the polyfill batch”).
+
+| Source looks like… | Put in |
+| ------------------ | ------ |
+| Pure explanation — prose, article, “how X works”, conceptual notes | **Learnings** |
+| Pure implementation — function prompt, polyfill, stub, BFE/LeetCode, coding-problem URL | **Coding** (put reference solution in `explanation`) |
+| Multiple choice with options A–D (or clear distractors) | **MCQ** |
+| “What is the output?” + a runnable snippet, no options | **Output** (prefer build script / existing Output pipeline for batch READMEs) |
+| React-specific concept (hooks, reconciliation, components) | **React Learnings** (`data/react-learnings.json`) |
+| System design / HLD | **HLD** (`data/hld-learnings.json`) |
+| Company interview notes (named company, round, “asked at …”) | Learnings file that fits topic; set **`company`** |
+
+**Opt-in pair rule:** Add **both** Learnings + Coding only when the user explicitly requests it (e.g. “add learnings and coding”, “pair them”, “like polyfills”). Then use matching `id`, title, and `tags` ↔ `topics`. Respect opt-out phrases: `notes only`, `no coding`, `coding only`, `no learnings`.
 
 **File placement:**
 
@@ -112,7 +134,7 @@ Large batches → supplemental JSON + merge in `App.jsx` (see skill / polyfill p
 - Good: `Array.map() polyfill`, `Event loop microtasks`, `React Collapsible List`
 - Bad: `Notes from yesterday`, `Question 3`, raw URL slug
 - If the source has a clear heading, normalize it; if not, invent one from the main concept.
-- For Coding, title should match the Learnings twin when paired.
+- When user requests a paired batch, title should match across Learnings + Coding.
 
 ---
 
@@ -123,7 +145,7 @@ Reuse existing vocabulary from the target file when possible (e.g. `polyfill`, `
 | Field | Rules |
 | ----- | ----- |
 | Learnings `tags` | 1 primary category if any (`polyfill`, `HLD`, `React`, …) **first**, then 1–3 concept tags. No company slugs in `tags`. |
-| Coding `topics` | Same strings as the paired Learnings `tags`. |
+| Coding `topics` | Same concept tags as Learnings would use; when paired, match Learnings `tags` exactly. |
 | MCQ `topics` | Concept tags only; set `difficulty` separately (`easy` \| `medium` \| `hard` \| `advance`). |
 | `company` | Set when source is interview/company-sourced (e.g. `"Tekion"`). Never stuff company into `tags`. |
 | Coding `difficulty` | Infer from complexity: simple method polyfill → `easy`; async/edge cases → `medium`/`hard`. |
@@ -141,7 +163,7 @@ Do **not** invent one-off synonyms when a close existing tag exists (`Promise` n
 | `source` | Yes — short citation (URL, company notes label, or `user paste:` / `user request:`) on every new entry |
 | Learnings `answer` | Yes if source is thin notes/outline; expand into clear markdown (examples + code fences). If source is already a full article, clean/structure it — don’t discard useful detail |
 | Coding `description`, `template`, `testCases`, `runner`, `functionName` | Yes — invent a solvable stub + real tests; pick runner per skill (`expression`, `asyncExpression`, `timer`, …) |
-| Coding `explanation` | Yes — reference solution in markdown (can mirror Learnings answer when paired) |
+| Coding `explanation` | Yes — reference solution in markdown (required for Coding-only loads; can mirror Learnings `answer` when paired) |
 | MCQ `options`, `answer`, `explanation` | Yes if only stem/code given; ensure one correct key and plausible distractors |
 | Output `expectedLines` / `async` | Yes — mentally (or via runner) determine printed lines; set `async` when timers/promises matter |
 
@@ -151,8 +173,8 @@ Never leave placeholder text like `"TODO"` or `"Write explanation here"` in comm
 
 ## Workflow (execute in order)
 
-1. **Classify** — section(s), file(s), linked pair yes/no.
-2. **Dedupe** — scan corpus (+ within batch); skip or update duplicates; tell the user what was skipped.
+1. **Classify** — single section by default; paired only if user asked.
+2. **Dedupe** — scan corpus (+ within batch); on matches **compare content** then skip / update / merge; report each outcome.
 3. **Metadata** — title, tags/topics, company, difficulty, `source`, next id(s) for new items only.
 4. **Fill gaps** — generate answer / tests / options / explanation as needed.
 5. **Write** — exact skill schemas including `source`; extend `codingRunner.js` only for new test patterns.
@@ -165,14 +187,17 @@ Never leave placeholder text like `"TODO"` or `"Write explanation here"` in comm
 
 | User gives… | Do this |
 | ----------- | ------- |
-| Topic only (“debounce polyfill”) | Learnings + Coding pair; generate full answer, template, tests |
-| Raw interview dump | Learnings (+ Coding if implementable); set `company` if named |
+| Topic only (“debounce polyfill”) | **Coding** — pure implementation |
+| Topic only (“event loop”, “closures”) | **Learnings** — pure explanation |
+| BFE / coding-problem URL | **Coding only** |
+| Article URL | **Learnings only** |
+| Raw interview dump | **Learnings**; set `company` if named |
 | Code snippet + “output?” | Output (or MCQ if they want options — default Output) |
 | “Add these 10 MCQs” + list | MCQ; generate missing explanations/topics/difficulty |
 | Empty `/load` | Ask for source material |
 
 ---
 
-## Linked batches (reminder)
+## Paired batches (opt-in only)
 
-Match `id`, title, and tag values across Learnings + Coding (`tags` ↔ `topics`). Primary category tag first. Reference: `data/polyfill-learnings.json` + `data/coding-questions.json`.
+When the user explicitly asks for Learnings + Coding together, match `id`, title, and tag values across both (`tags` ↔ `topics`). Primary category tag first. Reference: `data/polyfill-learnings.json` + `data/coding-questions.json`.

@@ -8,6 +8,12 @@ function stripMarkdown(text) {
   return text.replace(/`([^`]+)`/g, '$1');
 }
 
+function truncateTitle(text, max = 26) {
+  const plain = stripMarkdown(text);
+  if (plain.length <= max) return plain;
+  return `${plain.slice(0, max)}…`;
+}
+
 export default function LearningsView({
   learning,
   learnings,
@@ -50,8 +56,10 @@ export default function LearningsView({
             aria-selected={item.id === selectedLearningId}
             className={`learning-mobile-chip${item.id === selectedLearningId ? ' active' : ''}`}
             onClick={() => onSelectLearning(item.id)}
+            title={`#${item.id} ${stripMarkdown(item.title)}`}
           >
-            #{item.id}
+            <span className="learning-mobile-chip-id">#{item.id}</span>
+            <span className="learning-mobile-chip-title">{truncateTitle(item.title)}</span>
           </button>
         ))}
       </div>

@@ -10,7 +10,7 @@ export default function Results({
   onReviewMistakes,
 }) {
   const missed = totalQuestions - score;
-  const pct = Math.round((score / totalQuestions) * 100);
+  const pct = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   const hasWeakTopics = weakTopics.length > 0;
 
   return (

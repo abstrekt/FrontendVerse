@@ -664,6 +664,154 @@
       "explanation": "When + operator is used with boolean values, JavaScript performs implicit type coercion: true is converted to 1 and false is converted to 0.",
       "readmeOutput": "1, 2",
       "async": false
+    },
+    {
+      "id": 53,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst obj = {\n  text: 'LOGGING',\n  list: ['1', '2', '3'],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  }\n};\nobj.log();\n```",
+      "code": "const obj = {\n  text: 'LOGGING',\n  list: ['1', '2', '3'],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  }\n};\nobj.log();",
+      "expectedLines": [
+        "undefined1",
+        "undefined2",
+        "undefined3"
+      ],
+      "explanation": "Inside the forEach callback, a regular function creates its own `this` context, which defaults to the global object (or undefined in strict mode). Since `this.text` is not defined globally, it logs `undefined` concatenated with each list item. Using an arrow function for the callback would fix this: arrow functions inherit `this` from the enclosing `log()` method.",
+      "readmeOutput": "undefined1, undefined2, undefined3",
+      "async": false,
+      "source": "https://medium.com/@sohammehta56/javascript-interesting-output-based-interview-questions-38682c0b64fe"
+    },
+    {
+      "id": 54,
+      "question": "What will be the output?",
+      "body": "```javascript\nsetTimeout(() => console.log(1));\nPromise.resolve().then(() => console.log(2));\nPromise.resolve().then(() => setTimeout(() => console.log(3)));\nnew Promise(() => console.log(4));\nsetTimeout(() => console.log(5));\n```",
+      "code": "setTimeout(() => console.log(1));\nPromise.resolve().then(() => console.log(2));\nPromise.resolve().then(() => setTimeout(() => console.log(3)));\nnew Promise(() => console.log(4));\nsetTimeout(() => console.log(5));",
+      "expectedLines": [
+        "4",
+        "2",
+        "1",
+        "5",
+        "3"
+      ],
+      "explanation": "1. The Promise executor runs synchronously → logs `4` immediately. 2. Microtask queue: `.then(() => log 2)` runs first, logging `2`; then `.then(() => setTimeout(3))` schedules a macrotask for `3`. 3. Macrotask queue: `1` and `5` were scheduled first (direct `setTimeout` calls), so they run before `3`. The `setTimeout(3)` was added to macrotask queue later (from inside a microtask), so it runs last.",
+      "readmeOutput": "4, 2, 1, 5, 3",
+      "async": true,
+      "source": "https://medium.com/@sohammehta56/javascript-interesting-output-based-interview-questions-38682c0b64fe"
+    },
+    {
+      "id": 55,
+      "question": "What will be the output?",
+      "body": "```javascript\nsetTimeout(() => console.log(1));\n(async () => {\n  console.log(2);\n  await Promise.resolve();\n  console.log(3);\n})();\nPromise.resolve().then(() => Promise.resolve().then(() => console.log(4)));\n```",
+      "code": "setTimeout(() => console.log(1));\n(async () => {\n  console.log(2);\n  await Promise.resolve();\n  console.log(3);\n})();\nPromise.resolve().then(() => Promise.resolve().then(() => console.log(4)));",
+      "expectedLines": [
+        "2",
+        "3",
+        "4",
+        "1"
+      ],
+      "explanation": "1. `console.log(2)` runs synchronously inside the async IIFE. 2. `await Promise.resolve()` yields, queuing the rest of the async function as a microtask. 3. The chained `.then(() => Promise.resolve().then(() => log 4))` schedules a microtask that itself schedules another microtask. 4. When microtasks run: first the `await` resumes → logs `3`; then the inner `.then` fires → logs `4`. 5. Finally macrotask: `setTimeout` → logs `1`. The key insight is that chained `.then().then()` creates nested microtasks — each `.then` callback goes into the microtask queue one at a time.",
+      "readmeOutput": "2, 3, 4, 1",
+      "async": true,
+      "source": "https://medium.com/@sohammehta56/javascript-interesting-output-based-interview-questions-38682c0b64fe"
+    },
+    {
+      "id": 56,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar a = 1;\nfunction foo() {\n  var a = 2;\n  console.log(a);\n}\nfoo();\nconsole.log(a);\n```",
+      "code": "var a = 1;\nfunction foo() {\n  var a = 2;\n  console.log(a);\n}\nfoo();\nconsole.log(a);",
+      "expectedLines": ["2", "1"],
+      "explanation": "Variables declared with `var` inside a function are **local** to that function — they live in a different memory location from the outer `var a = 1`. So `foo()` logs the local `a` (2), then the global `console.log(a)` logs 1. This demonstrates JavaScript's function-level scoping.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 57,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction foo() {\n  a = 2;\n}\nfoo();\nconsole.log(a);\n```",
+      "code": "function foo() {\n  a = 2;\n}\nfoo();\nconsole.log(a);",
+      "expectedLines": ["2"],
+      "explanation": "When you assign to a variable **without** `var`, `let`, or `const`, JavaScript does not create a local variable — it creates (or overwrites) a property on the **global object**. This is called an implicit global. In strict mode (`\"use strict\"`) this would throw a ReferenceError instead.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 58,
+      "question": "What will be the output?",
+      "body": "```javascript\nvar answer = 0;\nconst baseValue = value => multipleValue => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);\n```",
+      "code": "var answer = 0;\nconst baseValue = value => multipleValue => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);",
+      "expectedLines": ["10"],
+      "explanation": "This is a **closure** written with arrow functions. `baseValue(2)` returns a function that remembers `value = 2` in its closure. When that returned function is called as `multiple(5)`, it computes `2 * 5 = 10`. The inner function retains access to the outer function's `value` parameter even after the outer function has finished executing.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 59,
+      "question": "What will be the output?",
+      "body": "```javascript\nfunction outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    outerParam[\"b\"] = innerParam;\n  }\n  return innerFunc;\n}\nconst obj = { a: 1 };\nconst example = outerFunc(obj);\nconst answer = example(2);\nconsole.log(obj);\n```",
+      "code": "function outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    outerParam[\"b\"] = innerParam;\n  }\n  return innerFunc;\n}\nconst obj = { a: 1 };\nconst example = outerFunc(obj);\nconst answer = example(2);\nconsole.log(obj);",
+      "expectedLines": ["{\"a\":1,\"b\":2}"],
+      "explanation": "This combines **closures** and **reference types**. Objects (and arrays) are passed by sharing — the `outerParam` parameter inside `outerFunc` points to the same object as `obj`. When the inner function does `outerParam[\"b\"] = innerParam`, it mutates that shared object in place. So `console.log(obj)` shows `{a: 1, b: 2}`. If this were a primitive (number, string), the mutation inside the function would not affect the outer variable.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 60,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest(arr);\nconsole.log(arr);\n```",
+      "code": "let arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest(arr);\nconsole.log(arr);",
+      "expectedLines": ["[1,2,3]"],
+      "explanation": "Arrays are **reference types**. When `arr` is passed to `test()`, the parameter `array` points to the same array in memory. `array.push(3)` mutates that shared array, so `arr` outside the function also sees the change.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 61,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest([...arr]);\nconsole.log(arr);\n```",
+      "code": "let arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest([...arr]);\nconsole.log(arr);",
+      "expectedLines": ["[1,2]"],
+      "explanation": "The **spread operator** `[...arr]` creates a **new array** (a new reference). The `push(3)` modifies that copy, not the original `arr`. The original `arr` remains `[1, 2]`. This is the same as calling `test([1, 2])` — a fresh array literal.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 62,
+      "question": "What will be the output?",
+      "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array = [1, 2, 3];\n}\ntest(arr);\nconsole.log(arr);\n```",
+      "code": "let arr = [1, 2];\nfunction test(array) {\n  array = [1, 2, 3];\n}\ntest(arr);\nconsole.log(arr);",
+      "expectedLines": ["[1,2]"],
+      "explanation": "The `=` operator **creates a new reference** — it does not mutate the existing array. Inside the function, `array` is reassigned to point to a brand-new array `[1, 2, 3]`, but the outer variable `arr` still points to the original `[1, 2]`. Compare this with `.push()` (question 5) which mutates in place.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 63,
+      "question": "What will be the output?",
+      "body": "```javascript\nconst carDetails = {\n  name: \"Tomer\",\n  getName() {\n    return this.name;\n  },\n};\nthis.name = \"Joe\";\nvar getCarName = carDetails.getName;\nconsole.log(getCarName());\n```",
+      "code": "const carDetails = {\n  name: \"Tomer\",\n  getName() {\n    return this.name;\n  },\n};\nthis.name = \"Joe\";\nvar getCarName = carDetails.getName;\nconsole.log(getCarName());",
+      "expectedLines": ["Joe"],
+      "explanation": "**`this` is determined by how a function is called, not where it's defined.** When we do `var getCarName = carDetails.getName`, we're storing a detached reference to the function. Calling `getCarName()` as a plain function means `this` inside `getName` is the global object (non-strict mode). Since we set `this.name = \"Joe\"` on the global object (equivalent to `window.name = \"Joe\"` in browsers, where top-level `var name = \"Joe\"` would achieve the same result), the output is `\"Joe\"` — not `\"Tomer\"`.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 64,
+      "question": "What will be the output?",
+      "body": "```javascript\nconsole.log(a);\nconsole.log(b);\nvar a = 2;\nlet b = 2;\n```",
+      "code": "console.log(a);\nconsole.log(b);\nvar a = 2;\nlet b = 2;",
+      "expectedLines": ["ReferenceError: Cannot access 'b' before initialization"],
+      "explanation": "**`var` is hoisted and initialized to `undefined`**, so `console.log(a)` would log `undefined`. But then `console.log(b)` throws a **ReferenceError** because `let` is also hoisted but enters the **Temporal Dead Zone (TDZ)** — it cannot be accessed before its declaration line. The ReferenceError stops execution, so only the error is shown as the final output. Note: `let` and `const` ARE hoisted (unlike a common misconception), but they are not initialized until the declaration is reached.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
+    },
+    {
+      "id": 65,
+      "question": "What will be the output?",
+      "body": "```javascript\na();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function() {\n  console.log(\"b\");\n};\n```",
+      "code": "a();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function() {\n  console.log(\"b\");\n};",
+      "expectedLines": ["TypeError: b is not a function"],
+      "explanation": "**Function declarations are fully hoisted** — `a()` works and logs `\"a\"`. But **`var` is hoisted as `undefined`** — the `var b` declaration is hoisted to the top with value `undefined`, while the assignment `= function() {...}` stays in place. So `b()` tries to call `undefined()`, which throws **TypeError: b is not a function**. The function expression's value is not available until the line where it's assigned.",
+      "async": false,
+      "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
     }
   ]
 }

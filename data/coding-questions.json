@@ -65,7 +65,7 @@
       "runner": "sequentialResolution"
     },
     {
-      "id": 2,
+      "id": 3,
       "title": "Array.map() polyfill",
       "difficulty": "easy",
       "topics": [
@@ -96,7 +96,7 @@
       "explanation": "### Solution\n\n```javascript\nArray.prototype.myMap = function (callback, thisArg) {\n  const result = [];\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      result[i] = callback.call(thisArg, this[i], i, this);\n    }\n  }\n  return result;\n};\n```"
     },
     {
-      "id": 3,
+      "id": 4,
       "title": "Array.filter() polyfill",
       "difficulty": "easy",
       "topics": [
@@ -129,7 +129,7 @@
       "explanation": "### Solution\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) {\n  const result = [];\n  for (let i = 0; i < this.length; i++) {\n    if (i in this) {\n      if (callback.call(thisArg, this[i], i, this)) result.push(this[i]);\n    }\n  }\n  return result;\n};\n```"
     },
     {
-      "id": 4,
+      "id": 5,
       "title": "Array.reduce() polyfill",
       "difficulty": "medium",
       "topics": [
@@ -156,7 +156,7 @@
       "explanation": "### Solution\n\n```javascript\nArray.prototype.myReduce = function (callback, initialValue) {\n  let accumulator = initialValue;\n  let start = 0;\n  if (accumulator === undefined) { accumulator = this[0]; start = 1; }\n  for (let i = start; i < this.length; i++) {\n    if (i in this) accumulator = callback(accumulator, this[i], i, this);\n  }\n  return accumulator;\n};\n```"
     },
     {
-      "id": 5,
+      "id": 6,
       "title": "Function.call() polyfill",
       "difficulty": "medium",
       "topics": [
@@ -178,7 +178,7 @@
       "explanation": "### Solution\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) {\n  context = context || globalThis;\n  const key = Symbol();\n  context[key] = this;\n  const result = context[key](...args);\n  delete context[key];\n  return result;\n};\n```"
     },
     {
-      "id": 6,
+      "id": 7,
       "title": "Function.apply() polyfill",
       "difficulty": "medium",
       "topics": [
@@ -200,7 +200,7 @@
       "explanation": "### Solution\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) {\n  context = context || globalThis;\n  const key = Symbol();\n  context[key] = this;\n  const result = context[key](...args);\n  delete context[key];\n  return result;\n};\n```"
     },
     {
-      "id": 7,
+      "id": 8,
       "title": "Function.bind() polyfill",
       "difficulty": "medium",
       "topics": [
@@ -222,7 +222,7 @@
       "explanation": "### Solution\n\n```javascript\nFunction.prototype.myBind = function (context, ...presetArgs) {\n  const fn = this;\n  return function (...laterArgs) {\n    return fn.apply(context, [...presetArgs, ...laterArgs]);\n  };\n};\n```"
     },
     {
-      "id": 8,
+      "id": 9,
       "title": "Deep Copy",
       "difficulty": "medium",
       "topics": [
@@ -256,7 +256,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction deepCopy(obj) {\n  if (obj === null || typeof obj !== \"object\") return obj;\n  const copy = Array.isArray(obj) ? [] : {};\n  for (const key in obj) {\n    if (Object.hasOwn(obj, key)) copy[key] = deepCopy(obj[key]);\n  }\n  return copy;\n}\n```"
     },
     {
-      "id": 9,
+      "id": 10,
       "title": "Deep Merge",
       "difficulty": "medium",
       "topics": [
@@ -284,7 +284,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction deepMerge(target, source) {\n  if (Array.isArray(target) && Array.isArray(source)) return [...target, ...source];\n  const result = { ...target };\n  for (const key in source) {\n    if (typeof source[key] === \"object\" && source[key] !== null && key in target) {\n      result[key] = deepMerge(target[key], source[key]);\n    } else result[key] = source[key];\n  }\n  return result;\n}\n```"
     },
     {
-      "id": 10,
+      "id": 11,
       "title": "Flatten Array (infinite)",
       "difficulty": "easy",
       "topics": [
@@ -311,7 +311,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction flatten(arr) {\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item)) result.push(...flatten(item));\n    else result.push(item);\n  }\n  return result;\n}\n```"
     },
     {
-      "id": 11,
+      "id": 12,
       "title": "Flatten with Level",
       "difficulty": "medium",
       "topics": [
@@ -349,7 +349,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction flatten(arr, depth = 1) {\n  if (depth === 0) return arr.slice();\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item)) result.push(...flatten(item, depth - 1));\n    else result.push(item);\n  }\n  return result;\n}\n```"
     },
     {
-      "id": 12,
+      "id": 13,
       "title": "Debounce",
       "difficulty": "hard",
       "topics": [
@@ -385,7 +385,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction debounce(fn, delay) {\n  let timer;\n  return function (...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn.apply(this, args), delay);\n  };\n}\n```"
     },
     {
-      "id": 13,
+      "id": 14,
       "title": "Throttle",
       "difficulty": "hard",
       "topics": [
@@ -421,7 +421,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction throttle(fn, delay) {\n  let waiting = false;\n  return function (...args) {\n    if (waiting) return;\n    waiting = true;\n    fn.apply(this, args);\n    setTimeout(() => { waiting = false; }, delay);\n  };\n}\n```"
     },
     {
-      "id": 14,
+      "id": 15,
       "title": "Promise Polyfill",
       "difficulty": "hard",
       "topics": [
@@ -448,7 +448,7 @@
       "explanation": "### Solution\n\n```javascript\nclass MyPromise {\n  constructor(executor) {\n    this.state = \"pending\";\n    this.value = undefined;\n    this.handlers = [];\n\n    const resolve = (value) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"fulfilled\";\n      this.value = value;\n      this.handlers.forEach(h => h.onFulfilled(value));\n    };\n\n    const reject = (reason) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"rejected\";\n      this.value = reason;\n      this.handlers.forEach(h => h.onRejected(reason));\n    };\n\n    executor(resolve, reject);\n  }\n\n  then(onFulfilled, onRejected) {\n    return new MyPromise((resolve, reject) => {\n      const fulfilled = value => {\n        try {\n          resolve(onFulfilled ? onFulfilled(value) : value);\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      const rejected = reason => {\n        try {\n          if (onRejected) {\n            resolve(onRejected(reason));\n          } else {\n            reject(reason);\n          }\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      if (this.state === \"fulfilled\") {\n        fulfilled(this.value);\n      } else if (this.state === \"rejected\") {\n        rejected(this.value);\n      } else {\n        this.handlers.push({\n          onFulfilled: fulfilled,\n          onRejected: rejected\n        });\n      }\n    });\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n```"
     },
     {
-      "id": 15,
+      "id": 16,
       "title": "Promise.all() polyfill",
       "difficulty": "hard",
       "topics": [
@@ -479,7 +479,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction promiseAll(promises) {\n  return new Promise((resolve, reject) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = value;\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        })\n        .catch(reject);\n    });\n  });\n}\n```"
     },
     {
-      "id": 16,
+      "id": 17,
       "title": "Promise.race() polyfill",
       "difficulty": "hard",
       "topics": [
@@ -501,7 +501,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction promiseRace(promises) {\n  return new Promise((resolve, reject) => {\n    for (const promise of promises) {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(reject);\n    }\n  });\n}\n```"
     },
     {
-      "id": 17,
+      "id": 18,
       "title": "Promise.any() polyfill",
       "difficulty": "hard",
       "topics": [
@@ -528,7 +528,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction promiseAny(promises) {\n  return new Promise((resolve, reject) => {\n    const errors = [];\n    let rejected = 0;\n\n    if (promises.length === 0) {\n      reject(new AggregateError([]));\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(err => {\n          errors[index] = err;\n          rejected++;\n\n          if (rejected === promises.length) {\n            reject(new AggregateError(errors));\n          }\n        });\n    });\n  });\n}\n```"
     },
     {
-      "id": 18,
+      "id": 19,
       "title": "Promise.allSettled() polyfill",
       "difficulty": "hard",
       "topics": [
@@ -557,6 +557,194 @@
         }
       ],
       "explanation": "### Solution\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise(resolve => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = {\n            status: \"fulfilled\",\n            value\n          };\n        })\n        .catch(reason => {\n          result[index] = {\n            status: \"rejected\",\n            reason\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```"
+    },
+    {
+      "id": 19,
+      "title": "fetchWithAutoRetry — Auto-retry Promise on rejection",
+      "difficulty": "medium",
+      "topics": [
+        "Promise",
+        "async",
+        "error handling"
+      ],
+      "source": "https://bigfrontend.dev/problem/retry-promise-on-rejection",
+      "runner": "asyncExpression",
+      "functionName": "fetchWithAutoRetry",
+      "description": "Implement `fetchWithAutoRetry(fetcher, count)` that automatically retries a failing promise-based operation.\n\n- `fetcher` is a **function** that returns a Promise (e.g., an API call)\n- `count` is the **maximum number of retries** (not including the initial attempt)\n\nIf the `fetcher` rejects, retry it up to `count` more times. If all attempts fail, reject with the last error. If any attempt succeeds, resolve with that value immediately.\n\n### Example\n\n```javascript\n// Succeeds on 3rd attempt\nlet attempts = 0;\nconst fetcher = () => new Promise((resolve, reject) => {\n  attempts++;\n  attempts === 3 ? resolve('ok') : reject(new Error('fail'));\n});\n\nconst result = await fetchWithAutoRetry(fetcher, 2);\nconsole.log(result); // 'ok'\nconsole.log(attempts); // 3\n```\n\nComplete the implementation in the editor.",
+      "template": "function fetchWithAutoRetry(fetcher, count) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "let calls = 0; const fetcher = () => new Promise((resolve, reject) => { calls++; calls === 3 ? resolve('ok') : reject(new Error('fail')); });",
+          "code": "await fetchWithAutoRetry(fetcher, 3)",
+          "expected": "ok"
+        },
+        {
+          "setup": "let calls = 0; const fetcher = () => new Promise((resolve, reject) => { calls++; reject(new Error('always fails')); });",
+          "code": "await fetchWithAutoRetry(fetcher, 2).catch(e => e.message)",
+          "expected": "always fails"
+        },
+        {
+          "setup": "const fetcher = () => Promise.resolve(42);",
+          "code": "await fetchWithAutoRetry(fetcher, 0)",
+          "expected": 42
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction fetchWithAutoRetry(fetcher, count) {\n  return new Promise((resolve, reject) => {\n    function attempt(remaining) {\n      fetcher()\n        .then(resolve)\n        .catch((err) => {\n          if (remaining === 0) {\n            reject(err);\n          } else {\n            attempt(remaining - 1);\n          }\n        });\n    }\n    attempt(count);\n  });\n}\n```\n\n**Alternative: async/await with loop**\n\n```javascript\nasync function fetchWithAutoRetry(fetcher, count) {\n  let lastError;\n  for (let i = 0; i <= count; i++) {\n    try {\n      return await fetcher();\n    } catch (err) {\n      lastError = err;\n    }\n  }\n  throw lastError;\n}\n```\n\n**Key Points**\n- `count` is the number of **retries**, so total attempts = `count + 1` (initial call + retries)\n- On success, resolve immediately — don't keep retrying\n- Recursive `.catch()` chaining or a `for` loop both work; the recursive approach avoids `async/await` if needed\n- Synchronous throws from `fetcher()` are caught by `.catch()` / `try-catch`, treated as rejection"
+    },
+    {
+      "id": 3,
+      "title": "Promise Time Limit",
+      "difficulty": "easy",
+      "topics": [
+        "Promise",
+        "async",
+        "timing"
+      ],
+      "source": "https://leetcode.com/problems/promise-time-limit/description/",
+      "runner": "asyncExpression",
+      "functionName": "timeLimit",
+      "description": "Implement a function `timeLimit(fn, t)` that wraps an async function so it enforces a time limit.\n\n- `fn` is an async function that takes any number of arguments\n- `t` is the time limit in milliseconds\n\nThe returned function should:\n- Call `fn(...args)` and return the result if it completes within `t` milliseconds\n- Reject with the string `\"Time Limit Exceeded\"` if `fn` takes longer than `t` ms\n\n### Example\n\n```javascript\nconst limited = timeLimit(\n  (t) => new Promise(res => setTimeout(res, t)),\n  100\n);\nlimited(150).catch(console.log); // \"Time Limit Exceeded\" at t=100ms\n```\n\nComplete the implementation in the editor.",
+      "template": "var timeLimit = function(fn, t) {\n  // Write your code here\n};\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "await timeLimit((x) => Promise.resolve(x * 2), 1000)(21)",
+          "expected": 42
+        },
+        {
+          "setup": "",
+          "code": "await timeLimit((t) => new Promise(res => setTimeout(res, t)), 50)(200).catch(e => e)",
+          "expected": "Time Limit Exceeded"
+        },
+        {
+          "setup": "",
+          "code": "await timeLimit((...args) => Promise.resolve(args), 100)(1, 2, 3)",
+          "expected": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nvar timeLimit = function(fn, t) {\n  return async function(...args) {\n    const p1 = fn.apply(this, args);\n    const p2 = new Promise((_, reject) => {\n      setTimeout(() => reject('Time Limit Exceeded'), t);\n    });\n    return Promise.race([p1, p2]);\n  };\n};\n```\n\n### How It Works\n\n1. **`fn.apply(this, args)`** calls the original function with the correct `this` context and spread arguments.\n2. **Timeout promise (`p2`)** is a promise that rejects with `\"Time Limit Exceeded\"` after `t` milliseconds.\n3. **`Promise.race([p1, p2])`** settles with whichever promise settles first:\n   - If `fn` completes within `t` ms → returns its result (or throws its error)\n   - If `t` ms pass first → rejects with `\"Time Limit Exceeded\"`\n\n### Key Points\n- `Promise.race` is perfect here — it resolves or rejects with whichever settles first, exactly the behavior we need\n- The timeout promise uses `reject`, not `resolve` — the only failure case is the timeout firing\n- `fn.apply(this, args)` preserves both `this` context and handles variadic arguments\n- Once a promise in `Promise.race` settles, the other one is silently ignored (though its `setTimeout` still ticks — no cleanup needed for this problem)"
+    },
+    {
+      "id": 4,
+      "title": "Memoization Helper",
+      "difficulty": "medium",
+      "topics": [
+        "memoization",
+        "caching",
+        "functions",
+        "optimization"
+      ],
+      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "runner": "expression",
+      "functionName": "memoize",
+      "description": "Implement a `memoize(fn)` function that takes a function and returns a **memoized** version.\n\nThe memoized function should:\n- Remember previously computed results for given arguments\n- Return cached results for identical arguments instead of recomputing\n- Work with **any number of arguments**\n\n### Example\n\n```javascript\nconst add = (a, b) => a + b;\nconst memoizedAdd = memoize(add);\n\nconsole.log(memoizedAdd(1, 2)); // 3 (computed)\nconsole.log(memoizedAdd(1, 2)); // 3 (cached)\nconsole.log(memoizedAdd(2, 3)); // 5 (computed)\n```\n\nComplete the implementation in the editor.",
+      "template": "function memoize(fn) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const add = (a, b) => a + b; const memoizedAdd = memoize(add);",
+          "code": "memoizedAdd(5, 10)",
+          "expected": 15
+        },
+        {
+          "setup": "const concat = (a, b, c) => `${a}${b}${c}`; const memoized = memoize(concat); memoized('a', 'b', 'c');",
+          "code": "memoized('a', 'b', 'c')",
+          "expected": "abc"
+        },
+        {
+          "setup": "let callCount = 0; const fn = (x) => { callCount++; return x * 2; }; const memoized = memoize(fn); memoized(4); memoized(4); memoized(4);",
+          "code": "callCount",
+          "expected": 1
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object** stores results keyed by stringified arguments\n2. On each call, **stringify the arguments** to create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)\n- For single-argument functions, you can use the argument directly as the key instead of JSON.stringify"
+    },
+    {
+      "id": 5,
+      "title": "LRU Cache",
+      "difficulty": "medium",
+      "topics": [
+        "data-structures",
+        "caching",
+        "hashmap",
+        "linked-list"
+      ],
+      "source": "https://github.com/trekhleb/javascript-algorithms/tree/master/src/data-structures/lru-cache",
+      "runner": "expression",
+      "functionName": "LRUCache",
+      "description": "Implement an LRU (Least Recently Used) Cache that stores key-value pairs with a fixed **capacity**.\n\nThe cache should evict the **least recently used** item when it exceeds capacity.\n\n### API\n\n```javascript\nclass LRUCache {\n  constructor(capacity) { }  // Initialize with positive capacity\n  get(key) { }               // Return value or undefined\n  set(key, value) { }        // Add/update key, evict LRU if full\n}\n```\n\n### Example\n\n```javascript\nconst cache = new LRUCache(2);\ncache.set(1, 1);   // cache: {1=1}\ncache.set(2, 2);   // cache: {1=1, 2=2}\ncache.get(1);      // returns 1, 1 is now most recently used\ncache.set(3, 3);   // evicts key 2 (LRU), cache: {1=1, 3=3}\ncache.get(2);      // returns undefined (evicted)\n```\n\nBoth `get()` and `set()` must run in **O(1)** average time complexity.\n\nComplete the implementation in the editor.",
+      "template": "class LRUCache {\n  constructor(capacity) {\n    // Write your code here\n  }\n\n  get(key) {\n    // Write your code here\n  }\n\n  set(key, value) {\n    // Write your code here\n  }\n}\n",
+      "testCases": [
+        {
+          "setup": "const cache = new LRUCache(2); cache.set(1, 10);",
+          "code": "cache.get(1)",
+          "expected": 10
+        },
+        {
+          "setup": "const cache = new LRUCache(2); cache.set(1, 1); cache.set(2, 2); cache.set(3, 3);",
+          "code": "cache.get(1) === undefined",
+          "expected": true
+        },
+        {
+          "setup": "const cache = new LRUCache(2); cache.set(1, 1); cache.set(2, 2); cache.get(1); cache.set(3, 3);",
+          "code": "cache.get(2) === undefined",
+          "expected": true
+        },
+        {
+          "setup": "const cache = new LRUCache(2); cache.set(1, 1); cache.set(1, 100);",
+          "code": "cache.get(1)",
+          "expected": 100
+        },
+        {
+          "setup": "const cache = new LRUCache(3); cache.set(1, 1); cache.set(2, 2); cache.set(3, 3); cache.get(1); cache.get(2); cache.set(4, 4);",
+          "code": "cache.get(3) === undefined",
+          "expected": true
+        }
+      ],
+      "explanation": "### Approach: Doubly Linked List + Hash Map\n\nWe need O(1) `get` and `set`. A hash map gives O(1) lookups, but we also need to track usage order. A **doubly linked list** lets us move nodes to the front (mark as recently used) and remove from the tail (evict LRU) in O(1).\n\n### Solution\n\n```javascript\nclass LinkedListNode {\n  constructor(key, val, prev = null, next = null) {\n    this.key = key;\n    this.val = val;\n    this.prev = prev;\n    this.next = next;\n  }\n}\n\nclass LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.nodesMap = {};\n    this.size = 0;\n    this.head = new LinkedListNode();\n    this.tail = new LinkedListNode();\n  }\n\n  get(key) {\n    if (!(key in this.nodesMap)) return undefined;\n    const node = this.nodesMap[key];\n    this._promote(node);\n    return node.val;\n  }\n\n  set(key, val) {\n    if (key in this.nodesMap) {\n      const node = this.nodesMap[key];\n      node.val = val;\n      this._promote(node);\n    } else {\n      const node = new LinkedListNode(key, val);\n      this._append(node);\n    }\n  }\n\n  _promote(node) {\n    this._evict(node);\n    this._append(node);\n  }\n\n  _append(node) {\n    this.nodesMap[node.key] = node;\n\n    if (!this.head.next) {\n      this.head.next = node;\n      this.tail.prev = node;\n      node.prev = this.head;\n      node.next = this.tail;\n    } else {\n      const oldTail = this.tail.prev;\n      oldTail.next = node;\n      node.prev = oldTail;\n      node.next = this.tail;\n      this.tail.prev = node;\n    }\n\n    this.size += 1;\n\n    if (this.size > this.capacity) {\n      this._evict(this.head.next);\n    }\n  }\n\n  _evict(node) {\n    delete this.nodesMap[node.key];\n    this.size -= 1;\n\n    const prevNode = node.prev;\n    const nextNode = node.next;\n\n    if (prevNode === this.head && nextNode === this.tail) {\n      this.head.next = null;\n      this.tail.prev = null;\n      this.size = 0;\n      return;\n    }\n\n    if (prevNode === this.head) {\n      nextNode.prev = this.head;\n      this.head.next = nextNode;\n      return;\n    }\n\n    if (nextNode === this.tail) {\n      prevNode.next = this.tail;\n      this.tail.prev = prevNode;\n      return;\n    }\n\n    prevNode.next = nextNode;\n    nextNode.prev = prevNode;\n  }\n}\n```\n\n### Alternative: JavaScript Map (Simpler)\n\nSince `Map` preserves insertion order, we can use it directly:\n\n```javascript\nclass LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.items = new Map();\n  }\n\n  get(key) {\n    if (!this.items.has(key)) return undefined;\n    const val = this.items.get(key);\n    this.items.delete(key);\n    this.items.set(key, val);\n    return val;\n  }\n\n  set(key, val) {\n    this.items.delete(key);\n    this.items.set(key, val);\n    if (this.items.size > this.capacity) {\n      const lruKey = this.items.keys().next().value;\n      this.items.delete(lruKey);\n    }\n  }\n}\n```\n\n### Key Points\n\n- The doubly-linked-list approach combines a **hash map** for O(1) lookup with a **linked list** for O(1) reordering/eviction\n- Use **dummy head and tail nodes** to simplify edge cases (first/last node operations)\n- On `get`: promote the node to the tail (most recently used)\n- On `set` for existing key: update value + promote\n- On `set` for new key: append to tail, then evict head.next if over capacity\n- The Map-based solution is simpler but both are valid; interviewers often expect the linked-list implementation"
+    },
+    {
+      "id": 6,
+      "title": "AsyncTaskQueue",
+      "difficulty": "easy",
+      "topics": [
+        "async",
+        "concurrency",
+        "Promise",
+        "queue"
+      ],
+      "source": "https://bigfrontend.dev/problem/async-task-queue",
+      "runner": "asyncExpression",
+      "functionName": "AsyncTaskQueue",
+      "description": "Design and implement an `AsyncTaskQueue` class that manages execution of asynchronous tasks with a specified maximum concurrency limit.\n\nThe queue should:\n- Execute tasks in the order they are added (FIFO)\n- Ensure no more than the specified number of tasks run concurrently\n- Silently ignore task rejections — the queue must continue processing\n\n### API\n\n```javascript\nclass AsyncTaskQueue {\n  constructor(concurrency) { }\n  // Add an async task to the queue.\n  // Returns a Promise that resolves when the task completes\n  // (resolves even if the task rejects — rejections are silently ignored).\n  queue(task) { }\n}\n```\n\n### Example\n\n```javascript\nconst queue = new AsyncTaskQueue(2);\n\nconst task1 = () => new Promise(resolve => setTimeout(() => resolve('Task 1 done'), 1000));\nconst task2 = () => new Promise((_, reject) => setTimeout(() => reject('Task 2 failed'), 500));\nconst task3 = () => new Promise(resolve => setTimeout(() => resolve('Task 3 done'), 200));\n\nqueue.queue(task1); // Starts immediately\nqueue.queue(task2); // Starts immediately (concurrency = 2)\nqueue.queue(task3); // Waits until one of the first two completes\n// Task 2's failure is silently ignored; Task 3 still runs\n```\n\nComplete the implementation in the editor.",
+      "template": "class AsyncTaskQueue {\n  constructor(concurrency) {\n    // Write your code here\n  }\n\n  queue(task) {\n    // Write your code here\n  }\n}\n",
+      "testCases": [
+        {
+          "setup": "const queue = new AsyncTaskQueue(1); const order = [];",
+          "code": "(async () => { const p1 = queue.queue(() => { order.push(1); return Promise.resolve(1); }); const p2 = queue.queue(() => { order.push(2); return Promise.resolve(2); }); await p1; await p2; return order; })()",
+          "expected": [
+            1,
+            2
+          ]
+        },
+        {
+          "setup": "const queue = new AsyncTaskQueue(1); const order = [];",
+          "code": "(async () => { const p1 = queue.queue(() => { order.push('a'); return Promise.reject('fail'); }); const p2 = queue.queue(() => { order.push('b'); return Promise.resolve('ok'); }); await p1; await p2; return order; })()",
+          "expected": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "setup": "const queue = new AsyncTaskQueue(2); const running = new Set(); const maxConcurrent = { max: 0 };",
+          "code": "(async () => { const tasks = []; for (let i = 0; i < 4; i++) { const id = i; const p = queue.queue(() => { running.add(id); maxConcurrent.max = Math.max(maxConcurrent.max, running.size); return new Promise(r => setTimeout(() => { running.delete(id); r(id); }, 5)); }); tasks.push(p); } await Promise.all(tasks); return maxConcurrent.max; })()",
+          "expected": 2
+        }
+      ],
+      "explanation": "### Approach: Queue with Active Counter\n\nMaintain a **task queue** and a **pending count**. When `queue()` is called, push the task, then `flush()` starts work if capacity allows. Each task runs; when it settles (success or failure), decrement pending and call `flush()` again to drain the queue.\n\n### Solution\n\n```javascript\nclass AsyncTaskQueue {\n  constructor(concurrency) {\n    this.limit = concurrency;\n    this.pending = 0;\n    this.taskQueue = [];\n  }\n\n  queue(task) {\n    return new Promise((resolve) => {\n      this.taskQueue.push(() => {\n        this.pending++;\n        task()\n          .then(resolve)\n          .catch(() => resolve())\n          .finally(() => {\n            this.pending--;\n            this.flush();\n          });\n      });\n      this.flush();\n    });\n  }\n\n  flush() {\n    while (this.pending < this.limit && this.taskQueue.length) {\n      const cb = this.taskQueue.shift();\n      cb();\n    }\n  }\n}\n```\n\n### Key Points\n- `queue()` returns a Promise that resolves when the task completes — **always resolves**, even if the task rejects (rejections are caught and swallowed via `.catch(() => resolve())`)\n- `flush()` is the gatekeeper — it starts new tasks as long as `pending < limit` and the queue has work\n- The `.finally()` block ensures `pending` decrements and `flush()` is called regardless of success/failure\n- Tasks run FIFO: `this.taskQueue.shift()` removes from the front\n- A `while` loop in `flush()` starts as many tasks as capacity allows (useful if multiple tasks complete simultaneously)\n- The `pending` counter tracks in-flight tasks — simple and avoids time-based polling\n- Alternative worker-pool pattern (create K workers that each pull from a shared index) also works well"
     }
   ]
 }

@@ -32,7 +32,7 @@ It documents schemas, tagging conventions, coding test runners, merge patterns, 
 
 ## Reference example
 
-The polyfill batch (ids 2–18) shows the dual-section import pattern:
+The polyfill batch (ids 2–18) shows the **paired** dual-section import pattern (opt-in when using `/load` — the command defaults to a single section unless you ask for both):
 
 - Learnings: [`data/polyfill-learnings.json`](data/polyfill-learnings.json) — merged in `App.jsx`
 - Coding: entries in [`data/coding-questions.json`](data/coding-questions.json)

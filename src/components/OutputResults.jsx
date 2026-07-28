@@ -7,7 +7,7 @@ export default function OutputResults({
   onRestart,
 }) {
   const missed = totalQuestions - score;
-  const pct = Math.round((score / totalQuestions) * 100);
+  const pct = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
   return (
     <div className="quiz-container results output-results">

@@ -46,7 +46,12 @@ export default function FilterPanel({
     selectedTopics.length > 0 || selectedDifficulties.length > 0 || starredOnly;
 
   return (
-    <>
+    <div className="learnings-panel-body filters-panel-body">
+      <div className="panel-subheader learnings-panel-header">
+        <span>Javascript MCQs</span>
+        <span className="learnings-count">{questions.length}</span>
+      </div>
+
       <StarredFilterToggle
         checked={starredOnly}
         count={starredCount}
@@ -116,6 +121,6 @@ export default function FilterPanel({
           ))}
         </ul>
       )}
-    </>
+    </div>
   );
 }

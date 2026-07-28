@@ -1,0 +1,582 @@
+{
+  "source": "https://github.com/denysdovhan/wtfjs",
+  "learnings": [
+    {
+      "id": 31,
+      "title": "[] is equal ![]",
+      "tags": [
+        "coercion",
+        "Array",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `[] == ![]` → `true`\n\nEmpty array equals not-empty-array. Wild, but logical when you trace the coercion.\n\n```javascript\n[] == ![]; // → true\n```\n\n### How it simplifies\n\n```javascript\n+[] == +![]\n0 == +false\n0 == 0\n// → true\n```\n\n### Why\n\nThe abstract equality operator (`==`) converts both sides to numbers. On the right, `![]` → `false` (arrays are truthy, so NOT truthy is `false`), then `+false` → `0`. On the left, `+[]` → `0` (empty array coerces to `0` directly, without becoming a boolean first).\n\nArrays are **truthy** (`!![]` → `true`) but they coerce to `0` as a number. These two facts coexist."
+    },
+    {
+      "id": 32,
+      "title": "true is not equal ![], but not equal [] too",
+      "tags": [
+        "coercion",
+        "Array",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `true == []` and `true == ![]` are both `false`\n\n```javascript\ntrue == [];   // → false\ntrue == ![];  // → false\n\nfalse == [];  // → true\nfalse == ![]; // → true\n```\n\n### Why `true == []` is false\n\n`toNumber(true)` → `1`, `toNumber([])` → `0`. So `1 == 0` → `false`.\n\n### Why `true == ![]` is false\n\n`![]` → `false`, so `true == false` → `false`.\n\n### Why `false == []` is true\n\n`toNumber(false)` → `0`, `toNumber([])` → `0`. So `0 == 0` → `true`.\n\n### Why `false == ![]` is true\n\n`![]` → `false`, so `false == false` → `true`.\n\n**Key takeaway**: `==` coerces both sides to numbers before comparing, except when one side is already the right type."
+    },
+    {
+      "id": 33,
+      "title": "true is false (string coercion)",
+      "tags": [
+        "coercion",
+        "strings",
+        "truthy"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `!!\"false\" == !!\"true\"` → `true`\n\n```javascript\n!!\"false\" == !!\"true\";   // → true\n!!\"false\" === !!\"true\";  // → true\n```\n\n### Why\n\n`\"false\"` is a non-empty string, so it's **truthy**. Double-negating it gives `true`. Same for `\"true\"`. Both produce `true`, so they're equal.\n\n```javascript\n// The actual numeric values tell a different story\ntrue == \"true\";    // → false  (1 vs NaN)\nfalse == \"false\";  // → false  (0 vs NaN)\n```\n\n**Key insight**: Boolean coercion (`!!`) checks truthiness (non-empty string = truthy). Numeric coercion (`Number(\"true\")`) produces `NaN`. Different paths, different results."
+    },
+    {
+      "id": 34,
+      "title": "baNaNa — string plus unary plus",
+      "tags": [
+        "strings",
+        "operators",
+        "NaN"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `\"b\" + \"a\" + +\"a\" + \"a\"` → `'baNaNa'`\n\n```javascript\n\"b\" + \"a\" + +\"a\" + \"a\"; // → 'baNaNa'\n```\n\n### How it works\n\nThe unary `+` before the middle `\"a\"` tries to convert the string to a number, producing `NaN`. Then string concatenation takes over:\n\n```javascript\n\"b\" + \"a\" + (+ \"a\") + \"a\"\n\"b\" + \"a\" + NaN + \"a\"\n\"ba\" + \"NaN\" + \"a\"\n\"baNaN\" + \"a\"\n// → 'baNaNa'\n```\n\nThe original joke: `\"foo\" + +\"bar\"` → `'fooNaN'`."
+    },
+    {
+      "id": 35,
+      "title": "NaN is not a NaN",
+      "tags": [
+        "NaN",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `NaN === NaN` → `false`\n\n```javascript\nNaN === NaN; // → false\n```\n\n### Why\n\nThis is by spec. IEEE 754 defines NaN as \"unordered\" — it compares unequal to everything, **including itself**. The ECMAScript strict equality algorithm explicitly says: \"If `x` is NaN, return false.\"\n\n### Checking for NaN\n\n```javascript\n// Right way\nNumber.isNaN(NaN);     // → true\nNumber.isNaN(\"hello\"); // → false (strict — only NaN)\n\n// Loose way (also coerces)\nisNaN(\"hello\");         // → true (coerces to NaN first)\n\n// Via inequality trick\nNaN !== NaN;           // → true (so: if (x !== x) → x is NaN)\n```\n\n### Object.is to the rescue\n\n```javascript\nObject.is(NaN, NaN);   // → true\n```"
+    },
+    {
+      "id": 36,
+      "title": "Object.is() vs === weird cases",
+      "tags": [
+        "equality",
+        "NaN",
+        "Object.is"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Three cases where `Object.is()` differs from `===`\n\n```javascript\nObject.is(NaN, NaN);  // → true\nNaN === NaN;           // → false\n\nObject.is(-0, 0);      // → false\n-0 === 0;              // → true\n\nObject.is(NaN, 0 / 0); // → true\nNaN === 0 / 0;         // → false\n```\n\n### Why\n\n`Object.is()` uses the **SameValue** algorithm (not SameValueZero like `===`). SameValue treats `NaN` as equal to itself and `-0` as different from `+0`.\n\n### Use cases\n\n```javascript\n// When you need exact equality (React's useState uses Object.is internally)\nObject.is(-0, 0); // → false — these are distinct values\n\n// Most of the time, === is fine\n-0 === 0; // → true — usually what you want\n```"
+    },
+    {
+      "id": 37,
+      "title": "[] is truthy, but not true",
+      "tags": [
+        "coercion",
+        "Array",
+        "truthy"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `!![]` → `true` but `[] == true` → `false`\n\n```javascript\n!![]       // → true   (truthy check)\n[] == true // → false  (loose equality)\n```\n\n### Why\n\nTruthiness and loose equality use different algorithms:\n\n- **Truthiness** (`!!x`): an array is an object, objects are truthy → `true`.\n- **`==` with boolean**: first coerces the boolean to a number (`true` → `1`), then compares: `[] == 1` → `toNumber([])` → `0 == 1` → `false`.\n\n**Key takeaway**: Never use `==` to check truthiness. Use `!!` or explicit boolean conversion instead."
+    },
+    {
+      "id": 38,
+      "title": "null is falsy, but not false",
+      "tags": [
+        "coercion",
+        "null",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `!!null` → `false` but `null == false` → `false`\n\n```javascript\n!!null;       // → false\nnull == false; // → false\n\n// Other falsy values DO equal false\n0 == false;    // → true\n\"\" == false;   // → true\n```\n\n### Why\n\n`null` and `undefined` are special in the `==` algorithm: they are **only** equal to each other and nothing else.\n\n```javascript\nnull == undefined;  // → true\nnull == 0;          // → false\nnull == false;      // → false\nnull == \"\";         // → false\n```\n\nThey never get coerced to numbers during `==`. The spec explicitly says: if one side is `null` and the other is `undefined`, return true. Otherwise, if one side is `null` or `undefined`, return false."
+    },
+    {
+      "id": 39,
+      "title": "Adding arrays",
+      "tags": [
+        "Array",
+        "coercion",
+        "strings"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `[1, 2, 3] + [4, 5, 6]` → `'1,2,34,5,6'`\n\n```javascript\n[1, 2, 3] + [4, 5, 6]; // → '1,2,34,5,6'\n```\n\n### Why\n\nWhen you use `+` with arrays, JavaScript calls `toString()` on both arrays before concatenation:\n\n```javascript\n[1, 2, 3].toString();  // → '1,2,3'\n[4, 5, 6].toString();  // → '4,5,6'\n\n'1,2,3' + '4,5,6';     // → '1,2,34,5,6'\n```\n\nThe `+` operator favors string concatenation when either operand is not a number. Since arrays aren't numbers, both get stringified."
+    },
+    {
+      "id": 40,
+      "title": "Trailing commas in array",
+      "tags": [
+        "Array",
+        "syntax"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Trailing commas produce fewer elements than you think\n\n```javascript\nlet a = [, , ,];\na.length;      // → 3\na.toString();  // → ',,'\n```\n\n### Why\n\nTrailing commas (final commas) are allowed in JavaScript but they don't create additional elements. The array `[, , ,]` has three elements, not four. The third comma is the trailing one.\n\n```javascript\n// Compare:\n[, , ,].length;   // → 3 (two commas = two separators = three slots? No...)\n// Let's be precise:\nlet a = [, , ,];\n// The commas separate: [empty, empty, empty,] — three elements + trailing comma\n// So length = 3\n```\n\n### Real-world use\n\nTrailing commas are useful for cleaner git diffs when adding new array items:\n\n```javascript\nconst items = [\n  'apple',\n  'banana',  // trailing comma\n];\n// Adding 'cherry' only changes one line in the diff\n```"
+    },
+    {
+      "id": 41,
+      "title": "Array equality is a monster",
+      "tags": [
+        "Array",
+        "coercion",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## The wild world of array `==` comparisons\n\n```javascript\n[] == ''              // → true\n[] == 0               // → true\n[''] == ''            // → true\n[0] == 0              // → true\n[0] == ''             // → false\n[''] == 0             // → true\n[null] == ''          // → true\n[null] == 0           // → true\n[undefined] == ''     // → true\n[undefined] == 0      // → true\n[[]] == 0             // → true\n[[]] == ''            // → true\n[[[[[[]]]]]] == ''    // → true\n[[[[[[]]]]]] == 0     // → true\n```\n\n### Why\n\nAll of this follows from the **Abstract Equality Comparison** algorithm (spec section 7.2.15). When comparing an array (object) with a primitive:\n\n1. Convert the array to a primitive via `ToPrimitive` (calls `toString()`).\n2. If the result is a string, compare it with the other side.\n3. If the other side is a number, convert the string to a number.\n\n```javascript\n// [0] == '' — false because:\n[0].toString() → '0'\n'0' == ''       → false (different strings)\n\n// [''] == 0 — true because:\n[''].toString() → ''\n'' == 0         → true (empty string coerces to 0)\n```\n\n**Key**: deep nesting doesn't matter — eventually you get `''` or `0`."
+    },
+    {
+      "id": 42,
+      "title": "undefined and Number constructor",
+      "tags": [
+        "Number",
+        "undefined",
+        "coercion"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `Number()` → `0` but `Number(undefined)` → `NaN`\n\n```javascript\nNumber();           // → 0\nNumber(undefined);  // → NaN\n```\n\n### Why\n\nThese are different code paths in the spec:\n\n- `Number()` with no arguments: explicitly returns `+0`.\n- `Number(undefined)`: calls `ToNumber(undefined)` which returns `NaN`.\n\n```javascript\n// The equivalent explicit paths\nNumber();                // → 0   (no-args path)\nNumber(undefined);       // → NaN (ToNumber path)\n+undefined;              // → NaN (same ToNumber)\n```\n\n**Key takeaway**: No argument is not the same as `undefined` as an argument — even though `undefined` is the default parameter value."
+    },
+    {
+      "id": 43,
+      "title": "parseInt is a bad guy",
+      "tags": [
+        "parseInt",
+        "numbers",
+        "coercion"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `parseInt` quirks you should know\n\n```javascript\nparseInt(\"f*ck\");        // → NaN\nparseInt(\"f*ck\", 16);    // → 15  (f is hex digit 15)\n\nparseInt(\"Infinity\", 10); // → NaN\nparseInt(\"Infinity\", 19); // → 18  (I=18 in base 19+)\nparseInt(\"Infinity\", 24); // → 151176378\nparseInt(\"Infinity\", 36); // → 1461559270678\n\nparseInt(null, 24);       // → 23  (\"null\" → n is the 14th letter + 10 = 24... wait, n=23 in base 24)\n\nparseInt(\"08\");           // → 8  (ES5+, decimal)\nparseInt(\"08\");           // → 0  (old engines, octal)\n```\n\n### Floating point trap\n\n```javascript\nparseInt(0.000001);   // → 0\nparseInt(0.0000001);  // → 1  (converts to string \"1e-7\", parses \"1\")\nparseInt(1/1999999);  // → 5  (string \"5.00000250000125e-7\", parses \"5\")\n```\n\n### How parseInt works\n\n1. Converts the argument to a string (always!).\n2. Parses character by character from left to right.\n3. Stops at the first character that isn't a valid digit in the given radix.\n\n**Always pass a radix**: `parseInt(str, 10)`."
+    },
+    {
+      "id": 44,
+      "title": "Math with true and false",
+      "tags": [
+        "coercion",
+        "boolean",
+        "numbers"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Booleans as numbers in math operations\n\n```javascript\ntrue + true;                            // → 2\n(true + true) * (true + true) - true;   // → 3\n```\n\n### Why\n\nWhen used in arithmetic, `true` coerces to `1` and `false` coerces to `0`:\n\n```javascript\nNumber(true);   // → 1\nNumber(false);  // → 0\n+true;          // → 1 (unary plus)\n+false;         // → 0\n```\n\n### The spec says\n\n`ToNumber(true)` → `1`, `ToNumber(false)` → `+0`. This applies to `+`, `-`, `*`, `/`, and other numeric operators.\n\n```javascript\ntrue + false;   // → 1\nfalse - true;   // → -1\ntrue * 10;      // → 10\n```\n\n### Don't confuse with `==`\n\n```javascript\n1 == true;      // → true  (true coerces to 1)\n1 === true;     // → false (different types)\n```"
+    },
+    {
+      "id": 45,
+      "title": "HTML comments are valid in JavaScript",
+      "tags": [
+        "syntax",
+        "comments",
+        "history"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `<!--` is a valid single-line comment in JavaScript\n\n```javascript\n// valid comment\n<!-- valid comment too\n```\n\n### Why\n\nThis is a legacy feature from the early web. Browsers that didn't understand `<script>` tags would render JS code as text. To prevent that, developers wrapped JS in HTML comments:\n\n```html\n<script>\n<!--\n  var x = 10;\n//-->\n</script>\n```\n\n### Specification\n\nThis is officially part of ECMAScript (Annex B.1.3 — HTML-like Comments). It's supported in all engines, including Node.js (V8).\n\n```javascript\nconsole.log('hello');\n<!-- this is a comment\nconsole.log('still runs');\n```\n\n**Note**: `-->` (closing) is **not** a valid comment. Only `<!--` at the start of a line (or after whitespace/comments) works.\n\nDon't use this in modern code. It's purely a historical curiosity."
+    },
+    {
+      "id": 46,
+      "title": "NaN is a number (typeof NaN)",
+      "tags": [
+        "NaN",
+        "typeof",
+        "numbers"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `typeof NaN` → `'number'`\n\n```javascript\ntypeof NaN; // → 'number'\n```\n\n### Why\n\n`NaN` stands for \"Not a Number\" but it **is** a numeric type. It's the result of an invalid numeric operation, but its type is still `number`.\n\n```javascript\ntypeof NaN;            // → 'number'\ntypeof Infinity;       // → 'number'\ntypeof -Infinity;      // → 'number'\n```\n\n### How NaN is produced\n\n```javascript\n0 / 0;           // → NaN\nparseInt(\"abc\");  // → NaN\nMath.sqrt(-1);   // → NaN\nNumber(\"abc\");   // → NaN\n```\n\n### The name is misleading\n\nA better name would be \"Not a valid Number\" or \"Invalid Number\". NaN is a numeric value that represents an undefined or unrepresentable result, much like `null` represents the absence of an object.\n\nFrom the IEEE 754 spec: NaN is a numeric data type value representing an undefined result."
+    },
+    {
+      "id": 47,
+      "title": "[] and null are objects (typeof quirks)",
+      "tags": [
+        "typeof",
+        "null",
+        "Array",
+        "objects"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `typeof []` → `'object'` and `typeof null` → `'object'`\n\n```javascript\ntypeof [];                // → 'object'\ntypeof null;              // → 'object'\n\nnull instanceof Object;   // → false\n[] instanceof Object;     // → true\n```\n\n### Why\n\n`typeof null` returning `'object'` is a **known bug** from the first version of JavaScript that can't be fixed without breaking the web. The type tag for `null` was `0` (same as objects), while objects got their own tag value.\n\nFor arrays, `typeof` returns `'object'` because arrays are objects. The spec's `typeof` table only returns `'function'` for callable objects — everything else is `'object'`.\n\n### Better type checks\n\n```javascript\n// Check for array\nArray.isArray([]);                        // → true\n[] instanceof Array;                      // → true\n\n// Check for null\nx === null;                               // → true\n\n// General type check via toString\nObject.prototype.toString.call([]);       // → '[object Array]'\nObject.prototype.toString.call(null);     // → '[object Null]'\nObject.prototype.toString.call(new Date); // → '[object Date]'\n```"
+    },
+    {
+      "id": 48,
+      "title": "Precision of 0.1 + 0.2",
+      "tags": [
+        "numbers",
+        "floating-point",
+        "IEEE 754"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `0.1 + 0.2 === 0.3` → `false`\n\n```javascript\n0.1 + 0.2;            // → 0.30000000000000004\n0.1 + 0.2 === 0.3;    // → false\n```\n\n### Why\n\nJavaScript uses IEEE 754 double-precision floating-point. Decimal fractions like `0.1` and `0.2` can't be represented exactly in binary — they're repeating fractions in base 2, just like 1/3 is in base 10.\n\n```javascript\n// What's actually stored:\n0.1 → 0.10000000000000000555...\n0.2 → 0.20000000000000001110...\n// Sum is slightly above 0.3\n```\n\n### Fixes\n\n```javascript\n// 1. Use tolerance (epsilon)\nMath.abs((0.1 + 0.2) - 0.3) < Number.EPSILON; // → true\n\n// 2. Work in integers\n(1 + 2) / 10 === 0.3;                          // → true\n\n// 3. Use toFixed for display\n(0.1 + 0.2).toFixed(1);                        // → '0.3'\n\n// 4. Use a library (decimal.js, big.js) for precision-critical work\n```\n\nThis happens in **all** languages using IEEE 754 (Python, Java, C++, etc.), not just JavaScript."
+    },
+    {
+      "id": 49,
+      "title": "Comparison of three numbers",
+      "tags": [
+        "coercion",
+        "operators",
+        "chaining"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `1 < 2 < 3` → `true` but `3 > 2 > 1` → `false`\n\n```javascript\n1 < 2 < 3;  // → true\n3 > 2 > 1;  // → false\n```\n\n### Why\n\nJavaScript evaluates left-to-right, not as a chained comparison:\n\n```javascript\n1 < 2 < 3\n// Step 1: (1 < 2) → true\n// Step 2: true < 3 → 1 < 3 → true\n\n3 > 2 > 1\n// Step 1: (3 > 2) → true\n// Step 2: true > 1 → 1 > 1 → false\n```\n\n`true` coerces to `1` in numeric comparisons, so `true < 3` becomes `1 < 3`.\n\n### The fix\n\n```javascript\n// Use && for chained comparisons\n1 < 2 && 2 < 3;    // → true\n3 > 2 && 2 > 1;    // → true\n```"
+    },
+    {
+      "id": 50,
+      "title": "Funny math — mixed type operations",
+      "tags": [
+        "operators",
+        "coercion",
+        "strings"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## The weird world of `+` and `-` with mixed types\n\n```javascript\n 3  - 1       // → 2      (number subtraction)\n 3  + 1       // → 4      (number addition)\n'3' - 1       // → 2      (string '3' coerced to 3)\n'3' + 1       // → '31'   (1 coerced to '1', concatenation!)\n''  + ''      // → ''     (empty string concatenation)\n[]  + []      // → ''     (both arrays toString → '')\n{}  + []      // → 0      ({} treated as empty block, +[] → 0)\n[]  + {}      // → '[object Object]'\n{}  + {}      // → '[object Object][object Object]' (or NaN in some contexts)\n'222' - -'111' // → 333  ('222' - (-111) → 222 + 111)\n[4] * [4]     // → 16     ([4].toString() → '4', '4'*'4' → 16)\n[]  * []      // → 0      ('' * '' → 0 * 0 → 0... actually '' coerces to 0)\n[4, 4] * [4, 4] // → NaN ('4,4' can't be coerced to a number)\n```\n\n### The rules\n\n| Left | Right | `+` result | `-`, `*`, `/` result |\n|------|-------|-----------|---------------------|\n| Number | Number | addition | arithmetic |\n| Any | String | concatenation | NaN (unless string is numeric) |\n| Boolean | Any | number coercion | number coercion |\n| Object | Any | toString first | toString then toNumber |\n\n### `{}` + `[]` special case\n\n`{}` at the start of a statement is treated as an **empty code block**, not an object. So `{} + []` is parsed as `{}; +[]` → block followed by unary plus on array → `0`.\n\nWrap in parens to treat as an object: `({} + [])` → `'[object Object]'`."
+    },
+    {
+      "id": 51,
+      "title": "Strings aren't instances of String",
+      "tags": [
+        "strings",
+        "primitives",
+        "instanceof"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `\"str\" instanceof String` → `false`\n\n```javascript\n\"str\";                    // → 'str'\ntypeof \"str\";             // → 'string'\n\"str\" instanceof String;  // → false\n```\n\n### Why\n\n`\"str\"` is a **primitive string**, not a `String` object. `instanceof` checks the prototype chain, and primitives don't have one (they get temporarily wrapped when you access methods).\n\n```javascript\nString(\"str\") == \"str\";          // → true  (String() returns primitive)\nnew String(\"str\") == \"str\";      // → true  (wrapper object coerced)\nnew String(\"str\") === \"str\";     // → false (object vs primitive)\ntypeof new String(\"str\");         // → 'object'\nnew String(\"str\") instanceof String; // → true\n```\n\n### Auto-boxing\n\nWhen you call a method on a primitive string, JS temporarily wraps it in a `String` object:\n\n```javascript\n\"hello\".toUpperCase();  // JS does: new String(\"hello\").toUpperCase()\n\n// Same for numbers and booleans\n(1).toString();         // new Number(1).toString()\ntrue.toString();        // new Boolean(true).toString()\n```\n\n**Key**: primitives are lightweight; wrapper objects are rarely needed explicitly."
+    },
+    {
+      "id": 52,
+      "title": "Calling functions with backticks (tagged templates)",
+      "tags": [
+        "functions",
+        "template literals",
+        "ES6"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## You can call any function with backticks\n\n```javascript\nfunction f(...args) {\n  return args;\n}\n\nf(1, 2, 3);  // → [1, 2, 3]\n\nf`true is ${true}, false is ${false}, array is ${[1, 2, 3]}`;\n// → [\n//   ['true is ', ', false is ', ', array is ', ''],\n//   true,\n//   false,\n//   [1, 2, 3]\n// ]\n```\n\n### Why\n\nThis is a **tagged template literal**. The function receives:\n\n1. **First argument**: array of string literals (the parts between interpolations).\n2. **Remaining arguments**: the interpolated values in order.\n\n```javascript\nfunction tag(strings, ...values) {\n  console.log(strings); // ['Hello ', ' you are ', '']\n  console.log(values);  // ['Alice', 25]\n}\n\nconst name = 'Alice';\nconst age = 25;\ntag`Hello ${name} you are ${age}`;\n```\n\n### Real-world use\n\nThis powers libraries like **styled-components** in React:\n\n```javascript\nconst Button = styled.button`\n  color: ${props => props.primary ? 'blue' : 'gray'};\n  font-size: 1em;\n`;\n```"
+    },
+    {
+      "id": 53,
+      "title": "Call call call — Function.prototype chain",
+      "tags": [
+        "functions",
+        "call",
+        "apply",
+        "this"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `console.log.call.call.call.call.call.apply(a => a, [1, 2])`\n\nThis mind-bending chain actually works. Let's decode it.\n\n### How it works\n\n```javascript\n// Step 1: What is 'call'?\nconsole.log.call  // → Function.prototype.call\n\n// Step 2: call.call → calling 'call' with 'call' as 'this'\n// Function.prototype.call.call(fn) → fn()\n\n// Step 3: Chaining more .call's doesn't change the behavior\n// .call.call === .call (since call is itself a function)\n\n// So this chain:\nconsole.log.call.call.call.call.call  // → Function.prototype.call\n\n// Equals:\nFunction.prototype.call.apply(a => a, [1, 2])\n\n// Which is:\n(a => a).call(undefined, 1, 2)\n\n// Which returns:\n// → 1 (first argument after thisArg)\n```\n\n### Why it \"works\"\n\nThe chain of `.call` on `.call` is just calling `Function.prototype.call` with itself as `this`, which is effectively a no-op. Each additional `.call` is just redundantly resolving the same method.\n\n```javascript\n// These are equivalent:\nfn.call.call.call(a => a, 1, 2)\nfn.call(a => a, 1, 2)\n(a => a)(1, 2)\n// → 1\n```"
+    },
+    {
+      "id": 54,
+      "title": "A constructor property — self-referencing hack",
+      "tags": [
+        "constructor",
+        "strings",
+        "Function"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `c[c][c]('console.log(\"WTF?\")')()` — executing code from string chain\n\n```javascript\nconst c = \"constructor\";\nc[c][c]('console.log(\"WTF?\")')();  // > WTF?\n```\n\n### How it unravels\n\n```javascript\nconst c = \"constructor\";\n\nc;                // → 'constructor'\nc[c];             // → String.prototype.constructor → [Function: String]\nc[c][c];          // → Function.prototype.constructor → [Function: Function]\n\n// Function constructor creates a function from a string\nc[c][c]('console.log(\"WTF?\")');  // → [Function: anonymous]\n\n// Then we call it\nc[c][c]('console.log(\"WTF?\")')();  // > WTF?\n```\n\n### Why\n\nEvery object has a `constructor` property pointing to the function that created it. For a string, it's `String`. `String`'s own constructor is `Function`. The `Function` constructor can create functions from strings (like `eval`).\n\n```javascript\n// The chain:\n\"constructor\"               // string primitive\n  [\"constructor\"]           // → String (string's constructor)\n  [\"constructor\"]           // → Function (String's constructor)\n  ('return 42')             // → anonymous function returning 42\n  ()                        // → 42\n```\n\nThis is similar to `eval` but through the type system chain."
+    },
+    {
+      "id": 55,
+      "title": "Object as a key of object's property",
+      "tags": [
+        "objects",
+        "coercion",
+        "computed properties"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `{ [{}]: {} }` → `{ '[object Object]': {} }`\n\n```javascript\n{ [{}]: {} }  // → { '[object Object]': {} }\n```\n\n### Why\n\nComputed property names (`[expr]`) coerce the expression to a string. `{}.toString()` → `'[object Object]'`, so the key becomes that string.\n\n### Brackets hell\n\n```javascript\n({ [{}]: { [{}]: {} } }[{}][{}]);  // → {}\n\n// Structure:\n// {\n//   '[object Object]': {\n//     '[object Object]': {}\n//   }\n// }\n```\n\n### Any object becomes '[object Object]'\n\n```javascript\nconst key1 = {};\nconst key2 = { foo: 'bar' };\nconst obj = { [key1]: 'a', [key2]: 'b' };\n// → { '[object Object]': 'b' }  (second overwrites first!)\n```\n\n**Practical lesson**: Never use objects as property keys. Use `Map` if you need object keys:\n\n```javascript\nconst map = new Map();\nmap.set(key1, 'a');\nmap.set(key2, 'b');\nmap.get(key1);  // → 'a'\nmap.get(key2);  // → 'b'\n```"
+    },
+    {
+      "id": 56,
+      "title": "Accessing prototypes with __proto__",
+      "tags": [
+        "prototype",
+        "primitives",
+        "autoboxing"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `(1).__proto__.__proto__.__proto__` → `null`\n\n```javascript\n(1).__proto__;                    // → [Number: 0]\n(1).__proto__.__proto__;          // → {}\n(1).__proto__.__proto__.__proto__; // → null\n```\n\n### Why\n\nPrimitives don't have prototypes, but accessing `__proto__` on a primitive triggers **auto-boxing**: JavaScript wraps `1` in a `Number` object.\n\n```javascript\n// Auto-boxing chain:\n// 1 → Number.prototype → Object.prototype → null\n(1).__proto__                     // Number.prototype\n(1).__proto__.__proto__           // Object.prototype\n(1).__proto__.__proto__.__proto__ // null\n```\n\n### The full prototype chain\n\n```javascript\n// Number chain:\n1 → Number.prototype → Object.prototype → null\n\n// String chain:\n\"hi\" → String.prototype → Object.prototype → null\n\n// Array chain:\n[] → Array.prototype → Object.prototype → null\n\n// Function chain:\nfunction(){} → Function.prototype → Object.prototype → null\n```\n\n### `__proto__` vs `Object.getPrototypeOf`\n\n```javascript\nObject.getPrototypeOf(1);       // TypeError (can't convert primitive)\nObject.getPrototypeOf(Object(1)); // → Number.prototype (wrapper)\n\n// __proto__ auto-boxes; getPrototypeOf doesn't\n```"
+    },
+    {
+      "id": 57,
+      "title": "Destructuring with default values",
+      "tags": [
+        "destructuring",
+        "ES6",
+        "undefined"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## A tricky interview question\n\n```javascript\nlet x,\n  { x: y = 1 } = { x };\ny;  // → 1\n```\n\n### How it runs\n\n```javascript\nlet x,                    // 1. Declare x (undefined)\n  { x: y = 1 } = { x };  // 2. Destructure from { x: undefined }\ny;                        // 3. Result\n```\n\nBreaking it down:\n\n1. `let x` — `x` is declared with no initializer, so `x === undefined`.\n2. `{ x }` — shorthand property creates `{ x: undefined }`.\n3. `{ x: y = 1 } = { x: undefined }` — destructuring tries to extract `x` from the object. It finds `undefined`, so the default value `1` is used.\n4. `y` → `1`.\n\n### Key rules\n\nDefault values in destructuring only apply when the value is **`undefined`**, not for other falsy values:\n\n```javascript\nconst { a = 10 } = { a: undefined };  // a → 10\nconst { a = 10 } = { a: null };       // a → null (null is NOT undefined)\nconst { a = 10 } = { a: 0 };          // a → 0\nconst { a = 10 } = { a: false };      // a → false\n```"
+    },
+    {
+      "id": 58,
+      "title": "Dots and spreading — [...\"...\"].length",
+      "tags": [
+        "spread",
+        "strings",
+        "iterables"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `[...\"...\"].length` → `3`\n\n```javascript\n[...\"...\"].length;              // → 3\n[...[...\"...\"]].length;        // → 3\n[...[...[...\"...\"]]].length;   // → 3\n```\n\n### Why\n\nSpreading a string splits it into individual characters:\n\n```javascript\n[...\"...\"]  // → ['.', '.', '.']\n```\n\nEach spread uses the iterable protocol. Strings are iterable (each character is yielded). The inner `...` splits the string into 3 characters, the outer `[...]` wraps them back into an array.\n\n```javascript\n// You can nest this infinitely — same result:\n[...[...[...[...\"...\"]]]]  // → ['.', '.', '.']\n```\n\n### How spreads work\n\n```javascript\n// String iterator:\nconst it = \"...\"[Symbol.iterator]();\nit.next(); // { value: '.', done: false }\nit.next(); // { value: '.', done: false }\nit.next(); // { value: '.', done: false }\nit.next(); // { value: undefined, done: true }\n```\n\nEach `...` consumes the iterator and rebuilds the array."
+    },
+    {
+      "id": 59,
+      "title": "Labels in JavaScript",
+      "tags": [
+        "labels",
+        "break",
+        "control flow"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Labeled statements with `break`\n\n```javascript\nfoo: {\n  console.log(\"first\");\n  break foo;\n  console.log(\"second\");\n}\n// > first\n// → undefined\n```\n\n### Why\n\nJavaScript supports **labeled statements** — you can label a block or loop and use `break`/`continue` with that label.\n\n```javascript\n// Breaking out of nested loops\nouter: for (let i = 0; i < 3; i++) {\n  for (let j = 0; j < 3; j++) {\n    if (i === 1 && j === 1) break outer;\n    console.log(i, j);\n  }\n}\n// Logs (0,0) (0,1) (0,2) (1,0) — then stops entirely\n```\n\n### Nested labels\n\n```javascript\na: b: c: d: e: f: g: 1, 2, 3, 4, 5;  // → 5\n```\n\nAll of those are just labels on the comma expression. Labels don't affect evaluation — the comma operator returns the last value (`5`).\n\n### Rarely used\n\nLabels are uncommon in modern JS. Most uses can be replaced by extracting a function and using `return` instead. But they exist in the spec and work everywhere."
+    },
+    {
+      "id": 60,
+      "title": "Insidious try..catch — finally beats return",
+      "tags": [
+        "try-catch",
+        "finally",
+        "return"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `finally` overrides `return` in `try`\n\n```javascript\n(() => {\n  try {\n    return 2;\n  } finally {\n    return 3;\n  }\n})();  // → 3\n```\n\n### Why\n\nThe `finally` block always executes — even after a `return` in `try`. If `finally` has its own `return`, it **overrides** any return value from `try` or `catch`.\n\n```javascript\n// Without return in finally, try's return wins:\n(() => {\n  try {\n    return 2;\n  } finally {\n    console.log('cleanup');\n  }\n})();\n// > cleanup\n// → 2\n\n// Throw in try, return in finally — finally wins:\n(() => {\n  try {\n    throw new Error('oops');\n  } finally {\n    return 'safe';\n  }\n})();  // → 'safe'  (error is swallowed!)\n```\n\n### The completion order\n\n1. `try` block's `return 2` is evaluated but **not yet returned**.\n2. `finally` block runs.\n3. If `finally` has a `return`, that becomes the final return value.\n4. Otherwise, `try`'s value is returned.\n\n**Practical advice**: Avoid `return` in `finally`. Use `finally` only for cleanup."
+    },
+    {
+      "id": 61,
+      "title": "Is this multiple inheritance? (comma in extends)",
+      "tags": [
+        "classes",
+        "extends",
+        "comma operator"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `new class F extends (String, Array) {} ();` → `F []`\n\n```javascript\nnew class F extends (String, Array) {} ();  // → F []\n```\n\n### Why\n\nThis is **not** multiple inheritance. The parentheses contain a comma expression: `(String, Array)` evaluates both operands and returns the **last one** (`Array`). So the class extends `Array`.\n\n```javascript\n// Equivalent:\nclass F extends Array {}\nnew F();  // → F []\n```\n\n### Comma operator refresher\n\n```javascript\nlet x = (1, 2, 3);  // x → 3\n\n// Each expression is evaluated left to right, last value is returned\nlet y = (console.log('hi'), 42);  // logs 'hi', y → 42\n```\n\n### Real multiple inheritance\n\nJavaScript doesn't have true multiple inheritance. You can use **mixins**:\n\n```javascript\nconst Timestamped = Base => class extends Base {\n  timestamp = Date.now();\n};\n\nclass MyClass extends Timestamped(Array) {\n  // inherits from both Array and the mixin\n}\n```"
+    },
+    {
+      "id": 62,
+      "title": "A generator which yields itself",
+      "tags": [
+        "generators",
+        "iterators",
+        "recursion"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Infinite self-yielding generator\n\n```javascript\n(function* f() {\n  yield f;\n})().next();\n// → { value: [GeneratorFunction: f], done: false }\n```\n\n### Why\n\nThe generator yields itself (`f`), so you can chain `.next().value().next()`... forever:\n\n```javascript\n(function* f() {\n  yield f;\n})().next().value().next().value().next();\n// → { value: [GeneratorFunction: f], done: false }\n```\n\n### How generators work\n\n```javascript\nfunction* gen() {\n  yield 1;\n  yield 2;\n  return 3;\n}\n\nconst it = gen();\nit.next();  // { value: 1, done: false }\nit.next();  // { value: 2, done: false }\nit.next();  // { value: 3, done: true }\n```\n\nWhen you `yield f`, the generator pauses and returns `f` as the value. The caller can then call `f()` to get a new generator instance and repeat the process.\n\n### Practical use\n\nSelf-referential generators aren't common, but they demonstrate that generators can yield any value, including themselves — useful for building recursive traversal patterns."
+    },
+    {
+      "id": 63,
+      "title": "A class of class — class as property name",
+      "tags": [
+        "classes",
+        "keywords",
+        "properties"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `typeof new class { class() {} } ()` → `'object'`\n\n```javascript\ntypeof new class {\n  class() {}\n} ();  // → 'object'\n```\n\n### Why\n\nSince ES5, **keywords can be property names**. The word `class` in `class() {}` is not a class declaration — it's a **method name**. The outer `class { ... }` is an anonymous class expression.\n\n```javascript\n// Equivalent:\nconst obj = {\n  class: function() {}\n};\n\n// Or with ES6 shorthand:\nclass {\n  class() {}  // method named \"class\"\n}\n```\n\n### Other keywords as property names\n\n```javascript\nconst obj = {\n  if: 1,\n  else: 2,\n  return: 3,\n  class: 4,\n  function: 5,\n};\nobj.if;       // → 1\nobj.class;    // → 4\nobj.function; // → 5\n```\n\n**Key insight**: `new class { class() {} } ()` creates an instance of an anonymous class that has a method literally named `class`. The result is a plain object, so `typeof` returns `'object'`."
+    },
+    {
+      "id": 64,
+      "title": "Tricky arrow functions — implicit return",
+      "tags": [
+        "arrow functions",
+        "ES6",
+        "return"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `() => {}` returns `undefined`, not `{}`\n\n```javascript\nlet f = () => 10;\nf();  // → 10\n\nlet g = () => {};\ng();  // → undefined  (not {})\n```\n\n### Why\n\nThe curly braces `{}` in `() => {}` are interpreted as the **function body block**, not as an object literal. To return an object, wrap it in parentheses:\n\n```javascript\nlet h = () => ({});\nh();  // → {}\n\nlet i = () => ({ a: 1 });\ni();  // → { a: 1 }\n```\n\n### Implicit return rules\n\n```javascript\n// Single expression (no braces) → implicit return\nconst add = (a, b) => a + b;\n\n// Braces → need explicit return\nconst add2 = (a, b) => { return a + b; };\n\n// Returning object literal → wrap in ()\nconst getObj = () => ({ key: 'value' });\n\n// This is a common React bug:\n// Wrong:    const Comp = () => { name: 'test' }  → undefined\n// Correct:  const Comp = () => ({ name: 'test' }) → { name: 'test' }\n```"
+    },
+    {
+      "id": 65,
+      "title": "Arrow functions can not be a constructor",
+      "tags": [
+        "arrow functions",
+        "constructor",
+        "new",
+        "prototype"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `new` with arrow function throws TypeError\n\n```javascript\nlet f = function() {\n  this.a = 1;\n};\nnew f();  // → f { a: 1 }\n\nlet g = () => {\n  this.a = 1;\n};\nnew g();  // → TypeError: g is not a constructor\n```\n\n### Why\n\nArrow functions:\n- Have **no `[[Construct]]` internal method** — they can't be used with `new`.\n- Have **no `prototype` property**.\n- Use **lexical `this`** (captured from enclosing scope), so even if `new` worked, `this` wouldn't point to the new instance.\n\n### What makes a function a constructor\n\n```javascript\n// Regular functions have a prototype:\nfunction Foo() {}\nFoo.prototype;               // → { constructor: Foo }\nFoo.prototype.constructor === Foo;  // → true\n\n// Arrow functions don't:\nconst Bar = () => {};\nBar.prototype;               // → undefined\n\n// Methods (shorthand) are constructable:\nconst obj = {\n  method() {}\n};\nnew obj.method();  // Works (method shorthand creates a regular function)\n```\n\n**Key rule**: Use arrow functions for callbacks and short expressions. Use regular functions or classes when you need `new`, `this` binding, or `prototype`."
+    },
+    {
+      "id": 66,
+      "title": "arguments and arrow functions",
+      "tags": [
+        "arrow functions",
+        "arguments",
+        "rest parameters"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Arrow functions don't have `arguments`\n\n```javascript\nlet f = function() {\n  return arguments;\n};\nf(\"a\");  // → { '0': 'a' }\n\nlet g = () => arguments;\ng(\"a\");  // → ReferenceError: arguments is not defined\n```\n\n### Why\n\nArrow functions don't have their own `arguments` object. They inherit `arguments` from the enclosing non-arrow function scope (lexical scoping for `arguments` too).\n\n```javascript\nfunction outer() {\n  const arrow = () => arguments;\n  return arrow('b');  // inherits outer's arguments, ignores 'b'\n}\nouter('a');  // → { '0': 'a' }\n```\n\n### The fix: use rest parameters\n\n```javascript\nconst f = (...args) => args;\nf('a', 'b', 'c');  // → ['a', 'b', 'c']\n\n// Rest parameters work in both arrow and regular functions:\nfunction g(...args) {\n  return args;\n}\n```\n\n### What arrow functions DON'T have\n\n- `this` (lexical)\n- `arguments` (lexical)\n- `super` (lexical)\n- `new.target` (lexical)\n- `prototype` property\n\nThey're designed to be lightweight — use rest parameters for variable arguments."
+    },
+    {
+      "id": 67,
+      "title": "Tricky return — ASI after return",
+      "tags": [
+        "return",
+        "ASI",
+        "semicolons"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `return` with a line break returns `undefined`\n\n```javascript\n(function() {\n  return\n  {\n    b: 10\n  }\n})();  // → undefined\n```\n\n### Why\n\n**Automatic Semicolon Insertion (ASI)** kicks in after `return` followed by a line break. The code becomes:\n\n```javascript\nreturn;  // ← semicolon inserted here\n{\n  b: 10  // unreachable code (but not a syntax error — it's a block with label)\n}\n```\n\nThe object literal `{ b: 10 }` is never reached. `b:` is parsed as a **label**, and `10` is an expression statement.\n\n### The fix\n\n```javascript\n// Keep the opening brace on the same line:\nreturn {\n  b: 10\n};\n\n// Or wrap in parens:\nreturn (\n  { b: 10 }\n);\n```\n\n### Where ASI inserts semicolons\n\nASI inserts `;` after:\n- `return` followed by a line terminator\n- `throw` followed by a line terminator\n- `break` / `continue` followed by a line terminator\n- `++` / `--` on the next line after their operand\n\n```javascript\n// These are all affected:\nreturn          // → return;\n  42            // unreachable\n\nthrow           // → throw;\n  new Error()   // SyntaxError\n\nlet x = 1\nx++             // → x; ++x (or 1; ++x depending on context)\n```"
+    },
+    {
+      "id": 68,
+      "title": "Chaining assignments on object",
+      "tags": [
+        "assignment",
+        "objects",
+        "references"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `foo.x = foo = { n: 2 }` — a classic brain teaser\n\n```javascript\nvar foo = { n: 1 };\nvar bar = foo;\n\nfoo.x = foo = { n: 2 };\n\nfoo.x;  // → undefined\nfoo;    // → { n: 2 }\nbar;    // → { n: 1, x: { n: 2 } }\n```\n\n### Why\n\nAssignment is **right-to-left**, but lvalues (left-side targets) are **resolved left-to-right** before evaluation:\n\n1. `foo.x` is resolved — it refers to the **original** `foo` object `{ n: 1 }`.\n2. `foo = { n: 2 }` assigns a new object to the variable `foo`.\n3. The result of step 2 (`{ n: 2 }`) is assigned to `foo.x` from step 1 — which is the **original** object.\n\n```javascript\n// Equivalent to:\nvar foo = { n: 1 };\nvar bar = foo;            // bar → { n: 1 }\nvar temp = foo;           // temp → { n: 1 } (original)\nfoo = { n: 2 };           // foo now points to new object\ntemp.x = foo;             // original.x = { n: 2 }\n// bar still → original = { n: 1, x: { n: 2 } }\n```\n\n**Key insight**: The `foo.x` on the left was resolved to the **old** `foo` before `foo` was reassigned."
+    },
+    {
+      "id": 69,
+      "title": "Accessing object properties with arrays",
+      "tags": [
+        "objects",
+        "arrays",
+        "coercion",
+        "toString"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## Arrays as property keys — they get stringified\n\n```javascript\nvar obj = { property: 1 };\nvar array = [\"property\"];\n\nobj[array];  // → 1\n\n// Deeply nested arrays also work:\nvar nested = [[[[[[[[[[\"property\"]]]]]]]]]];\nobj[nested];  // → 1\n```\n\n### Why\n\nBracket notation `obj[...]` converts the expression to a string. An array's `toString()` joins its elements with commas:\n\n```javascript\n[\"property\"].toString();                          // → 'property'\n[[[[[\"property\"]]]]].toString();                  // → 'property'\n[1, 2, 3].toString();                             // → '1,2,3'\n```\n\n### Pseudo-multidimensional arrays\n\n```javascript\nvar map = {};\nvar x = 1, y = 2, z = 3;\n\nmap[[x, y, z]] = true;\nmap[[x + 10, y, z]] = true;\n\nmap[\"1,2,3\"];   // → true\nmap[\"11,2,3\"];  // → true\n```\n\n`[x, y, z]` → `\"1,2,3\"` as a string. This can be abused but is almost never what you want. Use `Map` for compound keys:\n\n```javascript\nconst map = new Map();\nmap.set([1, 2, 3], true);  // key is the array reference, not its string\n```"
+    },
+    {
+      "id": 70,
+      "title": "Math.max() less than Math.min()",
+      "tags": [
+        "Math",
+        "Infinity",
+        "edge cases"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `Math.min() > Math.max()` → `true`\n\n```javascript\nMath.min();          // → Infinity\nMath.max();          // → -Infinity\nMath.min() > Math.max();  // → true\n```\n\n### Why\n\nWith **no arguments**:\n- `Math.max()` returns `-Infinity` (starting point — any number is larger).\n- `Math.min()` returns `Infinity` (starting point — any number is smaller).\n\n```javascript\n// The logic: Math.max compares each argument and keeps the largest\nMath.max(1, 5, 3);  // → 5\n// With no arguments, the initial \"largest so far\" is -Infinity\n\n// Similarly for Math.min:\nMath.min(1, 5, 3);  // → 1\n// Initial \"smallest so far\" is Infinity\n```\n\n### Not to be confused with Number.MAX_VALUE / MIN_VALUE\n\n```javascript\nNumber.MAX_VALUE;  // → 1.7976931348623157e+308 (largest positive)\nNumber.MIN_VALUE;  // → 5e-324 (smallest positive, NOT most negative)\n\n// The actual smallest (most negative) number:\n-Number.MAX_VALUE;  // → -1.7976931348623157e+308\nNumber.NEGATIVE_INFINITY;  // even smaller\n```"
+    },
+    {
+      "id": 71,
+      "title": "Comparing null to 0",
+      "tags": [
+        "null",
+        "comparison",
+        "coercion"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## The `null >= 0` paradox\n\n```javascript\nnull == 0;   // → false\nnull > 0;    // → false\nnull >= 0;   // → true   ← wait, what?\n```\n\n### Why\n\nEach operator uses **different algorithms**:\n\n**`null == 0`** (Abstract Equality): `null` is only `==` to `undefined` — the spec says if one side is `null`/`undefined`, return false unless the other is also `null`/`undefined`. No coercion to numbers.\n\n**`null > 0`** (Relational Comparison): Calls `ToNumber(null)` → `0`. So `0 > 0` → `false`.\n\n**`null >= 0`** (Relational Comparison): Defined as `!(null < 0)`. First computes `null < 0` → `0 < 0` → `false`. Then `!false` → `true`.\n\n```javascript\n// Step by step for >=:\nnull >= 0\n!(null < 0)       // spec definition\n!(0 < 0)           // ToNumber(null) = 0\n!false             // 0 < 0 is false\ntrue\n```\n\nThe `>=` operator is literally `!( < )` — it's not `> || ==`. This is why the three comparisons can give seemingly contradictory results."
+    },
+    {
+      "id": 72,
+      "title": "Same variable redeclaration",
+      "tags": [
+        "var",
+        "declarations",
+        "hoisting"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## You can redeclare `var` variables — even in strict mode\n\n```javascript\nvar a, a, a;  // perfectly valid\nvar a;\nvar a;        // also valid\n\na, a;         // valid expression (comma operator)\n```\n\n### Why\n\n`var` declarations at the same scope level are **merged** into a single declaration during hoisting. Multiple `var` declarations for the same name in the same scope are not errors — they're effectively deduplicated.\n\n```javascript\n// What the engine sees:\nvar a = 1;\nvar a = 2;\n// becomes:\nvar a;\na = 1;\na = 2;\n```\n\n### What about `let` and `const`?\n\n```javascript\nlet a;\nlet a;  // → SyntaxError: Identifier 'a' has already been declared\n\nconst b = 1;\nconst b = 2;  // → SyntaxError\n\n// Even in different block scopes:\n{\n  let x = 1;\n}\n{\n  let x = 2;  // fine — different scope\n}\n```\n\n`let` and `const` block redeclaration; `var` doesn't."
+    },
+    {
+      "id": 73,
+      "title": "Default behavior of Array.prototype.sort()",
+      "tags": [
+        "Array",
+        "sort",
+        "strings",
+        "lexicographic"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `[10, 1, 3].sort()` → `[1, 10, 3]` (not `[1, 3, 10]`!)\n\n```javascript\n[10, 1, 3].sort();  // → [1, 10, 3]\n```\n\n### Why\n\nThe default sort converts elements to **strings** and compares their UTF-16 code unit values. Lexicographically, `\"10\"` comes before `\"3\"` because `'1' < '3'`.\n\n```javascript\n// String comparison:\n\"1\" < \"3\";   // → true\n\"10\" < \"3\";  // → true  (compares '1' vs '3', stops at first char)\n```\n\n### The fix\n\nAlways pass a compare function for numbers:\n\n```javascript\n[10, 1, 3].sort((a, b) => a - b);  // → [1, 3, 10]  (ascending)\n[10, 1, 3].sort((a, b) => b - a);  // → [10, 3, 1]  (descending)\n```\n\n### How the compare function works\n\n```javascript\n// If compareFn(a, b) returns:\n// < 0 → a comes before b\n// > 0 → b comes before a\n// = 0 → order unchanged\n\n// For strings, use localeCompare for proper sorting:\n['ä', 'a', 'z'].sort((a, b) => a.localeCompare(b));  // → ['a', 'ä', 'z']\n```\n\n**Remember**: `sort()` mutates the original array AND returns it."
+    },
+    {
+      "id": 74,
+      "title": "resolve() flattens nested promises",
+      "tags": [
+        "Promise",
+        "resolve",
+        "flattening"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `resolve()` with a Promise unwraps it\n\n```javascript\nconst theObject = { a: 7 };\nconst thePromise = new Promise((resolve) => {\n  resolve(theObject);\n});\n\nthePromise.then(value => {\n  console.log(value === theObject);  // > true\n  console.log(value);                // > { a: 7 }\n});\n```\n\nPassing a plain value → resolves with that value. But passing another Promise:\n\n```javascript\nconst innerPromise = new Promise((resolve) => {\n  resolve(7);\n});\n\nconst outerPromise = new Promise((resolve) => {\n  resolve(innerPromise);  // passing a Promise!\n});\n\nouterPromise.then(value => {\n  console.log(value === innerPromise);  // > false\n  console.log(value);                   // > 7  (unwrapped!)\n});\n```\n\n### Why\n\nThe Promise resolution procedure **flattens** thenables/promises. If you resolve a Promise with another Promise, the outer promise \"follows\" the inner one — it resolves to the inner's fulfillment value, not the inner Promise itself.\n\n```javascript\n// This is why Promise.resolve also flattens:\nPromise.resolve(Promise.resolve(42));  // → Promise { 42 } (not Promise { Promise { 42 } })\n\n// To get nested promises, wrap in an object:\nPromise.resolve({ inner: somePromise });\n```"
+    },
+    {
+      "id": 75,
+      "title": "arguments binding — live binding to parameters",
+      "tags": [
+        "arguments",
+        "functions",
+        "strict mode"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `arguments` is live-bound to parameters (non-strict mode)\n\n```javascript\nfunction a(x) {\n  arguments[0] = \"hello\";\n  console.log(x);\n}\n\na();       // > undefined  (no argument → no binding)\na(1);      // > \"hello\"    (live binding)\n```\n\n### Why\n\nIn **non-strict mode**, `arguments` and named parameters share a **live binding**. Changing `arguments[0]` changes `x` and vice versa. But this only happens when an argument was actually passed.\n\n```javascript\nfunction demo(x, y) {\n  arguments[0] = 'changed';\n  console.log(x);  // 'changed' (if called with arg)\n  \n  x = 'changed back';\n  console.log(arguments[0]);  // 'changed back' (live binding)\n  \n  arguments[1] = 'Y';\n  console.log(y);  // undefined (no arg passed for y, so no binding)\n}\n\ndemo('original');\n```\n\n### Strict mode breaks the link\n\n```javascript\nfunction strict(x) {\n  'use strict';\n  arguments[0] = 'hello';\n  console.log(x);  // original value (no live binding!)\n}\nstrict(1);  // > 1\n```\n\n**Modern advice**: Avoid `arguments`. Use rest parameters (`...args`) instead — they're real arrays with no magic binding."
+    },
+    {
+      "id": 76,
+      "title": "An infinite timeout — Infinity becomes 1ms",
+      "tags": [
+        "setTimeout",
+        "Infinity",
+        "timers"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `setTimeout(fn, Infinity)` runs almost immediately\n\n```javascript\nsetTimeout(() => console.log(\"called\"), Infinity);\n// > called  (runs immediately, not never)\n```\n\n### Why\n\nTimers store the delay as a **32-bit signed integer** internally. `Infinity` overflows this and gets clamped to `1` (or a very small value).\n\n```javascript\n// Node.js warns:\n// TimeoutOverflowWarning: Infinity does not fit into a 32-bit signed integer.\n// Timeout duration was set to 1.\n```\n\n### The delay limits\n\n```javascript\n// Maximum delay: ~24.8 days (2^31 - 1 ms)\nsetTimeout(fn, 2147483647);  // max allowed\n\n// Negative delays are treated as 0:\nsetTimeout(fn, -100);  // same as setTimeout(fn, 0)\n\n// Non-number delays:\nsetTimeout(fn, \"100\");  // coerced to 100\nsetTimeout(fn, \"abc\");  // coerced to NaN → treated as 0\n```\n\n### The minimum delay\n\n```javascript\n// Nested timeouts have a minimum of 4ms (browsers):\nsetTimeout(() => {\n  setTimeout(() => {}, 0);  // actually 4ms minimum\n}, 0);\n\n// Top-level setTimeout(fn, 0) still has a ~0-1ms minimum\n```"
+    },
+    {
+      "id": 77,
+      "title": "A setTimeout object — eval trap",
+      "tags": [
+        "setTimeout",
+        "eval",
+        "coercion"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `setTimeout` with non-string, non-function argument\n\n```javascript\nsetTimeout(123, 100);       // works (coerced to \"123\" → eval → no-op)\nsetTimeout('{a: 1}', 100);  // works (string → eval)\nsetTimeout({a: 1}, 100);    // → SyntaxError: Unexpected identifier\n```\n\n### Why\n\nWhen `setTimeout`'s first argument is not a function, it converts it to a string and passes it to `eval`:\n\n```javascript\n// {a: 1}.toString() → '[object Object]'\n// eval('[object Object]') → SyntaxError (not valid JS)\n\n// \"{a: 1}\" → eval → creates object (but {a: 1} is a block with label a: 1)\n// Actually: eval(\"{a: 1}\") → 1 (block with labeled expression)\n```\n\n### CSP (Content Security Policy) implications\n\n```javascript\n// If CSP disallows 'unsafe-eval':\nsetTimeout('console.log(1)', 100);\n// → Refused to evaluate a string as JavaScript because 'unsafe-eval'\n//   is not an allowed source of script\n```\n\n### Best practice\n\n**Always pass a function**, never a string:\n\n```javascript\n// Bad:\nsetTimeout(\"console.log('hi')\", 100);\n\n// Good:\nsetTimeout(() => console.log('hi'), 100);\n```"
+    },
+    {
+      "id": 78,
+      "title": "Double dot — 27..toString()",
+      "tags": [
+        "numbers",
+        "syntax",
+        "decimal",
+        "methods"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `27.toString()` fails, but `27..toString()` works\n\n```javascript\n27.toString();   // → SyntaxError: Invalid or unexpected token\n27..toString();  // → '27'\n(27).toString(); // → '27'\n```\n\n### Why\n\nThe first `.` after `27` is parsed as a **decimal point**, not a property accessor. `27.toString()` is parsed as `27.` (decimal) followed by `toString` (identifier), which is invalid.\n\n```javascript\n// The parser sees:\n27.toString()\n// → 27. (decimal) toString() ← SyntaxError\n\n// Two dots:\n27..toString()\n// → 27. (decimal, which is 27.0) .toString()\n// → Number(27.0).toString() → '27'\n```\n\n### Other workarounds\n\n```javascript\n(27).toString();          // parens disambiguate\n27 .toString();           // space before dot (uncommon)\n27.0.toString();          // explicit decimal\nconst n = 27; n.toString(); // variable reference\n```\n\n### This also affects number literals with methods\n\n```javascript\n27.toFixed(2);    // → SyntaxError\n27..toFixed(2);   // → '27.00'\n(27).toFixed(2);  // → '27.00'\n```"
+    },
+    {
+      "id": 79,
+      "title": "Why you should use semicolons",
+      "tags": [
+        "ASI",
+        "semicolons",
+        "syntax",
+        "classes"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## ASI can silently break class fields\n\n```javascript\nclass SomeClass {\n  [\"array\"] = []\n  [\"string\"] = \"str\"\n}\n\nnew SomeClass().array;  // → 'str'  (not []!)\n```\n\n### Why\n\nWithout semicolons, the two lines are merged by ASI:\n\n```javascript\nclass SomeClass {\n  [\"array\"] = [][\"string\"] = \"str\"\n}\n```\n\nThis is:\n1. `[\"string\"] = \"str\"` — assigns `\"str\"` to property `\"str\"` of an empty array (creates `[\"str\": \"str\"]`).\n2. The result (`\"str\"`) is assigned to `[\"array\"]`.\n\n```javascript\n// Equivalent to:\nclass SomeClass {\n  [\"array\"] = ([][\"string\"] = \"str\");\n}\n\n// Step by step:\nconst temp = [];\ntemp[\"string\"] = \"str\";  // array now has property \"string\"\ntemp;                     // ['str': \"str\"]\n\"str\"                     // assignment returns the value\n// So [\"array\"] = \"str\"\n```\n\n### The lesson\n\nASI is not always your friend. This is a case where missing semicolons cause a **logic error without any syntax error**.\n\n```javascript\n// Safe version:\nclass SomeClass {\n  [\"array\"] = [];\n  [\"string\"] = \"str\";\n}\n```"
+    },
+    {
+      "id": 80,
+      "title": "Split a string by a space — the empty string edge case",
+      "tags": [
+        "strings",
+        "split",
+        "edge cases"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `\"\".split(\"\")` vs `\"\".split(\" \")` — different results\n\n```javascript\n\"\".split(\"\");   // → []\n\"\".split(\" \");  // → [\"\"]\n```\n\n### Why\n\n`split` works by finding occurrences of the separator. With `\"\"` (empty string), it finds no separator in an empty string → returns `[]`. With `\" \"` (space), it finds no space in the empty string → returns `[\"\"]` (the original string as a single element).\n\n```javascript\n// The general rule:\n\"abc\".split(\"\");   // → ['a', 'b', 'c'] (split between every character)\n\"abc\".split(\" \");  // → ['abc']         (no space found, return whole string)\n\n// Edge cases:\n\"a b\".split(\" \");  // → ['a', 'b']\n\"  \".split(\" \");   // → ['', '', '']\n\"a\".split(\" \");    // → ['a']\n```\n\n### From the spec\n\nThe substrings are determined by searching left to right for occurrences of the separator. If the separator is not found, the array contains the original string.\n\n```javascript\n// Empty string with limit:\n\"\".split(\"\", 0);   // → []\n\"\".split(\" \", 0);  // → []\n```"
+    },
+    {
+      "id": 81,
+      "title": "A stringified string — JSON.stringify quotes",
+      "tags": [
+        "JSON",
+        "strings",
+        "serialization"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `JSON.stringify(\"production\") === \"production\"` → `false`\n\n```javascript\nJSON.stringify(\"production\");          // → '\"production\"'\nJSON.stringify(\"production\") === \"production\";  // → false\n```\n\n### Why\n\n`JSON.stringify` wraps strings in **double quotes** (JSON spec requirement). The result is a JSON-encoded string, not the original string.\n\n```javascript\nJSON.stringify(\"hello\");    // → '\"hello\"'    (quoted!)\nJSON.stringify(42);         // → '42'        (numbers aren't quoted)\nJSON.stringify(true);       // → 'true'      (booleans aren't quoted)\nJSON.stringify(null);       // → 'null'\nJSON.stringify([1,2,3]);    // → '[1,2,3]'   (arrays: outer brackets)\nJSON.stringify({a:1});      // → '{\"a\":1}'  (objects: outer braces)\n```\n\n### How to compare\n\n```javascript\n// Parse it back to compare:\nJSON.parse(JSON.stringify(\"production\")) === \"production\";  // → true\n\n// Or wrap both sides in stringify:\nJSON.stringify(\"production\") === JSON.stringify(\"production\");  // → true\n```\n\n### The fix\n\nIf you're comparing deep equality, use `JSON.stringify` on **both** sides or use a proper deep comparison library. Never compare a stringified value directly to a raw string."
+    },
+    {
+      "id": 82,
+      "title": "Non-strict comparison of a number to true",
+      "tags": [
+        "coercion",
+        "boolean",
+        "equality"
+      ],
+      "source": "https://github.com/denysdovhan/wtfjs",
+      "answer": "## `1.1 == true` → `false`\n\n```javascript\n1 == true;     // → true\nBoolean(1.1);  // → true\n1.1 == true;   // → false  ← why?\n```\n\n### Why\n\n`==` with a boolean first coerces the boolean to a number, then compares:\n\n```javascript\n1 == true        → 1 == Number(true)  → 1 == 1    → true\n1.1 == true      → 1.1 == Number(true) → 1.1 == 1 → false\n```\n\n`Boolean(1.1)` is `true` (truthy check), but that's a different operation from `== true`.\n\n### The coercion chain\n\n```javascript\n// == with boolean on either side:\n// Step 1: Convert boolean to number\n// Step 2: If other side is string, convert to number\n// Step 3: Compare numbers\n\n\"1\" == true     → \"1\" == 1    → 1 == 1     → true\n\"0\" == false    → \"0\" == 0    → 0 == 0     → true\n\"true\" == true  → \"true\" == 1 → NaN == 1   → false\n```\n\n**Key**: `x == true` is equivalent to `x == 1`, not `Boolean(x) == true`. Use `!!x` for truthiness checks."
+    }
+  ]
+}

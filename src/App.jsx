@@ -53,8 +53,10 @@ import questionsData from '../questions.json';
 import learningsData from '../data/learnings.json';
 import polyfillLearningsData from '../data/polyfill-learnings.json';
 import tekionInterviewLearningsData from '../data/tekion-interview-learnings.json';
+import wtfjsLearningsData from '../data/wtfjs-learnings.json';
 import reactLearningsData from '../data/react-learnings.json';
 import hldLearningsData from '../data/hld-learnings.json';
+import devtoInterviewLearningsData from '../data/devto-interview-learnings.json';
 import outputQuestionsData from '../data/output-questions.json';
 import scopeOutputQuestionsData from '../data/scope-output-questions.json';
 import codingQuestionsData from '../data/coding-questions.json';
@@ -383,7 +385,7 @@ export default function App() {
   const removeFromSessionQueue = useCallback((session, id) => {
     if (!session) return session;
     const queueIds = session.queueIds.filter((qid) => qid !== id);
-    const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length, 0));
+    const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
     return { ...session, queueIds, currentIndex };
   }, []);
 
@@ -393,6 +395,8 @@ export default function App() {
       ...learningsData.learnings,
       ...polyfillLearningsData.learnings,
       ...tekionInterviewLearningsData.learnings,
+      ...wtfjsLearningsData.learnings,
+      ...devtoInterviewLearningsData.learnings,
     ];
     const allOutputQuestions = [
       ...outputQuestionsData.questions,
@@ -572,18 +576,15 @@ export default function App() {
 
   const handlePick = useCallback(
     (correct, question) => {
-      setProgress((prev) => recordAnswer(prev, question, correct));
-      if (correct) {
-        setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
-      }
       setQuizSession((session) => {
-        if (!session) return session;
-        const answeredIds = session.answeredIds.includes(question.id)
-          ? session.answeredIds
-          : [...session.answeredIds, question.id];
+        if (!session || session.answeredIds.includes(question.id)) return session;
+        setProgress((prev) => recordAnswer(prev, question, correct));
+        if (correct) {
+          setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
+        }
         return {
           ...session,
-          answeredIds,
+          answeredIds: [...session.answeredIds, question.id],
           answered: session.answered + 1,
           score: session.score + (correct ? 1 : 0),
         };
@@ -605,7 +606,7 @@ export default function App() {
       setQuizSession((session) => {
         if (!session) return session;
         const queueIds = session.queueIds.filter((id) => id !== question.id);
-        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length, 0));
+        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
         return { ...session, queueIds, currentIndex };
       });
     },
@@ -1034,18 +1035,15 @@ export default function App() {
 
   const handleOutputCheck = useCallback(
     (correct, question) => {
-      setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
-      if (correct) {
-        setCompleted((prev) => markCompletedId(prev, 'output', question.id));
-      }
       setOutputSession((session) => {
-        if (!session) return session;
-        const answeredIds = session.answeredIds.includes(question.id)
-          ? session.answeredIds
-          : [...session.answeredIds, question.id];
+        if (!session || session.answeredIds.includes(question.id)) return session;
+        setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
+        if (correct) {
+          setCompleted((prev) => markCompletedId(prev, 'output', question.id));
+        }
         return {
           ...session,
-          answeredIds,
+          answeredIds: [...session.answeredIds, question.id],
           answered: session.answered + 1,
           score: session.score + (correct ? 1 : 0),
         };
@@ -1114,23 +1112,35 @@ export default function App() {
   );
 
   const handleCodingCheck = useCallback(
-    (correct, question) => {
-      setCodingProgress((prev) => {
-        const updated = recordCodingAnswer(prev, question.id, correct);
-        saveCodingProgress(updated);
-        return updated;
-      });
-      if (correct) {
+    (correct, question, { isRetry = false } = {}) => {
+      if (isRetry) {
+        if (!correct) return;
+        setCodingSession((session) => {
+          if (!session || !session.answeredIds.includes(question.id)) return session;
+          return { ...session, score: session.score + 1 };
+        });
+        setCodingProgress((prev) => {
+          const updated = recordCodingAnswer(prev, question.id, true);
+          saveCodingProgress(updated);
+          return updated;
+        });
         setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
+        return;
       }
+
       setCodingSession((session) => {
-        if (!session) return session;
-        const answeredIds = session.answeredIds.includes(question.id)
-          ? session.answeredIds
-          : [...session.answeredIds, question.id];
+        if (!session || session.answeredIds.includes(question.id)) return session;
+        setCodingProgress((prev) => {
+          const updated = recordCodingAnswer(prev, question.id, correct);
+          saveCodingProgress(updated);
+          return updated;
+        });
+        if (correct) {
+          setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
+        }
         return {
           ...session,
-          answeredIds,
+          answeredIds: [...session.answeredIds, question.id],
           answered: session.answered + 1,
           score: session.score + (correct ? 1 : 0),
         };
@@ -1293,7 +1303,7 @@ export default function App() {
     if (currentOutputQuestion) {
       return (
         <OutputQuizQuestion
-          key={outputCurrentIndex}
+          key={currentOutputQuestion.id}
           question={currentOutputQuestion}
           remaining={outputRemaining}
           sessionTotal={outputSessionTotal}
@@ -1379,7 +1389,7 @@ export default function App() {
     if (currentCodingQuestion) {
       return (
         <CodingChallenge
-          key={codingCurrentIndex}
+          key={currentCodingQuestion.id}
           question={currentCodingQuestion}
           remaining={codingRemaining}
           sessionTotal={codingSessionTotal}
@@ -1485,7 +1495,7 @@ export default function App() {
     if (currentQuestion) {
       return (
         <QuizQuestion
-          key={currentIndex}
+          key={currentQuestion.id}
           question={currentQuestion}
           remaining={remaining}
           sessionTotal={sessionTotal}
@@ -1538,6 +1548,8 @@ export default function App() {
             onSectionChange={setSection}
             totalQuestions={activeQuestions.length}
             learningsCount={activeLearnings.length}
+            reactLearningsCount={activeReactLearnings.length}
+            hldLearningsCount={activeHldLearnings.length}
             outputQuestionsCount={activeOutputQuestions.length}
             codingQuestionsCount={activeCodingQuestions.length}
             archivedCount={archivedCount}
@@ -1637,6 +1649,15 @@ export default function App() {
                 onClick={() => setSection('output')}
               >
                 Output
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeSection === 'archived'}
+                className={`section-toggle-btn${activeSection === 'archived' ? ' active' : ''}`}
+                onClick={() => setSection('archived')}
+              >
+                Archived
               </button>
             </div>
 
