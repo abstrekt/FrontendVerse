@@ -10,6 +10,7 @@ export default function Sidebar({
   learningsCount,
   reactLearningsCount,
   hldLearningsCount,
+  algorithmLearningsCount,
   outputQuestionsCount,
   codingQuestionsCount,
   archivedCount,
@@ -63,6 +64,8 @@ export default function Sidebar({
           ? `${reactLearningsCount} learning${reactLearningsCount !== 1 ? "s" : ""} available`
           : activeSection === "hld"
             ? `${hldLearningsCount} learning${hldLearningsCount !== 1 ? "s" : ""} available`
+            : activeSection === "algorithm"
+              ? `${algorithmLearningsCount} learning${algorithmLearningsCount !== 1 ? "s" : ""} available`
         : activeSection === "coding"
           ? `${codingQuestionsCount} challenge${codingQuestionsCount !== 1 ? "s" : ""} available`
           : `${outputQuestionsCount} question${outputQuestionsCount !== 1 ? "s" : ""} available`;
@@ -116,6 +119,17 @@ export default function Sidebar({
                 <span className="nav-icon">HD</span>
                 <span>HLD</span>
                 <span className="nav-count">{hldLearningsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "algorithm" ? "active" : ""}
+                onClick={() => onSectionChange("algorithm")}
+              >
+                <span className="nav-icon">AL</span>
+                <span>Algorithm</span>
+                <span className="nav-count">{algorithmLearningsCount}</span>
               </button>
             </li>
             <li>

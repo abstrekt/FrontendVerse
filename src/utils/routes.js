@@ -32,6 +32,15 @@ export function parseRoute(pathname) {
     };
   }
 
+  if (parts[0] === 'algorithm') {
+    const parsedId = parts[1] ? Number(parts[1]) : null;
+    return {
+      section: 'algorithm',
+      viewMode: 'quiz',
+      learningId: Number.isFinite(parsedId) ? parsedId : null,
+    };
+  }
+
   if (parts[0] === 'output') {
     return { section: 'output', viewMode: 'quiz', learningId: null };
   }
@@ -59,6 +68,10 @@ export function buildRoute({ section = 'mcq', viewMode = 'quiz', learningId = nu
 
   if (section === 'hld') {
     return learningId ? `/hld/${learningId}` : '/hld';
+  }
+
+  if (section === 'algorithm') {
+    return learningId ? `/algorithm/${learningId}` : '/algorithm';
   }
 
   if (section === 'output') {

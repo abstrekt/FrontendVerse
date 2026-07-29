@@ -1,6 +1,6 @@
 # js-mcq-quiz — Agent Guide
 
-JavaScript quiz app with four content sections: **MCQ**, **Learnings**, **Coding**, and **Output**.
+JavaScript quiz app with content sections: **MCQ**, **Learnings**, **React Learnings**, **HLD**, **Algorithm**, **Coding**, and **Output**.
 
 ## Quick start
 
@@ -17,6 +17,9 @@ Package manager: **pnpm** (`pnpm start` runs the dev server).
 | --------- | ---------------------------------- | ------------------- |
 | MCQ       | `questions.json`                   | `QuizQuestion`      |
 | Learnings | `data/learnings.json` (+ merges)   | `LearningsView`     |
+| React Learnings | `data/react-learnings.json`  | `LearningsView`     |
+| HLD       | `data/hld-learnings.json`          | `LearningsView`     |
+| Algorithm | `data/algorithm-learnings.json`    | `LearningsView`     |
 | Coding    | `data/coding-questions.json`       | `CodingChallenge`   |
 | Output    | `data/output-questions.json`       | `OutputQuizQuestion`|
 

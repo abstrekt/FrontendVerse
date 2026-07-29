@@ -5,6 +5,7 @@ export const EMPTY_STARRED = {
   learnings: [],
   'react-learnings': [],
   hld: [],
+  algorithm: [],
   coding: [],
   output: [],
 };
@@ -14,6 +15,7 @@ export const EMPTY_STARRED_FILTER = {
   learnings: false,
   'react-learnings': false,
   hld: false,
+  algorithm: false,
   coding: false,
   output: false,
 };

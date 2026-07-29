@@ -63,6 +63,13 @@ export function useAppRoute() {
     [navigate]
   );
 
+  const setAlgorithmLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'algorithm', learningId }), options);
+    },
+    [navigate]
+  );
+
   return {
     route,
     navigate,
@@ -71,5 +78,6 @@ export function useAppRoute() {
     setLearningId,
     setReactLearningId,
     setHldLearningId,
+    setAlgorithmLearningId,
   };
 }

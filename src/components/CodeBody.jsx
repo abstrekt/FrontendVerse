@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import js from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import { getSyntaxStyle } from '../utils/syntaxTheme';
+import MermaidDiagram from './MermaidDiagram';
 
 SyntaxHighlighter.registerLanguage('javascript', js);
 
@@ -19,6 +20,10 @@ export default function CodeBody({ content, highlight, theme = 'light' }) {
             const codeStr = String(children).replace(/\n$/, '');
 
             if (match) {
+              if (match[1] === 'mermaid') {
+                return <MermaidDiagram chart={codeStr} theme={theme} />;
+              }
+
               return highlight ? (
                 <SyntaxHighlighter
                   style={syntaxStyle}

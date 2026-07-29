@@ -13,6 +13,7 @@ const SECTION_CHIP_LABELS = {
   learnings: 'Learnings',
   'react-learnings': 'React',
   hld: 'HLD',
+  algorithm: 'Algorithm',
   coding: 'Coding',
   output: 'Output',
 };

@@ -56,7 +56,9 @@ import tekionInterviewLearningsData from '../data/tekion-interview-learnings.jso
 import wtfjsLearningsData from '../data/wtfjs-learnings.json';
 import reactLearningsData from '../data/react-learnings.json';
 import hldLearningsData from '../data/hld-learnings.json';
+import algorithmLearningsData from '../data/algorithm-learnings.json';
 import devtoInterviewLearningsData from '../data/devto-interview-learnings.json';
+import seniorFrontendLearningsData from '../data/senior-frontend-learnings.json';
 import outputQuestionsData from '../data/output-questions.json';
 import scopeOutputQuestionsData from '../data/scope-output-questions.json';
 import codingQuestionsData from '../data/coding-questions.json';
@@ -105,9 +107,10 @@ export default function App() {
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [hldLearnings, setHldLearnings] = useState([]);
+  const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
   const [outputQuestions, setOutputQuestions] = useState([]);
   const [outputSourceUrl, setOutputSourceUrl] = useState('');
-  const { route, navigate, setSection, setViewMode, setLearningId, setReactLearningId, setHldLearningId } = useAppRoute();
+  const { route, navigate, setSection, setViewMode, setLearningId, setReactLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
@@ -149,6 +152,10 @@ export default function App() {
     () => filterActive(hldLearnings, 'hld', archived),
     [hldLearnings, archived]
   );
+  const activeAlgorithmLearnings = useMemo(
+    () => filterActive(algorithmLearnings, 'algorithm', archived),
+    [algorithmLearnings, archived]
+  );
   const activeCodingQuestions = useMemo(
     () => filterActive(codingQuestions, 'coding', archived),
     [codingQuestions, archived]
@@ -180,6 +187,10 @@ export default function App() {
     () => (starredFilter.hld ? filterStarred(activeHldLearnings, 'hld', starred) : activeHldLearnings),
     [activeHldLearnings, starredFilter.hld, starred]
   );
+  const starredActiveAlgorithmLearnings = useMemo(
+    () => (starredFilter.algorithm ? filterStarred(activeAlgorithmLearnings, 'algorithm', starred) : activeAlgorithmLearnings),
+    [activeAlgorithmLearnings, starredFilter.algorithm, starred]
+  );
   const starredActiveCodingQuestions = useMemo(
     () => (starredFilter.coding ? filterStarred(activeCodingQuestions, 'coding', starred) : activeCodingQuestions),
     [activeCodingQuestions, starredFilter.coding, starred]
@@ -195,6 +206,7 @@ export default function App() {
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
+  const algorithmStarredCount = useMemo(() => getStarredCount(starred, 'algorithm'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
   const outputStarredCount = useMemo(() => getStarredCount(starred, 'output'), [starred]);
 
@@ -205,6 +217,7 @@ export default function App() {
         learnings: activeLearnings,
         reactLearnings: activeReactLearnings,
         hld: activeHldLearnings,
+        algorithm: activeAlgorithmLearnings,
         coding: activeCodingQuestions,
         output: activeOutputQuestions,
       }),
@@ -213,6 +226,7 @@ export default function App() {
       activeLearnings,
       activeReactLearnings,
       activeHldLearnings,
+      activeAlgorithmLearnings,
       activeCodingQuestions,
       activeOutputQuestions,
     ]
@@ -295,6 +309,14 @@ export default function App() {
     return starredActiveHldLearnings[0] ?? null;
   }, [starredActiveHldLearnings, route.learningId, activeSection]);
 
+  const selectedAlgorithmLearning = useMemo(() => {
+    if (activeSection !== 'algorithm') return null;
+    if (route.learningId) {
+      return starredActiveAlgorithmLearnings.find((item) => item.id === route.learningId) ?? starredActiveAlgorithmLearnings[0] ?? null;
+    }
+    return starredActiveAlgorithmLearnings[0] ?? null;
+  }, [starredActiveAlgorithmLearnings, route.learningId, activeSection]);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
@@ -325,6 +347,13 @@ export default function App() {
       setHldLearningId(starredActiveHldLearnings[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, starredActiveHldLearnings, setHldLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'algorithm' || !starredActiveAlgorithmLearnings.length) return;
+    if (route.learningId && !starredActiveAlgorithmLearnings.some((item) => item.id === route.learningId)) {
+      setAlgorithmLearningId(starredActiveAlgorithmLearnings[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, starredActiveAlgorithmLearnings, setAlgorithmLearningId]);
 
   const weakTopics = useMemo(
     () => getWeakTopics(progress, activeQuestions),
@@ -397,6 +426,7 @@ export default function App() {
       ...tekionInterviewLearningsData.learnings,
       ...wtfjsLearningsData.learnings,
       ...devtoInterviewLearningsData.learnings,
+      ...seniorFrontendLearningsData.learnings,
     ];
     const allOutputQuestions = [
       ...outputQuestionsData.questions,
@@ -407,6 +437,7 @@ export default function App() {
     setLearnings(allLearnings);
     setReactLearnings(reactLearningsData.learnings);
     setHldLearnings(hldLearningsData.learnings);
+    setAlgorithmLearnings(algorithmLearningsData.learnings);
     setOutputQuestions(allOutputQuestions);
     setOutputSourceUrl(outputQuestionsData.source);
     setCodingQuestions(allCodingQuestions);
@@ -754,6 +785,10 @@ export default function App() {
         setSection('hld', { learningId: id });
         return;
       }
+      if (section === 'algorithm') {
+        setSection('algorithm', { learningId: id });
+        return;
+      }
       if (section === 'mcq') {
         setSection('mcq');
         setViewMode('quiz');
@@ -893,6 +928,23 @@ export default function App() {
     [setStarredFilter, activeHldLearnings, starred, route.learningId, setHldLearningId]
   );
 
+  const handleAlgorithmStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, algorithm: value }));
+      if (value) {
+        const nextStarred = filterStarred(activeAlgorithmLearnings, 'algorithm', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setAlgorithmLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeAlgorithmLearnings, starred, route.learningId, setAlgorithmLearningId]
+  );
+
   const handleCodingStarredFilterChange = useCallback(
     (value) => {
       setStarredFilter((prev) => ({ ...prev, coding: value }));
@@ -981,6 +1033,18 @@ export default function App() {
       }
     },
     [setArchived, archived, hldLearnings, route.learningId, setHldLearningId]
+  );
+
+  const handleArchiveAlgorithmLearning = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'algorithm', learning.id));
+      const nextArchived = archiveId(archived, 'algorithm', learning.id);
+      const nextActive = filterActive(algorithmLearnings, 'algorithm', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setAlgorithmLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, algorithmLearnings, route.learningId, setAlgorithmLearningId]
   );
 
   const handleUnarchive = useCallback(
@@ -1550,6 +1614,7 @@ export default function App() {
             learningsCount={activeLearnings.length}
             reactLearningsCount={activeReactLearnings.length}
             hldLearningsCount={activeHldLearnings.length}
+            algorithmLearningsCount={activeAlgorithmLearnings.length}
             outputQuestionsCount={activeOutputQuestions.length}
             codingQuestionsCount={activeCodingQuestions.length}
             archivedCount={archivedCount}
@@ -1631,6 +1696,15 @@ export default function App() {
                 onClick={() => setSection('hld')}
               >
                 HLD
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeSection === 'algorithm'}
+                className={`section-toggle-btn${activeSection === 'algorithm' ? ' active' : ''}`}
+                onClick={() => setSection('algorithm')}
+              >
+                Algorithm
               </button>
               <button
                 type="button"
@@ -1726,6 +1800,20 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'algorithm' ? (
+              <LearningsView
+                learning={selectedAlgorithmLearning}
+                learnings={starredActiveAlgorithmLearnings}
+                selectedLearningId={selectedAlgorithmLearning?.id ?? null}
+                onSelectLearning={setAlgorithmLearningId}
+                onArchive={handleArchiveAlgorithmLearning}
+                isStarred={selectedAlgorithmLearning ? isStarred(selectedAlgorithmLearning.id, 'algorithm', starred) : false}
+                onToggleStar={() => selectedAlgorithmLearning && handleToggleStar('algorithm', selectedAlgorithmLearning.id)}
+                isCompleted={selectedAlgorithmLearning ? isCompleted(selectedAlgorithmLearning.id, 'algorithm', completed) : false}
+                onToggleCompleted={() => selectedAlgorithmLearning && handleToggleCompleted('algorithm', selectedAlgorithmLearning.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+              />
             ) : activeSection === 'archived' ? (
               <ArchivedView
                 archived={archived}
@@ -1733,6 +1821,7 @@ export default function App() {
                 learnings={learnings}
                 reactLearnings={reactLearnings}
                 hldLearnings={hldLearnings}
+                algorithmLearnings={algorithmLearnings}
                 codingQuestions={codingQuestions}
                 outputQuestions={outputQuestions}
                 onUnarchive={handleUnarchive}
@@ -1797,6 +1886,20 @@ export default function App() {
                 onStarredOnlyChange={handleHldStarredFilterChange}
                 onSelect={setHldLearningId}
                 title="HLD"
+              />
+            </div>
+          ) : activeSection === 'algorithm' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={starredActiveAlgorithmLearnings}
+                starredIds={starred.algorithm}
+                completedIds={completed.algorithm}
+                selectedLearningId={selectedAlgorithmLearning?.id ?? null}
+                starredOnly={starredFilter.algorithm}
+                starredCount={algorithmStarredCount}
+                onStarredOnlyChange={handleAlgorithmStarredFilterChange}
+                onSelect={setAlgorithmLearningId}
+                title="Algorithm"
               />
             </div>
           ) : activeSection === 'coding' ? (

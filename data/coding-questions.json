@@ -638,7 +638,7 @@
         "functions",
         "optimization"
       ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "source": "https://www.greatfrontend.com/questions/javascript/memoize",
       "runner": "expression",
       "functionName": "memoize",
       "description": "Implement a `memoize(fn)` function that takes a function and returns a **memoized** version.\n\nThe memoized function should:\n- Remember previously computed results for given arguments\n- Return cached results for identical arguments instead of recomputing\n- Work with **any number of arguments**\n\n### Example\n\n```javascript\nconst add = (a, b) => a + b;\nconst memoizedAdd = memoize(add);\n\nconsole.log(memoizedAdd(1, 2)); // 3 (computed)\nconsole.log(memoizedAdd(1, 2)); // 3 (cached)\nconsole.log(memoizedAdd(2, 3)); // 5 (computed)\n```\n\nComplete the implementation in the editor.",
@@ -660,7 +660,7 @@
           "expected": 1
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object** stores results keyed by stringified arguments\n2. On each call, **stringify the arguments** to create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)\n- For single-argument functions, you can use the argument directly as the key instead of JSON.stringify"
+      "explanation": "### Solution (multi-arg)\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### Solution (single-arg with Map)\n\n```javascript\nfunction memoize(func) {\n  const cache = new Map();\n\n  return function (arg) {\n    if (cache.has(arg)) {\n      return cache.get(arg);\n    }\n    const result = func.call(this, arg);\n    cache.set(arg, result);\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object / Map** stores results keyed by stringified arguments (or the argument itself for single-arg)\n2. On each call, create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- For single-argument functions, a `Map` using the argument reference as key avoids serialization overhead\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)"
     },
     {
       "id": 5,

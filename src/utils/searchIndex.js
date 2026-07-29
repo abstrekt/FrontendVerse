@@ -3,6 +3,7 @@ const SECTION_LABELS = {
   learnings: 'Learnings',
   'react-learnings': 'React',
   hld: 'HLD',
+  algorithm: 'Algorithm',
   coding: 'Coding',
   output: 'Output',
 };
@@ -43,6 +44,7 @@ export const SEARCH_SECTIONS = [
   'learnings',
   'react-learnings',
   'hld',
+  'algorithm',
   'coding',
   'output',
 ];
@@ -166,6 +168,7 @@ export function buildSearchIndex({
   learnings = [],
   reactLearnings = [],
   hld = [],
+  algorithm = [],
   coding = [],
   output = [],
 } = {}) {
@@ -174,6 +177,7 @@ export function buildSearchIndex({
     ...learnings.map((item) => buildLearningDoc(item, 'learnings')),
     ...reactLearnings.map((item) => buildLearningDoc(item, 'react-learnings')),
     ...hld.map((item) => buildLearningDoc(item, 'hld')),
+    ...algorithm.map((item) => buildLearningDoc(item, 'algorithm')),
     ...coding.map(buildCodingDoc),
     ...output.map(buildOutputDoc),
   ];

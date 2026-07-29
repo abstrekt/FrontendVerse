@@ -5,6 +5,7 @@ export const EMPTY_COMPLETED = {
   learnings: [],
   'react-learnings': [],
   hld: [],
+  algorithm: [],
   coding: [],
   output: [],
 };

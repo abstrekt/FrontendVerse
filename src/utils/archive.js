@@ -3,17 +3,19 @@ export const EMPTY_ARCHIVED = {
   learnings: [],
   'react-learnings': [],
   hld: [],
+  algorithm: [],
   coding: [],
   output: [],
 };
 
-export const SECTIONS = ['mcq', 'learnings', 'react-learnings', 'hld', 'coding', 'output'];
+export const SECTIONS = ['mcq', 'learnings', 'react-learnings', 'hld', 'algorithm', 'coding', 'output'];
 
 export const SECTION_LABELS = {
   mcq: 'MCQ',
   learnings: 'Learnings',
   'react-learnings': 'React Learnings',
   hld: 'HLD',
+  algorithm: 'Algorithm',
   coding: 'Coding',
   output: 'Output',
 };
