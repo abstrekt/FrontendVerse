@@ -745,6 +745,40 @@
         }
       ],
       "explanation": "### Approach: Queue with Active Counter\n\nMaintain a **task queue** and a **pending count**. When `queue()` is called, push the task, then `flush()` starts work if capacity allows. Each task runs; when it settles (success or failure), decrement pending and call `flush()` again to drain the queue.\n\n### Solution\n\n```javascript\nclass AsyncTaskQueue {\n  constructor(concurrency) {\n    this.limit = concurrency;\n    this.pending = 0;\n    this.taskQueue = [];\n  }\n\n  queue(task) {\n    return new Promise((resolve) => {\n      this.taskQueue.push(() => {\n        this.pending++;\n        task()\n          .then(resolve)\n          .catch(() => resolve())\n          .finally(() => {\n            this.pending--;\n            this.flush();\n          });\n      });\n      this.flush();\n    });\n  }\n\n  flush() {\n    while (this.pending < this.limit && this.taskQueue.length) {\n      const cb = this.taskQueue.shift();\n      cb();\n    }\n  }\n}\n```\n\n### Key Points\n- `queue()` returns a Promise that resolves when the task completes — **always resolves**, even if the task rejects (rejections are caught and swallowed via `.catch(() => resolve())`)\n- `flush()` is the gatekeeper — it starts new tasks as long as `pending < limit` and the queue has work\n- The `.finally()` block ensures `pending` decrements and `flush()` is called regardless of success/failure\n- Tasks run FIFO: `this.taskQueue.shift()` removes from the front\n- A `while` loop in `flush()` starts as many tasks as capacity allows (useful if multiple tasks complete simultaneously)\n- The `pending` counter tracks in-flight tasks — simple and avoids time-based polling\n- Alternative worker-pool pattern (create K workers that each pull from a shared index) also works well"
+    },
+    {
+      "id": 20,
+      "title": "Top-Down Traversal, Bottom-Up Construction",
+      "difficulty": "medium",
+      "topics": ["recursion", "objects", "Array"],
+      "source": "user paste: Universal Recursive JSON Framework",
+      "runner": "expression",
+      "functionName": "deepMap",
+      "description": "Implement `deepMap(node, fn)` that recursively traverses a nested JSON-like structure (objects and arrays) and applies `fn` to every **leaf value** (primitive: number, string, boolean, null, undefined). The function must return a **new** structure — never mutate the input.\n\n### The Pattern\n\n```\n┌─── Is N Terminal? ───► Transform & Return N (Base Case)\n│\nInput Node (N) ───┤\n│                       ┌── 1. Create empty container matching N\n└─── Is N Non-Terminal? ┤── 2. For each child (c) in N:\n                        │      Attach F(c) to container\n                        └── 3. Return container\n```\n\n### Example\n\n```javascript\nconst obj = { a: 1, b: { c: 2, d: [3, 4] } };\nconst result = deepMap(obj, x => x * 2);\n// { a: 2, b: { c: 4, d: [6, 8] } }\nconsole.log(obj.a); // 1 — original untouched\n```\n\nComplete the implementation in the editor.",
+      "template": "function deepMap(node, fn) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const obj = { a: 1, b: { c: 2, d: [3, 4] } };",
+          "code": "deepMap(obj, x => x * 2)",
+          "expected": { "a": 2, "b": { "c": 4, "d": [6, 8] } }
+        },
+        {
+          "setup": "const arr = [1, { x: 2 }, [3, { y: 4 }]]; const copy = deepMap(arr, x => x + 10); copy[0] = 999;",
+          "code": "arr[0]",
+          "expected": 1
+        },
+        {
+          "setup": "",
+          "code": "deepMap(42, x => x + 1)",
+          "expected": 43
+        },
+        {
+          "setup": "const nested = { a: [1, { b: 'hello' }], c: null };",
+          "code": "JSON.stringify(deepMap(nested, v => typeof v === 'number' ? v + 100 : v))",
+          "expected": "{\"a\":[101,{\"b\":\"hello\"}],\"c\":null}"
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction deepMap(node, fn) {\n  // Base case: terminal (leaf) — not an object (or null)\n  if (node === null || typeof node !== 'object') {\n    return fn(node);\n  }\n\n  // Non-terminal: create fresh container\n  const isArray = Array.isArray(node);\n  const container = isArray ? [] : {};\n\n  // Traverse children, attach bottom-up results\n  for (const key in node) {\n    container[key] = deepMap(node[key], fn);\n  }\n\n  return container;\n}\n```\n\n### Key Points\n- **Top-down pause, bottom-up assembly**: the parent creates an empty container, then pauses while each child recursively resolves. The call stack returns the transformed children, and the parent assembles them into the result.\n- **Immutability**: every level allocates a fresh container — the input is never mutated.\n- **Halting**: `null` and non-object types stop recursion immediately.\n- The `for...in` loop handles both array indices and object keys uniformly.\n- This skeleton unlocks virtually all JSON/object manipulation problems (deep copy, deep merge, flatten, nested transform, inversion, etc.) — only the base-case logic and assembly rule change.\n\n### Variations from the same skeleton\n\n| Problem | Base-case change | Assembly change |\n| --- | --- | --- |\n| **Deep Copy** | Return `node` as-is | No change |\n| **Deep Merge** | Return leaf | Merge objects, concat arrays |\n| **Invert keys/values** | Swap key↔value | Build from leaves |\n| **Flatten to depth** | Stop at `depth === 0` | Spread child arrays |"
     }
   ]
 }
