@@ -223,26 +223,28 @@
     },
     {
       "id": 9,
-      "title": "Deep Copy",
+      "title": "_.cloneDeep()",
       "difficulty": "medium",
       "topics": [
-        "polyfill",
+        "recursion",
         "objects",
-        "recursion"
+        "Array",
+        "WeakMap"
       ],
+      "source": "https://bigfrontend.dev/problem/create-cloneDeep",
       "runner": "expression",
-      "functionName": "deepCopy",
-      "description": "Implement `deepCopy(obj)` that creates an independent clone of objects and arrays.\n\n### Example\n\n```javascript\nconst a = { x: 1, y: { z: 2 } };\nconst b = deepCopy(a);\nb.y.z = 100;\nconsole.log(a.y.z); // 2\n```\n\nMutating the copy must not affect the original. Complete the implementation in the editor.",
-      "template": "function deepCopy(obj) {\n  // Write your code here\n}\n",
+      "functionName": "cloneDeep",
+      "description": "`Object.assign()` performs a shallow copy. For a recursive deep copy, Lodash provides `_.cloneDeep()`.\n\nImplement your own `cloneDeep(value)` that returns a fully independent clone. Mutating the copy must not affect the original at any nesting level.\n\n### Scope (BFE #63 + circular refs)\n\nFor this exercise, support:\n\n1. **Primitive types** (and their wrapper objects, e.g. `Object(1)`)\n2. **Plain objects** (object literals) with all enumerable own properties\n3. **Arrays**\n4. **Circular references** — `obj.self = obj` must clone without stack overflow; the copy should preserve the same graph shape (`copy.self === copy`)\n\nDo **not** use the built-in `structuredClone()`.\n\n### Example\n\n```javascript\nconst a = { x: 1, y: { z: 2 } };\nconst b = cloneDeep(a);\nb.y.z = 100;\nconsole.log(a.y.z); // 2\n```\n\n### Circular reference follow-up\n\nSee **Algorithm → cloneDeep — Circular References** for the `WeakMap` walkthrough and the register-before-recurse nuance.\n\nComplete the implementation in the editor.",
+      "template": "function cloneDeep(value) {\n  // Write your code here\n}\n",
       "testCases": [
         {
-          "setup": "const obj = { x: 1, y: { z: 2 } }; const copy = deepCopy(obj); copy.y.z = 100;",
+          "setup": "const obj = { x: 1, y: { z: 2 } }; const copy = cloneDeep(obj); copy.y.z = 100;",
           "code": "obj.y.z",
           "expected": 2
         },
         {
           "setup": "const obj = { a: [1, { b: 2 }] };",
-          "code": "deepCopy(obj)",
+          "code": "cloneDeep(obj)",
           "expected": {
             "a": [
               1,
@@ -251,9 +253,58 @@
               }
             ]
           }
+        },
+        {
+          "setup": "const arr = [{ x: 1 }, [2, 3]]; const copy = cloneDeep(arr); copy[0].x = 99; copy[1][0] = 99;",
+          "code": "[arr[0].x, arr[1][0]]",
+          "expected": [
+            1,
+            2
+          ]
+        },
+        {
+          "setup": "",
+          "code": "cloneDeep(null)",
+          "expected": null
+        },
+        {
+          "setup": "const obj = { items: [], meta: { count: 0, label: 'test' } }; const copy = cloneDeep(obj); copy.items.push(1); copy.meta.count = 99;",
+          "code": "[obj.items.length, obj.meta.count]",
+          "expected": [
+            0,
+            0
+          ]
+        },
+        {
+          "setup": "const obj = { x: 1 }; obj.self = obj; const copy = cloneDeep(obj);",
+          "code": "copy.self === copy",
+          "expected": true
+        },
+        {
+          "setup": "const obj = { x: 1 }; obj.self = obj; const copy = cloneDeep(obj); copy.x = 99;",
+          "code": "obj.x",
+          "expected": 1
+        },
+        {
+          "setup": "const obj = { x: 1 }; obj.self = obj; const copy = cloneDeep(obj);",
+          "code": "copy !== obj",
+          "expected": true
+        },
+        {
+          "setup": "const inner = { v: 2 }; const obj = { inner }; inner.parent = obj; const copy = cloneDeep(obj);",
+          "code": "[copy.inner.parent === copy, copy.inner.v]",
+          "expected": [
+            true,
+            2
+          ]
+        },
+        {
+          "setup": "const shared = { id: 1 }; const obj = { a: shared, b: shared }; const copy = cloneDeep(obj);",
+          "code": "copy.a === copy.b",
+          "expected": true
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction deepCopy(obj) {\n  if (obj === null || typeof obj !== \"object\") return obj;\n  const copy = Array.isArray(obj) ? [] : {};\n  for (const key in obj) {\n    if (Object.hasOwn(obj, key)) copy[key] = deepCopy(obj[key]);\n  }\n  return copy;\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction cloneDeep(data, seen = new WeakMap()) {\n  if (typeof data !== 'object' || data === null) {\n    return data;\n  }\n\n  if (seen.has(data)) {\n    return seen.get(data);\n  }\n\n  const clonedData = Array.isArray(data) ? [] : {};\n  seen.set(data, clonedData);\n\n  if (Array.isArray(data)) {\n    for (let i = 0; i < data.length; i++) {\n      clonedData[i] = cloneDeep(data[i], seen);\n    }\n  } else {\n    for (const key in data) {\n      if (Object.hasOwn(data, key)) {\n        clonedData[key] = cloneDeep(data[key], seen);\n      }\n    }\n  }\n\n  return clonedData;\n}\n```\n\n### How It Works\n\n1. **Base case** — primitives (`null`, `number`, `string`, `boolean`, `undefined`, `symbol`, `bigint`) are returned as-is.\n2. **Cycle guard** — if `seen` already maps this object to a clone, return that clone (prevents infinite recursion).\n3. **Container** — allocate a fresh `[]` or `{}` matching the input type.\n4. **Register early** — `seen.set(data, clonedData)` **before** recursing so back-edges like `obj.self = obj` resolve to the in-progress clone.\n5. **Recurse** — copy each enumerable own property, passing the same `seen` map through.\n\n### Key Points\n\n- Wrapper objects like `Object(1)` are plain objects at runtime (`typeof` is `'object'`), so the same loop handles them.\n- Use `Object.hasOwn` to avoid copying inherited properties.\n- A `WeakMap` memo also deduplicates **shared subtrees** (`obj.a` and `obj.b` both point to the same nested object → `copy.a === copy.b`).\n- Production `_.cloneDeep` also handles `Date`, `Map`, `Set`, `RegExp`, and typed arrays.\n\n### Further reading\n\n**Algorithm → cloneDeep — Circular References** — full trace of the register-before-recurse nuance, why `WeakMap` beats `Map`, and verification examples."
     },
     {
       "id": 10,
@@ -312,21 +363,94 @@
     },
     {
       "id": 12,
-      "title": "Flatten with Level",
+      "title": "Flatten Deeply Nested Array",
       "difficulty": "medium",
       "topics": [
-        "polyfill",
-        "Array",
-        "recursion"
+        "recursion",
+        "Array"
       ],
+      "source": "https://leetcode.com/problems/flatten-deeply-nested-array/",
       "runner": "expression",
-      "functionName": "flattenDepth",
-      "description": "Implement `flatten(arr, depth = 1)` that flattens only up to the given depth.\n\n### Example\n\n```javascript\nflatten([1, [2, [3, [4]]]], 2);\n// [1, 2, 3, [4]]\n```\n\nComplete the implementation in the editor.",
-      "template": "function flatten(arr, depth = 1) {\n  // Write your code here\n}\n",
+      "functionName": "flat",
+      "description": "Given a multi-dimensional array `arr` and a depth `n`, return a flattened version of that array.\n\nA multi-dimensional array contains integers or other multi-dimensional arrays. Flatten only when the **current nesting depth is less than `n`**. The depth of top-level elements is **0**.\n\nPlease solve it **without** the built-in `Array.flat` method.\n\nAlso see [BFE #3 — Implement Array.prototype.flat()](https://bigfrontend.dev/problem/implement-Array-prototype-flat).\n\n### Example 1\n\n```javascript\nflat([1, 2, 3, [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]], 0);\n// [1, 2, 3, [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]]\n```\n\n`n = 0` — no sub-array is flattened because depth 0 is not less than 0.\n\n### Example 2\n\n```javascript\nflat([1, 2, 3, [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]], 1);\n// [1, 2, 3, 4, 5, 6, 7, 8, [9, 10, 11], 12, 13, 14, 15]\n```\n\n### Example 3 (BFE)\n\n```javascript\nflat([1, [2], [3, [4]]], 2);\n// [1, 2, 3, 4]\n```\n\nComplete the implementation in the editor.",
+      "template": "function flat(arr, n) {\n  // Write your code here\n}\n",
       "testCases": [
         {
+          "setup": "const arr = [1, 2, 3, [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]];",
+          "code": "flat(arr, 0)",
+          "expected": [
+            1,
+            2,
+            3,
+            [
+              4,
+              5,
+              6
+            ],
+            [
+              7,
+              8,
+              [
+                9,
+                10,
+                11
+              ],
+              12
+            ],
+            [
+              13,
+              14,
+              15
+            ]
+          ]
+        },
+        {
+          "setup": "const arr = [1, 2, 3, [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]];",
+          "code": "flat(arr, 1)",
+          "expected": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            [
+              9,
+              10,
+              11
+            ],
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        {
           "setup": "",
-          "code": "flatten([1, [2, [3, [4]]]], 2)",
+          "code": "flat([[1, 2, 3], [4, 5, 6], [7, 8, [9, 10, 11], 12], [13, 14, 15]], 2)",
+          "expected": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        {
+          "setup": "",
+          "code": "flat([1, [2], [3, [4]]], 1)",
           "expected": [
             1,
             2,
@@ -338,15 +462,16 @@
         },
         {
           "setup": "",
-          "code": "flatten([1, [2, 3]], 1)",
+          "code": "flat([1, [2], [3, [4]]], 2)",
           "expected": [
             1,
             2,
-            3
+            3,
+            4
           ]
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction flatten(arr, depth = 1) {\n  if (depth === 0) return arr.slice();\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item)) result.push(...flatten(item, depth - 1));\n    else result.push(item);\n  }\n  return result;\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction flat(arr, n) {\n  if (!n) return arr;\n  const result = [];\n  for (const item of arr) {\n    if (Array.isArray(item) && n > 0) {\n      result.push(...flat(item, n - 1));\n    } else {\n      result.push(item);\n    }\n  }\n  return result;\n}\n```\n\n### How It Works\n\n1. **`n === 0`** — return the original array unchanged (LeetCode 2625 semantics).\n2. **Leaf element** — push non-arrays directly.\n3. **Nested array** — recurse with `n - 1` and spread the flattened children into the result.\n\n### Key Points\n\n- Depth counts **levels of nesting**, not element count. Top-level sub-arrays are at depth 0.\n- `result.push(...flat(item, n - 1))` avoids O(n²) `concat` in a loop.\n- Contrast with **Flatten Array (infinite)** (id 11) which flattens to arbitrary depth.\n- Follow-up: implement iteratively with a stack to avoid call-stack limits on very deep input."
     },
     {
       "id": 13,
@@ -559,7 +684,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise(resolve => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = {\n            status: \"fulfilled\",\n            value\n          };\n        })\n        .catch(reason => {\n          result[index] = {\n            status: \"rejected\",\n            reason\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```"
     },
     {
-      "id": 19,
+      "id": 25,
       "title": "fetchWithAutoRetry — Auto-retry Promise on rejection",
       "difficulty": "medium",
       "topics": [
@@ -592,7 +717,7 @@
       "explanation": "### Solution\n\n```javascript\nfunction fetchWithAutoRetry(fetcher, count) {\n  return new Promise((resolve, reject) => {\n    function attempt(remaining) {\n      fetcher()\n        .then(resolve)\n        .catch((err) => {\n          if (remaining === 0) {\n            reject(err);\n          } else {\n            attempt(remaining - 1);\n          }\n        });\n    }\n    attempt(count);\n  });\n}\n```\n\n**Alternative: async/await with loop**\n\n```javascript\nasync function fetchWithAutoRetry(fetcher, count) {\n  let lastError;\n  for (let i = 0; i <= count; i++) {\n    try {\n      return await fetcher();\n    } catch (err) {\n      lastError = err;\n    }\n  }\n  throw lastError;\n}\n```\n\n**Key Points**\n- `count` is the number of **retries**, so total attempts = `count + 1` (initial call + retries)\n- On success, resolve immediately — don't keep retrying\n- Recursive `.catch()` chaining or a `for` loop both work; the recursive approach avoids `async/await` if needed\n- Synchronous throws from `fetcher()` are caught by `.catch()` / `try-catch`, treated as rejection"
     },
     {
-      "id": 3,
+      "id": 26,
       "title": "Promise Time Limit",
       "difficulty": "easy",
       "topics": [
@@ -629,7 +754,7 @@
       "explanation": "### Solution\n\n```javascript\nvar timeLimit = function(fn, t) {\n  return async function(...args) {\n    const p1 = fn.apply(this, args);\n    const p2 = new Promise((_, reject) => {\n      setTimeout(() => reject('Time Limit Exceeded'), t);\n    });\n    return Promise.race([p1, p2]);\n  };\n};\n```\n\n### How It Works\n\n1. **`fn.apply(this, args)`** calls the original function with the correct `this` context and spread arguments.\n2. **Timeout promise (`p2`)** is a promise that rejects with `\"Time Limit Exceeded\"` after `t` milliseconds.\n3. **`Promise.race([p1, p2])`** settles with whichever promise settles first:\n   - If `fn` completes within `t` ms → returns its result (or throws its error)\n   - If `t` ms pass first → rejects with `\"Time Limit Exceeded\"`\n\n### Key Points\n- `Promise.race` is perfect here — it resolves or rejects with whichever settles first, exactly the behavior we need\n- The timeout promise uses `reject`, not `resolve` — the only failure case is the timeout firing\n- `fn.apply(this, args)` preserves both `this` context and handles variadic arguments\n- Once a promise in `Promise.race` settles, the other one is silently ignored (though its `setTimeout` still ticks — no cleanup needed for this problem)"
     },
     {
-      "id": 4,
+      "id": 27,
       "title": "Memoization Helper",
       "difficulty": "medium",
       "topics": [
@@ -663,7 +788,7 @@
       "explanation": "### Solution (multi-arg)\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### Solution (single-arg with Map)\n\n```javascript\nfunction memoize(func) {\n  const cache = new Map();\n\n  return function (arg) {\n    if (cache.has(arg)) {\n      return cache.get(arg);\n    }\n    const result = func.call(this, arg);\n    cache.set(arg, result);\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object / Map** stores results keyed by stringified arguments (or the argument itself for single-arg)\n2. On each call, create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- For single-argument functions, a `Map` using the argument reference as key avoids serialization overhead\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)"
     },
     {
-      "id": 5,
+      "id": 28,
       "title": "LRU Cache",
       "difficulty": "medium",
       "topics": [
@@ -707,7 +832,7 @@
       "explanation": "### Approach: Doubly Linked List + Hash Map\n\nWe need O(1) `get` and `set`. A hash map gives O(1) lookups, but we also need to track usage order. A **doubly linked list** lets us move nodes to the front (mark as recently used) and remove from the tail (evict LRU) in O(1).\n\n### Solution\n\n```javascript\nclass LinkedListNode {\n  constructor(key, val, prev = null, next = null) {\n    this.key = key;\n    this.val = val;\n    this.prev = prev;\n    this.next = next;\n  }\n}\n\nclass LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.nodesMap = {};\n    this.size = 0;\n    this.head = new LinkedListNode();\n    this.tail = new LinkedListNode();\n  }\n\n  get(key) {\n    if (!(key in this.nodesMap)) return undefined;\n    const node = this.nodesMap[key];\n    this._promote(node);\n    return node.val;\n  }\n\n  set(key, val) {\n    if (key in this.nodesMap) {\n      const node = this.nodesMap[key];\n      node.val = val;\n      this._promote(node);\n    } else {\n      const node = new LinkedListNode(key, val);\n      this._append(node);\n    }\n  }\n\n  _promote(node) {\n    this._evict(node);\n    this._append(node);\n  }\n\n  _append(node) {\n    this.nodesMap[node.key] = node;\n\n    if (!this.head.next) {\n      this.head.next = node;\n      this.tail.prev = node;\n      node.prev = this.head;\n      node.next = this.tail;\n    } else {\n      const oldTail = this.tail.prev;\n      oldTail.next = node;\n      node.prev = oldTail;\n      node.next = this.tail;\n      this.tail.prev = node;\n    }\n\n    this.size += 1;\n\n    if (this.size > this.capacity) {\n      this._evict(this.head.next);\n    }\n  }\n\n  _evict(node) {\n    delete this.nodesMap[node.key];\n    this.size -= 1;\n\n    const prevNode = node.prev;\n    const nextNode = node.next;\n\n    if (prevNode === this.head && nextNode === this.tail) {\n      this.head.next = null;\n      this.tail.prev = null;\n      this.size = 0;\n      return;\n    }\n\n    if (prevNode === this.head) {\n      nextNode.prev = this.head;\n      this.head.next = nextNode;\n      return;\n    }\n\n    if (nextNode === this.tail) {\n      prevNode.next = this.tail;\n      this.tail.prev = prevNode;\n      return;\n    }\n\n    prevNode.next = nextNode;\n    nextNode.prev = prevNode;\n  }\n}\n```\n\n### Alternative: JavaScript Map (Simpler)\n\nSince `Map` preserves insertion order, we can use it directly:\n\n```javascript\nclass LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.items = new Map();\n  }\n\n  get(key) {\n    if (!this.items.has(key)) return undefined;\n    const val = this.items.get(key);\n    this.items.delete(key);\n    this.items.set(key, val);\n    return val;\n  }\n\n  set(key, val) {\n    this.items.delete(key);\n    this.items.set(key, val);\n    if (this.items.size > this.capacity) {\n      const lruKey = this.items.keys().next().value;\n      this.items.delete(lruKey);\n    }\n  }\n}\n```\n\n### Key Points\n\n- The doubly-linked-list approach combines a **hash map** for O(1) lookup with a **linked list** for O(1) reordering/eviction\n- Use **dummy head and tail nodes** to simplify edge cases (first/last node operations)\n- On `get`: promote the node to the tail (most recently used)\n- On `set` for existing key: update value + promote\n- On `set` for new key: append to tail, then evict head.next if over capacity\n- The Map-based solution is simpler but both are valid; interviewers often expect the linked-list implementation"
     },
     {
-      "id": 6,
+      "id": 29,
       "title": "AsyncTaskQueue",
       "difficulty": "easy",
       "topics": [
@@ -779,6 +904,235 @@
         }
       ],
       "explanation": "### Solution\n\n```javascript\nfunction deepMap(node, fn) {\n  // Base case: terminal (leaf) — not an object (or null)\n  if (node === null || typeof node !== 'object') {\n    return fn(node);\n  }\n\n  // Non-terminal: create fresh container\n  const isArray = Array.isArray(node);\n  const container = isArray ? [] : {};\n\n  // Traverse children, attach bottom-up results\n  for (const key in node) {\n    container[key] = deepMap(node[key], fn);\n  }\n\n  return container;\n}\n```\n\n### Key Points\n- **Top-down pause, bottom-up assembly**: the parent creates an empty container, then pauses while each child recursively resolves. The call stack returns the transformed children, and the parent assembles them into the result.\n- **Immutability**: every level allocates a fresh container — the input is never mutated.\n- **Halting**: `null` and non-object types stop recursion immediately.\n- The `for...in` loop handles both array indices and object keys uniformly.\n- This skeleton unlocks virtually all JSON/object manipulation problems (deep copy, deep merge, flatten, nested transform, inversion, etc.) — only the base-case logic and assembly rule change.\n\n### Variations from the same skeleton\n\n| Problem | Base-case change | Assembly change |\n| --- | --- | --- |\n| **Deep Copy** | Return `node` as-is | No change |\n| **Deep Merge** | Return leaf | Merge objects, concat arrays |\n| **Invert keys/values** | Swap key↔value | Build from leaves |\n| **Flatten to depth** | Stop at `depth === 0` | Spread child arrays |"
+    },
+    {
+      "id": 21,
+      "title": "Compact Object",
+      "difficulty": "medium",
+      "topics": [
+        "recursion",
+        "objects",
+        "Array"
+      ],
+      "source": "https://leetcode.com/problems/compact-object/",
+      "runner": "expression",
+      "functionName": "compactObject",
+      "description": "Given an object or array `obj`, return a **compact object**.\n\nA compact object is the same as the original, except keys (or array indices) with **falsy values are removed**. This applies recursively to nested objects and arrays. Arrays are objects where indices are keys.\n\nA value is falsy when `Boolean(value)` returns `false` (e.g. `null`, `0`, `false`, `\"\"`, `undefined`, `NaN`).\n\nYou may assume `obj` is valid JSON (output of `JSON.parse`).\n\n### Example 1\n\n```javascript\ncompactObject([null, 0, false, 1]);\n// [1]\n```\n\n### Example 2\n\n```javascript\ncompactObject({ a: null, b: [false, 1] });\n// { b: [1] }\n```\n\n### Example 3\n\n```javascript\ncompactObject([null, 0, 5, [0], [false, 16]]);\n// [5, [], [16]]\n```\n\nComplete the implementation in the editor.",
+      "template": "function compactObject(obj) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "compactObject([null, 0, false, 1])",
+          "expected": [
+            1
+          ]
+        },
+        {
+          "setup": "",
+          "code": "compactObject({ a: null, b: [false, 1] })",
+          "expected": {
+            "b": [
+              1
+            ]
+          }
+        },
+        {
+          "setup": "",
+          "code": "compactObject([null, 0, 5, [0], [false, 16]])",
+          "expected": [
+            5,
+            [],
+            [
+              16
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "compactObject({ x: 0, y: '', z: { a: false, b: 'ok', c: null } })",
+          "expected": {
+            "z": {
+              "b": "ok"
+            }
+          }
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction compactObject(obj) {\n  if (obj === null || typeof obj !== 'object') return obj;\n\n  if (Array.isArray(obj)) {\n    const result = [];\n    for (const item of obj) {\n      const compacted = compactObject(item);\n      if (Boolean(compacted)) result.push(compacted);\n    }\n    return result;\n  }\n\n  const result = {};\n  for (const key in obj) {\n    const compacted = compactObject(obj[key]);\n    if (Boolean(compacted)) result[key] = compacted;\n  }\n  return result;\n}\n```\n\n### Key Points\n\n- **Test the value, not the key** — property names like `\"0\"` are always truthy strings.\n- **Compact after recursing** — an empty array `[]` is truthy and should be kept when all children were falsy.\n- Use `.push()` for arrays; never `delete arr[i]` (creates sparse holes).\n- Guard `null` before `typeof` checks — `typeof null === 'object'`."
+    },
+    {
+      "id": 22,
+      "title": "JSON Deep Equal",
+      "difficulty": "medium",
+      "topics": [
+        "recursion",
+        "objects",
+        "Array"
+      ],
+      "source": "https://leetcode.com/problems/json-deep-equal/",
+      "runner": "expression",
+      "functionName": "areDeeplyEqual",
+      "description": "Given two values `o1` and `o2`, return whether they are **deeply equal**.\n\nEquality rules:\n\n- **Primitives** — deeply equal if `o1 === o2`.\n- **Arrays** — same length, same elements in order, each element deeply equal.\n- **Objects** — same set of keys (order does not matter), each value deeply equal.\n\nBoth values are valid JSON. Do **not** use Lodash `_.isEqual()`.\n\n### Example 1\n\n```javascript\nareDeeplyEqual({ x: 1, y: 2 }, { x: 1, y: 2 });\n// true\n```\n\n### Example 2\n\n```javascript\nareDeeplyEqual({ y: 2, x: 1 }, { x: 1, y: 2 });\n// true — key order does not matter\n```\n\n### Example 3\n\n```javascript\nareDeeplyEqual({ x: null, L: [1, 2, 3] }, { x: null, L: ['1', '2', '3'] });\n// false — numbers vs strings\n```\n\nComplete the implementation in the editor.",
+      "template": "function areDeeplyEqual(o1, o2) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "areDeeplyEqual({ x: 1, y: 2 }, { x: 1, y: 2 })",
+          "expected": true
+        },
+        {
+          "setup": "",
+          "code": "areDeeplyEqual({ y: 2, x: 1 }, { x: 1, y: 2 })",
+          "expected": true
+        },
+        {
+          "setup": "",
+          "code": "areDeeplyEqual({ x: null, L: [1, 2, 3] }, { x: null, L: ['1', '2', '3'] })",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "areDeeplyEqual(true, false)",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "areDeeplyEqual([1, 2], [1, 2, 3])",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "areDeeplyEqual({ a: 1 }, { a: [1] })",
+          "expected": false
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction areDeeplyEqual(o1, o2) {\n  if (o1 === o2) return true;\n  if (o1 === null || o2 === null || typeof o1 !== 'object' || typeof o2 !== 'object') {\n    return false;\n  }\n  if (Array.isArray(o1) !== Array.isArray(o2)) return false;\n\n  const keys1 = Object.keys(o1);\n  const keys2 = Object.keys(o2);\n  if (keys1.length !== keys2.length) return false;\n\n  for (const key of keys1) {\n    if (!areDeeplyEqual(o1[key], o2[key])) return false;\n  }\n  return true;\n}\n```\n\n### Key Points\n\n- Early `o1 === o2` handles primitives and reference equality (including `null`).\n- `Array.isArray` mismatch means one side is an array and the other is a plain object — not equal.\n- For objects, comparing keys from `o1` only is sufficient when lengths match (no extra keys in `o2`).\n- `undefined` is not valid JSON but guard `typeof` before recursing."
+    },
+    {
+      "id": 23,
+      "title": "Differences Between Two Objects",
+      "difficulty": "hard",
+      "topics": [
+        "recursion",
+        "objects",
+        "Array"
+      ],
+      "source": "https://leetcode.com/problems/differences-between-two-objects/",
+      "runner": "expression",
+      "functionName": "objDiff",
+      "description": "Write a function that accepts two deeply nested objects or arrays `obj1` and `obj2` and returns a new object representing their **differences**.\n\nRules:\n\n- Only include keys that exist in **both** `obj1` and `obj2`. Keys added or removed are ignored.\n- For each changed key, the value is `[obj1Value, obj2Value]`.\n- When values are equal, omit the key entirely.\n- Array indices are treated as keys.\n- If types differ at the same key (e.g. object vs array), place `[obj1Value, obj2Value]` at that key.\n\nBoth inputs are valid JSON.\n\n### Example 1\n\n```javascript\nobjDiff({}, { a: 1, b: 2 });\n// {}\n```\n\n### Example 2\n\n```javascript\nobjDiff(\n  { a: 1, v: 3, x: [], z: { a: null } },\n  { a: 2, v: 4, x: [], z: { a: 2 } }\n);\n// { a: [1, 2], v: [3, 4], z: { a: [null, 2] } }\n```\n\n### Example 3\n\n```javascript\nobjDiff(\n  { a: 5, v: 6, z: [1, 2, 4, [2, 5, 7]] },\n  { a: 5, v: 7, z: [1, 2, 3, [1]] }\n);\n// { v: [6, 7], z: { '2': [4, 3], '3': { '0': [2, 1] } } }\n```\n\nComplete the implementation in the editor.",
+      "template": "function objDiff(obj1, obj2) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "objDiff({}, { a: 1, b: 2 })",
+          "expected": {}
+        },
+        {
+          "setup": "",
+          "code": "objDiff({ a: 1, v: 3, x: [], z: { a: null } }, { a: 2, v: 4, x: [], z: { a: 2 } })",
+          "expected": {
+            "a": [
+              1,
+              2
+            ],
+            "v": [
+              3,
+              4
+            ],
+            "z": {
+              "a": [
+                null,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "setup": "",
+          "code": "objDiff({ a: 5, v: 6, z: [1, 2, 4, [2, 5, 7]] }, { a: 5, v: 7, z: [1, 2, 3, [1]] })",
+          "expected": {
+            "v": [
+              6,
+              7
+            ],
+            "z": {
+              "2": [
+                4,
+                3
+              ],
+              "3": {
+                "0": [
+                  2,
+                  1
+                ]
+              }
+            }
+          }
+        },
+        {
+          "setup": "",
+          "code": "objDiff({ a: { b: 1 } }, { a: [5] })",
+          "expected": {
+            "a": [
+              {
+                "b": 1
+              },
+              [
+                5
+              ]
+            ]
+          }
+        },
+        {
+          "setup": "",
+          "code": "objDiff({ a: [1, 2, {}], b: false }, { b: false, a: [1, 2, {}] })",
+          "expected": {}
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction objDiff(obj1, obj2) {\n  if (getType(obj1) !== getType(obj2)) return [obj1, obj2];\n  if (!isObject(obj1)) return obj1 === obj2 ? {} : [obj1, obj2];\n\n  const diff = {};\n  const sharedKeys = Object.keys(obj1).filter((key) => key in obj2);\n\n  for (const key of sharedKeys) {\n    const subDiff = objDiff(obj1[key], obj2[key]);\n    if (Object.keys(subDiff).length > 0 || Array.isArray(subDiff)) {\n      diff[key] = subDiff;\n    }\n  }\n  return diff;\n}\n\nfunction getType(val) {\n  return Object.prototype.toString.call(val).slice(8, -1);\n}\n\nfunction isObject(val) {\n  return typeof val === 'object' && val !== null;\n}\n```\n\n### Key Points\n\n- **Type guard first** — `Array` vs `Object` vs primitive must match before recursing.\n- Leaf diff is a two-element array `[old, new]`; equal primitives return `{}` (no entry).\n- Only iterate keys present in **both** objects — additions/removals are ignored.\n- For arrays, numeric indices become string keys in the diff object (`\"2\"`, `\"3\"`).\n- An empty diff object `{}` means the structures are deeply equal."
+    },
+    {
+      "id": 24,
+      "title": "Convert Object to JSON String",
+      "difficulty": "medium",
+      "topics": [
+        "recursion",
+        "objects",
+        "Array"
+      ],
+      "source": "https://leetcode.com/problems/convert-object-to-json-string/",
+      "runner": "expression",
+      "functionName": "jsonStringify",
+      "description": "Given a JSON value, return its JSON string representation.\n\nThe value can be a string, number, array, object, boolean, or `null`. The returned string must have **no extra spaces**. Key order must match `Object.keys()` order.\n\nPlease solve it **without** the built-in `JSON.stringify` method.\n\n### Example 1\n\n```javascript\njsonStringify({ y: 1, x: 2 });\n// '{\"y\":1,\"x\":2}'\n```\n\n### Example 2\n\n```javascript\njsonStringify({ a: 'str', b: -12, c: true, d: null });\n// '{\"a\":\"str\",\"b\":-12,\"c\":true,\"d\":null}'\n```\n\n### Example 3\n\n```javascript\njsonStringify({ key: { a: 1, b: [{}, null, 'Hello'] } });\n// '{\"key\":{\"a\":1,\"b\":[{},null,\"Hello\"]}}'\n```\n\n### Example 4\n\n```javascript\njsonStringify(true);\n// 'true'\n```\n\nComplete the implementation in the editor.",
+      "template": "function jsonStringify(object) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "jsonStringify({ y: 1, x: 2 })",
+          "expected": "{\"y\":1,\"x\":2}"
+        },
+        {
+          "setup": "",
+          "code": "jsonStringify({ a: 'str', b: -12, c: true, d: null })",
+          "expected": "{\"a\":\"str\",\"b\":-12,\"c\":true,\"d\":null}"
+        },
+        {
+          "setup": "",
+          "code": "jsonStringify({ key: { a: 1, b: [{}, null, 'Hello'] } })",
+          "expected": "{\"key\":{\"a\":1,\"b\":[{},null,\"Hello\"]}}"
+        },
+        {
+          "setup": "",
+          "code": "jsonStringify(true)",
+          "expected": "true"
+        },
+        {
+          "setup": "",
+          "code": "jsonStringify([1, 'two', false])",
+          "expected": "[1,\"two\",false]"
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction jsonStringify(object) {\n  if (object === null) return 'null';\n  if (typeof object === 'string') return `\"${object}\"`;\n  if (typeof object === 'number' || typeof object === 'boolean') {\n    return String(object);\n  }\n  if (Array.isArray(object)) {\n    return `[${object.map(jsonStringify).join(',')}]`;\n  }\n  const pairs = Object.entries(object).map(\n    ([key, value]) => `${jsonStringify(key)}:${jsonStringify(value)}`\n  );\n  return `{${pairs.join(',')}}`;\n}\n```\n\n### Key Points\n\n- Handle **leaves first**: `null`, strings (wrap in quotes), numbers, booleans.\n- **Arrays** — map each element through `jsonStringify`, join with commas, wrap in `[]`.\n- **Objects** — `Object.entries` preserves `Object.keys()` order; stringify key and value separately.\n- Problem constraints use alphanumeric strings only — no escape sequences needed.\n- Follow-up: handle `undefined`, `Date`, and circular references (not valid JSON)."
     }
   ]
 }
