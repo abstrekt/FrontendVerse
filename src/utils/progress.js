@@ -11,8 +11,6 @@ export const EMPTY_PROGRESS = {
   },
 };
 
-export const EMPTY_SESSION = null;
-
 export const DIFFICULTY_LEVELS = ['easy', 'medium', 'advance'];
 
 export const DIFFICULTY_LABELS = {
@@ -21,30 +19,6 @@ export const DIFFICULTY_LABELS = {
   advance: 'Advanced',
   hard: 'Hard',
 };
-
-export function createSession({
-  queue,
-  mode = 'all',
-  topics = [],
-  difficulties = [],
-  score = 0,
-  answered = 0,
-  answeredIds = [],
-  currentIndex = 0,
-  sessionTotal,
-}) {
-  return {
-    answeredIds,
-    score,
-    answered,
-    currentIndex,
-    queueIds: queue.map((q) => q.id),
-    sessionTotal: sessionTotal ?? queue.length,
-    mode,
-    selectedTopics: topics,
-    selectedDifficulties: difficulties,
-  };
-}
 
 export function filterQuestions(questions, { topics = [], difficulties = [] } = {}) {
   return questions.filter((q) => {
@@ -56,30 +30,6 @@ export function filterQuestions(questions, { topics = [], difficulties = [] } = 
       difficulties.includes(q.difficulty);
     return topicOk && diffOk;
   });
-}
-
-export function restoreQueue(session, questions) {
-  if (!session?.queueIds?.length || !questions.length) return [];
-  const byId = new Map(questions.map((q) => [q.id, q]));
-  return session.queueIds.map((id) => byId.get(id)).filter(Boolean);
-}
-
-export function isRestorableSession(session, questions) {
-  if (!session?.queueIds?.length) return false;
-  return restoreQueue(session, questions).length > 0;
-}
-
-export function filterExcludedQuestions(pool, excludedIds) {
-  const excluded = excludedIds instanceof Set ? excludedIds : new Set(excludedIds);
-  return pool.filter((q) => !excluded.has(q.id));
-}
-
-export function sanitizeSessionQueue(session, skippedIds) {
-  if (!session) return session;
-  const skipped = skippedIds instanceof Set ? skippedIds : new Set(skippedIds);
-  const queueIds = session.queueIds.filter((id) => !skipped.has(id));
-  const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
-  return { ...session, queueIds, currentIndex };
 }
 
 const MAX_SESSIONS = 30;
@@ -160,19 +110,19 @@ export function getTopicCompletion(progress, questions, completedIds = null) {
     const answered = Boolean(progress?.answers?.[String(q.id)]) || completedSet.has(q.id);
 
     for (const topic of topics) {
-      const prev = topicMap.get(topic) || { solved: 0, total: 0 };
+      const prev = topicMap.get(topic) || { attempted: 0, total: 0 };
       topicMap.set(topic, {
-        solved: prev.solved + (answered ? 1 : 0),
+        attempted: prev.attempted + (answered ? 1 : 0),
         total: prev.total + 1,
       });
     }
   }
 
-  for (const [topic, { solved, total }] of topicMap) {
+  for (const [topic, { attempted, total }] of topicMap) {
     topicMap.set(topic, {
-      solved,
+      attempted,
       total,
-      pct: total > 0 ? Math.round((solved / total) * 100) : 0,
+      pct: total > 0 ? Math.round((attempted / total) * 100) : 0,
     });
   }
 
@@ -181,7 +131,7 @@ export function getTopicCompletion(progress, questions, completedIds = null) {
 
 export function getDifficultyCompletion(progress, questions, completedIds = null) {
   const diffMap = new Map(
-    DIFFICULTY_LEVELS.map((difficulty) => [difficulty, { solved: 0, total: 0, pct: 0 }])
+    DIFFICULTY_LEVELS.map((difficulty) => [difficulty, { attempted: 0, total: 0, pct: 0 }])
   );
   const completedSet = completedIds instanceof Set ? completedIds : new Set(completedIds ?? []);
 
@@ -192,16 +142,16 @@ export function getDifficultyCompletion(progress, questions, completedIds = null
     const answered = Boolean(progress?.answers?.[String(q.id)]) || completedSet.has(q.id);
     const prev = diffMap.get(difficulty);
     diffMap.set(difficulty, {
-      solved: prev.solved + (answered ? 1 : 0),
+      attempted: prev.attempted + (answered ? 1 : 0),
       total: prev.total + 1,
     });
   }
 
-  for (const [difficulty, { solved, total }] of diffMap) {
+  for (const [difficulty, { attempted, total }] of diffMap) {
     diffMap.set(difficulty, {
-      solved,
+      attempted,
       total,
-      pct: total > 0 ? Math.round((solved / total) * 100) : 0,
+      pct: total > 0 ? Math.round((attempted / total) * 100) : 0,
     });
   }
 

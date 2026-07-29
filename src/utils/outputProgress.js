@@ -12,37 +12,6 @@ export const EMPTY_OUTPUT_PROGRESS = {
   },
 };
 
-export const EMPTY_OUTPUT_SESSION = null;
-
-export function createOutputSession({
-  queue,
-  score = 0,
-  answered = 0,
-  answeredIds = [],
-  currentIndex = 0,
-  sessionTotal,
-}) {
-  return {
-    answeredIds,
-    score,
-    answered,
-    currentIndex,
-    queueIds: queue.map((q) => q.id),
-    sessionTotal: sessionTotal ?? queue.length,
-  };
-}
-
-export function restoreOutputQueue(session, questions) {
-  if (!session?.queueIds?.length || !questions.length) return [];
-  const byId = new Map(questions.map((q) => [q.id, q]));
-  return session.queueIds.map((id) => byId.get(id)).filter(Boolean);
-}
-
-export function isRestorableOutputSession(session, questions) {
-  if (!session?.queueIds?.length) return false;
-  return restoreOutputQueue(session, questions).length > 0;
-}
-
 export function filterExcludedOutputQuestions(pool, excludedIds) {
   const excluded = excludedIds instanceof Set ? excludedIds : new Set(excludedIds);
   return pool.filter((q) => !excluded.has(q.id));

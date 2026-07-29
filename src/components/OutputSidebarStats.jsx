@@ -43,7 +43,7 @@ export default function OutputSidebarStats({
           )}
           <div className="progress-stat">
             <span className="progress-stat-value">{completedCount}</span>
-            <span className="progress-stat-label">completed</span>
+            <span className="progress-stat-label">mastered</span>
           </div>
           <div className="progress-stat">
             <span className="progress-stat-value">{missedCount}</span>
@@ -60,7 +60,7 @@ export default function OutputSidebarStats({
         </button>
         {hasData && (
           <button type="button" className="progress-clear" onClick={onClearProgress}>
-            Clear output progress
+            Clear output history
           </button>
         )}
       </div>

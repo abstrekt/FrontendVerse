@@ -61,7 +61,7 @@
           }
         }
       ],
-      "explanation": "### Approach\n\nIterate through the `order` array and resolve each promise at the specified index (1-based, so subtract 1). For each resolved promise, push its value to `resolvedPromises`. If a promise rejects, catch the error and throw a new error with the message **\"Error Thrown\"**.\n\n### Solution\n\n```javascript\nasync function sequentialResolution(promises, order) {\n  for (const idx of order) {\n    try {\n      const value = await promises[idx - 1];\n      resolvedPromises.push(value);\n    } catch (err) {\n      throw new Error('Error Thrown');\n    }\n  }\n}\n```\n\n### Key Points\n- The `order` array uses **1-based indexing** — use `promises[idx - 1]` to access the correct promise.\n- On rejection, throw `new Error('Error Thrown')` — not the original error.\n- Use `await` inside a `try/catch` to handle each promise individually.\n- After a rejection, no further promises in the order should be processed.",
+      "explanation": "### Approach\n\nIterate through the `order` array and resolve each promise at the specified index (1-based, so subtract 1). For each resolved promise, push its value to `resolvedPromises`. If a promise rejects, catch the error and throw a new error with the message **\"Error Thrown\"**.\n\n### Solution\n\n```javascript\nasync function sequentialResolution(promises, order) {\n  for (const idx of order) {\n    try {\n      const value = await promises[idx - 1];\n      resolvedPromises.push(value);\n    } catch (err) {\n      throw new Error(\"Error Thrown\");\n    }\n  }\n}\n```\n\n### Key Points\n- The `order` array uses **1-based indexing** — use `promises[idx - 1]` to access the correct promise.\n- On rejection, throw `new Error('Error Thrown')` — not the original error.\n- Use `await` inside a `try/catch` to handle each promise individually.\n- After a rejection, no further promises in the order should be processed.",
       "runner": "sequentialResolution"
     },
     {
@@ -75,7 +75,7 @@
       ],
       "runner": "expression",
       "functionName": "myMap",
-      "description": "Implement `Array.prototype.myMap` that mirrors native `Array.map()`.\n\nHere **this** points to the array itself — the object before the dot.\n\n### Example\n\n```javascript\nconsole.log([1, 2, 3].myMap(x => x * 2));\n// [2, 4, 6]\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `Array.prototype.myMap` that mirrors native `Array.map()`.\n\nHere **this** points to the array itself — the object before the dot.\n\n### Example\n\n```javascript\nconsole.log([1, 2, 3].myMap((x) => x * 2));\n// [2, 4, 6]\n```\n\nComplete the implementation in the editor.",
       "template": "Array.prototype.myMap = function (callback, thisArg) {\n  // Write your code here\n};\n",
       "testCases": [
         {
@@ -106,7 +106,7 @@
       ],
       "runner": "expression",
       "functionName": "myFilter",
-      "description": "Implement `Array.prototype.myFilter` that mirrors native `Array.filter()`.\n\nReturn a new array with elements where the callback returns a truthy value. Skip sparse holes using `i in this`.\n\n### Signature\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) { }\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `Array.prototype.myFilter` that mirrors native `Array.filter()`.\n\nReturn a new array with elements where the callback returns a truthy value. Skip sparse holes using `i in this`.\n\n### Signature\n\n```javascript\nArray.prototype.myFilter = function (callback, thisArg) {};\n```\n\nComplete the implementation in the editor.",
       "template": "Array.prototype.myFilter = function (callback, thisArg) {\n  // Write your code here\n};\n",
       "testCases": [
         {
@@ -153,7 +153,7 @@
           "expected": 6
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nArray.prototype.myReduce = function (callback, initialValue) {\n  let accumulator = initialValue;\n  let start = 0;\n  if (accumulator === undefined) { accumulator = this[0]; start = 1; }\n  for (let i = start; i < this.length; i++) {\n    if (i in this) accumulator = callback(accumulator, this[i], i, this);\n  }\n  return accumulator;\n};\n```"
+      "explanation": "### Solution\n\n```javascript\nArray.prototype.myReduce = function (callback, initialValue) {\n  let accumulator = initialValue;\n  let start = 0;\n  if (accumulator === undefined) {\n    accumulator = this[0];\n    start = 1;\n  }\n  for (let i = start; i < this.length; i++) {\n    if (i in this) accumulator = callback(accumulator, this[i], i, this);\n  }\n  return accumulator;\n};\n```"
     },
     {
       "id": 6,
@@ -166,7 +166,7 @@
       ],
       "runner": "expression",
       "functionName": "myCall",
-      "description": "Implement `Function.prototype.myCall` that invokes a function with a given `this` value and arguments.\n\n### Signature\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) { }\n```\n\nPreserve `this` context. Default `context` to `globalThis` when nullish. Complete the implementation in the editor.",
+      "description": "Implement `Function.prototype.myCall` that invokes a function with a given `this` value and arguments.\n\n### Signature\n\n```javascript\nFunction.prototype.myCall = function (context, ...args) {};\n```\n\nPreserve `this` context. Default `context` to `globalThis` when nullish. Complete the implementation in the editor.",
       "template": "Function.prototype.myCall = function (context, ...args) {\n  // Write your code here\n};\n",
       "testCases": [
         {
@@ -188,7 +188,7 @@
       ],
       "runner": "expression",
       "functionName": "myApply",
-      "description": "Implement `Function.prototype.myApply` — like `myCall`, but arguments are passed as an array.\n\n### Signature\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) { }\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `Function.prototype.myApply` — like `myCall`, but arguments are passed as an array.\n\n### Signature\n\n```javascript\nFunction.prototype.myApply = function (context, args = []) {};\n```\n\nComplete the implementation in the editor.",
       "template": "Function.prototype.myApply = function (context, args = []) {\n  // Write your code here\n};\n",
       "testCases": [
         {
@@ -304,7 +304,7 @@
           "expected": true
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction cloneDeep(data, seen = new WeakMap()) {\n  if (typeof data !== 'object' || data === null) {\n    return data;\n  }\n\n  if (seen.has(data)) {\n    return seen.get(data);\n  }\n\n  const clonedData = Array.isArray(data) ? [] : {};\n  seen.set(data, clonedData);\n\n  if (Array.isArray(data)) {\n    for (let i = 0; i < data.length; i++) {\n      clonedData[i] = cloneDeep(data[i], seen);\n    }\n  } else {\n    for (const key in data) {\n      if (Object.hasOwn(data, key)) {\n        clonedData[key] = cloneDeep(data[key], seen);\n      }\n    }\n  }\n\n  return clonedData;\n}\n```\n\n### How It Works\n\n1. **Base case** — primitives (`null`, `number`, `string`, `boolean`, `undefined`, `symbol`, `bigint`) are returned as-is.\n2. **Cycle guard** — if `seen` already maps this object to a clone, return that clone (prevents infinite recursion).\n3. **Container** — allocate a fresh `[]` or `{}` matching the input type.\n4. **Register early** — `seen.set(data, clonedData)` **before** recursing so back-edges like `obj.self = obj` resolve to the in-progress clone.\n5. **Recurse** — copy each enumerable own property, passing the same `seen` map through.\n\n### Key Points\n\n- Wrapper objects like `Object(1)` are plain objects at runtime (`typeof` is `'object'`), so the same loop handles them.\n- Use `Object.hasOwn` to avoid copying inherited properties.\n- A `WeakMap` memo also deduplicates **shared subtrees** (`obj.a` and `obj.b` both point to the same nested object → `copy.a === copy.b`).\n- Production `_.cloneDeep` also handles `Date`, `Map`, `Set`, `RegExp`, and typed arrays.\n\n### Further reading\n\n**Algorithm → cloneDeep — Circular References** — full trace of the register-before-recurse nuance, why `WeakMap` beats `Map`, and verification examples."
+      "explanation": "### Solution\n\n```javascript\nfunction cloneDeep(data, seen = new WeakMap()) {\n  if (typeof data !== \"object\" || data === null) {\n    return data;\n  }\n\n  if (seen.has(data)) {\n    return seen.get(data);\n  }\n\n  const clonedData = Array.isArray(data) ? [] : {};\n  seen.set(data, clonedData);\n\n  if (Array.isArray(data)) {\n    for (let i = 0; i < data.length; i++) {\n      clonedData[i] = cloneDeep(data[i], seen);\n    }\n  } else {\n    for (const key in data) {\n      if (Object.hasOwn(data, key)) {\n        clonedData[key] = cloneDeep(data[key], seen);\n      }\n    }\n  }\n\n  return clonedData;\n}\n```\n\n### How It Works\n\n1. **Base case** — primitives (`null`, `number`, `string`, `boolean`, `undefined`, `symbol`, `bigint`) are returned as-is.\n2. **Cycle guard** — if `seen` already maps this object to a clone, return that clone (prevents infinite recursion).\n3. **Container** — allocate a fresh `[]` or `{}` matching the input type.\n4. **Register early** — `seen.set(data, clonedData)` **before** recursing so back-edges like `obj.self = obj` resolve to the in-progress clone.\n5. **Recurse** — copy each enumerable own property, passing the same `seen` map through.\n\n### Key Points\n\n- Wrapper objects like `Object(1)` are plain objects at runtime (`typeof` is `'object'`), so the same loop handles them.\n- Use `Object.hasOwn` to avoid copying inherited properties.\n- A `WeakMap` memo also deduplicates **shared subtrees** (`obj.a` and `obj.b` both point to the same nested object → `copy.a === copy.b`).\n- Production `_.cloneDeep` also handles `Date`, `Map`, `Set`, `RegExp`, and typed arrays.\n\n### Further reading\n\n**Algorithm → cloneDeep — Circular References** — full trace of the register-before-recurse nuance, why `WeakMap` beats `Map`, and verification examples."
     },
     {
       "id": 10,
@@ -332,7 +332,7 @@
           }
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction deepMerge(target, source) {\n  if (Array.isArray(target) && Array.isArray(source)) return [...target, ...source];\n  const result = { ...target };\n  for (const key in source) {\n    if (typeof source[key] === \"object\" && source[key] !== null && key in target) {\n      result[key] = deepMerge(target[key], source[key]);\n    } else result[key] = source[key];\n  }\n  return result;\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction deepMerge(target, source) {\n  if (Array.isArray(target) && Array.isArray(source))\n    return [...target, ...source];\n  const result = { ...target };\n  for (const key in source) {\n    if (\n      typeof source[key] === \"object\" &&\n      source[key] !== null &&\n      key in target\n    ) {\n      result[key] = deepMerge(target[key], source[key]);\n    } else result[key] = source[key];\n  }\n  return result;\n}\n```"
     },
     {
       "id": 11,
@@ -484,7 +484,7 @@
       ],
       "runner": "timer",
       "functionName": "debounce",
-      "description": "Implement `debounce(fn, delay)` that delays calling `fn` until `delay` ms have passed since the last invocation.\n\n### Example\n\n```javascript\nwindow.addEventListener(\"resize\", debounce(() => {\n  console.log(\"resize\");\n}, 300));\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `debounce(fn, delay)` that delays calling `fn` until `delay` ms have passed since the last invocation.\n\n### Example\n\n```javascript\nwindow.addEventListener(\n  \"resize\",\n  debounce(() => {\n    console.log(\"resize\");\n  }, 300),\n);\n```\n\nComplete the implementation in the editor.",
       "template": "function debounce(fn, delay) {\n  // Write your code here\n}\n",
       "testCases": [
         {
@@ -543,7 +543,7 @@
           "expected": 2
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction throttle(fn, delay) {\n  let waiting = false;\n  return function (...args) {\n    if (waiting) return;\n    waiting = true;\n    fn.apply(this, args);\n    setTimeout(() => { waiting = false; }, delay);\n  };\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction throttle(fn, delay) {\n  let waiting = false;\n  return function (...args) {\n    if (waiting) return;\n    waiting = true;\n    fn.apply(this, args);\n    setTimeout(() => {\n      waiting = false;\n    }, delay);\n  };\n}\n```"
     },
     {
       "id": 15,
@@ -570,7 +570,7 @@
           "expected": "err"
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nclass MyPromise {\n  constructor(executor) {\n    this.state = \"pending\";\n    this.value = undefined;\n    this.handlers = [];\n\n    const resolve = (value) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"fulfilled\";\n      this.value = value;\n      this.handlers.forEach(h => h.onFulfilled(value));\n    };\n\n    const reject = (reason) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"rejected\";\n      this.value = reason;\n      this.handlers.forEach(h => h.onRejected(reason));\n    };\n\n    executor(resolve, reject);\n  }\n\n  then(onFulfilled, onRejected) {\n    return new MyPromise((resolve, reject) => {\n      const fulfilled = value => {\n        try {\n          resolve(onFulfilled ? onFulfilled(value) : value);\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      const rejected = reason => {\n        try {\n          if (onRejected) {\n            resolve(onRejected(reason));\n          } else {\n            reject(reason);\n          }\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      if (this.state === \"fulfilled\") {\n        fulfilled(this.value);\n      } else if (this.state === \"rejected\") {\n        rejected(this.value);\n      } else {\n        this.handlers.push({\n          onFulfilled: fulfilled,\n          onRejected: rejected\n        });\n      }\n    });\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nclass MyPromise {\n  constructor(executor) {\n    this.state = \"pending\";\n    this.value = undefined;\n    this.handlers = [];\n\n    const resolve = (value) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"fulfilled\";\n      this.value = value;\n      this.handlers.forEach((h) => h.onFulfilled(value));\n    };\n\n    const reject = (reason) => {\n      if (this.state !== \"pending\") return;\n      this.state = \"rejected\";\n      this.value = reason;\n      this.handlers.forEach((h) => h.onRejected(reason));\n    };\n\n    executor(resolve, reject);\n  }\n\n  then(onFulfilled, onRejected) {\n    return new MyPromise((resolve, reject) => {\n      const fulfilled = (value) => {\n        try {\n          resolve(onFulfilled ? onFulfilled(value) : value);\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      const rejected = (reason) => {\n        try {\n          if (onRejected) {\n            resolve(onRejected(reason));\n          } else {\n            reject(reason);\n          }\n        } catch (e) {\n          reject(e);\n        }\n      };\n\n      if (this.state === \"fulfilled\") {\n        fulfilled(this.value);\n      } else if (this.state === \"rejected\") {\n        rejected(this.value);\n      } else {\n        this.handlers.push({\n          onFulfilled: fulfilled,\n          onRejected: rejected,\n        });\n      }\n    });\n  }\n\n  catch(onRejected) {\n    return this.then(null, onRejected);\n  }\n}\n```"
     },
     {
       "id": 16,
@@ -601,7 +601,7 @@
           "expected": []
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction promiseAll(promises) {\n  return new Promise((resolve, reject) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = value;\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        })\n        .catch(reject);\n    });\n  });\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAll(promises) {\n  return new Promise((resolve, reject) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then((value) => {\n          result[index] = value;\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        })\n        .catch(reject);\n    });\n  });\n}\n```"
     },
     {
       "id": 17,
@@ -623,7 +623,7 @@
           "expected": "fast"
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction promiseRace(promises) {\n  return new Promise((resolve, reject) => {\n    for (const promise of promises) {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(reject);\n    }\n  });\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction promiseRace(promises) {\n  return new Promise((resolve, reject) => {\n    for (const promise of promises) {\n      Promise.resolve(promise).then(resolve).catch(reject);\n    }\n  });\n}\n```"
     },
     {
       "id": 18,
@@ -650,7 +650,7 @@
           "expected": true
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction promiseAny(promises) {\n  return new Promise((resolve, reject) => {\n    const errors = [];\n    let rejected = 0;\n\n    if (promises.length === 0) {\n      reject(new AggregateError([]));\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch(err => {\n          errors[index] = err;\n          rejected++;\n\n          if (rejected === promises.length) {\n            reject(new AggregateError(errors));\n          }\n        });\n    });\n  });\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAny(promises) {\n  return new Promise((resolve, reject) => {\n    const errors = [];\n    let rejected = 0;\n\n    if (promises.length === 0) {\n      reject(new AggregateError([]));\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(resolve)\n        .catch((err) => {\n          errors[index] = err;\n          rejected++;\n\n          if (rejected === promises.length) {\n            reject(new AggregateError(errors));\n          }\n        });\n    });\n  });\n}\n```"
     },
     {
       "id": 19,
@@ -681,7 +681,7 @@
           ]
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise(resolve => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then(value => {\n          result[index] = {\n            status: \"fulfilled\",\n            value\n          };\n        })\n        .catch(reason => {\n          result[index] = {\n            status: \"rejected\",\n            reason\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```"
+      "explanation": "### Solution\n\n```javascript\nfunction promiseAllSettled(promises) {\n  return new Promise((resolve) => {\n    const result = [];\n    let completed = 0;\n\n    if (promises.length === 0) {\n      resolve([]);\n      return;\n    }\n\n    promises.forEach((promise, index) => {\n      Promise.resolve(promise)\n        .then((value) => {\n          result[index] = {\n            status: \"fulfilled\",\n            value,\n          };\n        })\n        .catch((reason) => {\n          result[index] = {\n            status: \"rejected\",\n            reason,\n          };\n        })\n        .finally(() => {\n          completed++;\n\n          if (completed === promises.length) {\n            resolve(result);\n          }\n        });\n    });\n  });\n}\n```"
     },
     {
       "id": 25,
@@ -695,7 +695,7 @@
       "source": "https://bigfrontend.dev/problem/retry-promise-on-rejection",
       "runner": "asyncExpression",
       "functionName": "fetchWithAutoRetry",
-      "description": "Implement `fetchWithAutoRetry(fetcher, count)` that automatically retries a failing promise-based operation.\n\n- `fetcher` is a **function** that returns a Promise (e.g., an API call)\n- `count` is the **maximum number of retries** (not including the initial attempt)\n\nIf the `fetcher` rejects, retry it up to `count` more times. If all attempts fail, reject with the last error. If any attempt succeeds, resolve with that value immediately.\n\n### Example\n\n```javascript\n// Succeeds on 3rd attempt\nlet attempts = 0;\nconst fetcher = () => new Promise((resolve, reject) => {\n  attempts++;\n  attempts === 3 ? resolve('ok') : reject(new Error('fail'));\n});\n\nconst result = await fetchWithAutoRetry(fetcher, 2);\nconsole.log(result); // 'ok'\nconsole.log(attempts); // 3\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `fetchWithAutoRetry(fetcher, count)` that automatically retries a failing promise-based operation.\n\n- `fetcher` is a **function** that returns a Promise (e.g., an API call)\n- `count` is the **maximum number of retries** (not including the initial attempt)\n\nIf the `fetcher` rejects, retry it up to `count` more times. If all attempts fail, reject with the last error. If any attempt succeeds, resolve with that value immediately.\n\n### Example\n\n```javascript\n// Succeeds on 3rd attempt\nlet attempts = 0;\nconst fetcher = () =>\n  new Promise((resolve, reject) => {\n    attempts++;\n    attempts === 3 ? resolve(\"ok\") : reject(new Error(\"fail\"));\n  });\n\nconst result = await fetchWithAutoRetry(fetcher, 2);\nconsole.log(result); // 'ok'\nconsole.log(attempts); // 3\n```\n\nComplete the implementation in the editor.",
       "template": "function fetchWithAutoRetry(fetcher, count) {\n  // Write your code here\n}\n",
       "testCases": [
         {
@@ -728,7 +728,7 @@
       "source": "https://leetcode.com/problems/promise-time-limit/description/",
       "runner": "asyncExpression",
       "functionName": "timeLimit",
-      "description": "Implement a function `timeLimit(fn, t)` that wraps an async function so it enforces a time limit.\n\n- `fn` is an async function that takes any number of arguments\n- `t` is the time limit in milliseconds\n\nThe returned function should:\n- Call `fn(...args)` and return the result if it completes within `t` milliseconds\n- Reject with the string `\"Time Limit Exceeded\"` if `fn` takes longer than `t` ms\n\n### Example\n\n```javascript\nconst limited = timeLimit(\n  (t) => new Promise(res => setTimeout(res, t)),\n  100\n);\nlimited(150).catch(console.log); // \"Time Limit Exceeded\" at t=100ms\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement a function `timeLimit(fn, t)` that wraps an async function so it enforces a time limit.\n\n- `fn` is an async function that takes any number of arguments\n- `t` is the time limit in milliseconds\n\nThe returned function should:\n- Call `fn(...args)` and return the result if it completes within `t` milliseconds\n- Reject with the string `\"Time Limit Exceeded\"` if `fn` takes longer than `t` ms\n\n### Example\n\n```javascript\nconst limited = timeLimit((t) => new Promise((res) => setTimeout(res, t)), 100);\nlimited(150).catch(console.log); // \"Time Limit Exceeded\" at t=100ms\n```\n\nComplete the implementation in the editor.",
       "template": "var timeLimit = function(fn, t) {\n  // Write your code here\n};\n",
       "testCases": [
         {
@@ -751,7 +751,7 @@
           ]
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nvar timeLimit = function(fn, t) {\n  return async function(...args) {\n    const p1 = fn.apply(this, args);\n    const p2 = new Promise((_, reject) => {\n      setTimeout(() => reject('Time Limit Exceeded'), t);\n    });\n    return Promise.race([p1, p2]);\n  };\n};\n```\n\n### How It Works\n\n1. **`fn.apply(this, args)`** calls the original function with the correct `this` context and spread arguments.\n2. **Timeout promise (`p2`)** is a promise that rejects with `\"Time Limit Exceeded\"` after `t` milliseconds.\n3. **`Promise.race([p1, p2])`** settles with whichever promise settles first:\n   - If `fn` completes within `t` ms → returns its result (or throws its error)\n   - If `t` ms pass first → rejects with `\"Time Limit Exceeded\"`\n\n### Key Points\n- `Promise.race` is perfect here — it resolves or rejects with whichever settles first, exactly the behavior we need\n- The timeout promise uses `reject`, not `resolve` — the only failure case is the timeout firing\n- `fn.apply(this, args)` preserves both `this` context and handles variadic arguments\n- Once a promise in `Promise.race` settles, the other one is silently ignored (though its `setTimeout` still ticks — no cleanup needed for this problem)"
+      "explanation": "### Solution\n\n```javascript\nvar timeLimit = function (fn, t) {\n  return async function (...args) {\n    const p1 = fn.apply(this, args);\n    const p2 = new Promise((_, reject) => {\n      setTimeout(() => reject(\"Time Limit Exceeded\"), t);\n    });\n    return Promise.race([p1, p2]);\n  };\n};\n```\n\n### How It Works\n\n1. **`fn.apply(this, args)`** calls the original function with the correct `this` context and spread arguments.\n2. **Timeout promise (`p2`)** is a promise that rejects with `\"Time Limit Exceeded\"` after `t` milliseconds.\n3. **`Promise.race([p1, p2])`** settles with whichever promise settles first:\n   - If `fn` completes within `t` ms → returns its result (or throws its error)\n   - If `t` ms pass first → rejects with `\"Time Limit Exceeded\"`\n\n### Key Points\n- `Promise.race` is perfect here — it resolves or rejects with whichever settles first, exactly the behavior we need\n- The timeout promise uses `reject`, not `resolve` — the only failure case is the timeout firing\n- `fn.apply(this, args)` preserves both `this` context and handles variadic arguments\n- Once a promise in `Promise.race` settles, the other one is silently ignored (though its `setTimeout` still ticks — no cleanup needed for this problem)"
     },
     {
       "id": 27,
@@ -785,7 +785,7 @@
           "expected": 1
         }
       ],
-      "explanation": "### Solution (multi-arg)\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### Solution (single-arg with Map)\n\n```javascript\nfunction memoize(func) {\n  const cache = new Map();\n\n  return function (arg) {\n    if (cache.has(arg)) {\n      return cache.get(arg);\n    }\n    const result = func.call(this, arg);\n    cache.set(arg, result);\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object / Map** stores results keyed by stringified arguments (or the argument itself for single-arg)\n2. On each call, create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- For single-argument functions, a `Map` using the argument reference as key avoids serialization overhead\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)"
+      "explanation": "### Solution (multi-arg)\n\n```javascript\nfunction memoize(fn) {\n  const cache = {};\n  return function (...args) {\n    const key = JSON.stringify(args);\n    if (key in cache) {\n      return cache[key];\n    }\n    const result = fn.apply(this, args);\n    cache[key] = result;\n    return result;\n  };\n}\n```\n\n### Solution (single-arg with Map)\n\n```javascript\nfunction memoize(func) {\n  const cache = new Map();\n\n  return function (arg) {\n    if (cache.has(arg)) {\n      return cache.get(arg);\n    }\n    const result = func.call(this, arg);\n    cache.set(arg, result);\n    return result;\n  };\n}\n```\n\n### How It Works\n\n1. **Cache object / Map** stores results keyed by stringified arguments (or the argument itself for single-arg)\n2. On each call, create a lookup key\n3. **Cache hit** → return stored result immediately\n4. **Cache miss** → call the original function, store result, return it\n\n### Key Points\n- `JSON.stringify(args)` works for primitives and simple objects/arrays\n- For single-argument functions, a `Map` using the argument reference as key avoids serialization overhead\n- `fn.apply(this, args)` preserves the correct `this` context\n- Memoization trades **memory for speed** — useful for expensive pure functions\n- Works best with **pure functions** (same input always produces same output)"
     },
     {
       "id": 28,
@@ -800,7 +800,7 @@
       "source": "https://github.com/trekhleb/javascript-algorithms/tree/master/src/data-structures/lru-cache",
       "runner": "expression",
       "functionName": "LRUCache",
-      "description": "Implement an LRU (Least Recently Used) Cache that stores key-value pairs with a fixed **capacity**.\n\nThe cache should evict the **least recently used** item when it exceeds capacity.\n\n### API\n\n```javascript\nclass LRUCache {\n  constructor(capacity) { }  // Initialize with positive capacity\n  get(key) { }               // Return value or undefined\n  set(key, value) { }        // Add/update key, evict LRU if full\n}\n```\n\n### Example\n\n```javascript\nconst cache = new LRUCache(2);\ncache.set(1, 1);   // cache: {1=1}\ncache.set(2, 2);   // cache: {1=1, 2=2}\ncache.get(1);      // returns 1, 1 is now most recently used\ncache.set(3, 3);   // evicts key 2 (LRU), cache: {1=1, 3=3}\ncache.get(2);      // returns undefined (evicted)\n```\n\nBoth `get()` and `set()` must run in **O(1)** average time complexity.\n\nComplete the implementation in the editor.",
+      "description": "Implement an LRU (Least Recently Used) Cache that stores key-value pairs with a fixed **capacity**.\n\nThe cache should evict the **least recently used** item when it exceeds capacity.\n\n### API\n\n```javascript\nclass LRUCache {\n  constructor(capacity) {} // Initialize with positive capacity\n  get(key) {} // Return value or undefined\n  set(key, value) {} // Add/update key, evict LRU if full\n}\n```\n\n### Example\n\n```javascript\nconst cache = new LRUCache(2);\ncache.set(1, 1); // cache: {1=1}\ncache.set(2, 2); // cache: {1=1, 2=2}\ncache.get(1); // returns 1, 1 is now most recently used\ncache.set(3, 3); // evicts key 2 (LRU), cache: {1=1, 3=3}\ncache.get(2); // returns undefined (evicted)\n```\n\nBoth `get()` and `set()` must run in **O(1)** average time complexity.\n\nComplete the implementation in the editor.",
       "template": "class LRUCache {\n  constructor(capacity) {\n    // Write your code here\n  }\n\n  get(key) {\n    // Write your code here\n  }\n\n  set(key, value) {\n    // Write your code here\n  }\n}\n",
       "testCases": [
         {
@@ -844,7 +844,7 @@
       "source": "https://bigfrontend.dev/problem/async-task-queue",
       "runner": "asyncExpression",
       "functionName": "AsyncTaskQueue",
-      "description": "Design and implement an `AsyncTaskQueue` class that manages execution of asynchronous tasks with a specified maximum concurrency limit.\n\nThe queue should:\n- Execute tasks in the order they are added (FIFO)\n- Ensure no more than the specified number of tasks run concurrently\n- Silently ignore task rejections — the queue must continue processing\n\n### API\n\n```javascript\nclass AsyncTaskQueue {\n  constructor(concurrency) { }\n  // Add an async task to the queue.\n  // Returns a Promise that resolves when the task completes\n  // (resolves even if the task rejects — rejections are silently ignored).\n  queue(task) { }\n}\n```\n\n### Example\n\n```javascript\nconst queue = new AsyncTaskQueue(2);\n\nconst task1 = () => new Promise(resolve => setTimeout(() => resolve('Task 1 done'), 1000));\nconst task2 = () => new Promise((_, reject) => setTimeout(() => reject('Task 2 failed'), 500));\nconst task3 = () => new Promise(resolve => setTimeout(() => resolve('Task 3 done'), 200));\n\nqueue.queue(task1); // Starts immediately\nqueue.queue(task2); // Starts immediately (concurrency = 2)\nqueue.queue(task3); // Waits until one of the first two completes\n// Task 2's failure is silently ignored; Task 3 still runs\n```\n\nComplete the implementation in the editor.",
+      "description": "Design and implement an `AsyncTaskQueue` class that manages execution of asynchronous tasks with a specified maximum concurrency limit.\n\nThe queue should:\n- Execute tasks in the order they are added (FIFO)\n- Ensure no more than the specified number of tasks run concurrently\n- Silently ignore task rejections — the queue must continue processing\n\n### API\n\n```javascript\nclass AsyncTaskQueue {\n  constructor(concurrency) {}\n  // Add an async task to the queue.\n  // Returns a Promise that resolves when the task completes\n  // (resolves even if the task rejects — rejections are silently ignored).\n  queue(task) {}\n}\n```\n\n### Example\n\n```javascript\nconst queue = new AsyncTaskQueue(2);\n\nconst task1 = () =>\n  new Promise((resolve) => setTimeout(() => resolve(\"Task 1 done\"), 1000));\nconst task2 = () =>\n  new Promise((_, reject) => setTimeout(() => reject(\"Task 2 failed\"), 500));\nconst task3 = () =>\n  new Promise((resolve) => setTimeout(() => resolve(\"Task 3 done\"), 200));\n\nqueue.queue(task1); // Starts immediately\nqueue.queue(task2); // Starts immediately (concurrency = 2)\nqueue.queue(task3); // Waits until one of the first two completes\n// Task 2's failure is silently ignored; Task 3 still runs\n```\n\nComplete the implementation in the editor.",
       "template": "class AsyncTaskQueue {\n  constructor(concurrency) {\n    // Write your code here\n  }\n\n  queue(task) {\n    // Write your code here\n  }\n}\n",
       "testCases": [
         {
@@ -875,17 +875,30 @@
       "id": 20,
       "title": "Top-Down Traversal, Bottom-Up Construction",
       "difficulty": "medium",
-      "topics": ["recursion", "objects", "Array"],
+      "topics": [
+        "recursion",
+        "objects",
+        "Array"
+      ],
       "source": "user paste: Universal Recursive JSON Framework",
       "runner": "expression",
       "functionName": "deepMap",
-      "description": "Implement `deepMap(node, fn)` that recursively traverses a nested JSON-like structure (objects and arrays) and applies `fn` to every **leaf value** (primitive: number, string, boolean, null, undefined). The function must return a **new** structure — never mutate the input.\n\n### The Pattern\n\n```\n┌─── Is N Terminal? ───► Transform & Return N (Base Case)\n│\nInput Node (N) ───┤\n│                       ┌── 1. Create empty container matching N\n└─── Is N Non-Terminal? ┤── 2. For each child (c) in N:\n                        │      Attach F(c) to container\n                        └── 3. Return container\n```\n\n### Example\n\n```javascript\nconst obj = { a: 1, b: { c: 2, d: [3, 4] } };\nconst result = deepMap(obj, x => x * 2);\n// { a: 2, b: { c: 4, d: [6, 8] } }\nconsole.log(obj.a); // 1 — original untouched\n```\n\nComplete the implementation in the editor.",
+      "description": "Implement `deepMap(node, fn)` that recursively traverses a nested JSON-like structure (objects and arrays) and applies `fn` to every **leaf value** (primitive: number, string, boolean, null, undefined). The function must return a **new** structure — never mutate the input.\n\n### The Pattern\n\n```\n┌─── Is N Terminal? ───► Transform & Return N (Base Case)\n│\nInput Node (N) ───┤\n│                       ┌── 1. Create empty container matching N\n└─── Is N Non-Terminal? ┤── 2. For each child (c) in N:\n                        │      Attach F(c) to container\n                        └── 3. Return container\n```\n\n### Example\n\n```javascript\nconst obj = { a: 1, b: { c: 2, d: [3, 4] } };\nconst result = deepMap(obj, (x) => x * 2);\n// { a: 2, b: { c: 4, d: [6, 8] } }\nconsole.log(obj.a); // 1 — original untouched\n```\n\nComplete the implementation in the editor.",
       "template": "function deepMap(node, fn) {\n  // Write your code here\n}\n",
       "testCases": [
         {
           "setup": "const obj = { a: 1, b: { c: 2, d: [3, 4] } };",
           "code": "deepMap(obj, x => x * 2)",
-          "expected": { "a": 2, "b": { "c": 4, "d": [6, 8] } }
+          "expected": {
+            "a": 2,
+            "b": {
+              "c": 4,
+              "d": [
+                6,
+                8
+              ]
+            }
+          }
         },
         {
           "setup": "const arr = [1, { x: 2 }, [3, { y: 4 }]]; const copy = deepMap(arr, x => x + 10); copy[0] = 999;",
@@ -903,7 +916,7 @@
           "expected": "{\"a\":[101,{\"b\":\"hello\"}],\"c\":null}"
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction deepMap(node, fn) {\n  // Base case: terminal (leaf) — not an object (or null)\n  if (node === null || typeof node !== 'object') {\n    return fn(node);\n  }\n\n  // Non-terminal: create fresh container\n  const isArray = Array.isArray(node);\n  const container = isArray ? [] : {};\n\n  // Traverse children, attach bottom-up results\n  for (const key in node) {\n    container[key] = deepMap(node[key], fn);\n  }\n\n  return container;\n}\n```\n\n### Key Points\n- **Top-down pause, bottom-up assembly**: the parent creates an empty container, then pauses while each child recursively resolves. The call stack returns the transformed children, and the parent assembles them into the result.\n- **Immutability**: every level allocates a fresh container — the input is never mutated.\n- **Halting**: `null` and non-object types stop recursion immediately.\n- The `for...in` loop handles both array indices and object keys uniformly.\n- This skeleton unlocks virtually all JSON/object manipulation problems (deep copy, deep merge, flatten, nested transform, inversion, etc.) — only the base-case logic and assembly rule change.\n\n### Variations from the same skeleton\n\n| Problem | Base-case change | Assembly change |\n| --- | --- | --- |\n| **Deep Copy** | Return `node` as-is | No change |\n| **Deep Merge** | Return leaf | Merge objects, concat arrays |\n| **Invert keys/values** | Swap key↔value | Build from leaves |\n| **Flatten to depth** | Stop at `depth === 0` | Spread child arrays |"
+      "explanation": "### Solution\n\n```javascript\nfunction deepMap(node, fn) {\n  // Base case: terminal (leaf) — not an object (or null)\n  if (node === null || typeof node !== \"object\") {\n    return fn(node);\n  }\n\n  // Non-terminal: create fresh container\n  const isArray = Array.isArray(node);\n  const container = isArray ? [] : {};\n\n  // Traverse children, attach bottom-up results\n  for (const key in node) {\n    container[key] = deepMap(node[key], fn);\n  }\n\n  return container;\n}\n```\n\n### Key Points\n- **Top-down pause, bottom-up assembly**: the parent creates an empty container, then pauses while each child recursively resolves. The call stack returns the transformed children, and the parent assembles them into the result.\n- **Immutability**: every level allocates a fresh container — the input is never mutated.\n- **Halting**: `null` and non-object types stop recursion immediately.\n- The `for...in` loop handles both array indices and object keys uniformly.\n- This skeleton unlocks virtually all JSON/object manipulation problems (deep copy, deep merge, flatten, nested transform, inversion, etc.) — only the base-case logic and assembly rule change.\n\n### Variations from the same skeleton\n\n| Problem | Base-case change | Assembly change |\n| --- | --- | --- |\n| **Deep Copy** | Return `node` as-is | No change |\n| **Deep Merge** | Return leaf | Merge objects, concat arrays |\n| **Invert keys/values** | Swap key↔value | Build from leaves |\n| **Flatten to depth** | Stop at `depth === 0` | Spread child arrays |"
     },
     {
       "id": 21,
@@ -957,7 +970,7 @@
           }
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction compactObject(obj) {\n  if (obj === null || typeof obj !== 'object') return obj;\n\n  if (Array.isArray(obj)) {\n    const result = [];\n    for (const item of obj) {\n      const compacted = compactObject(item);\n      if (Boolean(compacted)) result.push(compacted);\n    }\n    return result;\n  }\n\n  const result = {};\n  for (const key in obj) {\n    const compacted = compactObject(obj[key]);\n    if (Boolean(compacted)) result[key] = compacted;\n  }\n  return result;\n}\n```\n\n### Key Points\n\n- **Test the value, not the key** — property names like `\"0\"` are always truthy strings.\n- **Compact after recursing** — an empty array `[]` is truthy and should be kept when all children were falsy.\n- Use `.push()` for arrays; never `delete arr[i]` (creates sparse holes).\n- Guard `null` before `typeof` checks — `typeof null === 'object'`."
+      "explanation": "### Solution\n\n```javascript\nfunction compactObject(obj) {\n  if (obj === null || typeof obj !== \"object\") return obj;\n\n  if (Array.isArray(obj)) {\n    const result = [];\n    for (const item of obj) {\n      const compacted = compactObject(item);\n      if (Boolean(compacted)) result.push(compacted);\n    }\n    return result;\n  }\n\n  const result = {};\n  for (const key in obj) {\n    const compacted = compactObject(obj[key]);\n    if (Boolean(compacted)) result[key] = compacted;\n  }\n  return result;\n}\n```\n\n### Key Points\n\n- **Test the value, not the key** — property names like `\"0\"` are always truthy strings.\n- **Compact after recursing** — an empty array `[]` is truthy and should be kept when all children were falsy.\n- Use `.push()` for arrays; never `delete arr[i]` (creates sparse holes).\n- Guard `null` before `typeof` checks — `typeof null === 'object'`."
     },
     {
       "id": 22,
@@ -971,7 +984,7 @@
       "source": "https://leetcode.com/problems/json-deep-equal/",
       "runner": "expression",
       "functionName": "areDeeplyEqual",
-      "description": "Given two values `o1` and `o2`, return whether they are **deeply equal**.\n\nEquality rules:\n\n- **Primitives** — deeply equal if `o1 === o2`.\n- **Arrays** — same length, same elements in order, each element deeply equal.\n- **Objects** — same set of keys (order does not matter), each value deeply equal.\n\nBoth values are valid JSON. Do **not** use Lodash `_.isEqual()`.\n\n### Example 1\n\n```javascript\nareDeeplyEqual({ x: 1, y: 2 }, { x: 1, y: 2 });\n// true\n```\n\n### Example 2\n\n```javascript\nareDeeplyEqual({ y: 2, x: 1 }, { x: 1, y: 2 });\n// true — key order does not matter\n```\n\n### Example 3\n\n```javascript\nareDeeplyEqual({ x: null, L: [1, 2, 3] }, { x: null, L: ['1', '2', '3'] });\n// false — numbers vs strings\n```\n\nComplete the implementation in the editor.",
+      "description": "Given two values `o1` and `o2`, return whether they are **deeply equal**.\n\nEquality rules:\n\n- **Primitives** — deeply equal if `o1 === o2`.\n- **Arrays** — same length, same elements in order, each element deeply equal.\n- **Objects** — same set of keys (order does not matter), each value deeply equal.\n\nBoth values are valid JSON. Do **not** use Lodash `_.isEqual()`.\n\n### Example 1\n\n```javascript\nareDeeplyEqual({ x: 1, y: 2 }, { x: 1, y: 2 });\n// true\n```\n\n### Example 2\n\n```javascript\nareDeeplyEqual({ y: 2, x: 1 }, { x: 1, y: 2 });\n// true — key order does not matter\n```\n\n### Example 3\n\n```javascript\nareDeeplyEqual({ x: null, L: [1, 2, 3] }, { x: null, L: [\"1\", \"2\", \"3\"] });\n// false — numbers vs strings\n```\n\nComplete the implementation in the editor.",
       "template": "function areDeeplyEqual(o1, o2) {\n  // Write your code here\n}\n",
       "testCases": [
         {
@@ -1005,7 +1018,7 @@
           "expected": false
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction areDeeplyEqual(o1, o2) {\n  if (o1 === o2) return true;\n  if (o1 === null || o2 === null || typeof o1 !== 'object' || typeof o2 !== 'object') {\n    return false;\n  }\n  if (Array.isArray(o1) !== Array.isArray(o2)) return false;\n\n  const keys1 = Object.keys(o1);\n  const keys2 = Object.keys(o2);\n  if (keys1.length !== keys2.length) return false;\n\n  for (const key of keys1) {\n    if (!areDeeplyEqual(o1[key], o2[key])) return false;\n  }\n  return true;\n}\n```\n\n### Key Points\n\n- Early `o1 === o2` handles primitives and reference equality (including `null`).\n- `Array.isArray` mismatch means one side is an array and the other is a plain object — not equal.\n- For objects, comparing keys from `o1` only is sufficient when lengths match (no extra keys in `o2`).\n- `undefined` is not valid JSON but guard `typeof` before recursing."
+      "explanation": "### Solution\n\n```javascript\nfunction areDeeplyEqual(o1, o2) {\n  if (o1 === o2) return true;\n  if (\n    o1 === null ||\n    o2 === null ||\n    typeof o1 !== \"object\" ||\n    typeof o2 !== \"object\"\n  ) {\n    return false;\n  }\n  if (Array.isArray(o1) !== Array.isArray(o2)) return false;\n\n  const keys1 = Object.keys(o1);\n  const keys2 = Object.keys(o2);\n  if (keys1.length !== keys2.length) return false;\n\n  for (const key of keys1) {\n    if (!areDeeplyEqual(o1[key], o2[key])) return false;\n  }\n  return true;\n}\n```\n\n### Key Points\n\n- Early `o1 === o2` handles primitives and reference equality (including `null`).\n- `Array.isArray` mismatch means one side is an array and the other is a plain object — not equal.\n- For objects, comparing keys from `o1` only is sufficient when lengths match (no extra keys in `o2`).\n- `undefined` is not valid JSON but guard `typeof` before recursing."
     },
     {
       "id": 23,
@@ -1019,7 +1032,7 @@
       "source": "https://leetcode.com/problems/differences-between-two-objects/",
       "runner": "expression",
       "functionName": "objDiff",
-      "description": "Write a function that accepts two deeply nested objects or arrays `obj1` and `obj2` and returns a new object representing their **differences**.\n\nRules:\n\n- Only include keys that exist in **both** `obj1` and `obj2`. Keys added or removed are ignored.\n- For each changed key, the value is `[obj1Value, obj2Value]`.\n- When values are equal, omit the key entirely.\n- Array indices are treated as keys.\n- If types differ at the same key (e.g. object vs array), place `[obj1Value, obj2Value]` at that key.\n\nBoth inputs are valid JSON.\n\n### Example 1\n\n```javascript\nobjDiff({}, { a: 1, b: 2 });\n// {}\n```\n\n### Example 2\n\n```javascript\nobjDiff(\n  { a: 1, v: 3, x: [], z: { a: null } },\n  { a: 2, v: 4, x: [], z: { a: 2 } }\n);\n// { a: [1, 2], v: [3, 4], z: { a: [null, 2] } }\n```\n\n### Example 3\n\n```javascript\nobjDiff(\n  { a: 5, v: 6, z: [1, 2, 4, [2, 5, 7]] },\n  { a: 5, v: 7, z: [1, 2, 3, [1]] }\n);\n// { v: [6, 7], z: { '2': [4, 3], '3': { '0': [2, 1] } } }\n```\n\nComplete the implementation in the editor.",
+      "description": "Write a function that accepts two deeply nested objects or arrays `obj1` and `obj2` and returns a new object representing their **differences**.\n\nRules:\n\n- Only include keys that exist in **both** `obj1` and `obj2`. Keys added or removed are ignored.\n- For each changed key, the value is `[obj1Value, obj2Value]`.\n- When values are equal, omit the key entirely.\n- Array indices are treated as keys.\n- If types differ at the same key (e.g. object vs array), place `[obj1Value, obj2Value]` at that key.\n\nBoth inputs are valid JSON.\n\n### Example 1\n\n```javascript\nobjDiff({}, { a: 1, b: 2 });\n// {}\n```\n\n### Example 2\n\n```javascript\nobjDiff(\n  { a: 1, v: 3, x: [], z: { a: null } },\n  { a: 2, v: 4, x: [], z: { a: 2 } },\n);\n// { a: [1, 2], v: [3, 4], z: { a: [null, 2] } }\n```\n\n### Example 3\n\n```javascript\nobjDiff(\n  { a: 5, v: 6, z: [1, 2, 4, [2, 5, 7]] },\n  { a: 5, v: 7, z: [1, 2, 3, [1]] },\n);\n// { v: [6, 7], z: { '2': [4, 3], '3': { '0': [2, 1] } } }\n```\n\nComplete the implementation in the editor.",
       "template": "function objDiff(obj1, obj2) {\n  // Write your code here\n}\n",
       "testCases": [
         {
@@ -1089,7 +1102,7 @@
           "expected": {}
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction objDiff(obj1, obj2) {\n  if (getType(obj1) !== getType(obj2)) return [obj1, obj2];\n  if (!isObject(obj1)) return obj1 === obj2 ? {} : [obj1, obj2];\n\n  const diff = {};\n  const sharedKeys = Object.keys(obj1).filter((key) => key in obj2);\n\n  for (const key of sharedKeys) {\n    const subDiff = objDiff(obj1[key], obj2[key]);\n    if (Object.keys(subDiff).length > 0 || Array.isArray(subDiff)) {\n      diff[key] = subDiff;\n    }\n  }\n  return diff;\n}\n\nfunction getType(val) {\n  return Object.prototype.toString.call(val).slice(8, -1);\n}\n\nfunction isObject(val) {\n  return typeof val === 'object' && val !== null;\n}\n```\n\n### Key Points\n\n- **Type guard first** — `Array` vs `Object` vs primitive must match before recursing.\n- Leaf diff is a two-element array `[old, new]`; equal primitives return `{}` (no entry).\n- Only iterate keys present in **both** objects — additions/removals are ignored.\n- For arrays, numeric indices become string keys in the diff object (`\"2\"`, `\"3\"`).\n- An empty diff object `{}` means the structures are deeply equal."
+      "explanation": "### Solution\n\n```javascript\nfunction objDiff(obj1, obj2) {\n  if (getType(obj1) !== getType(obj2)) return [obj1, obj2];\n  if (!isObject(obj1)) return obj1 === obj2 ? {} : [obj1, obj2];\n\n  const diff = {};\n  const sharedKeys = Object.keys(obj1).filter((key) => key in obj2);\n\n  for (const key of sharedKeys) {\n    const subDiff = objDiff(obj1[key], obj2[key]);\n    if (Object.keys(subDiff).length > 0 || Array.isArray(subDiff)) {\n      diff[key] = subDiff;\n    }\n  }\n  return diff;\n}\n\nfunction getType(val) {\n  return Object.prototype.toString.call(val).slice(8, -1);\n}\n\nfunction isObject(val) {\n  return typeof val === \"object\" && val !== null;\n}\n```\n\n### Key Points\n\n- **Type guard first** — `Array` vs `Object` vs primitive must match before recursing.\n- Leaf diff is a two-element array `[old, new]`; equal primitives return `{}` (no entry).\n- Only iterate keys present in **both** objects — additions/removals are ignored.\n- For arrays, numeric indices become string keys in the diff object (`\"2\"`, `\"3\"`).\n- An empty diff object `{}` means the structures are deeply equal."
     },
     {
       "id": 24,
@@ -1103,7 +1116,7 @@
       "source": "https://leetcode.com/problems/convert-object-to-json-string/",
       "runner": "expression",
       "functionName": "jsonStringify",
-      "description": "Given a JSON value, return its JSON string representation.\n\nThe value can be a string, number, array, object, boolean, or `null`. The returned string must have **no extra spaces**. Key order must match `Object.keys()` order.\n\nPlease solve it **without** the built-in `JSON.stringify` method.\n\n### Example 1\n\n```javascript\njsonStringify({ y: 1, x: 2 });\n// '{\"y\":1,\"x\":2}'\n```\n\n### Example 2\n\n```javascript\njsonStringify({ a: 'str', b: -12, c: true, d: null });\n// '{\"a\":\"str\",\"b\":-12,\"c\":true,\"d\":null}'\n```\n\n### Example 3\n\n```javascript\njsonStringify({ key: { a: 1, b: [{}, null, 'Hello'] } });\n// '{\"key\":{\"a\":1,\"b\":[{},null,\"Hello\"]}}'\n```\n\n### Example 4\n\n```javascript\njsonStringify(true);\n// 'true'\n```\n\nComplete the implementation in the editor.",
+      "description": "Given a JSON value, return its JSON string representation.\n\nThe value can be a string, number, array, object, boolean, or `null`. The returned string must have **no extra spaces**. Key order must match `Object.keys()` order.\n\nPlease solve it **without** the built-in `JSON.stringify` method.\n\n### Example 1\n\n```javascript\njsonStringify({ y: 1, x: 2 });\n// '{\"y\":1,\"x\":2}'\n```\n\n### Example 2\n\n```javascript\njsonStringify({ a: \"str\", b: -12, c: true, d: null });\n// '{\"a\":\"str\",\"b\":-12,\"c\":true,\"d\":null}'\n```\n\n### Example 3\n\n```javascript\njsonStringify({ key: { a: 1, b: [{}, null, \"Hello\"] } });\n// '{\"key\":{\"a\":1,\"b\":[{},null,\"Hello\"]}}'\n```\n\n### Example 4\n\n```javascript\njsonStringify(true);\n// 'true'\n```\n\nComplete the implementation in the editor.",
       "template": "function jsonStringify(object) {\n  // Write your code here\n}\n",
       "testCases": [
         {
@@ -1132,7 +1145,7 @@
           "expected": "[1,\"two\",false]"
         }
       ],
-      "explanation": "### Solution\n\n```javascript\nfunction jsonStringify(object) {\n  if (object === null) return 'null';\n  if (typeof object === 'string') return `\"${object}\"`;\n  if (typeof object === 'number' || typeof object === 'boolean') {\n    return String(object);\n  }\n  if (Array.isArray(object)) {\n    return `[${object.map(jsonStringify).join(',')}]`;\n  }\n  const pairs = Object.entries(object).map(\n    ([key, value]) => `${jsonStringify(key)}:${jsonStringify(value)}`\n  );\n  return `{${pairs.join(',')}}`;\n}\n```\n\n### Key Points\n\n- Handle **leaves first**: `null`, strings (wrap in quotes), numbers, booleans.\n- **Arrays** — map each element through `jsonStringify`, join with commas, wrap in `[]`.\n- **Objects** — `Object.entries` preserves `Object.keys()` order; stringify key and value separately.\n- Problem constraints use alphanumeric strings only — no escape sequences needed.\n- Follow-up: handle `undefined`, `Date`, and circular references (not valid JSON)."
+      "explanation": "### Solution\n\n```javascript\nfunction jsonStringify(object) {\n  if (object === null) return \"null\";\n  if (typeof object === \"string\") return `\"${object}\"`;\n  if (typeof object === \"number\" || typeof object === \"boolean\") {\n    return String(object);\n  }\n  if (Array.isArray(object)) {\n    return `[${object.map(jsonStringify).join(\",\")}]`;\n  }\n  const pairs = Object.entries(object).map(\n    ([key, value]) => `${jsonStringify(key)}:${jsonStringify(value)}`,\n  );\n  return `{${pairs.join(\",\")}}`;\n}\n```\n\n### Key Points\n\n- Handle **leaves first**: `null`, strings (wrap in quotes), numbers, booleans.\n- **Arrays** — map each element through `jsonStringify`, join with commas, wrap in `[]`.\n- **Objects** — `Object.entries` preserves `Object.keys()` order; stringify key and value separately.\n- Problem constraints use alphanumeric strings only — no escape sequences needed.\n- Follow-up: handle `undefined`, `Date`, and circular references (not valid JSON)."
     }
   ]
 }

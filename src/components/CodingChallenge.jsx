@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import CodeBody from './CodeBody';
 import CodeEditor from './CodeEditor';
 import DifficultyBadge from './DifficultyBadge';
@@ -131,9 +129,9 @@ export default function CodingChallenge({
     <div className="quiz-container coding-container">
       <div className="quiz-header">
         <div className="quiz-header-top">
-          <span className="progress">Remaining {remaining}/{sessionTotal}</span>
+          <span className="progress">Left in pass {remaining}/{sessionTotal}</span>
           <div className="quiz-header-badges">
-            {isCompleted && <span className="completed-badge">Completed</span>}
+            {isCompleted && <span className="completed-badge">Mastered</span>}
             <span className="score-badge">
               Answered {answered}
               {answered > 0 ? ` · Score ${score}/${answered}` : ''}
@@ -160,9 +158,7 @@ export default function CodingChallenge({
           </div>
 
           <div className="coding-description">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {question.description}
-            </ReactMarkdown>
+            <CodeBody content={question.description} highlight={highlight} theme={theme} />
           </div>
 
           {testResults && testResults.length > 0 && (

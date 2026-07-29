@@ -50,7 +50,7 @@ export default function CodingPanel({
                     <span className="learning-nav-star" aria-label="Starred">★</span>
                   )}
                   {completedSet.has(question.id) && (
-                    <span className="learning-nav-completed" aria-label="Completed">✓</span>
+                    <span className="learning-nav-completed" aria-label="Mastered">✓</span>
                   )}
                   <DifficultyBadge difficulty={question.difficulty} />
                 </span>

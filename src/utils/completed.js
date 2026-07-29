@@ -1,4 +1,4 @@
-import { SECTIONS } from './archive';
+import { SECTIONS } from './archive.js';
 
 export const EMPTY_COMPLETED = {
   mcq: [],
@@ -48,6 +48,16 @@ export function getTotalCompletedCount(completed) {
 export function filterExcludedCompleted(items, section, completed) {
   const completedSet = getCompletedSet(completed, section);
   return items.filter((item) => !completedSet.has(item.id));
+}
+
+export function sortCompletedToEnd(items, section, completed) {
+  const completedSet = getCompletedSet(completed, section);
+  const pending = [];
+  const done = [];
+  for (const item of items) {
+    (completedSet.has(item.id) ? done : pending).push(item);
+  }
+  return [...pending, ...done];
 }
 
 /** Merge correct answers from quiz progress into the completed store (one-time migration). */

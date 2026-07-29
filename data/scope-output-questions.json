@@ -4,7 +4,7 @@
       "id": 66,
       "question": "What will be the output?",
       "body": "```javascript\nvar x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x); // ???\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y); // ???\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z); // ???\n  }\n  console.log(\"D:\", y); // ???\n  console.log(\"E:\", z); // ???\n}\n\ntestScope();\nconsole.log(\"F:\", x); // ???\n```",
-      "code": "var x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x);\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y);\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z);\n  }\n  console.log(\"D:\", y);\n  console.log(\"E:\", z);\n}\n\ntestScope();\nconsole.log(\"F:\", x);",
+      "code": "var x = 1;\n\nfunction testScope() {\n  console.log(\"A:\", x); // ???\n  var x = 2;\n  let y = 3;\n  const z = 4;\n  {\n    console.log(\"B:\", y); // ???\n    let y = 5;\n    const z = 6;\n    console.log(\"C:\", z); // ???\n  }\n  console.log(\"D:\", y); // ???\n  console.log(\"E:\", z); // ???\n}\n\ntestScope();\nconsole.log(\"F:\", x); // ???",
       "expectedLines": [
         "ReferenceError: Cannot access 'y' before initialization"
       ],

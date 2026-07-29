@@ -61,9 +61,9 @@ export default function QuizQuestion({
     <div className="quiz-container">
       <div className="quiz-header">
         <div className="quiz-header-top">
-          <span className="progress">Remaining {remaining}/{sessionTotal}</span>
+          <span className="progress">Left in pass {remaining}/{sessionTotal}</span>
           <div className="quiz-header-badges">
-            {isCompleted && <span className="completed-badge">Completed</span>}
+            {isCompleted && <span className="completed-badge">Mastered</span>}
             <span className="score-badge">
               Answered {answered} · Score {score}/{answered}
             </span>

@@ -50,7 +50,7 @@ export default function LearningsPanel({
                 <span className="learning-nav-meta">
                   <span className="learning-nav-id">#{item.id}</span>
                   {starredSet.has(item.id) && <span className="learning-nav-star" aria-label="Starred">★</span>}
-                  {completedSet.has(item.id) && <span className="learning-nav-completed" aria-label="Completed">✓</span>}
+                  {completedSet.has(item.id) && <span className="learning-nav-completed" aria-label="Mastered">✓</span>}
                 </span>
                 <span className="learning-nav-title">{stripMarkdown(item.title)}</span>
               </button>

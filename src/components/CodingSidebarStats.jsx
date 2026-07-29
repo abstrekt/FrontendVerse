@@ -30,7 +30,7 @@ export default function CodingSidebarStats({
           )}
           <div className="progress-stat">
             <span className="progress-stat-value">{completedCount}</span>
-            <span className="progress-stat-label">completed</span>
+            <span className="progress-stat-label">mastered</span>
           </div>
         </div>
       )}

@@ -19,12 +19,6 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAppRoute } from './hooks/useAppRoute';
 import {
   EMPTY_PROGRESS,
-  EMPTY_SESSION,
-  createSession,
-  restoreQueue,
-  isRestorableSession,
-  sanitizeSessionQueue,
-  filterExcludedQuestions,
   filterQuestions,
   recordAnswer,
   recordSession,
@@ -38,10 +32,6 @@ import {
 } from './utils/progress';
 import {
   EMPTY_OUTPUT_PROGRESS,
-  EMPTY_OUTPUT_SESSION,
-  createOutputSession,
-  restoreOutputQueue,
-  isRestorableOutputSession,
   buildOutputQueue,
   recordOutputAnswer,
   recordOutputSession,
@@ -49,6 +39,24 @@ import {
   getOutputLifetimeAccuracy,
   getOutputMissedCount,
 } from './utils/outputProgress';
+import {
+  EMPTY_PRACTICE_QUEUE,
+  createPracticeQueue,
+  restorePracticeQueue,
+  isRestorablePracticeQueue,
+  advancePass,
+  archiveFromQueue,
+  getPracticeQueueQuestionIds,
+  getSkippedPracticeQueueIds,
+  mergePracticeQueueSkippedIds,
+  normalizePracticeQueue,
+  openQuestionInQueue,
+  appendToQueueTail,
+  loadPracticeQueueFromStorage,
+  filterPoolByCompleted,
+  sanitizePracticeQueue,
+  skipQuestionInQueue,
+} from './utils/practiceQueue';
 import questionsData from '../questions.json';
 import learningsData from '../data/learnings.json';
 import polyfillLearningsData from '../data/polyfill-learnings.json';
@@ -78,7 +86,6 @@ import {
   unarchiveId,
   getArchivedSet,
   getArchivedCount,
-  sanitizeQueueIds,
 } from './utils/archive';
 import {
   EMPTY_STARRED,
@@ -94,12 +101,47 @@ import {
   markCompletedId,
   toggleCompletedId,
   getCompletedCount,
-  getCompletedSet,
+  sortCompletedToEnd,
   syncCompletedFromProgress,
   syncOutputCompletedFromProgress,
 } from './utils/completed';
 import StarredFilterToggle from './components/StarredFilterToggle';
 import { buildSearchIndex } from './utils/searchIndex';
+import { getPassScopeQuestions } from './utils/questionState';
+
+function makeLearningToggleCompleted(section, orderedList, setId, completed, setCompleted) {
+  return (id) => {
+    const wasCompleted = isCompleted(id, section, completed);
+    if (!wasCompleted) {
+      const idx = orderedList.findIndex((item) => item.id === id);
+      const next = orderedList[idx + 1];
+      setCompleted((prev) => markCompletedId(prev, section, id));
+      if (next && !isCompleted(next.id, section, completed)) {
+        setId(next.id);
+      }
+      return;
+    }
+    setCompleted((prev) => toggleCompletedId(prev, section, id));
+  };
+}
+
+function usePracticeQueueStorage(key, legacyKey) {
+  const [value, setValue] = useState(
+    () => loadPracticeQueueFromStorage(key, legacyKey) ?? EMPTY_PRACTICE_QUEUE
+  );
+
+  useEffect(() => {
+    try {
+      if (value !== null) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -117,10 +159,10 @@ export default function App() {
   const [theme, setTheme] = useLocalStorage('quiz-theme', 'light');
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
-  const [quizSession, setQuizSession] = useLocalStorage('quiz-session', EMPTY_SESSION);
-  const [skippedIds, setSkippedIds] = useLocalStorage('quiz-skipped', []);
+  const [mcqQueue, setMcqQueue] = usePracticeQueueStorage('mcq-queue', 'quiz-session');
+  const [legacySkippedIds, setLegacySkippedIds] = useLocalStorage('quiz-skipped', []);
   const [outputProgress, setOutputProgress] = useLocalStorage('output-quiz-progress', EMPTY_OUTPUT_PROGRESS);
-  const [outputSession, setOutputSession] = useLocalStorage('output-quiz-session', EMPTY_OUTPUT_SESSION);
+  const [outputQueue, setOutputQueue] = usePracticeQueueStorage('output-queue', 'output-quiz-session');
   const [outputIncludeCompleted, setOutputIncludeCompleted] = useLocalStorage('output-quiz-include-completed', true);
   const [mcqIncludeCompleted, setMcqIncludeCompleted] = useLocalStorage('mcq-include-completed', true);
   const [codingIncludeCompleted, setCodingIncludeCompleted] = useLocalStorage('coding-include-completed', true);
@@ -128,7 +170,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
   const [panelCollapsed, setPanelCollapsed] = useLocalStorage('layout-panel-collapsed', false);
   const [codingProgress, setCodingProgress] = useState(() => loadCodingProgress());
-  const [codingSession, setCodingSession] = useLocalStorage('coding-quiz-session', null);
+  const [codingQueue, setCodingQueue] = usePracticeQueueStorage('coding-queue', 'coding-quiz-session');
   const [codingQuestions, setCodingQuestions] = useState([]);
   const [archived, setArchived] = useLocalStorage('quiz-archived', EMPTY_ARCHIVED);
   const [starred, setStarred] = useLocalStorage('quiz-starred', EMPTY_STARRED);
@@ -166,10 +208,6 @@ export default function App() {
   );
   const archivedCount = useMemo(() => getArchivedCount(archived), [archived]);
   const archivedMcqSet = useMemo(() => getArchivedSet(archived, 'mcq'), [archived]);
-  const mcqExcludedSet = useMemo(
-    () => new Set([...skippedIds, ...archivedMcqSet]),
-    [skippedIds, archivedMcqSet]
-  );
 
   const starredActiveQuestions = useMemo(
     () => (starredFilter.mcq ? filterStarred(activeQuestions, 'mcq', starred) : activeQuestions),
@@ -190,6 +228,22 @@ export default function App() {
   const starredActiveAlgorithmLearnings = useMemo(
     () => (starredFilter.algorithm ? filterStarred(activeAlgorithmLearnings, 'algorithm', starred) : activeAlgorithmLearnings),
     [activeAlgorithmLearnings, starredFilter.algorithm, starred]
+  );
+  const orderedStarredActiveLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveLearnings, 'learnings', completed),
+    [starredActiveLearnings, completed]
+  );
+  const orderedStarredActiveReactLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveReactLearnings, 'react-learnings', completed),
+    [starredActiveReactLearnings, completed]
+  );
+  const orderedStarredActiveHldLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveHldLearnings, 'hld', completed),
+    [starredActiveHldLearnings, completed]
+  );
+  const orderedStarredActiveAlgorithmLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveAlgorithmLearnings, 'algorithm', completed),
+    [starredActiveAlgorithmLearnings, completed]
   );
   const starredActiveCodingQuestions = useMemo(
     () => (starredFilter.coding ? filterStarred(activeCodingQuestions, 'coding', starred) : activeCodingQuestions),
@@ -232,90 +286,85 @@ export default function App() {
     ]
   );
 
-  const sessionRecordedRef = useRef(false);
-  const outputSessionRecordedRef = useRef(false);
-  const codingSessionRecordedRef = useRef(false);
+  const passRecordedRef = useRef(false);
+  const outputPassRecordedRef = useRef(false);
+  const codingPassRecordedRef = useRef(false);
+  const skippedIds = useMemo(() => getSkippedPracticeQueueIds(mcqQueue), [mcqQueue]);
 
-  const shuffled = useMemo(
-    () => restoreQueue(quizSession, starredActiveQuestions),
-    [quizSession, starredActiveQuestions]
+  const mcqRestored = useMemo(
+    () => restorePracticeQueue(mcqQueue, starredActiveQuestions),
+    [mcqQueue, starredActiveQuestions]
   );
-  const sessionAnsweredIds = useMemo(
-    () => new Set(quizSession?.answeredIds ?? []),
-    [quizSession]
-  );
-  const score = quizSession?.score ?? 0;
-  const answered = quizSession?.answered ?? 0;
-  const currentIndex = quizSession?.currentIndex ?? 0;
-  const mode = quizSession?.mode ?? 'all';
-  const selectedTopics = quizSession?.selectedTopics ?? [];
-  const selectedDifficulties = quizSession?.selectedDifficulties ?? [];
-  const sessionTotal = quizSession?.sessionTotal ?? 0;
-  const remaining = shuffled.length - currentIndex;
+  const score = mcqQueue?.score ?? 0;
+  const answered = mcqQueue?.answered ?? 0;
+  const mode = mcqQueue?.mode ?? 'all';
+  const selectedTopics = mcqQueue?.selectedTopics ?? [];
+  const selectedDifficulties = mcqQueue?.selectedDifficulties ?? [];
+  const sessionTotal = mcqRestored.length;
+  const remaining = mcqQueue?.remaining ?? 0;
+  const passTotal = mcqQueue?.passTotal ?? sessionTotal;
+  const currentQuestion = mcqRestored[0] ?? null;
+  const isPassComplete = remaining === 0 && sessionTotal > 0;
 
-  const outputShuffled = useMemo(
-    () => restoreOutputQueue(outputSession, starredActiveOutputQuestions),
-    [outputSession, starredActiveOutputQuestions]
+  const outputRestored = useMemo(
+    () => restorePracticeQueue(outputQueue, starredActiveOutputQuestions),
+    [outputQueue, starredActiveOutputQuestions]
   );
-  const outputScore = outputSession?.score ?? 0;
-  const outputAnswered = outputSession?.answered ?? 0;
-  const outputCurrentIndex = outputSession?.currentIndex ?? 0;
-  const outputSessionTotal = outputSession?.sessionTotal ?? 0;
-  const outputRemaining = outputShuffled.length - outputCurrentIndex;
-  const currentOutputQuestion = outputShuffled.length > 0 ? outputShuffled[outputCurrentIndex] : null;
-  const isOutputFinished = outputShuffled.length > 0 && outputCurrentIndex >= outputShuffled.length;
-  const outputSessionCaughtUp =
-    starredActiveOutputQuestions.length > 0 && outputShuffled.length === 0;
+  const outputScore = outputQueue?.score ?? 0;
+  const outputAnswered = outputQueue?.answered ?? 0;
+  const outputSessionTotal = outputRestored.length;
+  const outputRemaining = outputQueue?.remaining ?? 0;
+  const outputPassTotal = outputQueue?.passTotal ?? outputSessionTotal;
+  const currentOutputQuestion = outputRestored[0] ?? null;
+  const isOutputPassComplete = outputRemaining === 0 && outputSessionTotal > 0;
+  const outputQueueEmpty =
+    starredActiveOutputQuestions.length > 0 && outputRestored.length === 0;
 
-  const codingShuffled = useMemo(
-    () => {
-      if (!codingSession?.queueIds || !starredActiveCodingQuestions.length) return [];
-      const byId = new Map(starredActiveCodingQuestions.map((q) => [q.id, q]));
-      return codingSession.queueIds.map((id) => byId.get(id)).filter(Boolean);
-    },
-    [codingSession, starredActiveCodingQuestions]
+  const codingRestored = useMemo(
+    () => restorePracticeQueue(codingQueue, starredActiveCodingQuestions),
+    [codingQueue, starredActiveCodingQuestions]
   );
-  const codingScore = codingSession?.score ?? 0;
-  const codingAnswered = codingSession?.answered ?? 0;
-  const codingCurrentIndex = codingSession?.currentIndex ?? 0;
-  const codingSessionTotal = codingSession?.sessionTotal ?? 0;
-  const codingRemaining = codingShuffled.length - codingCurrentIndex;
-  const currentCodingQuestion = codingShuffled.length > 0 ? codingShuffled[codingCurrentIndex] : null;
-  const isCodingFinished = codingShuffled.length > 0 && codingCurrentIndex >= codingShuffled.length;
-  const codingSessionCaughtUp =
-    starredActiveCodingQuestions.length > 0 && codingShuffled.length === 0;
+  const codingScore = codingQueue?.score ?? 0;
+  const codingAnswered = codingQueue?.answered ?? 0;
+  const codingSessionTotal = codingRestored.length;
+  const codingRemaining = codingQueue?.remaining ?? 0;
+  const codingPassTotal = codingQueue?.passTotal ?? codingSessionTotal;
+  const currentCodingQuestion = codingRestored[0] ?? null;
+  const isCodingPassComplete = codingRemaining === 0 && codingSessionTotal > 0;
+  const codingQueueEmpty =
+    starredActiveCodingQuestions.length > 0 && codingRestored.length === 0;
 
   const selectedLearning = useMemo(() => {
     if (activeSection !== 'learnings') return null;
     if (route.learningId) {
-      return starredActiveLearnings.find((item) => item.id === route.learningId) ?? starredActiveLearnings[0] ?? null;
+      return orderedStarredActiveLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveLearnings[0] ?? null;
     }
-    return starredActiveLearnings[0] ?? null;
-  }, [starredActiveLearnings, route.learningId, activeSection]);
+    return orderedStarredActiveLearnings[0] ?? null;
+  }, [orderedStarredActiveLearnings, route.learningId, activeSection]);
 
   const selectedReactLearning = useMemo(() => {
     if (activeSection !== 'react-learnings') return null;
     if (route.learningId) {
-      return starredActiveReactLearnings.find((item) => item.id === route.learningId) ?? starredActiveReactLearnings[0] ?? null;
+      return orderedStarredActiveReactLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveReactLearnings[0] ?? null;
     }
-    return starredActiveReactLearnings[0] ?? null;
-  }, [starredActiveReactLearnings, route.learningId, activeSection]);
+    return orderedStarredActiveReactLearnings[0] ?? null;
+  }, [orderedStarredActiveReactLearnings, route.learningId, activeSection]);
 
   const selectedHldLearning = useMemo(() => {
     if (activeSection !== 'hld') return null;
     if (route.learningId) {
-      return starredActiveHldLearnings.find((item) => item.id === route.learningId) ?? starredActiveHldLearnings[0] ?? null;
+      return orderedStarredActiveHldLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveHldLearnings[0] ?? null;
     }
-    return starredActiveHldLearnings[0] ?? null;
-  }, [starredActiveHldLearnings, route.learningId, activeSection]);
+    return orderedStarredActiveHldLearnings[0] ?? null;
+  }, [orderedStarredActiveHldLearnings, route.learningId, activeSection]);
 
   const selectedAlgorithmLearning = useMemo(() => {
     if (activeSection !== 'algorithm') return null;
     if (route.learningId) {
-      return starredActiveAlgorithmLearnings.find((item) => item.id === route.learningId) ?? starredActiveAlgorithmLearnings[0] ?? null;
+      return orderedStarredActiveAlgorithmLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveAlgorithmLearnings[0] ?? null;
     }
-    return starredActiveAlgorithmLearnings[0] ?? null;
-  }, [starredActiveAlgorithmLearnings, route.learningId, activeSection]);
+    return orderedStarredActiveAlgorithmLearnings[0] ?? null;
+  }, [orderedStarredActiveAlgorithmLearnings, route.learningId, activeSection]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -328,32 +377,32 @@ export default function App() {
   }, [navigate]);
 
   useEffect(() => {
-    if (activeSection !== 'learnings' || !starredActiveLearnings.length) return;
-    if (route.learningId && !starredActiveLearnings.some((item) => item.id === route.learningId)) {
-      setLearningId(starredActiveLearnings[0].id, { replace: true });
+    if (activeSection !== 'learnings' || !orderedStarredActiveLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveLearnings.some((item) => item.id === route.learningId)) {
+      setLearningId(orderedStarredActiveLearnings[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, starredActiveLearnings, setLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveLearnings, setLearningId]);
 
   useEffect(() => {
-    if (activeSection !== 'react-learnings' || !starredActiveReactLearnings.length) return;
-    if (route.learningId && !starredActiveReactLearnings.some((item) => item.id === route.learningId)) {
-      setReactLearningId(starredActiveReactLearnings[0].id, { replace: true });
+    if (activeSection !== 'react-learnings' || !orderedStarredActiveReactLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveReactLearnings.some((item) => item.id === route.learningId)) {
+      setReactLearningId(orderedStarredActiveReactLearnings[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, starredActiveReactLearnings, setReactLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveReactLearnings, setReactLearningId]);
 
   useEffect(() => {
-    if (activeSection !== 'hld' || !starredActiveHldLearnings.length) return;
-    if (route.learningId && !starredActiveHldLearnings.some((item) => item.id === route.learningId)) {
-      setHldLearningId(starredActiveHldLearnings[0].id, { replace: true });
+    if (activeSection !== 'hld' || !orderedStarredActiveHldLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveHldLearnings.some((item) => item.id === route.learningId)) {
+      setHldLearningId(orderedStarredActiveHldLearnings[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, starredActiveHldLearnings, setHldLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveHldLearnings, setHldLearningId]);
 
   useEffect(() => {
-    if (activeSection !== 'algorithm' || !starredActiveAlgorithmLearnings.length) return;
-    if (route.learningId && !starredActiveAlgorithmLearnings.some((item) => item.id === route.learningId)) {
-      setAlgorithmLearningId(starredActiveAlgorithmLearnings[0].id, { replace: true });
+    if (activeSection !== 'algorithm' || !orderedStarredActiveAlgorithmLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveAlgorithmLearnings.some((item) => item.id === route.learningId)) {
+      setAlgorithmLearningId(orderedStarredActiveAlgorithmLearnings[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, starredActiveAlgorithmLearnings, setAlgorithmLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId]);
 
   const weakTopics = useMemo(
     () => getWeakTopics(progress, activeQuestions),
@@ -382,25 +431,24 @@ export default function App() {
     return filteredQuestions;
   }, [mode, starredActiveQuestions, weakTopics, progress, filteredQuestions, selectedTopics, selectedDifficulties]);
 
-  const currentQuestion = shuffled.length > 0 ? shuffled[currentIndex] : null;
-  const isFinished = shuffled.length > 0 && currentIndex >= shuffled.length;
-  const sessionCaughtUp =
-    basePool.length > 0 && shuffled.length === 0 && sessionAnsweredIds.size > 0;
+  const currentPassQuestions = useMemo(
+    () => getPassScopeQuestions(starredActiveQuestions, mcqQueue),
+    [starredActiveQuestions, mcqQueue]
+  );
+  const mcqListQuestions = currentPassQuestions.length > 0 ? currentPassQuestions : basePool;
+  const mcqListScopeLabel = currentPassQuestions.length > 0 ? 'Current pass' : 'Filtered questions';
 
-  const shufflePool = useCallback(
-    (pool, answeredIds, progressOverride = progress, excludedIds = mcqExcludedSet, includeCompleted = mcqIncludeCompleted) => {
+  const mcqQueueEmpty = basePool.length > 0 && mcqRestored.length === 0;
+
+  const buildMcqPool = useCallback(
+    (pool, includeCompleted = mcqIncludeCompleted) => {
       const source = pool.length > 0 ? pool : starredActiveQuestions;
-      const completedExcluded = includeCompleted
-        ? []
-        : [...getCompletedSet(completed, 'mcq')];
-      const excluded = new Set([...answeredIds, ...excludedIds, ...completedExcluded]);
-      const unanswered = filterExcludedQuestions(source, excluded);
-      return {
-        queue: unanswered.length > 0 ? smartShuffle(unanswered, progressOverride) : [],
-        allAnswered: source.length > 0 && unanswered.length === 0,
-      };
+      return filterPoolByCompleted(source, completed, {
+        includeCompleted,
+        section: 'mcq',
+      });
     },
-    [starredActiveQuestions, progress, mcqExcludedSet, mcqIncludeCompleted, completed]
+    [starredActiveQuestions, completed, mcqIncludeCompleted]
   );
 
   const buildOutputQuizQueue = useCallback(
@@ -411,12 +459,60 @@ export default function App() {
     [starredActiveOutputQuestions, completed, outputIncludeCompleted]
   );
 
-  const removeFromSessionQueue = useCallback((session, id) => {
-    if (!session) return session;
-    const queueIds = session.queueIds.filter((qid) => qid !== id);
-    const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
-    return { ...session, queueIds, currentIndex };
-  }, []);
+  const startMcqPass = useCallback(
+    (pool, nextMode = 'all', topics = selectedTopics, difficulties = selectedDifficulties, { resetPass = true } = {}) => {
+      const filtered = buildMcqPool(pool);
+      const queue = smartShuffle(filtered, progress);
+      setMcqQueue(
+        createPracticeQueue(queue, {
+          mode: nextMode,
+          topics,
+          difficulties,
+          resetPass,
+          score: resetPass ? 0 : (mcqQueue?.score ?? 0),
+          answered: resetPass ? 0 : (mcqQueue?.answered ?? 0),
+          answeredIds: resetPass ? [] : (mcqQueue?.answeredIds ?? []),
+        })
+      );
+      passRecordedRef.current = false;
+    },
+    [buildMcqPool, progress, selectedTopics, selectedDifficulties, mcqQueue, setMcqQueue]
+  );
+
+  const startOutputPass = useCallback(
+    ({ resetPass = true, includeCompleted: includeCompletedOverride, pool: poolOverride } = {}) => {
+      const includeCompleted = includeCompletedOverride ?? outputIncludeCompleted;
+      const queue = buildOutputQuizQueue(poolOverride ?? starredActiveOutputQuestions, includeCompleted);
+      setOutputQueue(
+        createPracticeQueue(queue, {
+          resetPass,
+          score: resetPass ? 0 : (outputQueue?.score ?? 0),
+          answered: resetPass ? 0 : (outputQueue?.answered ?? 0),
+          answeredIds: resetPass ? [] : (outputQueue?.answeredIds ?? []),
+        })
+      );
+      outputPassRecordedRef.current = false;
+    },
+    [buildOutputQuizQueue, starredActiveOutputQuestions, outputIncludeCompleted, outputQueue, setOutputQueue]
+  );
+
+  const startCodingPass = useCallback(
+    ({ resetPass = true, includeCompleted: includeCompletedOverride, pool: poolOverride } = {}) => {
+      const includeCompleted = includeCompletedOverride ?? codingIncludeCompleted;
+      const pool = poolOverride ?? starredActiveCodingQuestions;
+      const queue = buildCodingQueue(pool, completed, { includeCompleted });
+      setCodingQueue(
+        createPracticeQueue(queue, {
+          resetPass,
+          score: resetPass ? 0 : (codingQueue?.score ?? 0),
+          answered: resetPass ? 0 : (codingQueue?.answered ?? 0),
+          answeredIds: resetPass ? [] : (codingQueue?.answeredIds ?? []),
+        })
+      );
+      codingPassRecordedRef.current = false;
+    },
+    [starredActiveCodingQuestions, completed, codingIncludeCompleted, codingQueue, setCodingQueue]
+  );
 
   useEffect(() => {
     const allQuestions = questionsData.questions;
@@ -449,64 +545,53 @@ export default function App() {
     const starredOutput = starredFilter.output ? filterStarred(activeOutput, 'output', starred) : activeOutput;
     const starredCoding = starredFilter.coding ? filterStarred(activeCoding, 'coding', starred) : activeCoding;
 
-    setQuizSession((saved) => {
-      let sanitized = sanitizeSessionQueue(saved, skippedIds);
-      if (sanitized?.queueIds) {
-        const queueIds = sanitizeQueueIds(sanitized.queueIds, 'mcq', archived);
-        const currentIndex = Math.min(sanitized.currentIndex, Math.max(queueIds.length - 1, 0));
-        sanitized = { ...sanitized, queueIds, currentIndex };
+    setMcqQueue((saved) => {
+      let state = normalizePracticeQueue(saved);
+      if (state) {
+        state = mergePracticeQueueSkippedIds(state, legacySkippedIds);
+        state = sanitizePracticeQueue(state, 'mcq', archived);
       }
-      if (isRestorableSession(sanitized, starredMcq)) {
-        return sanitized;
+      if (isRestorablePracticeQueue(state, starredMcq)) {
+        return state;
       }
-      const { queue } = shufflePool(starredMcq, new Set(), progress, mcqExcludedSet);
-      return createSession({ queue, mode: 'all', topics: [], difficulties: [] });
+      const pool = filterPoolByCompleted(starredMcq, completed, {
+        includeCompleted: mcqIncludeCompleted,
+        section: 'mcq',
+      });
+      const queue = smartShuffle(pool, progress);
+      return createPracticeQueue(queue, { mode: 'all', topics: [], difficulties: [] });
     });
 
-    setOutputSession((saved) => {
-      let session = saved;
-      if (session?.queueIds) {
-        const queueIds = sanitizeQueueIds(session.queueIds, 'output', archived);
-        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
-        session = { ...session, queueIds, currentIndex };
-      }
-      if (isRestorableOutputSession(session, starredOutput)) {
-        return session;
+    setOutputQueue((saved) => {
+      const state = sanitizePracticeQueue(normalizePracticeQueue(saved), 'output', archived);
+      if (isRestorablePracticeQueue(state, starredOutput)) {
+        return state;
       }
       const queue = buildOutputQueue(starredOutput, completed, {
         includeCompleted: outputIncludeCompleted,
       });
-      return createOutputSession({ queue });
+      return createPracticeQueue(queue);
     });
 
-    setCodingSession((saved) => {
-      let session = saved;
-      if (session?.queueIds) {
-        const queueIds = sanitizeQueueIds(session.queueIds, 'coding', archived);
-        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
-        session = { ...session, queueIds, currentIndex };
-      }
-      if (session?.queueIds?.length && starredCoding.length) {
-        const byId = new Map(starredCoding.map((q) => [q.id, q]));
-        const restored = session.queueIds.map((id) => byId.get(id)).filter(Boolean);
-        if (restored.length > 0 && session.currentIndex < restored.length) return session;
+    setCodingQueue((saved) => {
+      const state = sanitizePracticeQueue(normalizePracticeQueue(saved), 'coding', archived);
+      if (isRestorablePracticeQueue(state, starredCoding)) {
+        return state;
       }
       const queue = buildCodingQueue(starredCoding, completed, {
         includeCompleted: codingIncludeCompleted,
       });
-      return {
-        answeredIds: [],
-        score: 0,
-        answered: 0,
-        currentIndex: 0,
-        queueIds: queue.map((q) => q.id),
-        sessionTotal: queue.length,
-      };
+      return createPracticeQueue(queue);
     });
 
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!legacySkippedIds.length || !mcqQueue) return;
+    setLegacySkippedIds([]);
+  }, [legacySkippedIds, mcqQueue, setLegacySkippedIds]);
 
   useEffect(() => {
     if (completedSyncedRef.current) return;
@@ -520,253 +605,160 @@ export default function App() {
   }, [outputProgress, progress, codingProgress, setCompleted]);
 
   useEffect(() => {
-    if (!isFinished || sessionRecordedRef.current) return;
-    sessionRecordedRef.current = true;
+    if (!isPassComplete || passRecordedRef.current) return;
+    passRecordedRef.current = true;
 
-    const pct = sessionTotal > 0 ? Math.round((score / sessionTotal) * 100) : 0;
+    const pct = passTotal > 0 ? Math.round((score / passTotal) * 100) : 0;
     setProgress((prev) =>
       recordSession(prev, {
         score,
-        total: sessionTotal,
+        total: passTotal,
         pct,
         mode,
         topics: selectedTopics,
         difficulties: selectedDifficulties,
-        questionIds: quizSession?.queueIds ?? [],
+        questionIds: mcqQueue?.queueIds ?? [],
       })
     );
-  }, [isFinished, score, sessionTotal, mode, selectedTopics, selectedDifficulties, quizSession, setProgress]);
+  }, [isPassComplete, score, passTotal, mode, selectedTopics, selectedDifficulties, mcqQueue, setProgress]);
 
   useEffect(() => {
-    if (!isOutputFinished || outputSessionRecordedRef.current) return;
-    outputSessionRecordedRef.current = true;
+    if (!isOutputPassComplete || outputPassRecordedRef.current) return;
+    outputPassRecordedRef.current = true;
 
-    const pct = outputSessionTotal > 0 ? Math.round((outputScore / outputSessionTotal) * 100) : 0;
+    const pct = outputPassTotal > 0 ? Math.round((outputScore / outputPassTotal) * 100) : 0;
     setOutputProgress((prev) =>
       recordOutputSession(prev, {
         score: outputScore,
-        total: outputSessionTotal,
+        total: outputPassTotal,
         pct,
-        questionIds: outputSession?.queueIds ?? [],
+        questionIds: outputQueue?.queueIds ?? [],
       })
     );
-  }, [isOutputFinished, outputScore, outputSessionTotal, outputSession, setOutputProgress]);
+  }, [isOutputPassComplete, outputScore, outputPassTotal, outputQueue, setOutputProgress]);
 
   useEffect(() => {
-    if (!isCodingFinished || codingSessionRecordedRef.current) return;
-    codingSessionRecordedRef.current = true;
+    if (!isCodingPassComplete || codingPassRecordedRef.current) return;
+    codingPassRecordedRef.current = true;
 
-    const pct = codingSessionTotal > 0 ? Math.round((codingScore / codingSessionTotal) * 100) : 0;
+    const pct = codingPassTotal > 0 ? Math.round((codingScore / codingPassTotal) * 100) : 0;
     setCodingProgress((prev) => {
       const updated = recordCodingSession(prev, {
         score: codingScore,
-        total: codingSessionTotal,
+        total: codingPassTotal,
         pct,
-        questionIds: codingSession?.queueIds ?? [],
+        questionIds: codingQueue?.queueIds ?? [],
       });
       saveCodingProgress(updated);
       return updated;
     });
-  }, [isCodingFinished, codingScore, codingSessionTotal, codingSession, setCodingProgress]);
-
-  const applySession = useCallback(
-    (pool, nextMode, topics, difficulties, { resetSession = false } = {}) => {
-      const answeredIds = resetSession
-        ? new Set()
-        : new Set(quizSession?.answeredIds ?? []);
-      const nextScore = resetSession ? 0 : (quizSession?.score ?? 0);
-      const nextAnswered = resetSession ? 0 : (quizSession?.answered ?? 0);
-      const nextSessionTotal = resetSession ? undefined : quizSession?.sessionTotal;
-
-      const { queue } = shufflePool(pool, answeredIds);
-
-      setQuizSession(
-        createSession({
-          queue,
-          mode: nextMode,
-          topics,
-          difficulties,
-          score: nextScore,
-          answered: nextAnswered,
-          answeredIds: [...answeredIds],
-          currentIndex: 0,
-          sessionTotal: resetSession ? queue.length : nextSessionTotal,
-        })
-      );
-      sessionRecordedRef.current = false;
-    },
-    [shufflePool, quizSession]
-  );
+  }, [isCodingPassComplete, codingScore, codingPassTotal, codingQueue, setCodingProgress]);
 
   const startQuiz = useCallback(
-    (pool, nextMode = 'all', { resetSession = false, topics = selectedTopics, difficulties = selectedDifficulties } = {}) => {
-      applySession(pool, nextMode, topics, difficulties, { resetSession });
+    (pool, nextMode = 'all', { resetPass = true, topics = selectedTopics, difficulties = selectedDifficulties } = {}) => {
+      startMcqPass(pool, nextMode, topics, difficulties, { resetPass });
     },
-    [applySession, selectedTopics, selectedDifficulties]
+    [startMcqPass, selectedTopics, selectedDifficulties]
   );
 
   const handlePick = useCallback(
     (correct, question) => {
-      setQuizSession((session) => {
-        if (!session || session.answeredIds.includes(question.id)) return session;
+      setMcqQueue((state) => {
+        if (!state || state.answeredIds.includes(question.id)) return state;
         setProgress((prev) => recordAnswer(prev, question, correct));
         if (correct) {
           setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
         }
         return {
-          ...session,
-          answeredIds: [...session.answeredIds, question.id],
-          answered: session.answered + 1,
-          score: session.score + (correct ? 1 : 0),
+          ...state,
+          answeredIds: [...state.answeredIds, question.id],
+          answered: state.answered + 1,
+          score: state.score + (correct ? 1 : 0),
         };
       });
     },
-    [setProgress, setQuizSession, setCompleted]
+    [setProgress, setMcqQueue, setCompleted]
   );
 
   const handleNext = useCallback(() => {
-    setQuizSession((session) => {
-      if (!session) return session;
-      return { ...session, currentIndex: session.currentIndex + 1 };
-    });
-  }, [setQuizSession]);
+    setMcqQueue((state) => advancePass(state));
+  }, [setMcqQueue]);
 
   const handleSkip = useCallback(
     (question) => {
-      setSkippedIds((ids) => (ids.includes(question.id) ? ids : [...ids, question.id]));
-      setQuizSession((session) => {
-        if (!session) return session;
-        const queueIds = session.queueIds.filter((id) => id !== question.id);
-        const currentIndex = Math.min(session.currentIndex, Math.max(queueIds.length - 1, 0));
-        return { ...session, queueIds, currentIndex };
-      });
+      setMcqQueue((state) => skipQuestionInQueue(state, question.id));
     },
-    [setSkippedIds, setQuizSession]
+    [setMcqQueue]
   );
 
   const handleUnskip = useCallback(
     (questionId) => {
-      setSkippedIds((ids) => ids.filter((id) => id !== questionId));
-      setQuizSession((session) => {
-        if (!session) return session;
-        if (session.answeredIds.includes(questionId)) return session;
-        if (session.queueIds.includes(questionId)) return session;
-        return { ...session, queueIds: [...session.queueIds, questionId] };
-      });
+      setMcqQueue((state) => appendToQueueTail(state, questionId, { clearSkipped: true }));
     },
-    [setSkippedIds, setQuizSession]
+    [setMcqQueue]
   );
 
   const handleRestart = useCallback(() => {
-    startQuiz(basePool, mode, { resetSession: true });
+    startQuiz(basePool, mode, { resetPass: true });
   }, [basePool, mode, startQuiz]);
 
   const handleStartWeak = useCallback(() => {
     const pool = getQuestionsForWeakTopics(starredActiveQuestions, weakTopics);
-    startQuiz(pool, 'weak', { resetSession: true, topics: [], difficulties: [] });
+    startQuiz(pool, 'weak', { resetPass: true, topics: [], difficulties: [] });
   }, [starredActiveQuestions, weakTopics, startQuiz]);
 
   const handleStartReview = useCallback(() => {
     const pool = getQuestionsForReview(starredActiveQuestions, progress);
-    startQuiz(pool, 'review', { resetSession: true, topics: [], difficulties: [] });
+    startQuiz(pool, 'review', { resetPass: true, topics: [], difficulties: [] });
   }, [starredActiveQuestions, progress, startQuiz]);
 
   const handleBackToAll = useCallback(() => {
-    startQuiz(filteredQuestions, 'all', { resetSession: true, topics: selectedTopics, difficulties: selectedDifficulties });
+    startQuiz(filteredQuestions, 'all', { resetPass: true, topics: selectedTopics, difficulties: selectedDifficulties });
   }, [filteredQuestions, selectedTopics, selectedDifficulties, startQuiz]);
 
   const handleOpenQuestion = useCallback(
     (questionId) => {
       setViewMode('quiz');
-      setSkippedIds((ids) => ids.filter((id) => id !== questionId));
-      setQuizSession((session) => {
-        if (!session) return session;
-
-        const existingIndex = session.queueIds.indexOf(questionId);
-        if (existingIndex >= 0) {
-          return { ...session, currentIndex: existingIndex };
-        }
-
+      setMcqQueue((state) => {
+        if (!state) return state;
         const question = starredActiveQuestions.find((q) => q.id === questionId);
-        if (!question) return session;
-
-        const insertAt = Math.min(session.currentIndex, session.queueIds.length);
-        const queueIds = [
-          ...session.queueIds.slice(0, insertAt),
-          questionId,
-          ...session.queueIds.slice(insertAt),
-        ];
-
-        return {
-          ...session,
-          queueIds,
-          currentIndex: insertAt,
-          sessionTotal: Math.max(session.sessionTotal, queueIds.length),
-        };
+        if (!question) return state;
+        return openQuestionInQueue(state, questionId, { clearSkipped: true });
       });
     },
-    [starredActiveQuestions, setQuizSession, setSkippedIds, setViewMode]
+    [starredActiveQuestions, setMcqQueue, setViewMode]
   );
-
-  const jumpToSessionItem = useCallback((setSession, pool, itemId, createSessionFromIds) => {
-    setSession((session) => {
-      const existingIndex = session?.queueIds?.indexOf(itemId) ?? -1;
-      if (existingIndex >= 0) {
-        return { ...session, currentIndex: existingIndex };
-      }
-
-      const item = pool.find((entry) => entry.id === itemId);
-      if (!item) return session;
-
-      if (!session?.queueIds?.length) {
-        return createSessionFromIds([itemId]);
-      }
-
-      const insertAt = Math.min(session.currentIndex, session.queueIds.length);
-      const queueIds = [
-        ...session.queueIds.slice(0, insertAt),
-        itemId,
-        ...session.queueIds.slice(insertAt),
-      ];
-
-      return {
-        ...session,
-        queueIds,
-        currentIndex: insertAt,
-        sessionTotal: Math.max(session.sessionTotal ?? queueIds.length, queueIds.length),
-      };
-    });
-  }, []);
 
   const handleOpenCodingQuestion = useCallback(
     (questionId) => {
-      jumpToSessionItem(
-        setCodingSession,
-        activeCodingQuestions,
-        questionId,
-        (queueIds) => ({
-          answeredIds: [],
-          score: 0,
-          answered: 0,
-          currentIndex: 0,
-          queueIds,
-          sessionTotal: queueIds.length,
-        })
-      );
+      setCodingQueue((state) => {
+        if (!state?.queueIds?.length) {
+          const item = activeCodingQuestions.find((q) => q.id === questionId);
+          if (!item) return state;
+          return createPracticeQueue([item]);
+        }
+        const item = activeCodingQuestions.find((q) => q.id === questionId);
+        if (!item) return state;
+        return openQuestionInQueue(state, questionId);
+      });
     },
-    [activeCodingQuestions, jumpToSessionItem, setCodingSession]
+    [activeCodingQuestions, setCodingQueue]
   );
 
   const handleOpenOutputQuestion = useCallback(
     (questionId) => {
-      jumpToSessionItem(
-        setOutputSession,
-        activeOutputQuestions,
-        questionId,
-        (queueIds) => createOutputSession({ queue: activeOutputQuestions.filter((q) => queueIds.includes(q.id)) })
-      );
+      setOutputQueue((state) => {
+        if (!state?.queueIds?.length) {
+          const item = activeOutputQuestions.find((q) => q.id === questionId);
+          if (!item) return state;
+          return createPracticeQueue([item]);
+        }
+        const item = activeOutputQuestions.find((q) => q.id === questionId);
+        if (!item) return state;
+        return openQuestionInQueue(state, questionId);
+      });
     },
-    [activeOutputQuestions, jumpToSessionItem, setOutputSession]
+    [activeOutputQuestions, setOutputQueue]
   );
 
   const handleSearchSelect = useCallback(
@@ -792,19 +784,14 @@ export default function App() {
       if (section === 'mcq') {
         setSection('mcq');
         setViewMode('quiz');
-        setSkippedIds((ids) => ids.filter((skippedId) => skippedId !== id));
-        jumpToSessionItem(
-          setQuizSession,
-          activeQuestions,
-          id,
-          (queueIds) =>
-            createSession({
-              queue: activeQuestions.filter((question) => queueIds.includes(question.id)),
-              mode: 'all',
-              topics: [],
-              difficulties: [],
-            })
-        );
+        setMcqQueue((state) => {
+          const question = activeQuestions.find((q) => q.id === id);
+          if (!question) return state;
+          if (!getPracticeQueueQuestionIds(state).length) {
+            return createPracticeQueue([question], { mode: 'all', topics: [], difficulties: [] });
+          }
+          return openQuestionInQueue(state, id, { clearSkipped: true });
+        });
         return;
       }
       if (section === 'coding') {
@@ -821,10 +808,9 @@ export default function App() {
       activeQuestions,
       handleOpenCodingQuestion,
       handleOpenOutputQuestion,
-      jumpToSessionItem,
-      setQuizSession,
+      getPracticeQueueQuestionIds,
+      setMcqQueue,
       setSection,
-      setSkippedIds,
       setViewMode,
     ]
   );
@@ -841,6 +827,23 @@ export default function App() {
       setCompleted((prev) => toggleCompletedId(prev, section, id));
     },
     [setCompleted]
+  );
+
+  const handleToggleLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('learnings', orderedStarredActiveLearnings, setLearningId, completed, setCompleted),
+    [orderedStarredActiveLearnings, setLearningId, completed, setCompleted]
+  );
+  const handleToggleReactLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('react-learnings', orderedStarredActiveReactLearnings, setReactLearningId, completed, setCompleted),
+    [orderedStarredActiveReactLearnings, setReactLearningId, completed, setCompleted]
+  );
+  const handleToggleHldLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('hld', orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted),
+    [orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted]
+  );
+  const handleToggleAlgorithmLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('algorithm', orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId, completed, setCompleted),
+    [orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId, completed, setCompleted]
   );
 
   const getMcqPoolForMode = useCallback(
@@ -863,7 +866,7 @@ export default function App() {
       setStarredFilter((prev) => ({ ...prev, mcq: value }));
       const source = value ? filterStarred(activeQuestions, 'mcq', starred) : activeQuestions;
       const pool = getMcqPoolForMode(source, mode, selectedTopics, selectedDifficulties);
-      startQuiz(pool, mode, { resetSession: true, topics: selectedTopics, difficulties: selectedDifficulties });
+      startQuiz(pool, mode, { resetPass: true, topics: selectedTopics, difficulties: selectedDifficulties });
     },
     [
       setStarredFilter,
@@ -949,54 +952,42 @@ export default function App() {
     (value) => {
       setStarredFilter((prev) => ({ ...prev, coding: value }));
       const pool = value ? filterStarred(activeCodingQuestions, 'coding', starred) : activeCodingQuestions;
-      const queue = buildCodingQueue(pool, completed, { includeCompleted: codingIncludeCompleted });
-      setCodingSession({
-        answeredIds: [],
-        score: 0,
-        answered: 0,
-        currentIndex: 0,
-        queueIds: queue.map((q) => q.id),
-        sessionTotal: queue.length,
-      });
-      codingSessionRecordedRef.current = false;
+      startCodingPass({ resetPass: true, pool });
     },
-    [setStarredFilter, activeCodingQuestions, starred, completed, codingIncludeCompleted, setCodingSession]
+    [setStarredFilter, activeCodingQuestions, starred, startCodingPass]
   );
 
   const handleOutputStarredFilterChange = useCallback(
     (value) => {
       setStarredFilter((prev) => ({ ...prev, output: value }));
       const pool = value ? filterStarred(activeOutputQuestions, 'output', starred) : activeOutputQuestions;
-      const queue = buildOutputQueue(pool, completed, { includeCompleted: outputIncludeCompleted });
-      setOutputSession(createOutputSession({ queue }));
-      outputSessionRecordedRef.current = false;
+      startOutputPass({ resetPass: true, pool });
     },
-    [setStarredFilter, activeOutputQuestions, starred, completed, outputIncludeCompleted, setOutputSession]
+    [setStarredFilter, activeOutputQuestions, starred, startOutputPass]
   );
 
   const handleArchiveMcq = useCallback(
     (question) => {
       setArchived((prev) => archiveId(prev, 'mcq', question.id));
-      setSkippedIds((ids) => ids.filter((id) => id !== question.id));
-      setQuizSession((session) => removeFromSessionQueue(session, question.id));
+      setMcqQueue((state) => archiveFromQueue(state, question.id));
     },
-    [setArchived, setSkippedIds, setQuizSession, removeFromSessionQueue]
+    [setArchived, setMcqQueue]
   );
 
   const handleArchiveOutput = useCallback(
     (question) => {
       setArchived((prev) => archiveId(prev, 'output', question.id));
-      setOutputSession((session) => removeFromSessionQueue(session, question.id));
+      setOutputQueue((state) => archiveFromQueue(state, question.id));
     },
-    [setArchived, setOutputSession, removeFromSessionQueue]
+    [setArchived, setOutputQueue]
   );
 
   const handleArchiveCoding = useCallback(
     (question) => {
       setArchived((prev) => archiveId(prev, 'coding', question.id));
-      setCodingSession((session) => removeFromSessionQueue(session, question.id));
+      setCodingQueue((state) => archiveFromQueue(state, question.id));
     },
-    [setArchived, setCodingSession, removeFromSessionQueue]
+    [setArchived, setCodingQueue]
   );
 
   const handleArchiveLearning = useCallback(
@@ -1051,137 +1042,97 @@ export default function App() {
     (section, id) => {
       setArchived((prev) => unarchiveId(prev, section, id));
       if (section === 'mcq') {
-        setQuizSession((session) => {
-          if (!session) return session;
-          if (session.answeredIds.includes(id)) return session;
-          if (session.queueIds.includes(id)) return session;
-          return { ...session, queueIds: [...session.queueIds, id] };
-        });
+        setMcqQueue((state) => appendToQueueTail(state, id));
       }
     },
-    [setArchived, setQuizSession]
+    [setArchived, setMcqQueue]
   );
 
   const handleClearProgress = useCallback(() => {
-    if (!window.confirm('Clear all quiz progress and history?')) return;
+    if (!window.confirm('Clear all quiz answer history? Mastered questions will stay marked.')) return;
     setProgress(EMPTY_PROGRESS);
-    const { queue } = shufflePool(filteredQuestions, new Set(), EMPTY_PROGRESS);
-    setQuizSession(createSession({ queue, mode: 'all', topics: [], difficulties: [] }));
-    sessionRecordedRef.current = false;
-  }, [shufflePool, filteredQuestions, setProgress, setQuizSession]);
-
-  const startOutputQuiz = useCallback(
-    ({ resetSession = false, includeCompleted: includeCompletedOverride, pool: poolOverride } = {}) => {
-      const includeCompleted = includeCompletedOverride ?? outputIncludeCompleted;
-      const nextScore = resetSession ? 0 : (outputSession?.score ?? 0);
-      const nextAnswered = resetSession ? 0 : (outputSession?.answered ?? 0);
-      const nextSessionTotal = resetSession ? undefined : outputSession?.sessionTotal;
-
-      const queue = buildOutputQuizQueue(
-        poolOverride ?? starredActiveOutputQuestions,
-        includeCompleted
-      );
-
-      setOutputSession(
-        createOutputSession({
-          queue,
-          score: nextScore,
-          answered: nextAnswered,
-          answeredIds: resetSession ? [] : [...(outputSession?.answeredIds ?? [])],
-          currentIndex: 0,
-          sessionTotal: resetSession ? queue.length : nextSessionTotal,
-        })
-      );
-      outputSessionRecordedRef.current = false;
-    },
-    [buildOutputQuizQueue, starredActiveOutputQuestions, outputIncludeCompleted, outputSession, setOutputSession]
-  );
+    const pool = buildMcqPool(filteredQuestions);
+    const queue = smartShuffle(pool, EMPTY_PROGRESS);
+    setMcqQueue(createPracticeQueue(queue, { mode: 'all', topics: [], difficulties: [] }));
+    passRecordedRef.current = false;
+  }, [buildMcqPool, filteredQuestions, setProgress, setMcqQueue]);
 
   const handleOutputCheck = useCallback(
     (correct, question) => {
-      setOutputSession((session) => {
-        if (!session || session.answeredIds.includes(question.id)) return session;
+      setOutputQueue((state) => {
+        if (!state || state.answeredIds.includes(question.id)) return state;
         setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
         if (correct) {
           setCompleted((prev) => markCompletedId(prev, 'output', question.id));
         }
         return {
-          ...session,
-          answeredIds: [...session.answeredIds, question.id],
-          answered: session.answered + 1,
-          score: session.score + (correct ? 1 : 0),
+          ...state,
+          answeredIds: [...state.answeredIds, question.id],
+          answered: state.answered + 1,
+          score: state.score + (correct ? 1 : 0),
         };
       });
     },
-    [setOutputProgress, setOutputSession, setCompleted]
+    [setOutputProgress, setOutputQueue, setCompleted]
   );
 
   const handleOutputNext = useCallback(() => {
-    setOutputSession((session) => {
-      if (!session) return session;
-      return { ...session, currentIndex: session.currentIndex + 1 };
-    });
-  }, [setOutputSession]);
+    setOutputQueue((state) => advancePass(state));
+  }, [setOutputQueue]);
 
   const handleOutputRestart = useCallback(() => {
-    startOutputQuiz({ resetSession: true });
-  }, [startOutputQuiz]);
+    startOutputPass({ resetPass: true });
+  }, [startOutputPass]);
 
   const handleOutputIncludeCompletedChange = useCallback(
     (value) => {
       setOutputIncludeCompleted(value);
-      startOutputQuiz({ resetSession: true, includeCompleted: value });
+      startOutputPass({ resetPass: true, includeCompleted: value });
     },
-    [setOutputIncludeCompleted, startOutputQuiz]
+    [setOutputIncludeCompleted, startOutputPass]
   );
 
   const handleOutputClearProgress = useCallback(() => {
-    if (!window.confirm('Clear all output quiz progress and history?')) return;
+    if (!window.confirm('Clear all output answer history? Mastered questions will stay marked.')) return;
     setOutputProgress(EMPTY_OUTPUT_PROGRESS);
     const queue = buildOutputQuizQueue(starredActiveOutputQuestions);
-    setOutputSession(createOutputSession({ queue }));
-    outputSessionRecordedRef.current = false;
-  }, [buildOutputQuizQueue, starredActiveOutputQuestions, setOutputProgress, setOutputSession]);
+    setOutputQueue(createPracticeQueue(queue));
+    outputPassRecordedRef.current = false;
+  }, [buildOutputQuizQueue, starredActiveOutputQuestions, setOutputProgress, setOutputQueue]);
 
   const handleMcqIncludeCompletedChange = useCallback(
     (value) => {
       setMcqIncludeCompleted(value);
-      const { queue } = shufflePool(basePool, new Set(), progress, mcqExcludedSet, value);
-      setQuizSession(createSession({
-        queue,
+      const pool = filterPoolByCompleted(basePool, completed, {
+        includeCompleted: value,
+        section: 'mcq',
+      });
+      const queue = smartShuffle(pool, progress);
+      setMcqQueue(createPracticeQueue(queue, {
         mode,
         topics: selectedTopics,
         difficulties: selectedDifficulties,
       }));
-      sessionRecordedRef.current = false;
+      passRecordedRef.current = false;
     },
-    [setMcqIncludeCompleted, shufflePool, basePool, progress, mcqExcludedSet, mode, selectedTopics, selectedDifficulties, setQuizSession]
+    [setMcqIncludeCompleted, basePool, completed, progress, mode, selectedTopics, selectedDifficulties, setMcqQueue]
   );
 
   const handleCodingIncludeCompletedChange = useCallback(
     (value) => {
       setCodingIncludeCompleted(value);
-      const queue = buildCodingQueue(starredActiveCodingQuestions, completed, { includeCompleted: value });
-      setCodingSession({
-        answeredIds: [],
-        score: 0,
-        answered: 0,
-        currentIndex: 0,
-        queueIds: queue.map((q) => q.id),
-        sessionTotal: queue.length,
-      });
-      codingSessionRecordedRef.current = false;
+      startCodingPass({ resetPass: true, includeCompleted: value });
     },
-    [setCodingIncludeCompleted, starredActiveCodingQuestions, completed, setCodingSession]
+    [setCodingIncludeCompleted, startCodingPass]
   );
 
   const handleCodingCheck = useCallback(
     (correct, question, { isRetry = false } = {}) => {
       if (isRetry) {
         if (!correct) return;
-        setCodingSession((session) => {
-          if (!session || !session.answeredIds.includes(question.id)) return session;
-          return { ...session, score: session.score + 1 };
+        setCodingQueue((state) => {
+          if (!state || !state.answeredIds.includes(question.id)) return state;
+          return { ...state, score: state.score + 1 };
         });
         setCodingProgress((prev) => {
           const updated = recordCodingAnswer(prev, question.id, true);
@@ -1192,8 +1143,8 @@ export default function App() {
         return;
       }
 
-      setCodingSession((session) => {
-        if (!session || session.answeredIds.includes(question.id)) return session;
+      setCodingQueue((state) => {
+        if (!state || state.answeredIds.includes(question.id)) return state;
         setCodingProgress((prev) => {
           const updated = recordCodingAnswer(prev, question.id, correct);
           saveCodingProgress(updated);
@@ -1203,37 +1154,23 @@ export default function App() {
           setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
         }
         return {
-          ...session,
-          answeredIds: [...session.answeredIds, question.id],
-          answered: session.answered + 1,
-          score: session.score + (correct ? 1 : 0),
+          ...state,
+          answeredIds: [...state.answeredIds, question.id],
+          answered: state.answered + 1,
+          score: state.score + (correct ? 1 : 0),
         };
       });
     },
-    [setCodingProgress, setCodingSession, setCompleted]
+    [setCodingProgress, setCodingQueue, setCompleted]
   );
 
   const handleCodingNext = useCallback(() => {
-    setCodingSession((session) => {
-      if (!session) return session;
-      return { ...session, currentIndex: session.currentIndex + 1 };
-    });
-  }, [setCodingSession]);
+    setCodingQueue((state) => advancePass(state));
+  }, [setCodingQueue]);
 
   const handleCodingRestart = useCallback(() => {
-    const queue = buildCodingQueue(starredActiveCodingQuestions, completed, {
-      includeCompleted: codingIncludeCompleted,
-    });
-    setCodingSession({
-      answeredIds: [],
-      score: 0,
-      answered: 0,
-      currentIndex: 0,
-      queueIds: queue.map((q) => q.id),
-      sessionTotal: queue.length,
-    });
-    codingSessionRecordedRef.current = false;
-  }, [starredActiveCodingQuestions, completed, codingIncludeCompleted, setCodingSession]);
+    startCodingPass({ resetPass: true });
+  }, [startCodingPass]);
 
   const codingStats = useMemo(() => getCodingStats(codingProgress), [codingProgress]);
 
@@ -1254,7 +1191,7 @@ export default function App() {
 
       if (searchPaletteOpen) return;
 
-      if (e.key === 'Enter' && !isFinished && !loading && !isEditable) {
+      if (e.key === 'Enter' && !isPassComplete && !loading && !isEditable) {
         e.preventDefault();
         const btn = document.querySelector('.next-btn');
         if (btn) btn.click();
@@ -1262,7 +1199,7 @@ export default function App() {
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isFinished, loading, searchPaletteOpen]);
+  }, [isPassComplete, loading, searchPaletteOpen]);
 
   function handleToggleTopic(topic) {
     const next = selectedTopics.includes(topic)
@@ -1294,7 +1231,7 @@ export default function App() {
 
     pool = filterQuestions(pool, { topics, difficulties });
 
-    startQuiz(pool, currentMode, { resetSession: false, topics, difficulties });
+    startQuiz(pool, currentMode, { resetPass: true, topics, difficulties });
   }
 
   const lifetimeAccuracy = getLifetimeAccuracy(progress.stats);
@@ -1308,7 +1245,7 @@ export default function App() {
       return <div className="quiz-container loading"><p>Loading questions...</p></div>;
     }
 
-    if (outputSessionCaughtUp) {
+    if (outputQueueEmpty) {
       return (
         <div className="quiz-container">
           <div className="filtered-empty">
@@ -1317,7 +1254,7 @@ export default function App() {
                 ? 'No starred output questions yet.'
                 : outputIncludeCompleted
                   ? 'No output questions available in this session. Start a new quiz to continue.'
-                  : 'All output questions are completed. Turn on "Include completed questions" to keep practicing.'}
+                  : 'All output questions are mastered. Turn on "Include mastered questions" to keep practicing.'}
             </p>
             <button onClick={handleOutputRestart}>Start new quiz</button>
           </div>
@@ -1349,12 +1286,12 @@ export default function App() {
       );
     }
 
-    if (isOutputFinished) {
+    if (isOutputPassComplete) {
       return (
         <div className="quiz-container">
           <OutputResults
             score={outputScore}
-            totalQuestions={outputSessionTotal}
+            totalQuestions={outputPassTotal}
             sessionCount={outputProgress.sessions.length}
             bestPct={outputBestPct}
             missedCount={outputMissedCount}
@@ -1395,7 +1332,7 @@ export default function App() {
       return <div className="quiz-container loading"><p>Loading questions...</p></div>;
     }
 
-    if (codingSessionCaughtUp) {
+    if (codingQueueEmpty) {
       return (
         <div className="quiz-container">
           <div className="filtered-empty">
@@ -1404,7 +1341,7 @@ export default function App() {
                 ? 'No starred coding challenges yet.'
                 : codingIncludeCompleted
                   ? 'No coding challenges available in this session. Start a new quiz to continue.'
-                  : 'All coding challenges are completed. Turn on "Include completed questions" to keep practicing.'}
+                  : 'All coding challenges are mastered. Turn on "Include mastered questions" to keep practicing.'}
             </p>
             <button onClick={handleCodingRestart}>Start new quiz</button>
           </div>
@@ -1436,12 +1373,12 @@ export default function App() {
       );
     }
 
-    if (isCodingFinished) {
+    if (isCodingPassComplete) {
       return (
         <div className="quiz-container">
           <CodingResults
             score={codingScore}
-            totalQuestions={codingSessionTotal}
+            totalQuestions={codingPassTotal}
             sessionCount={codingProgress.sessions.length}
             bestPct={codingStats.bestPct}
             onRestart={handleCodingRestart}
@@ -1483,26 +1420,28 @@ export default function App() {
     if (viewMode === 'list') {
       return (
         <QuestionListView
-          questions={filteredQuestions}
+          questions={mcqListQuestions}
           progress={progress}
           skippedIds={skippedIds}
+          passState={mcqQueue}
           starredIds={starred.mcq}
           completedIds={completed.mcq}
           currentQuestionId={currentQuestion?.id ?? null}
           onOpenQuestion={handleOpenQuestion}
           onUnskip={handleUnskip}
+          scopeLabel={mcqListScopeLabel}
         />
       );
     }
 
-    if (sessionCaughtUp) {
+    if (mcqQueueEmpty) {
       return (
         <div className="quiz-container">
           <div className="filtered-empty">
             <p>
               {mcqIncludeCompleted
-                ? "You've answered all questions in this session. Start a new quiz to continue."
-                : 'All questions are completed. Turn on "Include completed questions" to keep practicing.'}
+                ? 'No questions available in this pass. Start a new quiz to continue.'
+                : 'All questions are mastered. Turn on "Include mastered questions" to keep practicing.'}
             </p>
             <button onClick={handleRestart}>Start new quiz</button>
           </div>
@@ -1538,12 +1477,12 @@ export default function App() {
       );
     }
 
-    if (isFinished) {
+    if (isPassComplete) {
       return (
         <div className="quiz-container">
           <Results
             score={score}
-            totalQuestions={sessionTotal}
+            totalQuestions={passTotal}
             sessionCount={progress.sessions.length}
             bestPct={bestPct}
             weakTopics={weakTopics}
@@ -1761,56 +1700,56 @@ export default function App() {
             {activeSection === 'learnings' ? (
               <LearningsView
                 learning={selectedLearning}
-                learnings={starredActiveLearnings}
+                learnings={orderedStarredActiveLearnings}
                 selectedLearningId={selectedLearning?.id ?? null}
                 onSelectLearning={setLearningId}
                 onArchive={handleArchiveLearning}
                 isStarred={selectedLearning ? isStarred(selectedLearning.id, 'learnings', starred) : false}
                 onToggleStar={() => selectedLearning && handleToggleStar('learnings', selectedLearning.id)}
                 isCompleted={selectedLearning ? isCompleted(selectedLearning.id, 'learnings', completed) : false}
-                onToggleCompleted={() => selectedLearning && handleToggleCompleted('learnings', selectedLearning.id)}
+                onToggleCompleted={() => selectedLearning && handleToggleLearningCompleted(selectedLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
             ) : activeSection === 'react-learnings' ? (
               <LearningsView
                 learning={selectedReactLearning}
-                learnings={starredActiveReactLearnings}
+                learnings={orderedStarredActiveReactLearnings}
                 selectedLearningId={selectedReactLearning?.id ?? null}
                 onSelectLearning={setReactLearningId}
                 onArchive={handleArchiveReactLearning}
                 isStarred={selectedReactLearning ? isStarred(selectedReactLearning.id, 'react-learnings', starred) : false}
                 onToggleStar={() => selectedReactLearning && handleToggleStar('react-learnings', selectedReactLearning.id)}
                 isCompleted={selectedReactLearning ? isCompleted(selectedReactLearning.id, 'react-learnings', completed) : false}
-                onToggleCompleted={() => selectedReactLearning && handleToggleCompleted('react-learnings', selectedReactLearning.id)}
+                onToggleCompleted={() => selectedReactLearning && handleToggleReactLearningCompleted(selectedReactLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
             ) : activeSection === 'hld' ? (
               <LearningsView
                 learning={selectedHldLearning}
-                learnings={starredActiveHldLearnings}
+                learnings={orderedStarredActiveHldLearnings}
                 selectedLearningId={selectedHldLearning?.id ?? null}
                 onSelectLearning={setHldLearningId}
                 onArchive={handleArchiveHldLearning}
                 isStarred={selectedHldLearning ? isStarred(selectedHldLearning.id, 'hld', starred) : false}
                 onToggleStar={() => selectedHldLearning && handleToggleStar('hld', selectedHldLearning.id)}
                 isCompleted={selectedHldLearning ? isCompleted(selectedHldLearning.id, 'hld', completed) : false}
-                onToggleCompleted={() => selectedHldLearning && handleToggleCompleted('hld', selectedHldLearning.id)}
+                onToggleCompleted={() => selectedHldLearning && handleToggleHldLearningCompleted(selectedHldLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
             ) : activeSection === 'algorithm' ? (
               <LearningsView
                 learning={selectedAlgorithmLearning}
-                learnings={starredActiveAlgorithmLearnings}
+                learnings={orderedStarredActiveAlgorithmLearnings}
                 selectedLearningId={selectedAlgorithmLearning?.id ?? null}
                 onSelectLearning={setAlgorithmLearningId}
                 onArchive={handleArchiveAlgorithmLearning}
                 isStarred={selectedAlgorithmLearning ? isStarred(selectedAlgorithmLearning.id, 'algorithm', starred) : false}
                 onToggleStar={() => selectedAlgorithmLearning && handleToggleStar('algorithm', selectedAlgorithmLearning.id)}
                 isCompleted={selectedAlgorithmLearning ? isCompleted(selectedAlgorithmLearning.id, 'algorithm', completed) : false}
-                onToggleCompleted={() => selectedAlgorithmLearning && handleToggleCompleted('algorithm', selectedAlgorithmLearning.id)}
+                onToggleCompleted={() => selectedAlgorithmLearning && handleToggleAlgorithmLearningCompleted(selectedAlgorithmLearning.id)}
                 highlight={syntaxHighlight}
                 theme={theme}
               />
@@ -1849,7 +1788,7 @@ export default function App() {
           ) : activeSection === 'learnings' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={starredActiveLearnings}
+                learnings={orderedStarredActiveLearnings}
                 starredIds={starred.learnings}
                 completedIds={completed.learnings}
                 selectedLearningId={selectedLearning?.id ?? null}
@@ -1863,7 +1802,7 @@ export default function App() {
           ) : activeSection === 'react-learnings' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={starredActiveReactLearnings}
+                learnings={orderedStarredActiveReactLearnings}
                 starredIds={starred['react-learnings']}
                 completedIds={completed['react-learnings']}
                 selectedLearningId={selectedReactLearning?.id ?? null}
@@ -1877,7 +1816,7 @@ export default function App() {
           ) : activeSection === 'hld' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={starredActiveHldLearnings}
+                learnings={orderedStarredActiveHldLearnings}
                 starredIds={starred.hld}
                 completedIds={completed.hld}
                 selectedLearningId={selectedHldLearning?.id ?? null}
@@ -1891,7 +1830,7 @@ export default function App() {
           ) : activeSection === 'algorithm' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={starredActiveAlgorithmLearnings}
+                learnings={orderedStarredActiveAlgorithmLearnings}
                 starredIds={starred.algorithm}
                 completedIds={completed.algorithm}
                 selectedLearningId={selectedAlgorithmLearning?.id ?? null}

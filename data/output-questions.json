@@ -28,8 +28,8 @@
     {
       "id": 3,
       "question": "What will be the output?",
-      "body": "```javascript\nlet a = { x: 1, y: 2 }\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);\n```",
-      "code": "let a = { x: 1, y: 2 }\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);",
+      "body": "```javascript\nlet a = { x: 1, y: 2 };\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);\n```",
+      "code": "let a = { x: 1, y: 2 };\nlet b = a;\nb.x = 3;\nconsole.log(a);\nconsole.log(b);",
       "expectedLines": [
         "{\"x\":3,\"y\":2}",
         "{\"x\":3,\"y\":2}"
@@ -41,8 +41,8 @@
     {
       "id": 4,
       "question": "What will be the output?",
-      "body": "```javascript\nfor(var i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}\n```",
-      "code": "for(var i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}",
+      "body": "```javascript\nfor (var i = 0; i < 10; i++) {\n  setTimeout(function () {\n    console.log(\"value is \" + i);\n  });\n}\n```",
+      "code": "for (var i = 0; i < 10; i++) {\n  setTimeout(function () {\n    console.log(\"value is \" + i);\n  });\n}",
       "expectedLines": [
         "value is 10",
         "value is 10",
@@ -62,8 +62,8 @@
     {
       "id": 5,
       "question": "What will be the output?",
-      "body": "```javascript\nfor(let i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}\n```",
-      "code": "for(let i = 0; i < 10; i++){\n    setTimeout(function(){\n      console.log(\"value is \" + i);\n  })\n}",
+      "body": "```javascript\nfor (let i = 0; i < 10; i++) {\n  setTimeout(function () {\n    console.log(\"value is \" + i);\n  });\n}\n```",
+      "code": "for (let i = 0; i < 10; i++) {\n  setTimeout(function () {\n    console.log(\"value is \" + i);\n  });\n}",
       "expectedLines": [
         "value is 0",
         "value is 1",
@@ -83,8 +83,8 @@
     {
       "id": 6,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction hello() {\n  console.log(\"1\");\n    setTimeout(() => {\n        console.log(\"2\");\n    })\n  console.log(\"3\");\n}\nhello();\n```",
-      "code": "function hello() {\n  console.log(\"1\");\n    setTimeout(() => {\n        console.log(\"2\");\n    })\n  console.log(\"3\");\n}\nhello();",
+      "body": "```javascript\nfunction hello() {\n  console.log(\"1\");\n  setTimeout(() => {\n    console.log(\"2\");\n  });\n  console.log(\"3\");\n}\nhello();\n```",
+      "code": "function hello() {\n  console.log(\"1\");\n  setTimeout(() => {\n    console.log(\"2\");\n  });\n  console.log(\"3\");\n}\nhello();",
       "expectedLines": [
         "1",
         "3",
@@ -97,8 +97,8 @@
     {
       "id": 7,
       "question": "What will be the output?",
-      "body": "```javascript\nlet f = \"8\";\nlet a = 1;\nconsole.log((+f)+a+1);\n```",
-      "code": "let f = \"8\";\nlet a = 1;\nconsole.log((+f)+a+1);",
+      "body": "```javascript\nlet f = \"8\";\nlet a = 1;\nconsole.log(+f + a + 1);\n```",
+      "code": "let f = \"8\";\nlet a = 1;\nconsole.log(+f + a + 1);",
       "expectedLines": [
         "10"
       ],
@@ -109,8 +109,8 @@
     {
       "id": 8,
       "question": "What will be the output?",
-      "body": "```javascript\nlet a = 10;\nif(true){\n   let a = 20;\n   console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");\n```",
-      "code": "let a = 10;\nif(true){\n   let a = 20;\n   console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");",
+      "body": "```javascript\nlet a = 10;\nif (true) {\n  let a = 20;\n  console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");\n```",
+      "code": "let a = 10;\nif (true) {\n  let a = 20;\n  console.log(a, \"inside\");\n}\nconsole.log(a, \"outside\");",
       "expectedLines": [
         "20 inside",
         "10 outside"
@@ -122,8 +122,8 @@
     {
       "id": 9,
       "question": "What will be the output?",
-      "body": "```javascript\nvar a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a)\n```",
-      "code": "var a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a)",
+      "body": "```javascript\nvar a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a);\n```",
+      "code": "var a = \"xyz\";\nvar a = \"pqr\";\nconsole.log(a);",
       "expectedLines": [
         "pqr"
       ],
@@ -146,8 +146,8 @@
     {
       "id": 11,
       "question": "What will be the output?",
-      "body": "```javascript\nconst person1 = { name: 'xyz', age: 21 };\nconst person2 = { city: 'abc', ...person1 };\nconsole.log(person2);\n```",
-      "code": "const person1 = { name: 'xyz', age: 21 };\nconst person2 = { city: 'abc', ...person1 };\nconsole.log(person2);",
+      "body": "```javascript\nconst person1 = { name: \"xyz\", age: 21 };\nconst person2 = { city: \"abc\", ...person1 };\nconsole.log(person2);\n```",
+      "code": "const person1 = { name: \"xyz\", age: 21 };\nconst person2 = { city: \"abc\", ...person1 };\nconsole.log(person2);",
       "expectedLines": [
         "{\"city\":\"abc\",\"name\":\"xyz\",\"age\":21}"
       ],
@@ -207,8 +207,8 @@
     {
       "id": 16,
       "question": "What will be the output?",
-      "body": "```javascript\nconsole.log({} == {}); \nconsole.log({} === {});\n```",
-      "code": "console.log({} == {}); \nconsole.log({} === {});",
+      "body": "```javascript\nconsole.log({} == {});\nconsole.log({} === {});\n```",
+      "code": "console.log({} == {});\nconsole.log({} === {});",
       "expectedLines": [
         "false",
         "false"
@@ -220,8 +220,8 @@
     {
       "id": 17,
       "question": "What will be the output?",
-      "body": "```javascript\nlet x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x)\n```",
-      "code": "let x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x)",
+      "body": "```javascript\nlet x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x);\n```",
+      "code": "let x = 5;\nlet y = x++;\nconsole.log(y);\nconsole.log(x);",
       "expectedLines": [
         "5",
         "6"
@@ -233,8 +233,8 @@
     {
       "id": 18,
       "question": "What will be the output?",
-      "body": "```javascript\nlet x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x)\n```",
-      "code": "let x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x)",
+      "body": "```javascript\nlet x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x);\n```",
+      "code": "let x = 5;\nlet y = ++x;\nconsole.log(y);\nconsole.log(x);",
       "expectedLines": [
         "6",
         "6"
@@ -246,8 +246,8 @@
     {
       "id": 19,
       "question": "What will be the output?",
-      "body": "```javascript\nconsole.log('apple'.split(''));\n```",
-      "code": "console.log('apple'.split(''));",
+      "body": "```javascript\nconsole.log(\"apple\".split(\"\"));\n```",
+      "code": "console.log(\"apple\".split(\"\"));",
       "expectedLines": [
         "[\"a\",\"p\",\"p\",\"l\",\"e\"]"
       ],
@@ -258,8 +258,8 @@
     {
       "id": 20,
       "question": "What will be the output?",
-      "body": "```javascript\nconst arr = [2,3,5,2,8,10,5];\nconsole.log(arr.indexOf(5))\n```",
-      "code": "const arr = [2,3,5,2,8,10,5];\nconsole.log(arr.indexOf(5))",
+      "body": "```javascript\nconst arr = [2, 3, 5, 2, 8, 10, 5];\nconsole.log(arr.indexOf(5));\n```",
+      "code": "const arr = [2, 3, 5, 2, 8, 10, 5];\nconsole.log(arr.indexOf(5));",
       "expectedLines": [
         "2"
       ],
@@ -270,8 +270,8 @@
     {
       "id": 21,
       "question": "What will be the output?",
-      "body": "```javascript\nconst array = [8, 18, 28, 38];\nconst result = array.map(element => element + 2)\n               .filter((element) => element > 25);\nconsole.log(result);\n```",
-      "code": "const array = [8, 18, 28, 38];\nconst result = array.map(element => element + 2)\n               .filter((element) => element > 25);\nconsole.log(result);",
+      "body": "```javascript\nconst array = [8, 18, 28, 38];\nconst result = array\n  .map((element) => element + 2)\n  .filter((element) => element > 25);\nconsole.log(result);\n```",
+      "code": "const array = [8, 18, 28, 38];\nconst result = array\n  .map((element) => element + 2)\n  .filter((element) => element > 25);\nconsole.log(result);",
       "expectedLines": [
         "[30,40]"
       ],
@@ -282,8 +282,8 @@
     {
       "id": 22,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction checkValue(value){\n    var result = Array.isArray(value);\n    console.log(result);\n}\ncheckValue([1,2,3]);\n```",
-      "code": "function checkValue(value){\n    var result = Array.isArray(value);\n    console.log(result);\n}\ncheckValue([1,2,3]);",
+      "body": "```javascript\nfunction checkValue(value) {\n  var result = Array.isArray(value);\n  console.log(result);\n}\ncheckValue([1, 2, 3]);\n```",
+      "code": "function checkValue(value) {\n  var result = Array.isArray(value);\n  console.log(result);\n}\ncheckValue([1, 2, 3]);",
       "expectedLines": [
         "true"
       ],
@@ -294,8 +294,8 @@
     {
       "id": 23,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction sum(a=5, b=7){\n    return a+b;\n}\nconsole.log(sum(undefined, 20));\n```",
-      "code": "function sum(a=5, b=7){\n    return a+b;\n}\nconsole.log(sum(undefined, 20));",
+      "body": "```javascript\nfunction sum(a = 5, b = 7) {\n  return a + b;\n}\nconsole.log(sum(undefined, 20));\n```",
+      "code": "function sum(a = 5, b = 7) {\n  return a + b;\n}\nconsole.log(sum(undefined, 20));",
       "expectedLines": [
         "25"
       ],
@@ -332,8 +332,8 @@
     {
       "id": 26,
       "question": "What will be the output?",
-      "body": "```javascript\nconsole.log(printName());\nfunction printName(){\n    return \"Hi my name is Bob\"\n}\n```",
-      "code": "console.log(printName());\nfunction printName(){\n    return \"Hi my name is Bob\"\n}",
+      "body": "```javascript\nconsole.log(printName());\nfunction printName() {\n  return \"Hi my name is Bob\";\n}\n```",
+      "code": "console.log(printName());\nfunction printName() {\n  return \"Hi my name is Bob\";\n}",
       "expectedLines": [
         "Hi my name is Bob"
       ],
@@ -344,8 +344,8 @@
     {
       "id": 27,
       "question": "What will be the output?",
-      "body": "```javascript\nconsole.log(printName());\nconst printName = () => {\n    return \"Hi my name is Bob\"\n}\n```",
-      "code": "console.log(printName());\nconst printName = () => {\n    return \"Hi my name is Bob\"\n}",
+      "body": "```javascript\nconsole.log(printName());\nconst printName = () => {\n  return \"Hi my name is Bob\";\n};\n```",
+      "code": "console.log(printName());\nconst printName = () => {\n  return \"Hi my name is Bob\";\n};",
       "expectedLines": [
         "ReferenceError: Cannot access 'printName' before initialization"
       ],
@@ -356,8 +356,8 @@
     {
       "id": 28,
       "question": "What will be the output?",
-      "body": "```javascript\nconst userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age); \nconsole.log(cloneUserDetails.address.city);\n```",
-      "code": "const userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age); \nconsole.log(cloneUserDetails.address.city);",
+      "body": "```javascript\nconst userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age);\nconsole.log(cloneUserDetails.address.city);\n```",
+      "code": "const userDetails = {\n  firstName: \"Surbhi\",\n  lastName: \"Dighe\",\n  age: 20,\n  address: {\n    city: \"Hyderabad\",\n    country: \"India\",\n  },\n};\n\nlet cloneUserDetails = { ...userDetails };\n//Updating original object\nuserDetails.age = 22;\nuserDetails.address.city = \"Banglore\";\n\nconsole.log(cloneUserDetails.age);\nconsole.log(cloneUserDetails.address.city);",
       "expectedLines": [
         "20",
         "Banglore"
@@ -369,8 +369,8 @@
     {
       "id": 29,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction hello(){\n\tconsole.log(name);\n\tconsole.log(age);\n\tvar name = \"Alice\";\n\tlet age = 21;\n}\nhello();\n```",
-      "code": "function hello(){\n\tconsole.log(name);\n\tconsole.log(age);\n\tvar name = \"Alice\";\n\tlet age = 21;\n}\nhello();",
+      "body": "```javascript\nfunction hello() {\n  console.log(name);\n  console.log(age);\n  var name = \"Alice\";\n  let age = 21;\n}\nhello();\n```",
+      "code": "function hello() {\n  console.log(name);\n  console.log(age);\n  var name = \"Alice\";\n  let age = 21;\n}\nhello();",
       "expectedLines": [
         "ReferenceError: Cannot access 'age' before initialization"
       ],
@@ -381,8 +381,8 @@
     {
       "id": 30,
       "question": "What will be the output?",
-      "body": "```javascript\nconst arr1 = [1,2,3];\nconst arr2 = [1,2,3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);\n```",
-      "code": "const arr1 = [1,2,3];\nconst arr2 = [1,2,3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);",
+      "body": "```javascript\nconst arr1 = [1, 2, 3];\nconst arr2 = [1, 2, 3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);\n```",
+      "code": "const arr1 = [1, 2, 3];\nconst arr2 = [1, 2, 3];\nconst str = \"1,2,3\";\n\nconsole.log(arr1 == str);\nconsole.log(arr1 == arr2);",
       "expectedLines": [
         "true",
         "false"
@@ -394,8 +394,8 @@
     {
       "id": 31,
       "question": "What will be the output?",
-      "body": "```javascript\nconst a = {x : 1};\nconst b = {x : 1};\nconsole.log(a === b);\nconsole.log(a.x === b.x)\n```",
-      "code": "const a = {x : 1};\nconst b = {x : 1};\nconsole.log(a === b);\nconsole.log(a.x === b.x)",
+      "body": "```javascript\nconst a = { x: 1 };\nconst b = { x: 1 };\nconsole.log(a === b);\nconsole.log(a.x === b.x);\n```",
+      "code": "const a = { x: 1 };\nconst b = { x: 1 };\nconsole.log(a === b);\nconsole.log(a.x === b.x);",
       "expectedLines": [
         "false",
         "true"
@@ -419,8 +419,8 @@
     {
       "id": 33,
       "question": "What will be the output?",
-      "body": "```javascript\nconst arr = [11, 0, '', false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);\n```",
-      "code": "const arr = [11, 0, '', false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);",
+      "body": "```javascript\nconst arr = [11, 0, \"\", false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);\n```",
+      "code": "const arr = [11, 0, \"\", false, 2, 1];\nconst filtered = arr.filter(Boolean);\nconsole.log(filtered);",
       "expectedLines": [
         "[11,2,1]"
       ],
@@ -431,8 +431,8 @@
     {
       "id": 34,
       "question": "What will be the output?",
-      "body": "```javascript\nvar x = 0;\nvar y = 10;\nif(x){\n  console.log(x);\n}\nif(y){\n  console.log(y);\n}\n```",
-      "code": "var x = 0;\nvar y = 10;\nif(x){\n  console.log(x);\n}\nif(y){\n  console.log(y);\n}",
+      "body": "```javascript\nvar x = 0;\nvar y = 10;\nif (x) {\n  console.log(x);\n}\nif (y) {\n  console.log(y);\n}\n```",
+      "code": "var x = 0;\nvar y = 10;\nif (x) {\n  console.log(x);\n}\nif (y) {\n  console.log(y);\n}",
       "expectedLines": [
         "10"
       ],
@@ -443,8 +443,8 @@
     {
       "id": 35,
       "question": "What will be the output?",
-      "body": "```javascript\nconst obj = {\n\tvar1: 1,\n\tvar2: 2\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);\n```",
-      "code": "const obj = {\n\tvar1: 1,\n\tvar2: 2\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);",
+      "body": "```javascript\nconst obj = {\n  var1: 1,\n  var2: 2,\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);\n```",
+      "code": "const obj = {\n  var1: 1,\n  var2: 2,\n};\nconst { var1, var2 } = obj;\nconsole.log(var1, var2);",
       "expectedLines": [
         "1 2"
       ],
@@ -455,8 +455,8 @@
     {
       "id": 36,
       "question": "What will be the output?",
-      "body": "```javascript\nconst user = { \n\tname: \"Surbhi dighe\", \n\tcountry: \"India\" \n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);\n```",
-      "code": "const user = { \n\tname: \"Surbhi dighe\", \n\tcountry: \"India\" \n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);",
+      "body": "```javascript\nconst user = {\n  name: \"Surbhi dighe\",\n  country: \"India\",\n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);\n```",
+      "code": "const user = {\n  name: \"Surbhi dighe\",\n  country: \"India\",\n};\nconst { name: fullname, country } = user;\nconsole.log(fullname);\nconsole.log(name);",
       "expectedLines": [
         "ReferenceError: name is not defined"
       ],
@@ -467,8 +467,8 @@
     {
       "id": 37,
       "question": "What will be the output?",
-      "body": "```javascript\nconst person = {\n  firstName: 'Surbhi',\n};\nconst { lastName=\"dighe\" } = person;\nconsole.log(lastName);\n```",
-      "code": "const person = {\n  firstName: 'Surbhi',\n};\nconst { lastName=\"dighe\" } = person;\nconsole.log(lastName);",
+      "body": "```javascript\nconst person = {\n  firstName: \"Surbhi\",\n};\nconst { lastName = \"dighe\" } = person;\nconsole.log(lastName);\n```",
+      "code": "const person = {\n  firstName: \"Surbhi\",\n};\nconst { lastName = \"dighe\" } = person;\nconsole.log(lastName);",
       "expectedLines": [
         "dighe"
       ],
@@ -479,8 +479,8 @@
     {
       "id": 38,
       "question": "What will be the output?",
-      "body": "```javascript\nconst person = {\n  firstName: 'Surbhi',\n};\nconst { firstName=\"Henry\"} = person;\nconsole.log(firstName);\n```",
-      "code": "const person = {\n  firstName: 'Surbhi',\n};\nconst { firstName=\"Henry\"} = person;\nconsole.log(firstName);",
+      "body": "```javascript\nconst person = {\n  firstName: \"Surbhi\",\n};\nconst { firstName = \"Henry\" } = person;\nconsole.log(firstName);\n```",
+      "code": "const person = {\n  firstName: \"Surbhi\",\n};\nconst { firstName = \"Henry\" } = person;\nconsole.log(firstName);",
       "expectedLines": [
         "Surbhi"
       ],
@@ -491,8 +491,8 @@
     {
       "id": 39,
       "question": "What will be the output?",
-      "body": "```javascript\nvar a = 10;\nlet a = 20;\nconsole.log(a)\n```",
-      "code": "var a = 10;\nlet a = 20;\nconsole.log(a)",
+      "body": "```javascript\nvar a = 10;\nlet a = 20;\nconsole.log(a);\n```",
+      "code": "var a = 10;\nlet a = 20;\nconsole.log(a);",
       "expectedLines": [
         "SyntaxError: Identifier 'a' has already been declared"
       ],
@@ -503,8 +503,8 @@
     {
       "id": 40,
       "question": "What will be the output?",
-      "body": "```javascript\nconst arr = [\"A\",\"B\",\"C\",\"D\",\"E\"]\nconsole.log(Object.keys(arr));\n```",
-      "code": "const arr = [\"A\",\"B\",\"C\",\"D\",\"E\"]\nconsole.log(Object.keys(arr));",
+      "body": "```javascript\nconst arr = [\"A\", \"B\", \"C\", \"D\", \"E\"];\nconsole.log(Object.keys(arr));\n```",
+      "code": "const arr = [\"A\", \"B\", \"C\", \"D\", \"E\"];\nconsole.log(Object.keys(arr));",
       "expectedLines": [
         "[\"0\",\"1\",\"2\",\"3\",\"4\"]"
       ],
@@ -515,8 +515,8 @@
     {
       "id": 41,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction modify(obj) {\n    obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n    obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);\n```",
-      "code": "function modify(obj) {\n    obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n    obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);",
+      "body": "```javascript\nfunction modify(obj) {\n  obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n  obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);\n```",
+      "code": "function modify(obj) {\n  obj.name = \"Updated\";\n}\nlet person = { name: \"Original\" };\nmodify(person);\nconsole.log(person.name);\n\nfunction reassign(obj) {\n  obj = { name: \"New Object\" };\n}\nreassign(person);\nconsole.log(person.name);",
       "expectedLines": [
         "Updated",
         "Updated"
@@ -528,8 +528,8 @@
     {
       "id": 42,
       "question": "What will be the output?",
-      "body": "```javascript\nlet a={ x:1, y: {alpha:10,beta:20} };\nlet b = {...a};\n\nb.x=101;\nb.y.alpha=1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);\n```",
-      "code": "let a={ x:1, y: {alpha:10,beta:20} };\nlet b = {...a};\n\nb.x=101;\nb.y.alpha=1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);",
+      "body": "```javascript\nlet a = { x: 1, y: { alpha: 10, beta: 20 } };\nlet b = { ...a };\n\nb.x = 101;\nb.y.alpha = 1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);\n```",
+      "code": "let a = { x: 1, y: { alpha: 10, beta: 20 } };\nlet b = { ...a };\n\nb.x = 101;\nb.y.alpha = 1001;\n\nconsole.log(a.x);\nconsole.log(a.y.alpha);",
       "expectedLines": [
         "1",
         "1001"
@@ -541,8 +541,8 @@
     {
       "id": 43,
       "question": "What will be the output?",
-      "body": "```javascript\nconsole.log('Start');\n\nsetTimeout(() => {\n  console.log('setTimeout');\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise');\n});\n\nconsole.log('End');\n```",
-      "code": "console.log('Start');\n\nsetTimeout(() => {\n  console.log('setTimeout');\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise');\n});\n\nconsole.log('End');",
+      "body": "```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"setTimeout\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"Promise\");\n});\n\nconsole.log(\"End\");\n```",
+      "code": "console.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"setTimeout\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"Promise\");\n});\n\nconsole.log(\"End\");",
       "expectedLines": [
         "Start",
         "End",
@@ -556,8 +556,8 @@
     {
       "id": 44,
       "question": "What will be the output?",
-      "body": "```javascript\nvar array = [1,2,3,4,5];\ndelete array[2];\nconsole.log(array.length);\n```",
-      "code": "var array = [1,2,3,4,5];\ndelete array[2];\nconsole.log(array.length);",
+      "body": "```javascript\nvar array = [1, 2, 3, 4, 5];\ndelete array[2];\nconsole.log(array.length);\n```",
+      "code": "var array = [1, 2, 3, 4, 5];\ndelete array[2];\nconsole.log(array.length);",
       "expectedLines": [
         "5"
       ],
@@ -568,8 +568,8 @@
     {
       "id": 45,
       "question": "What will be the output?",
-      "body": "```javascript\nlet x = [\"a\",\"b\",\"c\"];\nlet y = [\"a\",\"b\",\"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);\n```",
-      "code": "let x = [\"a\",\"b\",\"c\"];\nlet y = [\"a\",\"b\",\"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);",
+      "body": "```javascript\nlet x = [\"a\", \"b\", \"c\"];\nlet y = [\"a\", \"b\", \"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);\n```",
+      "code": "let x = [\"a\", \"b\", \"c\"];\nlet y = [\"a\", \"b\", \"c\"];\nlet z = y;\n\nconsole.log(x == y);\nconsole.log(z == y);\nconsole.log(z == x);",
       "expectedLines": [
         "false",
         "true",
@@ -582,8 +582,8 @@
     {
       "id": 46,
       "question": "What will be the output?",
-      "body": "```javascript\nlet x; \nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);\n```",
-      "code": "let x; \nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);",
+      "body": "```javascript\nlet x;\nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);\n```",
+      "code": "let x;\nconsole.log(x);\nx = 20;\nconsole.log(x);\nx = \"John\";\nconsole.log(x);",
       "expectedLines": [
         "undefined",
         "20",
@@ -608,8 +608,8 @@
     {
       "id": 48,
       "question": "What will be the output?",
-      "body": "```javascript\nconst user = {\n    name: 'Aman Bhoria!',\n    logMessage() {\n        console.log(this.name); // What is logged? \n    }\n}; \nsetTimeout(user.logMessage, 1000);\n```",
-      "code": "const user = {\n    name: 'Aman Bhoria!',\n    logMessage() {\n        console.log(this.name); // What is logged? \n    }\n}; \nsetTimeout(user.logMessage, 1000);",
+      "body": "```javascript\nconst user = {\n  name: \"Aman Bhoria!\",\n  logMessage() {\n    console.log(this.name); // What is logged?\n  },\n};\nsetTimeout(user.logMessage, 1000);\n```",
+      "code": "const user = {\n  name: \"Aman Bhoria!\",\n  logMessage() {\n    console.log(this.name); // What is logged?\n  },\n};\nsetTimeout(user.logMessage, 1000);",
       "expectedLines": [
         "undefined"
       ],
@@ -644,8 +644,8 @@
     {
       "id": 51,
       "question": "What will be the output?",
-      "body": "```javascript\nfunction printName(firstName, lastName) {\n    firstName = \"Aman\";\n    lastName = \"Bhoria\";\n    return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name)\n```",
-      "code": "function printName(firstName, lastName) {\n    firstName = \"Aman\";\n    lastName = \"Bhoria\";\n    return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name)",
+      "body": "```javascript\nfunction printName(firstName, lastName) {\n  firstName = \"Aman\";\n  lastName = \"Bhoria\";\n  return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name);\n```",
+      "code": "function printName(firstName, lastName) {\n  firstName = \"Aman\";\n  lastName = \"Bhoria\";\n  return arguments[0] + \" \" + arguments[1];\n}\n\nlet name = printName(\"John\", \"Doe\");\nconsole.log(name);",
       "expectedLines": [
         "Aman Bhoria"
       ],
@@ -656,8 +656,8 @@
     {
       "id": 52,
       "question": "What will be the output?",
-      "body": "```javascript\nlet x = true + false; \nlet y = x + 1;\n\nconsole.log(x, y);\n```",
-      "code": "let x = true + false; \nlet y = x + 1;\n\nconsole.log(x, y);",
+      "body": "```javascript\nlet x = true + false;\nlet y = x + 1;\n\nconsole.log(x, y);\n```",
+      "code": "let x = true + false;\nlet y = x + 1;\n\nconsole.log(x, y);",
       "expectedLines": [
         "1 2"
       ],
@@ -668,8 +668,8 @@
     {
       "id": 53,
       "question": "What will be the output?",
-      "body": "```javascript\nconst obj = {\n  text: 'LOGGING',\n  list: ['1', '2', '3'],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  }\n};\nobj.log();\n```",
-      "code": "const obj = {\n  text: 'LOGGING',\n  list: ['1', '2', '3'],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  }\n};\nobj.log();",
+      "body": "```javascript\nconst obj = {\n  text: \"LOGGING\",\n  list: [\"1\", \"2\", \"3\"],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  },\n};\nobj.log();\n```",
+      "code": "const obj = {\n  text: \"LOGGING\",\n  list: [\"1\", \"2\", \"3\"],\n  log() {\n    this.list.forEach(function (item) {\n      console.log(this.text + item);\n    });\n  },\n};\nobj.log();",
       "expectedLines": [
         "undefined1",
         "undefined2",
@@ -718,7 +718,10 @@
       "question": "What will be the output?",
       "body": "```javascript\nvar a = 1;\nfunction foo() {\n  var a = 2;\n  console.log(a);\n}\nfoo();\nconsole.log(a);\n```",
       "code": "var a = 1;\nfunction foo() {\n  var a = 2;\n  console.log(a);\n}\nfoo();\nconsole.log(a);",
-      "expectedLines": ["2", "1"],
+      "expectedLines": [
+        "2",
+        "1"
+      ],
       "explanation": "Variables declared with `var` inside a function are **local** to that function — they live in a different memory location from the outer `var a = 1`. So `foo()` logs the local `a` (2), then the global `console.log(a)` logs 1. This demonstrates JavaScript's function-level scoping.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -728,7 +731,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nfunction foo() {\n  a = 2;\n}\nfoo();\nconsole.log(a);\n```",
       "code": "function foo() {\n  a = 2;\n}\nfoo();\nconsole.log(a);",
-      "expectedLines": ["2"],
+      "expectedLines": [
+        "2"
+      ],
       "explanation": "When you assign to a variable **without** `var`, `let`, or `const`, JavaScript does not create a local variable — it creates (or overwrites) a property on the **global object**. This is called an implicit global. In strict mode (`\"use strict\"`) this would throw a ReferenceError instead.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -736,9 +741,11 @@
     {
       "id": 58,
       "question": "What will be the output?",
-      "body": "```javascript\nvar answer = 0;\nconst baseValue = value => multipleValue => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);\n```",
-      "code": "var answer = 0;\nconst baseValue = value => multipleValue => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);",
-      "expectedLines": ["10"],
+      "body": "```javascript\nvar answer = 0;\nconst baseValue = (value) => (multipleValue) => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);\n```",
+      "code": "var answer = 0;\nconst baseValue = (value) => (multipleValue) => value * multipleValue;\nconst multiple = baseValue(2);\nanswer = multiple(5);\nconsole.log(answer);",
+      "expectedLines": [
+        "10"
+      ],
       "explanation": "This is a **closure** written with arrow functions. `baseValue(2)` returns a function that remembers `value = 2` in its closure. When that returned function is called as `multiple(5)`, it computes `2 * 5 = 10`. The inner function retains access to the outer function's `value` parameter even after the outer function has finished executing.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -748,7 +755,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nfunction outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    outerParam[\"b\"] = innerParam;\n  }\n  return innerFunc;\n}\nconst obj = { a: 1 };\nconst example = outerFunc(obj);\nconst answer = example(2);\nconsole.log(obj);\n```",
       "code": "function outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    outerParam[\"b\"] = innerParam;\n  }\n  return innerFunc;\n}\nconst obj = { a: 1 };\nconst example = outerFunc(obj);\nconst answer = example(2);\nconsole.log(obj);",
-      "expectedLines": ["{\"a\":1,\"b\":2}"],
+      "expectedLines": [
+        "{\"a\":1,\"b\":2}"
+      ],
       "explanation": "This combines **closures** and **reference types**. Objects (and arrays) are passed by sharing — the `outerParam` parameter inside `outerFunc` points to the same object as `obj`. When the inner function does `outerParam[\"b\"] = innerParam`, it mutates that shared object in place. So `console.log(obj)` shows `{a: 1, b: 2}`. If this were a primitive (number, string), the mutation inside the function would not affect the outer variable.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -758,7 +767,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest(arr);\nconsole.log(arr);\n```",
       "code": "let arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest(arr);\nconsole.log(arr);",
-      "expectedLines": ["[1,2,3]"],
+      "expectedLines": [
+        "[1,2,3]"
+      ],
       "explanation": "Arrays are **reference types**. When `arr` is passed to `test()`, the parameter `array` points to the same array in memory. `array.push(3)` mutates that shared array, so `arr` outside the function also sees the change.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -768,7 +779,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest([...arr]);\nconsole.log(arr);\n```",
       "code": "let arr = [1, 2];\nfunction test(array) {\n  array.push(3);\n}\ntest([...arr]);\nconsole.log(arr);",
-      "expectedLines": ["[1,2]"],
+      "expectedLines": [
+        "[1,2]"
+      ],
       "explanation": "The **spread operator** `[...arr]` creates a **new array** (a new reference). The `push(3)` modifies that copy, not the original `arr`. The original `arr` remains `[1, 2]`. This is the same as calling `test([1, 2])` — a fresh array literal.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -778,7 +791,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nlet arr = [1, 2];\nfunction test(array) {\n  array = [1, 2, 3];\n}\ntest(arr);\nconsole.log(arr);\n```",
       "code": "let arr = [1, 2];\nfunction test(array) {\n  array = [1, 2, 3];\n}\ntest(arr);\nconsole.log(arr);",
-      "expectedLines": ["[1,2]"],
+      "expectedLines": [
+        "[1,2]"
+      ],
       "explanation": "The `=` operator **creates a new reference** — it does not mutate the existing array. Inside the function, `array` is reassigned to point to a brand-new array `[1, 2, 3]`, but the outer variable `arr` still points to the original `[1, 2]`. Compare this with `.push()` (question 5) which mutates in place.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -788,7 +803,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nconst carDetails = {\n  name: \"Tomer\",\n  getName() {\n    return this.name;\n  },\n};\nthis.name = \"Joe\";\nvar getCarName = carDetails.getName;\nconsole.log(getCarName());\n```",
       "code": "const carDetails = {\n  name: \"Tomer\",\n  getName() {\n    return this.name;\n  },\n};\nthis.name = \"Joe\";\nvar getCarName = carDetails.getName;\nconsole.log(getCarName());",
-      "expectedLines": ["Joe"],
+      "expectedLines": [
+        "Joe"
+      ],
       "explanation": "**`this` is determined by how a function is called, not where it's defined.** When we do `var getCarName = carDetails.getName`, we're storing a detached reference to the function. Calling `getCarName()` as a plain function means `this` inside `getName` is the global object (non-strict mode). Since we set `this.name = \"Joe\"` on the global object (equivalent to `window.name = \"Joe\"` in browsers, where top-level `var name = \"Joe\"` would achieve the same result), the output is `\"Joe\"` — not `\"Tomer\"`.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -798,7 +815,9 @@
       "question": "What will be the output?",
       "body": "```javascript\nconsole.log(a);\nconsole.log(b);\nvar a = 2;\nlet b = 2;\n```",
       "code": "console.log(a);\nconsole.log(b);\nvar a = 2;\nlet b = 2;",
-      "expectedLines": ["ReferenceError: Cannot access 'b' before initialization"],
+      "expectedLines": [
+        "ReferenceError: Cannot access 'b' before initialization"
+      ],
       "explanation": "**`var` is hoisted and initialized to `undefined`**, so `console.log(a)` would log `undefined`. But then `console.log(b)` throws a **ReferenceError** because `let` is also hoisted but enters the **Temporal Dead Zone (TDZ)** — it cannot be accessed before its declaration line. The ReferenceError stops execution, so only the error is shown as the final output. Note: `let` and `const` ARE hoisted (unlike a common misconception), but they are not initialized until the declaration is reached.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"
@@ -806,9 +825,11 @@
     {
       "id": 65,
       "question": "What will be the output?",
-      "body": "```javascript\na();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function() {\n  console.log(\"b\");\n};\n```",
-      "code": "a();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function() {\n  console.log(\"b\");\n};",
-      "expectedLines": ["TypeError: b is not a function"],
+      "body": "```javascript\na();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function () {\n  console.log(\"b\");\n};\n```",
+      "code": "a();\nfunction a() {\n  console.log(\"a\");\n}\nb();\nvar b = function () {\n  console.log(\"b\");\n};",
+      "expectedLines": [
+        "TypeError: b is not a function"
+      ],
       "explanation": "**Function declarations are fully hoisted** — `a()` works and logs `\"a\"`. But **`var` is hoisted as `undefined`** — the `var b` declaration is hoisted to the top with value `undefined`, while the assignment `= function() {...}` stays in place. So `b()` tries to call `undefined()`, which throws **TypeError: b is not a function**. The function expression's value is not available until the line where it's assigned.",
       "async": false,
       "source": "https://dev.to/tomeraitz/tricky-javascript-questions-7nk"

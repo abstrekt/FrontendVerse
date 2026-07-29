@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeCode } from './normalize-code.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE_URL =
@@ -31,14 +32,6 @@ function htmlToText(html) {
       .replace(/<\/h[1-6]>/gi, '\n')
       .replace(/<[^>]+>/g, '')
   );
-}
-
-function normalizeCode(body) {
-  const code = body
-    .replace(/```javascript\n?/g, '')
-    .replace(/```/g, '')
-    .trim();
-  return code.replace(/\s+/g, ' ').replace(/;\s*$/, '').trim();
 }
 
 function formatOptionText(text) {

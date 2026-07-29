@@ -3,7 +3,7 @@
     {
       "id": 1,
       "question": "What's the output?",
-      "body": "```javascript\nfunction sayHi() {\n  console.log(name);\n  console.log(age);\n  var name = 'Lydia';\n  let age = 21;\n}\n\nsayHi();\n```",
+      "body": "```javascript\nfunction sayHi() {\n  console.log(name);\n  console.log(age);\n  var name = \"Lydia\";\n  let age = 21;\n}\n\nsayHi();\n```",
       "options": [
         {
           "key": "A",
@@ -95,7 +95,7 @@
     {
       "id": 4,
       "question": "What's the output?",
-      "body": "```javascript\n+true;\n!'Lydia';\n```",
+      "body": "```javascript\n+true;\n!\"Lydia\";\n```",
       "options": [
         {
           "key": "A",
@@ -121,7 +121,7 @@
     {
       "id": 5,
       "question": "Which one is true?",
-      "body": "```javascript\nconst bird = {\n  size: 'small',\n};\n\nconst mouse = {\n  name: 'Mickey',\n  small: true,\n};\n```",
+      "body": "```javascript\nconst bird = {\n  size: \"small\",\n};\n\nconst mouse = {\n  name: \"Mickey\",\n  small: true,\n};\n```",
       "options": [
         {
           "key": "A",
@@ -153,7 +153,7 @@
     {
       "id": 6,
       "question": "What's the output?",
-      "body": "```javascript\nlet c = { greeting: 'Hey!' };\nlet d;\n\nd = c;\nc.greeting = 'Hello';\nconsole.log(d.greeting);\n```",
+      "body": "```javascript\nlet c = { greeting: \"Hey!\" };\nlet d;\n\nd = c;\nc.greeting = \"Hello\";\nconsole.log(d.greeting);\n```",
       "options": [
         {
           "key": "A",
@@ -217,7 +217,7 @@
     {
       "id": 8,
       "question": "What's the output?",
-      "body": "```javascript\nclass Chameleon {\n  static colorChange(newColor) {\n    this.newColor = newColor;\n    return this.newColor;\n  }\n\n  constructor({ newColor = 'green' } = {}) {\n    this.newColor = newColor;\n  }\n}\n\nconst freddie = new Chameleon({ newColor: 'purple' });\nconsole.log(freddie.colorChange('orange'));\n```",
+      "body": "```javascript\nclass Chameleon {\n  static colorChange(newColor) {\n    this.newColor = newColor;\n    return this.newColor;\n  }\n\n  constructor({ newColor = \"green\" } = {}) {\n    this.newColor = newColor;\n  }\n}\n\nconst freddie = new Chameleon({ newColor: \"purple\" });\nconsole.log(freddie.colorChange(\"orange\"));\n```",
       "options": [
         {
           "key": "A",
@@ -275,7 +275,7 @@
     {
       "id": 10,
       "question": "What happens when we do this?",
-      "body": "```javascript\nfunction bark() {\n  console.log('Woof!');\n}\n\nbark.animal = 'dog';\n```",
+      "body": "```javascript\nfunction bark() {\n  console.log(\"Woof!\");\n}\n\nbark.animal = \"dog\";\n```",
       "options": [
         {
           "key": "A",
@@ -305,7 +305,7 @@
     {
       "id": 11,
       "question": "What's the output?",
-      "body": "```javascript\nfunction Person(firstName, lastName) {\n  this.firstName = firstName;\n  this.lastName = lastName;\n}\n\nconst member = new Person('Lydia', 'Hallie');\nPerson.getFullName = function() {\n  return `${this.firstName} ${this.lastName}`;\n};\n\nconsole.log(member.getFullName());\n```",
+      "body": "```javascript\nfunction Person(firstName, lastName) {\n  this.firstName = firstName;\n  this.lastName = lastName;\n}\n\nconst member = new Person(\"Lydia\", \"Hallie\");\nPerson.getFullName = function () {\n  return `${this.firstName} ${this.lastName}`;\n};\n\nconsole.log(member.getFullName());\n```",
       "options": [
         {
           "key": "A",
@@ -325,7 +325,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "In JavaScript, functions are objects, and therefore, the method `getFullName` gets added to the constructor function object itself. For that reason, we can call `Person.getFullName()`, but `member.getFullName` throws a `TypeError`. \n\nIf you want a method to be available to all object instances, you have to add it to the prototype property:\n\n```js\nPerson.prototype.getFullName = function() {\n  return `${this.firstName} ${this.lastName}`;\n};\n```\n\n</p>",
+      "explanation": "In JavaScript, functions are objects, and therefore, the method `getFullName` gets added to the constructor function object itself. For that reason, we can call `Person.getFullName()`, but `member.getFullName` throws a `TypeError`. \n\nIf you want a method to be available to all object instances, you have to add it to the prototype property:\n\n```javascript\nPerson.prototype.getFullName = function () {\n  return `${this.firstName} ${this.lastName}`;\n};\n```\n\n</p>",
       "topics": [
         "classes",
         "error handling",
@@ -338,7 +338,7 @@
     {
       "id": 12,
       "question": "What's the output?",
-      "body": "```javascript\nfunction Person(firstName, lastName) {\n  this.firstName = firstName;\n  this.lastName = lastName;\n}\n\nconst lydia = new Person('Lydia', 'Hallie');\nconst sarah = Person('Sarah', 'Smith');\n\nconsole.log(lydia);\nconsole.log(sarah);\n```",
+      "body": "```javascript\nfunction Person(firstName, lastName) {\n  this.firstName = firstName;\n  this.lastName = lastName;\n}\n\nconst lydia = new Person(\"Lydia\", \"Hallie\");\nconst sarah = Person(\"Sarah\", \"Smith\");\n\nconsole.log(lydia);\nconsole.log(sarah);\n```",
       "options": [
         {
           "key": "A",
@@ -390,7 +390,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "During the **capturing** phase, the event goes through the ancestor elements down to the target element. It then reaches the **target** element, and **bubbling** begins.\n\n<img src=\"https://i.imgur.com/N18oRgd.png\" width=\"200\">\n\n</p>",
+      "explanation": "Event propagation has three phases in order:\n\n1. **Capturing** — the event travels from the root down through ancestors toward the target.\n2. **Target** — the event reaches the element that triggered it.\n3. **Bubbling** — the event travels back up from the target through its ancestors.\n\nSo the correct order is Capturing → Target → Bubbling.\n\n<img src=\"https://i.imgur.com/N18oRgd.png\" width=\"200\">\n\n</p>",
       "topics": [
         "generators"
       ],
@@ -423,7 +423,7 @@
     {
       "id": 15,
       "question": "What's the output?",
-      "body": "```javascript\nfunction sum(a, b) {\n  return a + b;\n}\n\nsum(1, '2');\n```",
+      "body": "```javascript\nfunction sum(a, b) {\n  return a + b;\n}\n\nsum(1, \"2\");\n```",
       "options": [
         {
           "key": "A",
@@ -484,7 +484,7 @@
     {
       "id": 17,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getPersonInfo(one, two, three) {\n  console.log(one);\n  console.log(two);\n  console.log(three);\n}\n\nconst person = 'Lydia';\nconst age = 21;\n\ngetPersonInfo`${person} is ${age} years old`;\n```",
+      "body": "```javascript\nfunction getPersonInfo(one, two, three) {\n  console.log(one);\n  console.log(two);\n  console.log(three);\n}\n\nconst person = \"Lydia\";\nconst age = 21;\n\ngetPersonInfo`${person} is ${age} years old`;\n```",
       "options": [
         {
           "key": "A",
@@ -500,7 +500,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "If you use tagged template literals, the value of the first argument is always an array of the string values. The remaining arguments get the values of the passed expressions!\n\n</p>",
+      "explanation": "Tagged template literals pass arguments to the tag function in a specific order.\n\nThe **first argument** is always an array of the string segments between expressions. The **remaining arguments** are the evaluated values of each `${...}` expression.\n\nHere `getPersonInfo` receives:\n1. `['', ' is ', ' years old']` (string parts)\n2. `'Lydia'` (value of `person`)\n3. `21` (value of `age`)\n\nSo the first `console.log` prints the array of strings, not `'Lydia'`.\n\n</p>",
       "topics": [
         "tagged templates",
         "template literals"
@@ -510,7 +510,7 @@
     {
       "id": 18,
       "question": "What's the output?",
-      "body": "```javascript\nfunction checkAge(data) {\n  if (data === { age: 18 }) {\n    console.log('You are an adult!');\n  } else if (data == { age: 18 }) {\n    console.log('You are still an adult.');\n  } else {\n    console.log(`Hmm.. You don't have an age I guess`);\n  }\n}\n\ncheckAge({ age: 18 });\n```",
+      "body": "```javascript\nfunction checkAge(data) {\n  if (data === { age: 18 }) {\n    console.log(\"You are an adult!\");\n  } else if (data == { age: 18 }) {\n    console.log(\"You are still an adult.\");\n  } else {\n    console.log(`Hmm.. You don't have an age I guess`);\n  }\n}\n\ncheckAge({ age: 18 });\n```",
       "options": [
         {
           "key": "A",
@@ -557,7 +557,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The rest parameter (`...args`) lets us \"collect\" all remaining arguments into an array. An array is an object, so `typeof args` returns `\"object\"`\n\n</p>",
+      "explanation": "The rest parameter (`...args`) collects all arguments passed to the function into a **real Array**.\n\nEven with one argument, `args` is `[21]` — an array object. In JavaScript, arrays are objects, so `typeof args` returns `\"object\"`.\n\nNote: `typeof` does not return `\"array\"`; use `Array.isArray(args)` to check for arrays.\n\n</p>",
       "topics": [
         "data types",
         "object methods",
@@ -568,7 +568,7 @@
     {
       "id": 20,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getAge() {\n  'use strict';\n  age = 21;\n  console.log(age);\n}\n\ngetAge();\n```",
+      "body": "```javascript\nfunction getAge() {\n  \"use strict\";\n  age = 21;\n  console.log(age);\n}\n\ngetAge();\n```",
       "options": [
         {
           "key": "A",
@@ -599,7 +599,7 @@
     {
       "id": 21,
       "question": "What's the value of `sum`?",
-      "body": "```javascript\nconst sum = eval('10*10+5');\n```",
+      "body": "```javascript\nconst sum = eval(\"10*10+5\");\n```",
       "options": [
         {
           "key": "A",
@@ -619,7 +619,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "`eval` evaluates code that's passed as a string. If it's an expression, like in this case, it evaluates the expression. The expression is `10 * 10 + 5`. This returns the number `105`.\n\n</p>",
+      "explanation": "`eval` executes JavaScript code passed as a string.\n\nWhen the string is an expression (not a statement), `eval` evaluates it and returns the result. Here `10 * 10 + 5` is evaluated as multiplication and addition, yielding `105`.\n\nAvoid `eval` in production code — it is slow and a security risk if the string comes from untrusted input.\n\n</p>",
       "topics": [
         "generators",
         "this"
@@ -629,7 +629,7 @@
     {
       "id": 22,
       "question": "How long is cool_secret accessible?",
-      "body": "```javascript\nsessionStorage.setItem('cool_secret', 123);\n```",
+      "body": "```javascript\nsessionStorage.setItem(\"cool_secret\", 123);\n```",
       "options": [
         {
           "key": "A",
@@ -649,7 +649,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The data stored in `sessionStorage` is removed after closing the _tab_.\n\nIf you used `localStorage`, the data would've been there forever, unless for example `localStorage.clear()` is invoked.\n\n</p>",
+      "explanation": "`sessionStorage` is scoped to the **browser tab** (session). Data persists across page reloads within the same tab, but is cleared when the tab is closed.\n\n`localStorage` persists until explicitly removed (e.g. `localStorage.clear()` or `removeItem`).\n\n`cool_secret` remains accessible until you close the tab.\n\n</p>",
       "topics": [],
       "difficulty": "easy"
     },
@@ -686,7 +686,7 @@
     {
       "id": 24,
       "question": "What's the output?",
-      "body": "```javascript\nconst obj = { 1: 'a', 2: 'b', 3: 'c' };\nconst set = new Set([1, 2, 3, 4, 5]);\n\nobj.hasOwnProperty('1');\nobj.hasOwnProperty(1);\nset.has('1');\nset.has(1);\n```",
+      "body": "```javascript\nconst obj = { 1: \"a\", 2: \"b\", 3: \"c\" };\nconst set = new Set([1, 2, 3, 4, 5]);\n\nobj.hasOwnProperty(\"1\");\nobj.hasOwnProperty(1);\nset.has(\"1\");\nset.has(1);\n```",
       "options": [
         {
           "key": "A",
@@ -717,7 +717,7 @@
     {
       "id": 25,
       "question": "What's the output?",
-      "body": "```javascript\nconst obj = { a: 'one', b: 'two', a: 'three' };\nconsole.log(obj);\n```",
+      "body": "```javascript\nconst obj = { a: \"one\", b: \"two\", a: \"three\" };\nconsole.log(obj);\n```",
       "options": [
         {
           "key": "A",
@@ -737,7 +737,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "If you have two keys with the same name, the key will be replaced. It will still be in its first position, but with the last specified value.\n\n</p>",
+      "explanation": "Object keys must be unique. If you define the same key twice, the **last value wins** while the key keeps its position in insertion order.\n\n`{ a: \"one\", b: \"two\", a: \"three\" }` becomes `{ a: \"three\", b: \"two\" }` — `a` is still the first key, but its value is `\"three\"`.\n\n</p>",
       "topics": [],
       "difficulty": "easy"
     },
@@ -760,7 +760,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The base execution context is the global execution context: it's what's accessible everywhere in your code.\n\n</p>",
+      "explanation": "When JavaScript starts executing your code, it creates the **global execution context** first.\n\nThat context provides two things:\n1. The **global object** (`window` in browsers, `global` in Node).\n2. A `this` binding (in non-strict global code, `this` refers to the global object).\n\nEvery other function creates its own execution context when invoked.\n\n</p>",
       "topics": [
         "object methods",
         "scope",
@@ -791,14 +791,14 @@
         }
       ],
       "answer": "C",
-      "explanation": "The `continue` statement skips an iteration if a certain condition returns `true`.\n\n</p>",
+      "explanation": "The `continue` statement skips the rest of the current loop iteration and jumps to the next one.\n\nWhen `i === 3`, `continue` runs before `console.log(i)`, so `3` is never logged. The loop still logs `1`, `2`, and `4`.\n\n</p>",
       "topics": [],
       "difficulty": "easy"
     },
     {
       "id": 28,
       "question": "What's the output?",
-      "body": "```javascript\nString.prototype.giveLydiaPizza = () => {\n  return 'Just give Lydia pizza already!';\n};\n\nconst name = 'Lydia';\n\nconsole.log(name.giveLydiaPizza())\n```",
+      "body": "```javascript\nString.prototype.giveLydiaPizza = () => {\n  return \"Just give Lydia pizza already!\";\n};\n\nconst name = \"Lydia\";\n\nconsole.log(name.giveLydiaPizza());\n```",
       "options": [
         {
           "key": "A",
@@ -829,7 +829,7 @@
     {
       "id": 29,
       "question": "What's the output?",
-      "body": "```javascript\nconst a = {};\nconst b = { key: 'b' };\nconst c = { key: 'c' };\n\na[b] = 123;\na[c] = 456;\n\nconsole.log(a[b]);\n```",
+      "body": "```javascript\nconst a = {};\nconst b = { key: \"b\" };\nconst c = { key: \"c\" };\n\na[b] = 123;\na[c] = 456;\n\nconsole.log(a[b]);\n```",
       "options": [
         {
           "key": "A",
@@ -861,7 +861,7 @@
     {
       "id": 30,
       "question": "What's the output?",
-      "body": "```javascript\nconst foo = () => console.log('First');\nconst bar = () => setTimeout(() => console.log('Second'));\nconst baz = () => console.log('Third');\n\nbar();\nfoo();\nbaz();\n```",
+      "body": "```javascript\nconst foo = () => console.log(\"First\");\nconst bar = () => setTimeout(() => console.log(\"Second\"));\nconst baz = () => console.log(\"Third\");\n\nbar();\nfoo();\nbaz();\n```",
       "options": [
         {
           "key": "A",
@@ -893,7 +893,7 @@
     {
       "id": 31,
       "question": "What is the event.target when clicking the button?",
-      "body": "```html\n<div onclick=\"console.log('first div')\">\n  <div onclick=\"console.log('second div')\">\n    <button onclick=\"console.log('button')\">\n      Click!\n    </button>\n  </div>\n</div>\n```",
+      "body": "```html\n<div onclick=\"console.log('first div')\">\n  <div onclick=\"console.log('second div')\">\n    <button onclick=\"console.log('button')\">Click!</button>\n  </div>\n</div>\n```",
       "options": [
         {
           "key": "A",
@@ -913,14 +913,14 @@
         }
       ],
       "answer": "C",
-      "explanation": "The deepest nested element that caused the event is the target of the event. You can stop bubbling by `event.stopPropagation`\n\n</p>",
+      "explanation": "`event.target` is the **deepest element** that triggered the event — here, the `<button>`.\n\n`event.currentTarget` would be the element the listener is attached to. Bubbling means parent handlers also run unless you call `event.stopPropagation()`.\n\n</p>",
       "topics": [],
       "difficulty": "easy"
     },
     {
       "id": 32,
       "question": "When you click the paragraph, what's the logged output?",
-      "body": "```html\n<div onclick=\"console.log('div')\">\n  <p onclick=\"console.log('p')\">\n    Click here!\n  </p>\n</div>\n```",
+      "body": "```html\n<div onclick=\"console.log('div')\">\n  <p onclick=\"console.log('p')\">Click here!</p>\n</div>\n```",
       "options": [
         {
           "key": "A",
@@ -949,7 +949,7 @@
     {
       "id": 33,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = { name: 'Lydia' };\n\nfunction sayHi(age) {\n  return `${this.name} is ${age}`;\n}\n\nconsole.log(sayHi.call(person, 21));\nconsole.log(sayHi.bind(person, 21));\n```",
+      "body": "```javascript\nconst person = { name: \"Lydia\" };\n\nfunction sayHi(age) {\n  return `${this.name} is ${age}`;\n}\n\nconsole.log(sayHi.call(person, 21));\nconsole.log(sayHi.bind(person, 21));\n```",
       "options": [
         {
           "key": "A",
@@ -1011,7 +1011,7 @@
     {
       "id": 35,
       "question": "Which of these values are falsy?",
-      "body": "```javascript\n0;\nnew Number(0);\n('');\n(' ');\nnew Boolean(false);\nundefined;\n```",
+      "body": "```javascript\n0;\nnew Number(0);\n(\"\");\n(\" \");\nnew Boolean(false);\nundefined;\n```",
       "options": [
         {
           "key": "A",
@@ -1031,7 +1031,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "There are 8 falsy values:\n\n- `undefined`\n- `null`\n- `NaN`\n- `false`\n- `''` (empty string)\n- `0`\n- `-0`\n- `0n` (BigInt(0))\n\nFunction constructors, like `new Number` and `new Boolean` are truthy.\n\n</p>",
+      "explanation": "JavaScript has 8 **falsy** values:\n\n- `undefined`, `null`, `NaN`, `false`\n- `0`, `-0`, `0n` (BigInt zero)\n- `\"\"` (empty string)\n\nEverything else is truthy — including `\" \"` (whitespace string), `new Number(0)`, and `new Boolean(false)`. Wrapper objects are objects, and objects are always truthy even when they wrap falsy primitives.\n\n</p>",
       "topics": [
         "classes",
         "coercion"
@@ -1061,7 +1061,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "`typeof 1` returns `\"number\"`.\n`typeof \"number\"` returns `\"string\"`\n\n</p>",
+      "explanation": "`typeof` always returns a string.\n\n1. `typeof 1` → `\"number\"` (operand is a number).\n2. `typeof \"number\"` → `\"string\"` (operand is the string `\"number\"`).\n\nThe second `typeof` operates on the **result** of the first, not on `1` again.\n\n</p>",
       "topics": [
         "data types"
       ],
@@ -1099,7 +1099,7 @@
     {
       "id": 38,
       "question": "What's the output?",
-      "body": "```javascript\n(() => {\n  let x, y;\n  try {\n    throw new Error();\n  } catch (x) {\n    (x = 1), (y = 2);\n    console.log(x);\n  }\n  console.log(x);\n  console.log(y);\n})();\n```",
+      "body": "```javascript\n(() => {\n  let x, y;\n  try {\n    throw new Error();\n  } catch (x) {\n    ((x = 1), (y = 2));\n    console.log(x);\n  }\n  console.log(x);\n  console.log(y);\n})();\n```",
       "options": [
         {
           "key": "A",
@@ -1166,7 +1166,7 @@
     {
       "id": 40,
       "question": "What's the output?",
-      "body": "```javascript\n[[0, 1], [2, 3]].reduce(\n  (acc, cur) => {\n    return acc.concat(cur);\n  },\n  [1, 2],\n);\n```",
+      "body": "```javascript\n[\n  [0, 1],\n  [2, 3],\n].reduce(\n  (acc, cur) => {\n    return acc.concat(cur);\n  },\n  [1, 2],\n);\n```",
       "options": [
         {
           "key": "A",
@@ -1196,7 +1196,7 @@
     {
       "id": 41,
       "question": "What's the output?",
-      "body": "```javascript\n!!null;\n!!'';\n!!1;\n```",
+      "body": "```javascript\n!!null;\n!!\"\";\n!!1;\n```",
       "options": [
         {
           "key": "A",
@@ -1216,7 +1216,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "`null` is falsy. `!null` returns `true`. `!true` returns `false`.\n\n`\"\"` is falsy. `!\"\"` returns `true`. `!true` returns `false`.\n\n`1` is truthy. `!1` returns `false`. `!false` returns `true`.\n\n</p>",
+      "explanation": "The `!!` operator applies logical NOT twice, coercing a value to boolean.\n\n- `!!null` → `!null` → `true` → `false`\n- `!!\"\"` → `!\"\"` → `true` → `false`\n- `!!1` → `!1` → `false` → `true`\n\nSo the output is `false false true`.\n\n</p>",
       "topics": [
         "coercion"
       ],
@@ -1225,7 +1225,7 @@
     {
       "id": 42,
       "question": "What does the `setInterval` method return in the browser?",
-      "body": "```javascript\nsetInterval(() => console.log('Hi'), 1000);\n```",
+      "body": "```javascript\nsetInterval(() => console.log(\"Hi\"), 1000);\n```",
       "options": [
         {
           "key": "A",
@@ -1245,7 +1245,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "It returns a unique id. This id can be used to clear that interval with the `clearInterval()` function.\n\n</p>",
+      "explanation": "`setInterval` schedules repeated execution and returns a **numeric timer ID** (in browsers).\n\nStore that ID and pass it to `clearInterval(id)` to stop the interval. The callback itself is not the return value — the timer ID is.\n\n</p>",
       "topics": [
         "event loop",
         "object methods",
@@ -1256,7 +1256,7 @@
     {
       "id": 43,
       "question": "What does this return?",
-      "body": "```javascript\n[...'Lydia'];\n```",
+      "body": "```javascript\n[...\"Lydia\"];\n```",
       "options": [
         {
           "key": "A",
@@ -1276,7 +1276,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "A string is an iterable. The spread operator maps every character of an iterable to one element.\n\n</p>",
+      "explanation": "The spread operator (`...`) on an iterable expands its elements.\n\nStrings are iterable in JavaScript, so `[...\"Lydia\"]` spreads each character into a new array: `['L', 'y', 'd', 'i', 'a']`.\n\n</p>\n\nSpread works on any iterable — strings, arrays, maps, and more.",
       "topics": [
         "array methods",
         "spread/rest",
@@ -1318,7 +1318,7 @@
     {
       "id": 45,
       "question": "What does this return?",
-      "body": "```javascript\nconst firstPromise = new Promise((res, rej) => {\n  setTimeout(res, 500, 'one');\n});\n\nconst secondPromise = new Promise((res, rej) => {\n  setTimeout(res, 100, 'two');\n});\n\nPromise.race([firstPromise, secondPromise]).then(res => console.log(res));\n```",
+      "body": "```javascript\nconst firstPromise = new Promise((res, rej) => {\n  setTimeout(res, 500, \"one\");\n});\n\nconst secondPromise = new Promise((res, rej) => {\n  setTimeout(res, 100, \"two\");\n});\n\nPromise.race([firstPromise, secondPromise]).then((res) => console.log(res));\n```",
       "options": [
         {
           "key": "A",
@@ -1350,7 +1350,7 @@
     {
       "id": 46,
       "question": "What's the output?",
-      "body": "```javascript\nlet person = { name: 'Lydia' };\nconst members = [person];\nperson = null;\n\nconsole.log(members);\n```",
+      "body": "```javascript\nlet person = { name: \"Lydia\" };\nconst members = [person];\nperson = null;\n\nconsole.log(members);\n```",
       "options": [
         {
           "key": "A",
@@ -1380,7 +1380,7 @@
     {
       "id": 47,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia',\n  age: 21,\n};\n\nfor (const item in person) {\n  console.log(item);\n}\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nfor (const item in person) {\n  console.log(item);\n}\n```",
       "options": [
         {
           "key": "A",
@@ -1412,7 +1412,7 @@
     {
       "id": 48,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log(3 + 4 + '5');\n```",
+      "body": "```javascript\nconsole.log(3 + 4 + \"5\");\n```",
       "options": [
         {
           "key": "A",
@@ -1442,7 +1442,7 @@
     {
       "id": 49,
       "question": "What's the value of `num`?",
-      "body": "```javascript\nconst num = parseInt('7*6', 10);\n```",
+      "body": "```javascript\nconst num = parseInt(\"7*6\", 10);\n```",
       "options": [
         {
           "key": "A",
@@ -1471,7 +1471,7 @@
     {
       "id": 50,
       "question": "What's the output?",
-      "body": "```javascript\n[1, 2, 3].map(num => {\n  if (typeof num === 'number') return;\n  return num * 2;\n});\n```",
+      "body": "```javascript\n[1, 2, 3].map((num) => {\n  if (typeof num === \"number\") return;\n  return num * 2;\n});\n```",
       "options": [
         {
           "key": "A",
@@ -1504,7 +1504,7 @@
     {
       "id": 51,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getInfo(member, year) {\n  member.name = 'Lydia';\n  year = '1998';\n}\n\nconst person = { name: 'Sarah' };\nconst birthYear = '1997';\n\ngetInfo(person, birthYear);\n\nconsole.log(person, birthYear);\n```",
+      "body": "```javascript\nfunction getInfo(member, year) {\n  member.name = \"Lydia\";\n  year = \"1998\";\n}\n\nconst person = { name: \"Sarah\" };\nconst birthYear = \"1997\";\n\ngetInfo(person, birthYear);\n\nconsole.log(person, birthYear);\n```",
       "options": [
         {
           "key": "A",
@@ -1533,7 +1533,7 @@
     {
       "id": 52,
       "question": "What's the output?",
-      "body": "```javascript\nfunction greeting() {\n  throw 'Hello world!';\n}\n\nfunction sayHi() {\n  try {\n    const data = greeting();\n    console.log('It worked!', data);\n  } catch (e) {\n    console.log('Oh no an error:', e);\n  }\n}\n\nsayHi();\n```",
+      "body": "```javascript\nfunction greeting() {\n  throw \"Hello world!\";\n}\n\nfunction sayHi() {\n  try {\n    const data = greeting();\n    console.log(\"It worked!\", data);\n  } catch (e) {\n    console.log(\"Oh no an error:\", e);\n  }\n}\n\nsayHi();\n```",
       "options": [
         {
           "key": "A",
@@ -1564,7 +1564,7 @@
     {
       "id": 53,
       "question": "What's the output?",
-      "body": "```javascript\nfunction Car() {\n  this.make = 'Lamborghini';\n  return { make: 'Maserati' };\n}\n\nconst myCar = new Car();\nconsole.log(myCar.make);\n```",
+      "body": "```javascript\nfunction Car() {\n  this.make = \"Lamborghini\";\n  return { make: \"Maserati\" };\n}\n\nconst myCar = new Car();\nconsole.log(myCar.make);\n```",
       "options": [
         {
           "key": "A",
@@ -1630,7 +1630,7 @@
     {
       "id": 55,
       "question": "What's the output?",
-      "body": "```javascript\nclass Dog {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nDog.prototype.bark = function() {\n  console.log(`Woof I am ${this.name}`);\n};\n\nconst pet = new Dog('Mara');\n\npet.bark();\n\ndelete Dog.prototype.bark;\n\npet.bark();\n```",
+      "body": "```javascript\nclass Dog {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nDog.prototype.bark = function () {\n  console.log(`Woof I am ${this.name}`);\n};\n\nconst pet = new Dog(\"Mara\");\n\npet.bark();\n\ndelete Dog.prototype.bark;\n\npet.bark();\n```",
       "options": [
         {
           "key": "A",
@@ -1694,7 +1694,7 @@
     {
       "id": 57,
       "question": "What's the output?",
-      "body": "```javascript\n// counter.js\nlet counter = 10;\nexport default counter;\n```\n\n```javascript\n// index.js\nimport myCounter from './counter';\n\nmyCounter += 1;\n\nconsole.log(myCounter);\n```",
+      "body": "```javascript\n// counter.js\nlet counter = 10;\nexport default counter;\n```\n\n```javascript\n// index.js\nimport myCounter from \"./counter\";\n\nmyCounter += 1;\n\nconsole.log(myCounter);\n```",
       "options": [
         {
           "key": "A",
@@ -1724,7 +1724,7 @@
     {
       "id": 58,
       "question": "What's the output?",
-      "body": "```javascript\nconst name = 'Lydia';\nage = 21;\n\nconsole.log(delete name);\nconsole.log(delete age);\n```",
+      "body": "```javascript\nconst name = \"Lydia\";\nage = 21;\n\nconsole.log(delete name);\nconsole.log(delete age);\n```",
       "options": [
         {
           "key": "A",
@@ -1787,7 +1787,7 @@
     {
       "id": 60,
       "question": "What's the output?",
-      "body": "```javascript\nconst user = { name: 'Lydia', age: 21 };\nconst admin = { admin: true, ...user };\n\nconsole.log(admin);\n```",
+      "body": "```javascript\nconst user = { name: \"Lydia\", age: 21 };\nconst admin = { admin: true, ...user };\n\nconsole.log(admin);\n```",
       "options": [
         {
           "key": "A",
@@ -1818,7 +1818,7 @@
     {
       "id": 61,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = { name: 'Lydia' };\n\nObject.defineProperty(person, 'age', { value: 21 });\n\nconsole.log(person);\nconsole.log(Object.keys(person));\n```",
+      "body": "```javascript\nconst person = { name: \"Lydia\" };\n\nObject.defineProperty(person, \"age\", { value: 21 });\n\nconsole.log(person);\nconsole.log(Object.keys(person));\n```",
       "options": [
         {
           "key": "A",
@@ -1848,7 +1848,7 @@
     {
       "id": 62,
       "question": "What's the output?",
-      "body": "```javascript\nconst settings = {\n  username: 'lydiahallie',\n  level: 19,\n  health: 90,\n};\n\nconst data = JSON.stringify(settings, ['level', 'health']);\nconsole.log(data);\n```",
+      "body": "```javascript\nconst settings = {\n  username: \"lydiahallie\",\n  level: 19,\n  health: 90,\n};\n\nconst data = JSON.stringify(settings, [\"level\", \"health\"]);\nconsole.log(data);\n```",
       "options": [
         {
           "key": "A",
@@ -1878,7 +1878,7 @@
     {
       "id": 63,
       "question": "What's the output?",
-      "body": "```javascript\nlet num = 10;\n\nconst increaseNumber = () => num++;\nconst increasePassedNumber = number => number++;\n\nconst num1 = increaseNumber();\nconst num2 = increasePassedNumber(num1);\n\nconsole.log(num1);\nconsole.log(num2);\n```",
+      "body": "```javascript\nlet num = 10;\n\nconst increaseNumber = () => num++;\nconst increasePassedNumber = (number) => number++;\n\nconst num1 = increaseNumber();\nconst num2 = increasePassedNumber(num1);\n\nconsole.log(num1);\nconsole.log(num2);\n```",
       "options": [
         {
           "key": "A",
@@ -2000,7 +2000,7 @@
     {
       "id": 67,
       "question": "What's the output?",
-      "body": "```javascript\n// index.js\nconsole.log('running index.js');\nimport { sum } from './sum.js';\nconsole.log(sum(1, 2));\n\n// sum.js\nconsole.log('running sum.js');\nexport const sum = (a, b) => a + b;\n```",
+      "body": "```javascript\n// index.js\nconsole.log(\"running index.js\");\nimport { sum } from \"./sum.js\";\nconsole.log(sum(1, 2));\n\n// sum.js\nconsole.log(\"running sum.js\");\nexport const sum = (a, b) => a + b;\n```",
       "options": [
         {
           "key": "A",
@@ -2030,7 +2030,7 @@
     {
       "id": 68,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log(Number(2) === Number(2));\nconsole.log(Boolean(false) === Boolean(false));\nconsole.log(Symbol('foo') === Symbol('foo'));\n```",
+      "body": "```javascript\nconsole.log(Number(2) === Number(2));\nconsole.log(Boolean(false) === Boolean(false));\nconsole.log(Symbol(\"foo\") === Symbol(\"foo\"));\n```",
       "options": [
         {
           "key": "A",
@@ -2059,7 +2059,7 @@
     {
       "id": 69,
       "question": "What's the output?",
-      "body": "```javascript\nconst name = 'Lydia Hallie';\nconsole.log(name.padStart(13));\nconsole.log(name.padStart(2));\n```",
+      "body": "```javascript\nconst name = \"Lydia Hallie\";\nconsole.log(name.padStart(13));\nconsole.log(name.padStart(2));\n```",
       "options": [
         {
           "key": "A",
@@ -2089,7 +2089,7 @@
     {
       "id": 70,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log('🥑' + '💻');\n```",
+      "body": "```javascript\nconsole.log(\"🥑\" + \"💻\");\n```",
       "options": [
         {
           "key": "A",
@@ -2109,7 +2109,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "With the `+` operator, you can concatenate strings. In this case, we are concatenating the string `\"🥑\"` with the string `\"💻\"`, resulting in `\"🥑💻\"`.\n\n</p>",
+      "explanation": "The `+` operator between two strings performs **concatenation**.\n\nBoth operands are strings (`\"🥑\"` and `\"💻\"`), so the result is `\"🥑💻\"` with no coercion.\n\n</p>\n\nEmoji are UTF-16 strings, so they concatenate like any other strings.",
       "topics": [
         "this"
       ],
@@ -2118,7 +2118,7 @@
     {
       "id": 71,
       "question": "How can we log the values that are commented out after the console.log statement?",
-      "body": "```javascript\nfunction* startGame() {\n  const answer = yield 'Do you love JavaScript?';\n  if (answer !== 'Yes') {\n    return \"Oh wow... Guess we're done here\";\n  }\n  return 'JavaScript loves you back ❤️';\n}\n\nconst game = startGame();\nconsole.log(/* 1 */); // Do you love JavaScript?\nconsole.log(/* 2 */); // JavaScript loves you back ❤️\n```",
+      "body": "```javascript\nfunction* startGame() {\n  const answer = yield \"Do you love JavaScript?\";\n  if (answer !== \"Yes\") {\n    return \"Oh wow... Guess we're done here\";\n  }\n  return \"JavaScript loves you back ❤️\";\n}\n\nconst game = startGame();\nconsole.log(/* 1 */); // Do you love JavaScript?\nconsole.log(/* 2 */); // JavaScript loves you back ❤️\n```",
       "options": [
         {
           "key": "A",
@@ -2178,7 +2178,7 @@
     {
       "id": 73,
       "question": "What's the output?",
-      "body": "```javascript\nasync function getData() {\n  return await Promise.resolve('I made it!');\n}\n\nconst data = getData();\nconsole.log(data);\n```",
+      "body": "```javascript\nasync function getData() {\n  return await Promise.resolve(\"I made it!\");\n}\n\nconst data = getData();\nconsole.log(data);\n```",
       "options": [
         {
           "key": "A",
@@ -2211,7 +2211,7 @@
     {
       "id": 74,
       "question": "What's the output?",
-      "body": "```javascript\nfunction addToList(item, list) {\n  return list.push(item);\n}\n\nconst result = addToList('apple', ['banana']);\nconsole.log(result);\n```",
+      "body": "```javascript\nfunction addToList(item, list) {\n  return list.push(item);\n}\n\nconst result = addToList(\"apple\", [\"banana\"]);\nconsole.log(result);\n```",
       "options": [
         {
           "key": "A",
@@ -2273,7 +2273,7 @@
     {
       "id": 76,
       "question": "What's the output?",
-      "body": "```javascript\nconst { firstName: myName } = { firstName: 'Lydia' };\n\nconsole.log(firstName);\n```",
+      "body": "```javascript\nconst { firstName: myName } = { firstName: \"Lydia\" };\n\nconsole.log(firstName);\n```",
       "options": [
         {
           "key": "A",
@@ -2293,7 +2293,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "By using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) syntax we can unpack values from arrays, or properties from objects, into distinct variables:\n\n```javascript\nconst { firstName } = { firstName: 'Lydia' };\n// ES5 version:\n// var firstName = { firstName: 'Lydia' }.firstName;\n\nconsole.log(firstName); // \"Lydia\"\n```\n\nAlso, a property can be unpacked from an object and assigned to a variable with a different name than the object property:\n\n```javascript\nconst { firstName: myName } = { firstName: 'Lydia' };\n// ES5 version:\n// var myName = { firstName: 'Lydia' }.firstName;\n\nconsole.log(myName); // \"Lydia\"\nconsole.log(firstName); // Uncaught ReferenceError: firstName is not defined\n```\n\nTherefore, `firstName` does not exist as a variable, thus attempting to access its value will raise a `ReferenceError`.\n\n**Note:** Be aware of the `global scope` properties:\n\n```javascript\nconst { name: myName } = { name: 'Lydia' };\n\nconsole.log(myName); // \"lydia\"\nconsole.log(name); // \"\" ----- Browser e.g. Chrome\nconsole.log(name); // ReferenceError: name is not defined  ----- NodeJS\n\n```\n\nWhenever Javascript is unable to find a variable within the _current scope_, it climbs up the [Scope chain](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch3.md) and searches for it and if it reaches the top-level scope, aka **Global scope**, and still doesn't find it, it will throw a `ReferenceError`.\n\n- In **Browsers** such as _Chrome_, `name` is a _deprecated global scope property_. In this example, the code is running inside _global scope_ and there is no user-defined local variable for `name`, therefore it searches the predefined _variables/properties_ in the global scope which is in the case of browsers, it searches through `window` object and it will extract the [window.name](https://developer.mozilla.org/en-US/docs/Web/API/Window/name) value which is equal to an **empty string**.\n\n- In **NodeJS**, there is no such property on the `global` object, thus attempting to access a non-existent variable will raise a [ReferenceError](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined).\n\n</p>",
+      "explanation": "By using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) syntax we can unpack values from arrays, or properties from objects, into distinct variables:\n\n```javascript\nconst { firstName } = { firstName: \"Lydia\" };\n// ES5 version:\n// var firstName = { firstName: 'Lydia' }.firstName;\n\nconsole.log(firstName); // \"Lydia\"\n```\n\nAlso, a property can be unpacked from an object and assigned to a variable with a different name than the object property:\n\n```javascript\nconst { firstName: myName } = { firstName: \"Lydia\" };\n// ES5 version:\n// var myName = { firstName: 'Lydia' }.firstName;\n\nconsole.log(myName); // \"Lydia\"\nconsole.log(firstName); // Uncaught ReferenceError: firstName is not defined\n```\n\nTherefore, `firstName` does not exist as a variable, thus attempting to access its value will raise a `ReferenceError`.\n\n**Note:** Be aware of the `global scope` properties:\n\n```javascript\nconst { name: myName } = { name: \"Lydia\" };\n\nconsole.log(myName); // \"lydia\"\nconsole.log(name); // \"\" ----- Browser e.g. Chrome\nconsole.log(name); // ReferenceError: name is not defined  ----- NodeJS\n```\n\nWhenever Javascript is unable to find a variable within the _current scope_, it climbs up the [Scope chain](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch3.md) and searches for it and if it reaches the top-level scope, aka **Global scope**, and still doesn't find it, it will throw a `ReferenceError`.\n\n- In **Browsers** such as _Chrome_, `name` is a _deprecated global scope property_. In this example, the code is running inside _global scope_ and there is no user-defined local variable for `name`, therefore it searches the predefined _variables/properties_ in the global scope which is in the case of browsers, it searches through `window` object and it will extract the [window.name](https://developer.mozilla.org/en-US/docs/Web/API/Window/name) value which is equal to an **empty string**.\n\n- In **NodeJS**, there is no such property on the `global` object, thus attempting to access a non-existent variable will raise a [ReferenceError](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined).\n\n</p>",
       "topics": [
         "closures",
         "destructuring",
@@ -2329,7 +2329,7 @@
     {
       "id": 78,
       "question": "What is the output?",
-      "body": "```javascript\nconst add = () => {\n  const cache = {};\n  return num => {\n    if (num in cache) {\n      return `From cache! ${cache[num]}`;\n    } else {\n      const result = num + 10;\n      cache[num] = result;\n      return `Calculated! ${result}`;\n    }\n  };\n};\n\nconst addFunction = add();\nconsole.log(addFunction(10));\nconsole.log(addFunction(10));\nconsole.log(addFunction(5 * 2));\n```",
+      "body": "```javascript\nconst add = () => {\n  const cache = {};\n  return (num) => {\n    if (num in cache) {\n      return `From cache! ${cache[num]}`;\n    } else {\n      const result = num + 10;\n      cache[num] = result;\n      return `Calculated! ${result}`;\n    }\n  };\n};\n\nconst addFunction = add();\nconsole.log(addFunction(10));\nconsole.log(addFunction(10));\nconsole.log(addFunction(5 * 2));\n```",
       "options": [
         {
           "key": "A",
@@ -2360,7 +2360,7 @@
     {
       "id": 79,
       "question": "What is the output?",
-      "body": "```javascript\nconst myLifeSummedUp = ['☕', '💻', '🍷', '🍫'];\n\nfor (let item in myLifeSummedUp) {\n  console.log(item);\n}\n\nfor (let item of myLifeSummedUp) {\n  console.log(item);\n}\n```",
+      "body": "```javascript\nconst myLifeSummedUp = [\"☕\", \"💻\", \"🍷\", \"🍫\"];\n\nfor (let item in myLifeSummedUp) {\n  console.log(item);\n}\n\nfor (let item of myLifeSummedUp) {\n  console.log(item);\n}\n```",
       "options": [
         {
           "key": "A",
@@ -2449,7 +2449,7 @@
     {
       "id": 82,
       "question": "What is the output?",
-      "body": "```javascript\nvar status = '😎';\n\nsetTimeout(() => {\n  const status = '😍';\n\n  const data = {\n    status: '🥑',\n    getStatus() {\n      return this.status;\n    },\n  };\n\n  console.log(data.getStatus());\n  console.log(data.getStatus.call(this));\n}, 0);\n```",
+      "body": "```javascript\nvar status = \"😎\";\n\nsetTimeout(() => {\n  const status = \"😍\";\n\n  const data = {\n    status: \"🥑\",\n    getStatus() {\n      return this.status;\n    },\n  };\n\n  console.log(data.getStatus());\n  console.log(data.getStatus.call(this));\n}, 0);\n```",
       "options": [
         {
           "key": "A",
@@ -2482,7 +2482,7 @@
     {
       "id": 83,
       "question": "What is the output?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia',\n  age: 21,\n};\n\nlet city = person.city;\ncity = 'Amsterdam';\n\nconsole.log(person);\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nlet city = person.city;\ncity = \"Amsterdam\";\n\nconsole.log(person);\n```",
       "options": [
         {
           "key": "A",
@@ -2544,7 +2544,7 @@
     {
       "id": 85,
       "question": "What kind of information would get logged?",
-      "body": "```javascript\nfetch('https://www.website.com/api/user/1')\n  .then(res => res.json())\n  .then(res => console.log(res));\n```",
+      "body": "```javascript\nfetch(\"https://www.website.com/api/user/1\")\n  .then((res) => res.json())\n  .then((res) => console.log(res));\n```",
       "options": [
         {
           "key": "A",
@@ -2564,7 +2564,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The value of `res` in the second `.then` is equal to the returned value of the previous `.then`. You can keep chaining `.then`s like this, where the value is passed to the next handler.\n\n</p>",
+      "explanation": "Each `.then` receives the **return value** of the previous handler.\n\n1. First `.then`: `res` is the fetch Response; returns `res.json()` (a Promise).\n2. Second `.then`: `res` is the **parsed JSON body** from that Promise — the user object `{ name: \"Lydia\", age: 21 }`.\n\nPromise chains pass resolved values downstream.\n\n</p>",
       "topics": [
         "this"
       ],
@@ -2604,7 +2604,7 @@
     {
       "id": 87,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log('I want pizza'[0]);\n```",
+      "body": "```javascript\nconsole.log(\"I want pizza\"[0]);\n```",
       "options": [
         {
           "key": "A",
@@ -2665,7 +2665,7 @@
     {
       "id": 89,
       "question": "What's the output?",
-      "body": "```javascript\n// module.js\nexport default () => 'Hello world';\nexport const name = 'Lydia';\n\n// index.js\nimport * as data from './module';\n\nconsole.log(data);\n```",
+      "body": "```javascript\n// module.js\nexport default () => \"Hello world\";\nexport const name = \"Lydia\";\n\n// index.js\nimport * as data from \"./module\";\n\nconsole.log(data);\n```",
       "options": [
         {
           "key": "A",
@@ -2696,7 +2696,7 @@
     {
       "id": 90,
       "question": "What's the output?",
-      "body": "```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nconst member = new Person('John');\nconsole.log(typeof member);\n```",
+      "body": "```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nconst member = new Person(\"John\");\nconsole.log(typeof member);\n```",
       "options": [
         {
           "key": "A",
@@ -2760,7 +2760,7 @@
     {
       "id": 92,
       "question": "What's the output?",
-      "body": "```javascript\nfunction giveLydiaPizza() {\n  return 'Here is pizza!';\n}\n\nconst giveLydiaChocolate = () =>\n  \"Here's chocolate... now go hit the gym already.\";\n\nconsole.log(giveLydiaPizza.prototype);\nconsole.log(giveLydiaChocolate.prototype);\n```",
+      "body": "```javascript\nfunction giveLydiaPizza() {\n  return \"Here is pizza!\";\n}\n\nconst giveLydiaChocolate = () =>\n  \"Here's chocolate... now go hit the gym already.\";\n\nconsole.log(giveLydiaPizza.prototype);\nconsole.log(giveLydiaChocolate.prototype);\n```",
       "options": [
         {
           "key": "A",
@@ -2795,7 +2795,7 @@
     {
       "id": 93,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia',\n  age: 21,\n};\n\nfor (const [x, y] of Object.entries(person)) {\n  console.log(x, y);\n}\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nfor (const [x, y] of Object.entries(person)) {\n  console.log(x, y);\n}\n```",
       "options": [
         {
           "key": "A",
@@ -2846,7 +2846,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "`...args` is a rest parameter. The rest parameter's value is an array containing all remaining arguments, **and can only be the last parameter**! In this example, the rest parameter was the second parameter. This is not possible, and will throw a syntax error.\n\n```javascript\nfunction getItems(fruitList, favoriteFruit, ...args) {\n  return [...fruitList, ...args, favoriteFruit];\n}\n\ngetItems(['banana', 'apple'], 'pear', 'orange');\n```\n\nThe above example works. This returns the array `[ 'banana', 'apple', 'orange', 'pear' ]`\n\n</p>",
+      "explanation": "`...args` is a rest parameter. The rest parameter's value is an array containing all remaining arguments, **and can only be the last parameter**! In this example, the rest parameter was the second parameter. This is not possible, and will throw a syntax error.\n\n```javascript\nfunction getItems(fruitList, favoriteFruit, ...args) {\n  return [...fruitList, ...args, favoriteFruit];\n}\n\ngetItems([\"banana\", \"apple\"], \"pear\", \"orange\");\n```\n\nThe above example works. This returns the array `[ 'banana', 'apple', 'orange', 'pear' ]`\n\n</p>",
       "topics": [
         "error handling",
         "generators",
@@ -2858,7 +2858,7 @@
     {
       "id": 95,
       "question": "What's the output?",
-      "body": "```javascript\nfunction nums(a, b) {\n  if (a > b) console.log('a is bigger');\n  else console.log('b is bigger');\n  return\n  a + b;\n}\n\nconsole.log(nums(4, 2));\nconsole.log(nums(1, 2));\n```",
+      "body": "```javascript\nfunction nums(a, b) {\n  if (a > b) console.log(\"a is bigger\");\n  else console.log(\"b is bigger\");\n  return;\n  a + b;\n}\n\nconsole.log(nums(4, 2));\nconsole.log(nums(1, 2));\n```",
       "options": [
         {
           "key": "A",
@@ -2889,7 +2889,7 @@
     {
       "id": 96,
       "question": "What's the output?",
-      "body": "```javascript\nclass Person {\n  constructor() {\n    this.name = 'Lydia';\n  }\n}\n\nPerson = class AnotherPerson {\n  constructor() {\n    this.name = 'Sarah';\n  }\n};\n\nconst member = new Person();\nconsole.log(member.name);\n```",
+      "body": "```javascript\nclass Person {\n  constructor() {\n    this.name = \"Lydia\";\n  }\n}\n\nPerson = class AnotherPerson {\n  constructor() {\n    this.name = \"Sarah\";\n  }\n};\n\nconst member = new Person();\nconsole.log(member.name);\n```",
       "options": [
         {
           "key": "A",
@@ -2921,7 +2921,7 @@
     {
       "id": 97,
       "question": "What's the output?",
-      "body": "```javascript\nconst info = {\n  [Symbol('a')]: 'b',\n};\n\nconsole.log(info);\nconsole.log(Object.keys(info));\n```",
+      "body": "```javascript\nconst info = {\n  [Symbol(\"a\")]: \"b\",\n};\n\nconsole.log(info);\nconsole.log(Object.keys(info));\n```",
       "options": [
         {
           "key": "A",
@@ -2986,7 +2986,7 @@
     {
       "id": 99,
       "question": "What's the output?",
-      "body": "```javascript\nconst name = 'Lydia';\n\nconsole.log(name());\n```",
+      "body": "```javascript\nconst name = \"Lydia\";\n\nconsole.log(name());\n```",
       "options": [
         {
           "key": "A",
@@ -3015,7 +3015,7 @@
     {
       "id": 100,
       "question": "What's the value of output?",
-      "body": "```javascript\n// 🎉✨ This is my 100th question! ✨🎉\n\nconst output = `${[] && 'Im'}possible!\nYou should${'' && `n't`} see a therapist after so much JavaScript lol`;\n```",
+      "body": "```javascript\n// 🎉✨ This is my 100th question! ✨🎉\n\nconst output = `${[] && \"Im\"}possible!\nYou should${\"\" && `n't`} see a therapist after so much JavaScript lol`;\n```",
       "options": [
         {
           "key": "A",
@@ -3045,7 +3045,7 @@
     {
       "id": 101,
       "question": "What's the value of output?",
-      "body": "```javascript\nconst one = false || {} || null;\nconst two = null || false || '';\nconst three = [] || 0 || true;\n\nconsole.log(one, two, three);\n```",
+      "body": "```javascript\nconst one = false || {} || null;\nconst two = null || false || \"\";\nconst three = [] || 0 || true;\n\nconsole.log(one, two, three);\n```",
       "options": [
         {
           "key": "A",
@@ -3076,7 +3076,7 @@
     {
       "id": 102,
       "question": "What's the value of output?",
-      "body": "```javascript\nconst myPromise = () => Promise.resolve('I have resolved!');\n\nfunction firstFunction() {\n  myPromise().then(res => console.log(res));\n  console.log('second');\n}\n\nasync function secondFunction() {\n  console.log(await myPromise());\n  console.log('second');\n}\n\nfirstFunction();\nsecondFunction();\n```",
+      "body": "```javascript\nconst myPromise = () => Promise.resolve(\"I have resolved!\");\n\nfunction firstFunction() {\n  myPromise().then((res) => console.log(res));\n  console.log(\"second\");\n}\n\nasync function secondFunction() {\n  console.log(await myPromise());\n  console.log(\"second\");\n}\n\nfirstFunction();\nsecondFunction();\n```",
       "options": [
         {
           "key": "A",
@@ -3108,7 +3108,7 @@
     {
       "id": 103,
       "question": "What's the value of output?",
-      "body": "```javascript\nconst set = new Set();\n\nset.add(1);\nset.add('Lydia');\nset.add({ name: 'Lydia' });\n\nfor (let item of set) {\n  console.log(item + 2);\n}\n```",
+      "body": "```javascript\nconst set = new Set();\n\nset.add(1);\nset.add(\"Lydia\");\nset.add({ name: \"Lydia\" });\n\nfor (let item of set) {\n  console.log(item + 2);\n}\n```",
       "options": [
         {
           "key": "A",
@@ -3169,7 +3169,7 @@
     {
       "id": 105,
       "question": "What's its value?",
-      "body": "```javascript\nfunction compareMembers(person1, person2 = person) {\n  if (person1 !== person2) {\n    console.log('Not the same!');\n  } else {\n    console.log('They are the same!');\n  }\n}\n\nconst person = { name: 'Lydia' };\n\ncompareMembers(person);\n```",
+      "body": "```javascript\nfunction compareMembers(person1, person2 = person) {\n  if (person1 !== person2) {\n    console.log(\"Not the same!\");\n  } else {\n    console.log(\"They are the same!\");\n  }\n}\n\nconst person = { name: \"Lydia\" };\n\ncompareMembers(person);\n```",
       "options": [
         {
           "key": "A",
@@ -3200,7 +3200,7 @@
     {
       "id": 106,
       "question": "What's its value?",
-      "body": "```javascript\nconst colorConfig = {\n  red: true,\n  blue: false,\n  green: true,\n  black: true,\n  yellow: false,\n};\n\nconst colors = ['pink', 'red', 'blue'];\n\nconsole.log(colorConfig.colors[1]);\n```",
+      "body": "```javascript\nconst colorConfig = {\n  red: true,\n  blue: false,\n  green: true,\n  black: true,\n  yellow: false,\n};\n\nconst colors = [\"pink\", \"red\", \"blue\"];\n\nconsole.log(colorConfig.colors[1]);\n```",
       "options": [
         {
           "key": "A",
@@ -3231,7 +3231,7 @@
     {
       "id": 107,
       "question": "What's its value?",
-      "body": "```javascript\nconsole.log('❤️' === '❤️');\n```",
+      "body": "```javascript\nconsole.log(\"❤️\" === \"❤️\");\n```",
       "options": [
         {
           "key": "A",
@@ -3250,7 +3250,7 @@
     {
       "id": 108,
       "question": "Which of these methods modifies the original array?",
-      "body": "```javascript\nconst emojis = ['✨', '🥑', '😍'];\n\nemojis.map(x => x + '✨');\nemojis.filter(x => x !== '🥑');\nemojis.find(x => x !== '🥑');\nemojis.reduce((acc, cur) => acc + '✨');\nemojis.slice(1, 2, '✨');\nemojis.splice(1, 2, '✨');\n```",
+      "body": "```javascript\nconst emojis = [\"✨\", \"🥑\", \"😍\"];\n\nemojis.map((x) => x + \"✨\");\nemojis.filter((x) => x !== \"🥑\");\nemojis.find((x) => x !== \"🥑\");\nemojis.reduce((acc, cur) => acc + \"✨\");\nemojis.slice(1, 2, \"✨\");\nemojis.splice(1, 2, \"✨\");\n```",
       "options": [
         {
           "key": "A",
@@ -3282,7 +3282,7 @@
     {
       "id": 109,
       "question": "What's the output?",
-      "body": "```javascript\nconst food = ['🍕', '🍫', '🥑', '🍔'];\nconst info = { favoriteFood: food[0] };\n\ninfo.favoriteFood = '🍝';\n\nconsole.log(food);\n```",
+      "body": "```javascript\nconst food = [\"🍕\", \"🍫\", \"🥑\", \"🍔\"];\nconst info = { favoriteFood: food[0] };\n\ninfo.favoriteFood = \"🍝\";\n\nconsole.log(food);\n```",
       "options": [
         {
           "key": "A",
@@ -3334,7 +3334,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "With the `JSON.parse()` method, we can parse JSON string to a JavaScript value.\n\n```javascript\n// Stringifying a number into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonNumber = JSON.stringify(4); // '4'\nJSON.parse(jsonNumber); // 4\n\n// Stringifying an array value into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonArray = JSON.stringify([1, 2, 3]); // '[1, 2, 3]'\nJSON.parse(jsonArray); // [1, 2, 3]\n\n// Stringifying an object  into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonArray = JSON.stringify({ name: 'Lydia' }); // '{\"name\":\"Lydia\"}'\nJSON.parse(jsonArray); // { name: 'Lydia' }\n```\n\n</p>",
+      "explanation": "With the `JSON.parse()` method, we can parse JSON string to a JavaScript value.\n\n```javascript\n// Stringifying a number into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonNumber = JSON.stringify(4); // '4'\nJSON.parse(jsonNumber); // 4\n\n// Stringifying an array value into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonArray = JSON.stringify([1, 2, 3]); // '[1, 2, 3]'\nJSON.parse(jsonArray); // [1, 2, 3]\n\n// Stringifying an object  into valid JSON, then parsing the JSON string to a JavaScript value:\nconst jsonArray = JSON.stringify({ name: \"Lydia\" }); // '{\"name\":\"Lydia\"}'\nJSON.parse(jsonArray); // { name: 'Lydia' }\n```\n\n</p>",
       "topics": [
         "object methods",
         "this"
@@ -3344,7 +3344,7 @@
     {
       "id": 111,
       "question": "What's the output?",
-      "body": "```javascript\nlet name = 'Lydia';\n\nfunction getName() {\n  console.log(name);\n  let name = 'Sarah';\n}\n\ngetName();\n```",
+      "body": "```javascript\nlet name = \"Lydia\";\n\nfunction getName() {\n  console.log(name);\n  let name = \"Sarah\";\n}\n\ngetName();\n```",
       "options": [
         {
           "key": "A",
@@ -3364,7 +3364,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "Each function has its own _execution context_ (or _scope_). The `getName` function first looks within its own context (scope) to see if it contains the variable `name` we're trying to access. In this case, the `getName` function contains its own `name` variable: we declare the variable `name` with the `let` keyword, and with the value of `'Sarah'`.\n\nVariables with the `let` keyword (and `const`) are hoisted, but unlike `var`, don't get <i>initialized</i>. They are not accessible before the line we declare (initialize) them. This is called the \"temporal dead zone\". When we try to access the variables before they are declared, JavaScript throws a `ReferenceError`.\n\nIf we wouldn't have declared the `name` variable within the `getName` function, the javascript engine would've looked down the _scope chain_. The outer scope has a variable called `name` with the value of `Lydia`. In that case, it would've logged `Lydia`.\n\n```javascript\nlet name = 'Lydia';\n\nfunction getName() {\n  console.log(name);\n}\n\ngetName(); // Lydia\n```\n\n</p>",
+      "explanation": "Each function has its own _execution context_ (or _scope_). The `getName` function first looks within its own context (scope) to see if it contains the variable `name` we're trying to access. In this case, the `getName` function contains its own `name` variable: we declare the variable `name` with the `let` keyword, and with the value of `'Sarah'`.\n\nVariables with the `let` keyword (and `const`) are hoisted, but unlike `var`, don't get <i>initialized</i>. They are not accessible before the line we declare (initialize) them. This is called the \"temporal dead zone\". When we try to access the variables before they are declared, JavaScript throws a `ReferenceError`.\n\nIf we wouldn't have declared the `name` variable within the `getName` function, the javascript engine would've looked down the _scope chain_. The outer scope has a variable called `name` with the value of `Lydia`. In that case, it would've logged `Lydia`.\n\n```javascript\nlet name = \"Lydia\";\n\nfunction getName() {\n  console.log(name);\n}\n\ngetName(); // Lydia\n```\n\n</p>",
       "topics": [
         "error handling",
         "hoisting",
@@ -3376,7 +3376,7 @@
     {
       "id": 112,
       "question": "What's the output?",
-      "body": "```javascript\nfunction* generatorOne() {\n  yield ['a', 'b', 'c'];\n}\n\nfunction* generatorTwo() {\n  yield* ['a', 'b', 'c'];\n}\n\nconst one = generatorOne();\nconst two = generatorTwo();\n\nconsole.log(one.next().value);\nconsole.log(two.next().value);\n```",
+      "body": "```javascript\nfunction* generatorOne() {\n  yield [\"a\", \"b\", \"c\"];\n}\n\nfunction* generatorTwo() {\n  yield* [\"a\", \"b\", \"c\"];\n}\n\nconst one = generatorOne();\nconst two = generatorTwo();\n\nconsole.log(one.next().value);\nconsole.log(two.next().value);\n```",
       "options": [
         {
           "key": "A",
@@ -3407,7 +3407,7 @@
     {
       "id": 113,
       "question": "What's the output?",
-      "body": "```javascript\nconsole.log(`${(x => x)('I love')} to program`);\n```",
+      "body": "```javascript\nconsole.log(`${((x) => x)(\"I love\")} to program`);\n```",
       "options": [
         {
           "key": "A",
@@ -3438,7 +3438,7 @@
     {
       "id": 114,
       "question": "What will happen?",
-      "body": "```javascript\nlet config = {\n  alert: setInterval(() => {\n    console.log('Alert!');\n  }, 1000),\n};\n\nconfig = null;\n```",
+      "body": "```javascript\nlet config = {\n  alert: setInterval(() => {\n    console.log(\"Alert!\");\n  }, 1000),\n};\n\nconfig = null;\n```",
       "options": [
         {
           "key": "A",
@@ -3471,7 +3471,7 @@
     {
       "id": 115,
       "question": "Which method(s) will return the value `'Hello world!'`?",
-      "body": "```javascript\nconst myMap = new Map();\nconst myFunc = () => 'greeting';\n\nmyMap.set(myFunc, 'Hello world!');\n\n//1\nmyMap.get('greeting');\n//2\nmyMap.get(myFunc);\n//3\nmyMap.get(() => 'greeting');\n```",
+      "body": "```javascript\nconst myMap = new Map();\nconst myFunc = () => \"greeting\";\n\nmyMap.set(myFunc, \"Hello world!\");\n\n//1\nmyMap.get(\"greeting\");\n//2\nmyMap.get(myFunc);\n//3\nmyMap.get(() => \"greeting\");\n```",
       "options": [
         {
           "key": "A",
@@ -3503,7 +3503,7 @@
     {
       "id": 116,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia',\n  age: 21,\n};\n\nconst changeAge = (x = { ...person }) => (x.age += 1);\nconst changeAgeAndName = (x = { ...person }) => {\n  x.age += 1;\n  x.name = 'Sarah';\n};\n\nchangeAge(person);\nchangeAgeAndName();\n\nconsole.log(person);\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nconst changeAge = (x = { ...person }) => (x.age += 1);\nconst changeAgeAndName = (x = { ...person }) => {\n  x.age += 1;\n  x.name = \"Sarah\";\n};\n\nchangeAge(person);\nchangeAgeAndName();\n\nconsole.log(person);\n```",
       "options": [
         {
           "key": "A",
@@ -3563,7 +3563,7 @@
     {
       "id": 118,
       "question": "What's the output?",
-      "body": "```javascript\nlet num = 1;\nconst list = ['🥳', '🤠', '🥰', '🤪'];\n\nconsole.log(list[(num += 1)]);\n```",
+      "body": "```javascript\nlet num = 1;\nconst list = [\"🥳\", \"🤠\", \"🥰\", \"🤪\"];\n\nconsole.log(list[(num += 1)]);\n```",
       "options": [
         {
           "key": "A",
@@ -3590,7 +3590,7 @@
     {
       "id": 119,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = {\n  firstName: 'Lydia',\n  lastName: 'Hallie',\n  pet: {\n    name: 'Mara',\n    breed: 'Dutch Tulip Hound',\n  },\n  getFullName() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n};\n\nconsole.log(person.pet?.name);\nconsole.log(person.pet?.family?.name);\nconsole.log(person.getFullName?.());\nconsole.log(member.getLastName?.());\n```",
+      "body": "```javascript\nconst person = {\n  firstName: \"Lydia\",\n  lastName: \"Hallie\",\n  pet: {\n    name: \"Mara\",\n    breed: \"Dutch Tulip Hound\",\n  },\n  getFullName() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n};\n\nconsole.log(person.pet?.name);\nconsole.log(person.pet?.family?.name);\nconsole.log(person.getFullName?.());\nconsole.log(member.getLastName?.());\n```",
       "options": [
         {
           "key": "A",
@@ -3621,7 +3621,7 @@
     {
       "id": 120,
       "question": "What's the output?",
-      "body": "```javascript\nconst groceries = ['banana', 'apple', 'peanuts'];\n\nif (groceries.indexOf('banana')) {\n  console.log('We have to buy bananas!');\n} else {\n  console.log(`We don't have to buy bananas!`);\n}\n```",
+      "body": "```javascript\nconst groceries = [\"banana\", \"apple\", \"peanuts\"];\n\nif (groceries.indexOf(\"banana\")) {\n  console.log(\"We have to buy bananas!\");\n} else {\n  console.log(`We don't have to buy bananas!`);\n}\n```",
       "options": [
         {
           "key": "A",
@@ -3670,7 +3670,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "The `language` method is a `setter`. Setters don't hold an actual value, their purpose is to _modify_ properties. When calling a `setter` method, `undefined` gets returned.\n\n</p>",
+      "explanation": "`language` is a **setter** — a special method invoked when you assign to `config.language`.\n\nSetters modify properties; they do not store a retrievable value themselves. Reading `config.language` looks for a getter or data property, not the setter. With only a setter defined, `config.language` is `undefined`.\n\n</p>",
       "topics": [
         "array methods",
         "map/set",
@@ -3682,7 +3682,7 @@
     {
       "id": 122,
       "question": "What's the output?",
-      "body": "```javascript\nconst name = 'Lydia Hallie';\n\nconsole.log(!typeof name === 'object');\nconsole.log(!typeof name === 'string');\n```",
+      "body": "```javascript\nconst name = \"Lydia Hallie\";\n\nconsole.log(!typeof name === \"object\");\nconsole.log(!typeof name === \"string\");\n```",
       "options": [
         {
           "key": "A",
@@ -3713,7 +3713,7 @@
     {
       "id": 123,
       "question": "What's the output?",
-      "body": "```javascript\nconst add = x => y => z => {\n  console.log(x, y, z);\n  return x + y + z;\n};\n\nadd(4)(5)(6);\n```",
+      "body": "```javascript\nconst add = (x) => (y) => (z) => {\n  console.log(x, y, z);\n  return x + y + z;\n};\n\nadd(4)(5)(6);\n```",
       "options": [
         {
           "key": "A",
@@ -3808,7 +3808,7 @@
     {
       "id": 126,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getFine(speed, amount) {\n  const formattedSpeed = new Intl.NumberFormat('en-US', {\n    style: 'unit',\n    unit: 'mile-per-hour'\n  }).format(speed);\n\n  const formattedAmount = new Intl.NumberFormat('en-US', {\n    style: 'currency',\n    currency: 'USD'\n  }).format(amount);\n\n  return `The driver drove ${formattedSpeed} and has to pay ${formattedAmount}`;\n}\n\nconsole.log(getFine(130, 300))\n```",
+      "body": "```javascript\nfunction getFine(speed, amount) {\n  const formattedSpeed = new Intl.NumberFormat(\"en-US\", {\n    style: \"unit\",\n    unit: \"mile-per-hour\",\n  }).format(speed);\n\n  const formattedAmount = new Intl.NumberFormat(\"en-US\", {\n    style: \"currency\",\n    currency: \"USD\",\n  }).format(amount);\n\n  return `The driver drove ${formattedSpeed} and has to pay ${formattedAmount}`;\n}\n\nconsole.log(getFine(130, 300));\n```",
       "options": [
         {
           "key": "A",
@@ -3837,7 +3837,7 @@
     {
       "id": 127,
       "question": "What's the output?",
-      "body": "```javascript\nconst spookyItems = ['👻', '🎃', '🕸'];\n({ item: spookyItems[3] } = { item: '💀' });\n\nconsole.log(spookyItems);\n```",
+      "body": "```javascript\nconst spookyItems = [\"👻\", \"🎃\", \"🕸\"];\n({ item: spookyItems[3] } = { item: \"💀\" });\n\nconsole.log(spookyItems);\n```",
       "options": [
         {
           "key": "A",
@@ -3868,7 +3868,7 @@
     {
       "id": 128,
       "question": "What's the output?",
-      "body": "```javascript\nconst name = 'Lydia Hallie';\nconst age = 21;\n\nconsole.log(Number.isNaN(name));\nconsole.log(Number.isNaN(age));\n\nconsole.log(isNaN(name));\nconsole.log(isNaN(age));\n```",
+      "body": "```javascript\nconst name = \"Lydia Hallie\";\nconst age = 21;\n\nconsole.log(Number.isNaN(name));\nconsole.log(Number.isNaN(age));\n\nconsole.log(isNaN(name));\nconsole.log(isNaN(age));\n```",
       "options": [
         {
           "key": "A",
@@ -3897,7 +3897,7 @@
     {
       "id": 129,
       "question": "What's the output?",
-      "body": "```javascript\nconst randomValue = 21;\n\nfunction getInfo() {\n  console.log(typeof randomValue);\n  const randomValue = 'Lydia Hallie';\n}\n\ngetInfo();\n```",
+      "body": "```javascript\nconst randomValue = 21;\n\nfunction getInfo() {\n  console.log(typeof randomValue);\n  const randomValue = \"Lydia Hallie\";\n}\n\ngetInfo();\n```",
       "options": [
         {
           "key": "A",
@@ -3929,7 +3929,7 @@
     {
       "id": 130,
       "question": "What's the output?",
-      "body": "```javascript\nconst myPromise = Promise.resolve('Woah some cool data');\n\n(async () => {\n  try {\n    console.log(await myPromise);\n  } catch {\n    throw new Error(`Oops didn't work`);\n  } finally {\n    console.log('Oh finally!');\n  }\n})();\n```",
+      "body": "```javascript\nconst myPromise = Promise.resolve(\"Woah some cool data\");\n\n(async () => {\n  try {\n    console.log(await myPromise);\n  } catch {\n    throw new Error(`Oops didn't work`);\n  } finally {\n    console.log(\"Oh finally!\");\n  }\n})();\n```",
       "options": [
         {
           "key": "A",
@@ -3960,7 +3960,7 @@
     {
       "id": 131,
       "question": "What's the output?",
-      "body": "```javascript\nconst emojis = ['🥑', ['✨', '✨', ['🍕', '🍕']]];\n\nconsole.log(emojis.flat(1));\n```",
+      "body": "```javascript\nconst emojis = [\"🥑\", [\"✨\", \"✨\", [\"🍕\", \"🍕\"]]];\n\nconsole.log(emojis.flat(1));\n```",
       "options": [
         {
           "key": "A",
@@ -4022,7 +4022,7 @@
     {
       "id": 133,
       "question": "What's the output?",
-      "body": "```javascript\nconst myPromise = Promise.resolve(Promise.resolve('Promise'));\n\nfunction funcOne() {\n  setTimeout(() => console.log('Timeout 1!'), 0);\n  myPromise.then(res => res).then(res => console.log(`${res} 1!`));\n  console.log('Last line 1!');\n}\n\nasync function funcTwo() {\n  const res = await myPromise;\n  console.log(`${res} 2!`)\n  setTimeout(() => console.log('Timeout 2!'), 0);\n  console.log('Last line 2!');\n}\n\nfuncOne();\nfuncTwo();\n```",
+      "body": "```javascript\nconst myPromise = Promise.resolve(Promise.resolve(\"Promise\"));\n\nfunction funcOne() {\n  setTimeout(() => console.log(\"Timeout 1!\"), 0);\n  myPromise.then((res) => res).then((res) => console.log(`${res} 1!`));\n  console.log(\"Last line 1!\");\n}\n\nasync function funcTwo() {\n  const res = await myPromise;\n  console.log(`${res} 2!`);\n  setTimeout(() => console.log(\"Timeout 2!\"), 0);\n  console.log(\"Last line 2!\");\n}\n\nfuncOne();\nfuncTwo();\n```",
       "options": [
         {
           "key": "A",
@@ -4054,7 +4054,7 @@
     {
       "id": 134,
       "question": "How can we invoke `sum` in `sum.js` from `index.js?`",
-      "body": "```javascript\n// sum.js\nexport default function sum(x) {\n  return x + x;\n}\n\n// index.js\nimport * as sum from './sum';\n```",
+      "body": "```javascript\n// sum.js\nexport default function sum(x) {\n  return x + x;\n}\n\n// index.js\nimport * as sum from \"./sum\";\n```",
       "options": [
         {
           "key": "A",
@@ -4074,7 +4074,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "With the asterisk `*`, we import all exported values from that file, both default and named. If we had the following file:\n\n```javascript\n// info.js\nexport const name = 'Lydia';\nexport const age = 21;\nexport default 'I love JavaScript';\n\n// index.js\nimport * as info from './info';\nconsole.log(info);\n```\n\nThe following would get logged:\n\n```javascript\n{\n  default: \"I love JavaScript\",\n  name: \"Lydia\",\n  age: 21\n}\n```\n\nFor the `sum` example, it means that the imported value `sum` looks like this:\n\n```javascript\n{ default: function sum(x) { return x + x } }\n```\n\nWe can invoke this function, by calling `sum.default`\n\n</p>",
+      "explanation": "With the asterisk `*`, we import all exported values from that file, both default and named. If we had the following file:\n\n```javascript\n// info.js\nexport const name = \"Lydia\";\nexport const age = 21;\nexport default \"I love JavaScript\";\n\n// index.js\nimport * as info from \"./info\";\nconsole.log(info);\n```\n\nThe following would get logged:\n\n```javascript\n{\n  default: \"I love JavaScript\",\n  name: \"Lydia\",\n  age: 21\n}\n```\n\nFor the `sum` example, it means that the imported value `sum` looks like this:\n\n```javascript\n{ default: function sum(x) { return x + x } }\n```\n\nWe can invoke this function, by calling `sum.default`\n\n</p>",
       "topics": [
         "generators",
         "modules",
@@ -4085,7 +4085,7 @@
     {
       "id": 135,
       "question": "What's the output?",
-      "body": "```javascript\nconst handler = {\n  set: () => console.log('Added a new property!'),\n  get: () => console.log('Accessed a property!'),\n};\n\nconst person = new Proxy({}, handler);\n\nperson.name = 'Lydia';\nperson.name;\n```",
+      "body": "```javascript\nconst handler = {\n  set: () => console.log(\"Added a new property!\"),\n  get: () => console.log(\"Accessed a property!\"),\n};\n\nconst person = new Proxy({}, handler);\n\nperson.name = \"Lydia\";\nperson.name;\n```",
       "options": [
         {
           "key": "A",
@@ -4117,7 +4117,7 @@
     {
       "id": 136,
       "question": "Which of the following will modify the `person` object?",
-      "body": "```javascript\nconst person = { name: 'Lydia Hallie' };\n\nObject.seal(person);\n```",
+      "body": "```javascript\nconst person = { name: \"Lydia Hallie\" };\n\nObject.seal(person);\n```",
       "options": [
         {
           "key": "A",
@@ -4137,7 +4137,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "With `Object.seal` we can prevent new properties from being _added_, or existing properties to be _removed_.\n\nHowever, you can still modify the value of existing properties.\n\n</p>",
+      "explanation": "`Object.seal()` prevents adding or removing properties, but **existing properties can still be modified**.\n\n- `person.name = \"Evan Bacon\"` — allowed (modifies existing `name`).\n- `person.age = 21` — blocked (new property).\n- `delete person.name` — blocked (removal).\n- `Object.assign(person, { age: 21 })` — blocked (adds new property).\n\n</p>",
       "topics": [
         "object methods"
       ],
@@ -4146,7 +4146,7 @@
     {
       "id": 137,
       "question": "Which of the following will modify the `person` object?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia Hallie',\n  address: {\n    street: '100 Main St',\n  },\n};\n\nObject.freeze(person);\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia Hallie\",\n  address: {\n    street: \"100 Main St\",\n  },\n};\n\nObject.freeze(person);\n```",
       "options": [
         {
           "key": "A",
@@ -4166,7 +4166,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The `Object.freeze` method _freezes_ an object. No properties can be added, modified, or removed.\n\nHowever, it only _shallowly_ freezes the object, meaning that only _direct_ properties on the object are frozen. If the property is another object, like `address` in this case, the properties on that object aren't frozen, and can be modified.\n\n</p>",
+      "explanation": "`Object.freeze()` makes an object shallowly immutable — no add, remove, or change of **direct** properties.\n\n- `person.name = \"Evan Bacon\"` — blocked.\n- `delete person.address` — blocked.\n- `person.pet = { name: \"Mara\" }` — blocked (new property).\n- `person.address.street = \"101 Main St\"` — **allowed**. `freeze` is shallow; nested objects like `address` are not frozen, so their properties can still change.\n\n</p>",
       "topics": [
         "object methods",
         "this"
@@ -4176,7 +4176,7 @@
     {
       "id": 138,
       "question": "What's the output?",
-      "body": "```javascript\nconst add = x => x + x;\n\nfunction myFunc(num = 2, value = add(num)) {\n  console.log(num, value);\n}\n\nmyFunc();\nmyFunc(3);\n```",
+      "body": "```javascript\nconst add = (x) => x + x;\n\nfunction myFunc(num = 2, value = add(num)) {\n  console.log(num, value);\n}\n\nmyFunc();\nmyFunc(3);\n```",
       "options": [
         {
           "key": "A",
@@ -4203,7 +4203,7 @@
     {
       "id": 139,
       "question": "What's the output?",
-      "body": "```javascript\nclass Counter {\n  #number = 10\n\n  increment() {\n    this.#number++\n  }\n\n  getNum() {\n    return this.#number\n  }\n}\n\nconst counter = new Counter()\ncounter.increment()\n\nconsole.log(counter.#number)\n```",
+      "body": "```javascript\nclass Counter {\n  #number = 10;\n\n  increment() {\n    this.#number++;\n  }\n\n  getNum() {\n    return this.#number;\n  }\n}\n\nconst counter = new Counter();\ncounter.increment();\n\nconsole.log(counter.#number);\n```",
       "options": [
         {
           "key": "A",
@@ -4234,7 +4234,7 @@
     {
       "id": 140,
       "question": "What's missing?",
-      "body": "```javascript\nconst teams = [\n  { name: 'Team 1', members: ['Paul', 'Lisa'] },\n  { name: 'Team 2', members: ['Laura', 'Tim'] },\n];\n\nfunction* getMembers(members) {\n  for (let i = 0; i < members.length; i++) {\n    yield members[i];\n  }\n}\n\nfunction* getTeams(teams) {\n  for (let i = 0; i < teams.length; i++) {\n    // ✨ SOMETHING IS MISSING HERE ✨\n  }\n}\n\nconst obj = getTeams(teams);\nobj.next(); // { value: \"Paul\", done: false }\nobj.next(); // { value: \"Lisa\", done: false }\n```",
+      "body": "```javascript\nconst teams = [\n  { name: \"Team 1\", members: [\"Paul\", \"Lisa\"] },\n  { name: \"Team 2\", members: [\"Laura\", \"Tim\"] },\n];\n\nfunction* getMembers(members) {\n  for (let i = 0; i < members.length; i++) {\n    yield members[i];\n  }\n}\n\nfunction* getTeams(teams) {\n  for (let i = 0; i < teams.length; i++) {\n    // ✨ SOMETHING IS MISSING HERE ✨\n  }\n}\n\nconst obj = getTeams(teams);\nobj.next(); // { value: \"Paul\", done: false }\nobj.next(); // { value: \"Lisa\", done: false }\n```",
       "options": [
         {
           "key": "A",
@@ -4265,7 +4265,7 @@
     {
       "id": 141,
       "question": "What's the output?",
-      "body": "```javascript\nconst person = {\n  name: 'Lydia Hallie',\n  hobbies: ['coding'],\n};\n\nfunction addHobby(hobby, hobbies = person.hobbies) {\n  hobbies.push(hobby);\n  return hobbies;\n}\n\naddHobby('running', []);\naddHobby('dancing');\naddHobby('baking', person.hobbies);\n\nconsole.log(person.hobbies);\n```",
+      "body": "```javascript\nconst person = {\n  name: \"Lydia Hallie\",\n  hobbies: [\"coding\"],\n};\n\nfunction addHobby(hobby, hobbies = person.hobbies) {\n  hobbies.push(hobby);\n  return hobbies;\n}\n\naddHobby(\"running\", []);\naddHobby(\"dancing\");\naddHobby(\"baking\", person.hobbies);\n\nconsole.log(person.hobbies);\n```",
       "options": [
         {
           "key": "A",
@@ -4326,7 +4326,7 @@
     {
       "id": 143,
       "question": "Which of the options result(s) in an error?",
-      "body": "```javascript\nconst emojis = ['🎄', '🎅🏼', '🎁', '⭐'];\n\n/* 1 */ emojis.push('🦌');\n/* 2 */ emojis.splice(0, 2);\n/* 3 */ emojis = [...emojis, '🥂'];\n/* 4 */ emojis.length = 0;\n```",
+      "body": "```javascript\nconst emojis = [\"🎄\", \"🎅🏼\", \"🎁\", \"⭐\"];\n\n/* 1 */ emojis.push(\"🦌\");\n/* 2 */ emojis.splice(0, 2);\n/* 3 */ emojis = [...emojis, \"🥂\"];\n/* 4 */ emojis.length = 0;\n```",
       "options": [
         {
           "key": "A",
@@ -4391,7 +4391,7 @@
     {
       "id": 145,
       "question": "What's the output?",
-      "body": "```javascript\nlet count = 0;\nconst nums = [0, 1, 2, 3];\n\nnums.forEach(num => {\n\tif (num) count += 1\n})\n\nconsole.log(count)\n```",
+      "body": "```javascript\nlet count = 0;\nconst nums = [0, 1, 2, 3];\n\nnums.forEach((num) => {\n  if (num) count += 1;\n});\n\nconsole.log(count);\n```",
       "options": [
         {
           "key": "A",
@@ -4421,7 +4421,7 @@
     {
       "id": 146,
       "question": "What's the output?",
-      "body": "```javascript\nfunction getFruit(fruits) {\n\tconsole.log(fruits?.[1]?.[1])\n}\n\ngetFruit([['🍊', '🍌'], ['🍍']])\ngetFruit()\ngetFruit([['🍍'], ['🍊', '🍌']])\n```",
+      "body": "```javascript\nfunction getFruit(fruits) {\n  console.log(fruits?.[1]?.[1]);\n}\n\ngetFruit([[\"🍊\", \"🍌\"], [\"🍍\"]]);\ngetFruit();\ngetFruit([[\"🍍\"], [\"🍊\", \"🍌\"]]);\n```",
       "options": [
         {
           "key": "A",
@@ -4452,7 +4452,7 @@
     {
       "id": 147,
       "question": "What's the output?",
-      "body": "```javascript\nclass Calc {\n\tconstructor() {\n\t\tthis.count = 0 \n\t}\n\n\tincrease() {\n\t\tthis.count++\n\t}\n}\n\nconst calc = new Calc()\nnew Calc().increase()\n\nconsole.log(calc.count)\n```",
+      "body": "```javascript\nclass Calc {\n  constructor() {\n    this.count = 0;\n  }\n\n  increase() {\n    this.count++;\n  }\n}\n\nconst calc = new Calc();\nnew Calc().increase();\n\nconsole.log(calc.count);\n```",
       "options": [
         {
           "key": "A",
@@ -4485,7 +4485,7 @@
     {
       "id": 148,
       "question": "What's the output?",
-      "body": "```javascript\nconst user = {\n\temail: \"e@mail.com\",\n\tpassword: \"12345\"\n}\n\nconst updateUser = ({ email, password }) => {\n\tif (email) {\n\t\tObject.assign(user, { email })\n\t}\n\n\tif (password) {\n\t\tuser.password = password\n\t}\n\n\treturn user\n}\n\nconst updatedUser = updateUser({ email: \"new@email.com\" })\n\nconsole.log(updatedUser === user)\n```",
+      "body": "```javascript\nconst user = {\n  email: \"e@mail.com\",\n  password: \"12345\",\n};\n\nconst updateUser = ({ email, password }) => {\n  if (email) {\n    Object.assign(user, { email });\n  }\n\n  if (password) {\n    user.password = password;\n  }\n\n  return user;\n};\n\nconst updatedUser = updateUser({ email: \"new@email.com\" });\n\nconsole.log(updatedUser === user);\n```",
       "options": [
         {
           "key": "A",
@@ -4514,7 +4514,7 @@
     {
       "id": 149,
       "question": "What's the output?",
-      "body": "```javascript\nconst fruit = ['🍌', '🍊', '🍎']\n\nfruit.slice(0, 1)\nfruit.splice(0, 1)\nfruit.unshift('🍇')\n\nconsole.log(fruit)\n```",
+      "body": "```javascript\nconst fruit = [\"🍌\", \"🍊\", \"🍎\"];\n\nfruit.slice(0, 1);\nfruit.splice(0, 1);\nfruit.unshift(\"🍇\");\n\nconsole.log(fruit);\n```",
       "options": [
         {
           "key": "A",
@@ -4545,7 +4545,7 @@
     {
       "id": 150,
       "question": "What's the output?",
-      "body": "```javascript\nconst animals = {};\nlet dog = { emoji: '🐶' }\nlet cat = { emoji: '🐈' }\n\nanimals[dog] = { ...dog, name: \"Mara\" }\nanimals[cat] = { ...cat, name: \"Sara\" }\n\nconsole.log(animals[dog])\n```",
+      "body": "```javascript\nconst animals = {};\nlet dog = { emoji: \"🐶\" };\nlet cat = { emoji: \"🐈\" };\n\nanimals[dog] = { ...dog, name: \"Mara\" };\nanimals[cat] = { ...cat, name: \"Sara\" };\n\nconsole.log(animals[dog]);\n```",
       "options": [
         {
           "key": "A",
@@ -4575,7 +4575,7 @@
     {
       "id": 151,
       "question": "What's the output?",
-      "body": "```javascript\nconst user = {\n\temail: \"my@email.com\",\n\tupdateEmail: email => {\n\t\tthis.email = email\n\t}\n}\n\nuser.updateEmail(\"new@email.com\")\nconsole.log(user.email)\n```",
+      "body": "```javascript\nconst user = {\n  email: \"my@email.com\",\n  updateEmail: (email) => {\n    this.email = email;\n  },\n};\n\nuser.updateEmail(\"new@email.com\");\nconsole.log(user.email);\n```",
       "options": [
         {
           "key": "A",
@@ -4607,7 +4607,7 @@
     {
       "id": 152,
       "question": "What's the output?",
-      "body": "```javascript\nconst promise1 = Promise.resolve('First')\nconst promise2 = Promise.resolve('Second')\nconst promise3 = Promise.reject('Third')\nconst promise4 = Promise.resolve('Fourth')\n\nconst runPromises = async () => {\n\tconst res1 = await Promise.all([promise1, promise2])\n\tconst res2  = await Promise.all([promise3, promise4])\n\treturn [res1, res2]\n}\n\nrunPromises()\n\t.then(res => console.log(res))\n\t.catch(err => console.log(err))\n```",
+      "body": "```javascript\nconst promise1 = Promise.resolve(\"First\");\nconst promise2 = Promise.resolve(\"Second\");\nconst promise3 = Promise.reject(\"Third\");\nconst promise4 = Promise.resolve(\"Fourth\");\n\nconst runPromises = async () => {\n  const res1 = await Promise.all([promise1, promise2]);\n  const res2 = await Promise.all([promise3, promise4]);\n  return [res1, res2];\n};\n\nrunPromises()\n  .then((res) => console.log(res))\n  .catch((err) => console.log(err));\n```",
       "options": [
         {
           "key": "A",
@@ -4640,7 +4640,7 @@
     {
       "id": 153,
       "question": "What should the value of `method` be to log `{ name: \"Lydia\", age: 22 }`?",
-      "body": "```javascript\nconst keys = [\"name\", \"age\"]\nconst values = [\"Lydia\", 22]\n\nconst method = /* ?? */\nObject[method](keys.map((_, i) => {\n\treturn [keys[i], values[i]]\n})) // { name: \"Lydia\", age: 22 }\n```",
+      "body": "```javascript\nconst keys = [\"name\", \"age\"];\nconst values = [\"Lydia\", 22];\n\nconst method =\n  /* ?? */\n  Object[method](\n    keys.map((_, i) => {\n      return [keys[i], values[i]];\n    }),\n  ); // { name: \"Lydia\", age: 22 }\n```",
       "options": [
         {
           "key": "A",
@@ -4673,7 +4673,7 @@
     {
       "id": 154,
       "question": "What's the output?",
-      "body": "```javascript\nconst createMember = ({ email, address = {}}) => {\n\tconst validEmail = /.+\\@.+\\..+/.test(email)\n\tif (!validEmail) throw new Error(\"Valid email pls\")\n\n\treturn {\n\t\temail,\n\t\taddress: address ? address : null\n\t}\n}\n\nconst member = createMember({ email: \"my@email.com\" })\nconsole.log(member)\n```",
+      "body": "```javascript\nconst createMember = ({ email, address = {} }) => {\n  const validEmail = /.+\\@.+\\..+/.test(email);\n  if (!validEmail) throw new Error(\"Valid email pls\");\n\n  return {\n    email,\n    address: address ? address : null,\n  };\n};\n\nconst member = createMember({ email: \"my@email.com\" });\nconsole.log(member);\n```",
       "options": [
         {
           "key": "A",
@@ -4705,7 +4705,7 @@
     {
       "id": 155,
       "question": "What's the output?",
-      "body": "```javascript\nlet randomValue = { name: \"Lydia\" }\nrandomValue = 23\n\nif (!typeof randomValue === \"string\") {\n\tconsole.log(\"It's not a string!\")\n} else {\n\tconsole.log(\"Yay it's a string!\")\n}\n```",
+      "body": "```javascript\nlet randomValue = { name: \"Lydia\" };\nrandomValue = 23;\n\nif (!typeof randomValue === \"string\") {\n  console.log(\"It's not a string!\");\n} else {\n  console.log(\"Yay it's a string!\");\n}\n```",
       "options": [
         {
           "key": "A",
@@ -4755,7 +4755,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `+` operator with a string and a number concatenates, so `1 + \"1\"` is `\"11\"`. Subtraction then coerces `\"11\"` to a number, so `\"11\" - 1` is `10`.",
+      "explanation": "JavaScript applies left-to-right evaluation with type coercion.\n\n1. `1 + \"1\"` — `+` with a string triggers concatenation → `\"11\"`.\n2. `\"11\" - 1` — subtraction coerces `\"11\"` to number `11` → `10`.\n\nThe `+` operator is special: if either operand is a string, it prefers concatenation over addition.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 156,
@@ -4766,7 +4766,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\n(function() {\nvar a = b = 5;\n})();\nconsole.log(b);\n```",
+      "body": "```javascript\n(function () {\n  var a = (b = 5);\n})();\nconsole.log(b);\n```",
       "options": [
         {
           "key": "A",
@@ -4786,7 +4786,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The expression var a = b = 5 is evaluated as b = 5 followed by var a = b. Here, b becomes a global variable because it is not declared with var. Hence, console.log(b) outputs 5.",
+      "explanation": "Assignment chains evaluate right-to-left.\n\n`var a = (b = 5)` is parsed as `b = 5` then `var a = b`.\n\n- `b = 5` assigns to `b` without `var`/`let`/`const` inside the IIFE, so `b` becomes a **global** variable.\n- `var a` is function-scoped inside the IIFE and is not accessible outside.\n\n`console.log(b)` prints `5`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 157,
@@ -4816,7 +4816,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "In JavaScript, the + operator between two arrays results in their string representation being concatenated. The string representation of an empty array is an empty string, so [] + [] results in \"\".",
+      "explanation": "The `+` operator coerces operands to strings when one is an object/array.\n\n`[]` converts to `\"\"` via `toString()`. So `[] + []` → `\"\" + \"\"` → `\"\"` (empty string).\n\nSimilarly `[] + {}` → `\"[object Object]\"`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 158,
@@ -4847,7 +4847,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "NaN stands for \"Not-a-Number\", but its type in JavaScript is actually number.",
+      "explanation": "`NaN` means \"Not-a-Number\" as a **value**, but its type is still `number`.\n\n`typeof NaN` returns `\"number\"` because `NaN` is a numeric value representing an invalid arithmetic result. Use `Number.isNaN()` to test for `NaN` specifically.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 159,
@@ -4869,7 +4869,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Due to floating-point precision issues in JavaScript, 0.1 + 0.2 does not exactly equal 0.3, but rather a number very close to it, hence the comparison returns false.",
+      "explanation": "Floating-point numbers use binary representation, so some decimal fractions cannot be stored exactly.\n\n`0.1 + 0.2` yields `0.30000000000000004`, not exactly `0.3`. The strict equality `===` comparison is therefore `false`.\n\nUse an epsilon check or `Number.EPSILON` for float comparisons.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 160,
@@ -4879,7 +4879,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar foo = {n: 1};\nvar bar = foo;\nfoo.x = foo = {n: 2};\nconsole.log(foo.x);\n```",
+      "body": "```javascript\nvar foo = { n: 1 };\nvar bar = foo;\nfoo.x = foo = { n: 2 };\nconsole.log(foo.x);\n```",
       "options": [
         {
           "key": "A",
@@ -4910,7 +4910,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\nreturn;\n{\ntest: 1\n};\n}\nconsole.log(typeof foo());\n```",
+      "body": "```javascript\nfunction foo() {\n  return;\n  {\n    test: 1;\n  }\n}\nconsole.log(typeof foo());\n```",
       "options": [
         {
           "key": "A",
@@ -4930,7 +4930,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "Due to automatic semicolon insertion, return; is treated as a complete statement. Therefore, the function returns undefined.",
+      "explanation": "Automatic semicolon insertion (ASI) terminates the `return` before the object literal.\n\nJavaScript parses `return` followed by a newline and `{` as `return;` — an empty return. The `{ test: 1 }` block is dead code. `foo()` returns `undefined`, so `typeof foo()` is `\"undefined\"`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 162,
@@ -4940,7 +4940,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 1;\nfunction b() {\na = 10;\nreturn;\nfunction a() {}\n}\nb();\nconsole.log(a);\n```",
+      "body": "```javascript\nvar a = 1;\nfunction b() {\n  a = 10;\n  return;\n  function a() {}\n}\nb();\nconsole.log(a);\n```",
       "options": [
         {
           "key": "A",
@@ -4972,7 +4972,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 5;\n(function() {\nvar a = 6;\nconsole.log(a);\na = 10;\nconsole.log(a);\n})();\nconsole.log(a);\n```",
+      "body": "```javascript\nvar a = 5;\n(function () {\n  var a = 6;\n  console.log(a);\n  a = 10;\n  console.log(a);\n})();\nconsole.log(a);\n```",
       "options": [
         {
           "key": "A",
@@ -5002,7 +5002,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 2;\nvar b = (function() {\ndelete a;\nreturn a;\n})();\nconsole.log(a);\nconsole.log(b);\n```",
+      "body": "```javascript\nvar a = 2;\nvar b = (function () {\n  delete a;\n  return a;\n})();\nconsole.log(a);\nconsole.log(b);\n```",
       "options": [
         {
           "key": "A",
@@ -5022,7 +5022,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The delete operator is used to remove properties from objects. Here, a is a variable, not a property of an object, so delete a has no effect. Thus, a remains 2, and the returned value b is also 2.",
+      "explanation": "`delete` only removes **properties from objects**. It does not delete variables declared with `var`, `let`, or `const`.\n\n`delete a` inside the IIFE has no effect on the outer `var a = 2`. Both `a` and the returned `b` are `2`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 165,
@@ -5082,7 +5082,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "Setting a property arr[&#8216;key'] does not affect the array's length property, which only counts numeric indices. Therefore, the length remains 3.",
+      "explanation": "Array `.length` counts only **numeric indices** from `0` to `length - 1`.\n\nSetting `arr['key'] = 'value'` adds a normal property, not a numeric index. It does not increase `.length`, which stays `3`.\n\nNon-index properties are stored separately from indexed elements.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 167,
@@ -5092,7 +5092,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction test() {\nconsole.log(a);\nconsole.log(foo());\nvar a = 1;\nfunction foo() {\nreturn 2;\n}\n}\ntest();\n```",
+      "body": "```javascript\nfunction test() {\n  console.log(a);\n  console.log(foo());\n  var a = 1;\n  function foo() {\n    return 2;\n  }\n}\ntest();\n```",
       "options": [
         {
           "key": "A",
@@ -5143,7 +5143,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Every function in JavaScript has a prototype property, which is an empty object by default.",
+      "explanation": "Every function has a `prototype` property used when the function is called as a constructor with `new`.\n\nFor a plain function `f`, `f.prototype` defaults to an object (`{}`) that becomes the prototype of instances created via `new f()`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 169,
@@ -5154,7 +5154,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar F = function() {};\nvar f = new F();\nconsole.log(F.prototype === f.__proto__);\n```",
+      "body": "```javascript\nvar F = function () {};\nvar f = new F();\nconsole.log(F.prototype === f.__proto__);\n```",
       "options": [
         {
           "key": "A",
@@ -5165,14 +5165,6 @@
           "text": "`false`"
         },
         {
-          "key": "A",
-          "text": "`123`"
-        },
-        {
-          "key": "B",
-          "text": "`456`"
-        },
-        {
           "key": "C",
           "text": "`undefined`"
         },
@@ -5181,10 +5173,10 @@
           "text": "`TypeError`"
         }
       ],
-      "answer": "B",
-      "explanation": "When objects are used as keys in JavaScript, they are converted to strings (`[object Object]`). Therefore, both `a[b]` and `a[c]` refer to the same key, and the last assignment overwrites the previous one. Thus, `a[b]` outputs `456`.",
+      "answer": "A",
+      "explanation": "The output is **`true`**.\n\n**`F.prototype` and `f.__proto__` point to the same object**, but they live on different things and serve different roles.\n\nIf `F` is a constructor function and `f` is an instance created with `new F()`:\n\n```javascript\nf.__proto__ === F.prototype; // true\n```\n\n## `F.prototype` — the blueprint\n\nThe `.prototype` property exists **only on functions**. When you define a function, the engine attaches a `.prototype` object to it. That object is the shared blueprint for every instance created with `new F()`.\n\n- **Lives on:** the constructor function (`F`)\n- **Purpose:** holds methods and properties shared by all instances of `F`\n- **Created when:** the function `F` is defined\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(this.name + \" makes a noise.\");\n};\n```\n\n## `f.__proto__` — the link\n\n`.__proto__` is an accessor on almost every object. It points to the prototype object that **this specific instance** inherits from — the spec's internal `[[Prototype]]` link.\n\nWhen you access `f.speak()`, JavaScript looks on `f` first. If the property isn't there, it follows `f.__proto__` (i.e. `F.prototype`) to find shared methods.\n\n- **Lives on:** the instance object (`f`)\n- **Purpose:** the actual inheritance link from instance → constructor blueprint\n- **Created when:** the object `f` is instantiated with `new`\n\n```javascript\nconst myDog = new Animal(\"Rex\");\n\nmyDog.speak(); // \"Rex makes a noise.\"\n\nconsole.log(myDog.__proto__ === Animal.prototype); // true\n```\n\n> `__proto__` is legacy. Prefer **`Object.getPrototypeOf(f)`** for reading the link.\n\n```javascript\nconsole.log(Object.getPrototypeOf(myDog) === Animal.prototype); // true\n```\n\n## Summary comparison\n\n| Feature | `F.prototype` | `f.__proto__` |\n| --- | --- | --- |\n| **Where does it live?** | On the constructor function | On the instance object |\n| **What is its job?** | Blueprint for new instances | Pointer to that blueprint |\n| **When is it created?** | When `F` is defined | When `f` is instantiated |\n| **Modern standard** | Standard and actively used | Legacy — use `Object.getPrototypeOf()` |\n\n## Mental model\n\n```\nF (constructor)          f (instance)\n    │                        │\n    └── .prototype ◄─────────┴── .__proto__  (same object)\n              │\n         shared methods\n```\n\nOne object, two views: the constructor **defines** the blueprint (`F.prototype`); each instance **references** it (`f.__proto__` / `[[Prototype]]`).",
       "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
+      "source": "user paste: F.prototype vs f.__proto__",
       "id": 170,
       "topics": [
         "object methods",
@@ -5193,7 +5185,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar x = 10;\n(function() {\nconsole.log(x);\nvar x = 20;\n})();\n```",
+      "body": "```javascript\nvar x = 10;\n(function () {\n  console.log(x);\n  var x = 20;\n})();\n```",
       "options": [
         {
           "key": "A",
@@ -5213,7 +5205,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The variable `x` is hoisted within the function scope, so the `console.log(x)` references the hoisted but uninitialized `x`, which is `undefined`.",
+      "explanation": "`var` is function-scoped and hoisted. Inside the IIFE, `var x` is hoisted to the top of the function body and initialized to `undefined`.\n\n`console.log(x)` runs before `x = 20`, so it reads the hoisted but uninitialized binding — `undefined`. This differs from `let`, which would throw a ReferenceError in the temporal dead zone.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 171,
@@ -5224,7 +5216,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\nreturn\n{\nmessage: \"Hello\"\n};\n}\nconsole.log(foo());\n```",
+      "body": "```javascript\nfunction foo() {\n  return;\n  {\n    message: \"Hello\";\n  }\n}\nconsole.log(foo());\n```",
       "options": [
         {
           "key": "A",
@@ -5244,7 +5236,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Due to automatic semicolon insertion, the `return` statement is terminated before the object is returned. Hence, `foo()` returns `undefined`.",
+      "explanation": "ASI inserts a semicolon after `return`, so the function returns before the object literal.\n\nParsed as `return;` followed by a standalone block `{ message: \"Hello\" }`. `foo()` returns `undefined`.\n\nASI is why many style guides put `{` on the same line as `return`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 172,
@@ -5254,7 +5246,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar f = function g() {\nreturn 23;\n};\nconsole.log(typeof g());\n```",
+      "body": "```javascript\nvar f = function g() {\n  return 23;\n};\nconsole.log(typeof g());\n```",
       "options": [
         {
           "key": "A",
@@ -5274,7 +5266,7 @@
         }
       ],
       "answer": "D",
-      "explanation": "The function `g` is only accessible within its own scope. Outside of this scope, it is not defined, resulting in a `ReferenceError`.",
+      "explanation": "Named function expressions create an inner name (`g`) visible **only inside** the function's scope.\n\n`f` is the variable holding the function. `g` is not accessible in the outer scope, so `typeof g()` throws `ReferenceError: g is not defined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 173,
@@ -5287,7 +5279,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar length = 10;\nfunction fn() {\nconsole.log(this.length);\n}\nvar obj = {\nlength: 5,\nmethod: function() {\nfn();\narguments[0]();\n}\n};\nobj.method(fn);\n```",
+      "body": "```javascript\nvar length = 10;\nfunction fn() {\n  console.log(this.length);\n}\nvar obj = {\n  length: 5,\n  method: function () {\n    fn();\n    arguments[0]();\n  },\n};\nobj.method(fn);\n```",
       "options": [
         {
           "key": "A",
@@ -5319,7 +5311,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction test() {\nvar a = b = 3;\n}\ntest();\nconsole.log(typeof a);\nconsole.log(typeof b);\n```",
+      "body": "```javascript\nfunction test() {\n  var a = (b = 3);\n}\ntest();\nconsole.log(typeof a);\nconsole.log(typeof b);\n```",
       "options": [
         {
           "key": "A",
@@ -5339,7 +5331,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The statement `var a = b = 3` declares `a` locally within the function, but `b` is implicitly declared as a global variable. Thus, `a` is `undefined` outside the function, while `b` is `number`.",
+      "explanation": "`var a = b = 3` assigns `3` to `b` first (creating a global `b` since `b` has no declaration), then declares local `a`.\n\nOutside `test()`, `a` is out of scope (`undefined`), while global `b` is `3` (`\"number\"`).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 175,
@@ -5351,7 +5343,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar foo = function bar() { return 42; };\nconsole.log(typeof bar);\n```",
+      "body": "```javascript\nvar foo = function bar() {\n  return 42;\n};\nconsole.log(typeof bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5371,7 +5363,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "The function `bar` is only available within its own scope. Outside this scope, it is not defined, resulting in `typeof bar` being `undefined`.",
+      "explanation": "In `var foo = function bar() { return 42; }`, the name `bar` is only bound **inside** the function body.\n\nOutside, only `foo` exists. `typeof bar` is `\"undefined\"` because `bar` was never declared in the outer scope.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 176,
@@ -5383,7 +5375,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\nvar x = 10;\n(function() {\nconsole.log(x);\n})();\nx = 20;\n}\nfoo();\n```",
+      "body": "```javascript\nfunction foo() {\n  var x = 10;\n  (function () {\n    console.log(x);\n  })();\n  x = 20;\n}\nfoo();\n```",
       "options": [
         {
           "key": "A",
@@ -5403,7 +5395,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The immediately invoked function expression (IIFE) captures the initial value of `x`, which is `10`, before it is reassigned to `20`.",
+      "explanation": "The IIFE closes over the variable `x`, not a snapshot of its value.\n\nExecution order matters: the IIFE runs **synchronously** before `x = 20`, so when `console.log(x)` runs, `x` is still `10`. If the IIFE were deferred (e.g. `setTimeout`), it would see `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 177,
@@ -5414,7 +5406,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 1;\nvar obj = {\na: 2,\nfn: function() {\nconsole.log(this.a);\n}\n};\nvar fn = obj.fn;\nfn();\n```",
+      "body": "```javascript\nvar a = 1;\nvar obj = {\n  a: 2,\n  fn: function () {\n    console.log(this.a);\n  },\n};\nvar fn = obj.fn;\nfn();\n```",
       "options": [
         {
           "key": "A",
@@ -5434,7 +5426,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "When `fn` is called outside the context of `obj`, `this` refers to the global object, where `a` is `1`.",
+      "explanation": "Regular functions get `this` from **how they are called**, not where they are defined.\n\n`var fn = obj.fn` extracts the function without `obj`. Calling `fn()` uses default binding — global object in sloppy mode, where global `a` is `1`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 178,
@@ -5446,7 +5438,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\na: 2,\nfoo: function() {\nvar self = this;\n(function() {\nconsole.log(self.a);\n})();\n}\n};\nobj.foo();\n```",
+      "body": "```javascript\nvar obj = {\n  a: 2,\n  foo: function () {\n    var self = this;\n    (function () {\n      console.log(self.a);\n    })();\n  },\n};\nobj.foo();\n```",
       "options": [
         {
           "key": "A",
@@ -5466,7 +5458,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The variable `self` captures the `this` context of `obj`, allowing the inner function to correctly reference `obj.a`.",
+      "explanation": "Regular nested functions do not inherit `this` from their outer function. The IIFE's `this` would be global.\n\nThe classic fix: `var self = this` inside `foo` captures `obj` as `self` before entering the IIFE. `self.a` is `2`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 179,
@@ -5476,7 +5468,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\na: 1,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nsetTimeout(obj.foo, 1000);\n```",
+      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nsetTimeout(obj.foo, 1000);\n```",
       "options": [
         {
           "key": "A",
@@ -5496,7 +5488,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "When `obj.foo` is passed to `setTimeout`, the context (`this`) is lost, so `this.a` refers to `undefined`.",
+      "explanation": "Passing `obj.foo` to `setTimeout` passes only the **function reference** — `this` is lost.\n\nWhen the timer fires, `foo` is called as a plain function, so `this` is the global object. Global `a` is `undefined` (no global `a` defined here).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 180,
@@ -5507,7 +5499,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\na: 1,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nsetTimeout(function() {\nobj.foo();\n}, 1000);\n```",
+      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nsetTimeout(function () {\n  obj.foo();\n}, 1000);\n```",
       "options": [
         {
           "key": "A",
@@ -5527,7 +5519,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "In this case, `obj.foo` is called within a function where `obj` is correctly referenced, so `this.a` is `1`.",
+      "explanation": "Wrapping the call in another function preserves access to `obj`.\n\n`setTimeout(function () { obj.foo(); }, 1000)` calls `obj.foo` as a method on `obj`, so `this` is `obj` and `this.a` is `1`.\n\nCalling `obj.foo()` as a method preserves the object receiver.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 181,
@@ -5538,7 +5530,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\nconsole.log(this);\n}\nfoo.call(null);\n```",
+      "body": "```javascript\nfunction foo() {\n  console.log(this);\n}\nfoo.call(null);\n```",
       "options": [
         {
           "key": "A",
@@ -5558,7 +5550,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "When `null` is passed as the context to `call`, `this` defaults to the global object.",
+      "explanation": "In non-strict mode, `call(null)` and `call(undefined)` coerce `null`/`undefined` to the **global object**.\n\nSo `foo.call(null)` logs the global object (`window` in browsers).\n\nStrict mode changes this rule — `null` stays `null` there.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 182,
@@ -5570,7 +5562,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\n\"use strict\";\nconsole.log(this);\n}\nfoo.call(null);\n```",
+      "body": "```javascript\nfunction foo() {\n  \"use strict\";\n  console.log(this);\n}\nfoo.call(null);\n```",
       "options": [
         {
           "key": "A",
@@ -5590,7 +5582,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "In strict mode, passing `null` to `call` or `apply` results in `this` being `null`.",
+      "explanation": "In **strict mode**, `call(null)` and `apply(null)` pass `null` as `this` without coercion.\n\n`foo.call(null)` logs `null` — unlike sloppy mode, which would substitute the global object.\n\nWithout `\"use strict\"`, `null`/`undefined` become the global object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 183,
@@ -5601,7 +5593,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\na: 1,\nfoo: function() {\nreturn function() {\nconsole.log(this.a);\n};\n}\n};\nvar fn = obj.foo();\nfn();\n```",
+      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    return function () {\n      console.log(this.a);\n    };\n  },\n};\nvar fn = obj.foo();\nfn();\n```",
       "options": [
         {
           "key": "A",
@@ -5621,7 +5613,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The inner function loses the `this` context of `obj` and refers to the global object, where `a` is `undefined`.",
+      "explanation": "The inner `function` has its own dynamic `this`. When `fn()` is called without a receiver, `this` is the global object.\n\nThe outer `foo` had `this === obj`, but that does not flow into the nested regular function. Global `a` is `undefined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 184,
@@ -5633,7 +5625,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\na: 1,\nfoo: function() {\nreturn () => {\nconsole.log(this.a);\n};\n}\n};\nvar fn = obj.foo();\nfn();\n```",
+      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    return () => {\n      console.log(this.a);\n    };\n  },\n};\nvar fn = obj.foo();\nfn();\n```",
       "options": [
         {
           "key": "A",
@@ -5653,7 +5645,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "Arrow functions capture the `this` context of their surrounding scope, which in this case is `obj`.",
+      "explanation": "Arrow functions do not have their own `this`. They inherit `this` **lexically** from the enclosing scope where the arrow is defined.\n\nThe arrow is created inside `foo` while `obj.foo()` sets `this` to `obj`. The arrow closes over that `this`, so `fn()` logs `obj.a` → `1`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 185,
@@ -5665,7 +5657,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\nsetTimeout(function() {\nconsole.log(this.a);\n}, 1000);\n}\n};\nobj.foo();\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n    setTimeout(function () {\n      console.log(this.a);\n    }, 1000);\n  },\n};\nobj.foo();\n```",
       "options": [
         {
           "key": "A",
@@ -5685,7 +5677,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The first `console.log(this.a)` refers to `obj.a`, which is `20`. The `setTimeout` callback has `this` referring to the global object, where `a` is `10`.",
+      "explanation": "The first `console.log(this.a)` runs with `this === obj`, so it logs `20`.\n\nThe `setTimeout` callback is a **regular function**, so when it runs, `this` is the global object. Global `a` is `10`. Output: `20` then `10` (after 1s).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 186,
@@ -5698,7 +5690,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nvar self = this;\nconsole.log(this.a);\nsetTimeout(function() {\nconsole.log(self.a);\n}, 1000);\n}\n};\nobj.foo();\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    var self = this;\n    console.log(this.a);\n    setTimeout(function () {\n      console.log(self.a);\n    }, 1000);\n  },\n};\nobj.foo();\n```",
       "options": [
         {
           "key": "A",
@@ -5718,7 +5710,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The variable `self` captures the `this` context of `obj`, allowing the `setTimeout` callback to correctly reference `obj.a`.",
+      "explanation": "Same as the detached `setTimeout` problem: the callback's `this` would be global.\n\n`var self = this` inside `foo` stores `obj` before the timer. The callback uses `self.a` → `20`.\n\nWithout `self`, the timer callback would log global `a` (`10`).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 187,
@@ -5729,7 +5721,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\nsetTimeout(() => {\nconsole.log(this.a);\n}, 1000);\n}\n};\nobj.foo();\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n    setTimeout(() => {\n      console.log(this.a);\n    }, 1000);\n  },\n};\nobj.foo();\n```",
       "options": [
         {
           "key": "A",
@@ -5749,7 +5741,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Arrow functions capture the `this` context of their surrounding scope, which in this case is `obj`.",
+      "explanation": "Arrow functions inherit `this` lexically from `foo`'s scope during `obj.foo()`.\n\nBoth the immediate log and the `setTimeout` arrow use the same lexical `this` (`obj`), so both log `20`.\n\nArrows share one lexical `this` for both the sync log and the timer.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 188,
@@ -5782,7 +5774,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Changing the prototype property of `Foo` after an instance has been created affects the instance, so `foo.bar` is `20`.",
+      "explanation": "Instances link to the constructor's **current** `prototype` object via an internal reference.\n\n`Foo.prototype.bar = 20` mutates the shared prototype object. `foo` still points to that object, so `foo.bar` becomes `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 189,
@@ -5793,7 +5785,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.bar = 20;\nvar foo = new Foo();\nconsole.log(foo.bar);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.bar = 20;\nvar foo = new Foo();\nconsole.log(foo.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5813,7 +5805,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The instance property `bar` of `foo` shadows the prototype property, so `foo.bar` is `10`.",
+      "explanation": "Property lookup: own properties shadow prototype properties.\n\n`new Foo()` sets `this.bar = 10` on the instance. `Foo.prototype.bar = 20` exists on the prototype, but `foo.bar` reads the own property first → `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 190,
@@ -5825,7 +5817,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = {bar: 10};\nvar foo = new Foo();\nFoo.prototype.bar = 20;\nconsole.log(foo.bar);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = { bar: 10 };\nvar foo = new Foo();\nFoo.prototype.bar = 20;\nconsole.log(foo.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5845,7 +5837,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Changing the property of the prototype object affects the instance, so `foo.bar` is `20`.",
+      "explanation": "`Foo.prototype = { bar: 10 }` assigns a new prototype object. `foo` links to it.\n\n`Foo.prototype.bar = 20` mutates that same object. `foo.bar` → `20`.\n\nThe instance and constructor share the same prototype object reference.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 191,
@@ -5856,7 +5848,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = {bar: 10};\nvar foo = new Foo();\nFoo.prototype = {bar: 20};\nconsole.log(foo.bar);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = { bar: 10 };\nvar foo = new Foo();\nFoo.prototype = { bar: 20 };\nconsole.log(foo.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5876,7 +5868,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "Reassigning the prototype object does not affect existing instances, so `foo.bar` remains `10`.",
+      "explanation": "Reassigning `Foo.prototype` replaces the constructor's prototype property — it does **not** change prototypes already linked to old instances.\n\n`foo` still links to `{ bar: 10 }`. New assignment `{ bar: 20 }` only affects future instances. `foo.bar` → `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 192,
@@ -5887,7 +5879,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = {bar: 10};\nvar foo1 = new Foo();\nFoo.prototype = {bar: 20};\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = { bar: 10 };\nvar foo1 = new Foo();\nFoo.prototype = { bar: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5907,7 +5899,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "`foo1` is created with the initial prototype, so `foo1.bar` is `10`. `foo2` is created after the prototype reassignment, so `foo2.bar` is `20`.",
+      "explanation": "Each `new Foo()` links to whatever `Foo.prototype` points to **at creation time**.\n\n- `foo1` created with `{ bar: 10 }` → `foo1.bar` is `10`.\n- Prototype reassigned to `{ bar: 20 }`.\n- `foo2` links to the new object → `foo2.bar` is `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 193,
@@ -5917,7 +5909,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = {bar: 20};\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = { bar: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -5937,7 +5929,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "`foo1` retains the initial prototype, so `foo1.bar` is `10`. `foo2` is created with the reassigned prototype, so `foo2.bar` is `20`.",
+      "explanation": "Reassigning `Foo.prototype` does not retroactively change existing instances.\n\n- `foo1` retains its link to the original prototype → `foo1.bar` is `10`.\n- `foo2` is created after reassignment → `foo2.bar` is `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 194,
@@ -5967,7 +5959,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Adding properties to the prototype after an instance has been created affects the instance, so `foo.baz` is `20`.",
+      "explanation": "The prototype chain is live. Adding `baz` to `Foo.prototype` after `foo` was created still makes `foo.baz` accessible via the prototype link.\n\n`foo.baz` → `20`.\n\nPrototype lookups are live — changes are visible to existing instances.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 195,
@@ -5977,7 +5969,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.baz;\nconsole.log(foo.baz);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.baz;\nconsole.log(foo.baz);\n```",
       "options": [
         {
           "key": "A",
@@ -5997,7 +5989,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Deleting a non-existent property has no effect, so `foo.baz` still refers to the prototype property, which is `20`.",
+      "explanation": "`delete foo.baz` tries to remove an **own** property `baz` on the instance. There is none — `baz` lives on the prototype.\n\n`delete` on a missing own property is a no-op. Lookup falls through to the prototype → `foo.baz` is `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 196,
@@ -6009,7 +6001,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.bar;\nconsole.log(foo.bar);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.bar;\nconsole.log(foo.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -6029,7 +6021,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "Deleting an instance property removes it from the instance, so `foo.bar` is `undefined`.",
+      "explanation": "`delete foo.bar` removes the **own** property `bar` from the instance.\n\n`foo.bar` no longer exists on the instance. There is no `bar` on the prototype either, so `foo.bar` is `undefined`.\n\nOnly own properties are removed; prototype chain is unchanged.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 197,
@@ -6041,7 +6033,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.bar;\nfoo.bar = 30;\nconsole.log(foo.bar);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.bar;\nfoo.bar = 30;\nconsole.log(foo.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -6061,7 +6053,7 @@
         }
       ],
       "answer": "C",
-      "explanation": "Reassigning the `bar` property on the instance sets it to `30`.",
+      "explanation": "After `delete foo.bar`, the own property is gone. `foo.bar = 30` creates a new own property on the instance.\n\n`foo.bar` → `30`. The prototype's `baz` is unrelated to `bar`.\n\nAssigning after delete creates a new own property on the instance.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 198,
@@ -6073,7 +6065,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nvar a = 30;\nreturn this.a;\n}\n};\nconsole.log(obj.foo());\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    var a = 30;\n    return this.a;\n  },\n};\nconsole.log(obj.foo());\n```",
       "options": [
         {
           "key": "A",
@@ -6093,7 +6085,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `this` context within `foo` refers to `obj`, so `this.a` is `20`.",
+      "explanation": "`var a = 30` is a **local** variable inside `foo`. `this.a` refers to the property on `obj` (the call receiver), not the local `a`.\n\n`obj.foo()` sets `this` to `obj`, so `this.a` is `20`.\n\nLocal `var a` is separate from `this.a` on the receiver object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 199,
@@ -6103,7 +6095,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nvar a = 30;\nreturn function() {\nreturn this.a;\n};\n}\n};\nconsole.log(obj.foo()());\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    var a = 30;\n    return function () {\n      return this.a;\n    };\n  },\n};\nconsole.log(obj.foo()());\n```",
       "options": [
         {
           "key": "A",
@@ -6123,7 +6115,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The returned function has its `this` context set to the global object, so `this.a` is `10`.",
+      "explanation": "The returned **regular function** gets `this` from its call. `obj.foo()()` invokes the inner function with no receiver, so `this` is global.\n\nGlobal `a` is `10`. Local `var a = 30` inside `foo` is unrelated to the inner function's `this.a`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 200,
@@ -6136,7 +6128,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nvar a = 30;\nreturn () => {\nreturn this.a;\n};\n}\n};\nconsole.log(obj.foo()());\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    var a = 30;\n    return () => {\n      return this.a;\n    };\n  },\n};\nconsole.log(obj.foo()());\n```",
       "options": [
         {
           "key": "A",
@@ -6156,7 +6148,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Arrow functions capture the `this` context of their surrounding scope, which in this case is `obj`.",
+      "explanation": "The returned **arrow** inherits `this` from `foo`'s execution context. `obj.foo()` calls `foo` with `this === obj`.\n\nThe arrow closes over that `this`, so `this.a` is `20` — not global `10` or local `30`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 201,
@@ -6168,7 +6160,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this;\n};\n}\n};\nconsole.log(obj.foo()() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this;\n    };\n  },\n};\nconsole.log(obj.foo()() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6180,7 +6172,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The arrow function captures the `this` context of `obj`, so it returns `obj`.",
+      "explanation": "Arrow functions inherit `this` lexically. `obj.foo()` runs `foo` with `this === obj`, and the returned arrow keeps that binding.\n\n`obj.foo()()` returns `obj`, so `=== obj` is `true`.\n\nMethod call `obj.foo()` makes the arrow return the same object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 202,
@@ -6191,7 +6183,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn function() {\nreturn this;\n};\n}\n};\nconsole.log(obj.foo()() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this;\n    };\n  },\n};\nconsole.log(obj.foo()() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6203,7 +6195,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The returned function has its `this` context set to the global object, so it does not return `obj`.",
+      "explanation": "The returned **regular function** loses `obj` as `this` when invoked as `obj.foo()()`.\n\nInner call has no receiver → `this` is global. The returned value is not `obj`, so `=== obj` is `false`.\n\nInner regular functions do not inherit the outer method receiver.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 203,
@@ -6216,7 +6208,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn this;\n}\n};\nvar bar = obj.foo;\nconsole.log(bar() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6228,7 +6220,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "When `bar` is called, `this` refers to the global object, not `obj`.",
+      "explanation": "Extracting `obj.foo` into `bar` detaches the method from `obj`.\n\n`bar()` uses default binding → global `this`. `bar() === obj` is `false`.\n\nExplicit `call`/`apply`/`bind` is how you restore `this` on detached methods.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 204,
@@ -6240,7 +6232,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn this;\n}\n};\nconsole.log(obj.foo() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nconsole.log(obj.foo() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6252,7 +6244,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "When `obj.foo` is called, `this` refers to `obj`, so it returns `obj`.",
+      "explanation": "Method call `obj.foo()` sets `this` to `obj` for the duration of `foo`.\n\n`foo` returns `this` (which is `obj`), so `obj.foo() === obj` is `true`.\n\nDirect method syntax `obj.foo()` is the implicit binding form.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 205,
@@ -6262,7 +6254,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn this;\n}\n};\nvar bar = obj.foo;\nconsole.log(bar.call(obj) === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar.call(obj) === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6274,7 +6266,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "When `bar` is called with `call(obj)`, `this` is explicitly set to `obj`, so it returns `obj`.",
+      "explanation": "`call(obj)` explicitly sets `this` for the detached function.\n\nEven though `bar` was extracted from `obj`, `bar.call(obj)` forces `this` to `obj` → returns `obj`.\n\n`call` passes arguments individually; `apply` uses an array.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 206,
@@ -6285,7 +6277,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn this;\n}\n};\nvar bar = obj.foo;\nconsole.log(bar.apply(obj) === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar.apply(obj) === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6297,7 +6289,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "When `bar` is called with `apply(obj)`, `this` is explicitly set to `obj`, so it returns `obj`.",
+      "explanation": "`apply(obj)` works like `call` for setting `this` — the only difference is how arguments are passed.\n\n`bar.apply(obj)` sets `this` to `obj` → returns `obj`.\n\nBoth override default binding for that single invocation.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 207,
@@ -6308,7 +6300,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn this;\n}\n};\nvar bar = obj.foo;\nconsole.log(bar.bind(obj)() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar.bind(obj)() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6320,7 +6312,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "When `bar` is called with `bind(obj)`, `this` is permanently bound to `obj`, so it returns `obj`.",
+      "explanation": "`bind(obj)` creates a new function with `this` permanently bound to `obj`.\n\n`bar.bind(obj)()` invokes that bound function → returns `obj`.\n\n`bind` returns a new function; it does not invoke the original.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 208,
@@ -6330,7 +6322,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this;\n};\n}\n};\nvar bar = obj.foo;\nconsole.log(bar()() === obj);\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this;\n    };\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar()() === obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6342,7 +6334,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The arrow function captures the `this` context of `bar`, which is the global object, not `obj`.",
+      "explanation": "`bar = obj.foo` detaches `foo`. `bar()` calls `foo` with global `this`.\n\nThe arrow inside inherits lexical `this` from that global context, not from `obj`. Result is not `obj`.\n\nDetached `bar()` runs `foo` with global `this`, and the arrow follows that.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 209,
@@ -6355,7 +6347,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo()());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo()());\n```",
       "options": [
         {
           "key": "A",
@@ -6375,7 +6367,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The arrow function captures the `this` context of `obj`, so it correctly references `obj.a`, which is `10`.",
+      "explanation": "Arrow functions inherit `this` lexically from where they are **created**.\n\n`obj.foo()` sets `this` to `obj` inside `foo`. The arrow captures that, so `obj.foo()()` returns `obj.a` → `10`.\n\nContrast id 211: a regular inner function would log `undefined` here.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 210,
@@ -6386,7 +6378,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn function() {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo()());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo()());\n```",
       "options": [
         {
           "key": "A",
@@ -6406,7 +6398,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The returned function has its `this` context set to the global object, where `a` is `undefined`.",
+      "explanation": "The returned **regular function** gets `this` from how **it** is invoked, not from `foo`'s `this`.\n\n`obj.foo()()` calls the inner function with no receiver → `this` is the global object. There is no global `a`, so `this.a` is `undefined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 211,
@@ -6419,7 +6411,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn function() {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.call({a: 20})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.call({ a: 20 })());\n```",
       "options": [
         {
           "key": "A",
@@ -6438,8 +6430,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "B",
-      "explanation": "The `call` method sets the `this` context for `foo`, so `this.a` is `20`.",
+      "answer": "C",
+      "explanation": "Regular functions use **dynamic** `this` — set only when the inner function is called.\n\n1. `call({ a: 20 })` sets `this` to `{ a: 20 }` while `foo` runs, but `foo` only **returns** the inner function.\n2. The trailing `()` invokes that inner function with no receiver → `this` is the global object.\n3. There is no global `a` in this snippet, so `this.a` is `undefined` — not `20` from the `call` target.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 212,
@@ -6450,7 +6442,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn function() {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.apply({a: 30})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.apply({ a: 30 })());\n```",
       "options": [
         {
           "key": "A",
@@ -6469,8 +6461,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "B",
-      "explanation": "The `apply` method sets the `this` context for `foo`, so `this.a` is `30`.",
+      "answer": "C",
+      "explanation": "Same pattern as `call`: `apply` sets `this` only for the **outer** `foo` invocation.\n\nThe returned regular function is invoked separately with `()`. Its `this` is global. With no global `a` in this snippet, `this.a` is `undefined` — not `30` from the `apply` argument.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 213,
@@ -6481,7 +6473,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn function() {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.bind({a: 40})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.bind({ a: 40 })()());\n```",
       "options": [
         {
           "key": "A",
@@ -6500,8 +6492,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "B",
-      "explanation": "The `bind` method sets the `this` context for `foo` permanently, so `this.a` is `40`.",
+      "answer": "C",
+      "explanation": "The returned regular function still loses `foo`'s `this` when invoked on its own.\n\n`bind({ a: 40 })` runs `foo` with `this = { a: 40 }`, but the **inner** function invoked by the final `()` uses global `this`. With no global `a`, `this.a` is `undefined` — not `40`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 214,
@@ -6512,7 +6504,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.call({a: 50})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.call({ a: 50 })());\n```",
       "options": [
         {
           "key": "A",
@@ -6531,8 +6523,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "A",
-      "explanation": "The arrow function captures the `this` context of `obj`, so `this.a` is `10`.",
+      "answer": "B",
+      "explanation": "Arrow functions have **no own `this`**. They inherit `this` from the enclosing function's execution context when the arrow is **created**.\n\n`call({ a: 50 })` sets `this` inside `foo` to `{ a: 50 }`. The arrow is created during that call and inherits that `this`, so `this.a` is `50` — `call` on the outer function does affect the arrow's `this`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 215,
@@ -6543,7 +6535,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.apply({a: 60})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.apply({ a: 60 })());\n```",
       "options": [
         {
           "key": "A",
@@ -6562,8 +6554,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "A",
-      "explanation": "The arrow function captures the `this` context of `obj`, so `this.a` is `10`.",
+      "answer": "B",
+      "explanation": "Arrow functions inherit `this` from the enclosing function when the arrow is created — not from a later invocation of the returned arrow.\n\n`apply({ a: 60 })` runs `foo` with `this = { a: 60 }`. The arrow is created in that context and keeps that `this`, so `this.a` is `60`. Unlike regular nested functions, the arrow does not lose `foo`'s `this` when the outer function was called via `apply`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 216,
@@ -6574,7 +6566,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this.a;\n};\n},\na: 10\n};\nconsole.log(obj.foo.bind({a: 70})());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.bind({ a: 70 })()());\n```",
       "options": [
         {
           "key": "A",
@@ -6593,8 +6585,8 @@
           "text": "`ReferenceError`"
         }
       ],
-      "answer": "A",
-      "explanation": "The arrow function captures the `this` context of `obj`, so `this.a` is `10`.",
+      "answer": "B",
+      "explanation": "Same rule as `call`/`apply`: the arrow inherits `this` from `foo`'s execution when the arrow is created.\n\n`bind({ a: 70 })` runs `foo` with `this = { a: 70 }`. The returned arrow keeps that binding, so the final `()` returns `70`. Contrast id 211: a regular inner function would use global `this` and log `undefined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 217,
@@ -6605,7 +6597,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nvar bar = obj.foo;\nbar.call(obj);\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar.call(obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6625,7 +6617,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `call` method sets the `this` context to `obj`, so `this.a` is `20`.",
+      "explanation": "Detached methods lose their receiver. `var bar = obj.foo` stores the function without `obj`.\n\n`bar.call(obj)` explicitly sets `this` to `obj` for that invocation, so `this.a` logs `20` — not global `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 218,
@@ -6636,7 +6628,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nvar bar = obj.foo;\nbar.apply(obj);\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar.apply(obj);\n```",
       "options": [
         {
           "key": "A",
@@ -6656,7 +6648,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `apply` method sets the `this` context to `obj`, so `this.a` is `20`.",
+      "explanation": "`apply` sets `this` the same way as `call` — only the argument list format differs.\n\n`bar.apply(obj)` forces `this` to `obj` during the call, so `this.a` is `20`.\n\nWorks the same as `call` — only argument passing differs.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 219,
@@ -6667,7 +6659,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nvar bar = obj.foo;\nbar.bind(obj)();\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar.bind(obj)();\n```",
       "options": [
         {
           "key": "A",
@@ -6687,7 +6679,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `bind` method sets the `this` context to `obj`, so `this.a` is `20`.",
+      "explanation": "`bind(obj)` returns a new function with `this` permanently bound to `obj`.\n\n`bar.bind(obj)()` invokes that bound function, so `this.a` is `20`.\n\nThe bound function keeps `obj` as `this` on every future call.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 220,
@@ -6698,7 +6690,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\nfoo: function() {\nreturn () => {\nreturn this.a;\n};\n},\na: 10\n};\nvar bar = obj.foo;\nconsole.log(bar()());\n```",
+      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nvar bar = obj.foo;\nconsole.log(bar()());\n```",
       "options": [
         {
           "key": "A",
@@ -6718,7 +6710,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The arrow function captures the `this` context of the global object, where `a` is `undefined`.",
+      "explanation": "Detaching `foo` with `var bar = obj.foo` means `bar()` runs with global `this`.\n\nThe arrow inside inherits that global lexical `this`. Without a global `a`, `this.a` is `undefined`.\n\nWithout a global `a`, lexical global `this.a` is `undefined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 221,
@@ -6731,7 +6723,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = function() {\nreturn this.bar;\n};\nvar foo = new Foo();\nconsole.log(foo.baz());\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nconsole.log(foo.baz());\n```",
       "options": [
         {
           "key": "A",
@@ -6751,7 +6743,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The method `baz` on the prototype correctly references the instance property `bar`, so `foo.baz()` returns `10`.",
+      "explanation": "Methods called on an instance use that instance as `this`.\n\n`foo.baz()` is a method call on `foo`, so inside `baz`, `this` is the instance. `this.bar` reads the instance property → `10`.\n\n`this` in a method call is the object before the dot.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 222,
@@ -6763,7 +6755,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = function() {\nreturn this.bar;\n};\nvar foo = new Foo();\nvar baz = foo.baz;\nconsole.log(baz());\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nvar baz = foo.baz;\nconsole.log(baz());\n```",
       "options": [
         {
           "key": "A",
@@ -6783,7 +6775,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `this` context of `baz` is the global object, where `bar` is `undefined`.",
+      "explanation": "Extracting a method loses the instance binding.\n\n`var baz = foo.baz` then `baz()` invokes the function without a receiver → global `this`. Global `bar` is `undefined`, so the result is `undefined`.\n\nDetached prototype methods behave like any other detached function.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 223,
@@ -6796,7 +6788,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = function() {\nreturn this.bar;\n};\nvar foo = new Foo();\nvar baz = foo.baz.bind(foo);\nconsole.log(baz());\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nvar baz = foo.baz.bind(foo);\nconsole.log(baz());\n```",
       "options": [
         {
           "key": "A",
@@ -6816,7 +6808,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The `bind` method sets the `this` context of `baz` to `foo`, so it correctly references `foo.bar`.",
+      "explanation": "`bind(foo)` fixes the detached-method problem by permanently binding `this` to `foo`.\n\n`baz()` on the bound function still runs with `this === foo`, so `this.bar` is `10`.\n\nPrefer `bind` when passing methods to async callbacks or timers.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 224,
@@ -6828,7 +6820,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = function() {\nreturn this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz, 1000);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz, 1000);\n```",
       "options": [
         {
           "key": "A",
@@ -6848,7 +6840,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The `this` context of `baz` is the global object when called inside `setTimeout`, where `bar` is `undefined`.",
+      "explanation": "`setTimeout(foo.baz, 1000)` passes only the function reference — `this` is lost.\n\nWhen the timer fires, `baz` runs as a plain function with global `this`, where `bar` is `undefined`.\n\nSame pattern as passing `obj.foo` directly to `setTimeout`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 225,
@@ -6862,7 +6854,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\nthis.bar = 10;\n}\nFoo.prototype.baz = function() {\nreturn this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz.bind(foo), 1000);\n```",
+      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz.bind(foo), 1000);\n```",
       "options": [
         {
           "key": "A",
@@ -6882,7 +6874,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The `bind` method sets the `this` context of `baz` to `foo`, so it correctly references `foo.bar`.",
+      "explanation": "Binding before passing to `setTimeout` preserves the instance.\n\n`foo.baz.bind(foo)` creates a function whose `this` is always `foo`, so when the timer fires, `this.bar` is `10`.\n\nBinding before scheduling preserves the instance as `this`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 226,
@@ -6895,7 +6887,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = {baz: 20};\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = { baz: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
       "options": [
         {
           "key": "A",
@@ -6915,7 +6907,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "`foo1` retains the initial prototype, so `foo1.bar` is `10`. `foo2` is created with the reassigned prototype, where `bar` is `undefined`.",
+      "explanation": "Each instance stores an internal link to the prototype object **active at creation time**.\n\n`Foo.prototype = { baz: 20 }` replaces the constructor's prototype — it does not update instances already created. `foo1` still uses the old prototype (`bar` is `10`); `foo2` uses the new one (`bar` is `undefined`).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 227,
@@ -6945,7 +6937,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "Changing the prototype property affects all instances, so both `foo1.bar` and `foo2.bar` are `20`.",
+      "explanation": "Mutating a property on the shared prototype object affects **all** instances linked to it.\n\n`Foo.prototype.bar = 20` changes the object both `foo1` and `foo2` point to, so both read `20`.\n\nAll instances share one prototype object until it is replaced.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 228,
@@ -6956,7 +6948,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = {baz: 20};\nvar foo2 = new Foo();\nconsole.log(foo1.baz, foo2.baz);\n```",
+      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = { baz: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.baz, foo2.baz);\n```",
       "options": [
         {
           "key": "A",
@@ -6976,7 +6968,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "`foo1` retains the initial prototype, so `foo1.baz` is `undefined`. `foo2` is created with the reassigned prototype, so `foo2.baz` is `20`.",
+      "explanation": "Prototype **reassignment** vs **mutation**: replacing `Foo.prototype` does not retroactively relink existing instances.\n\n`foo1` keeps the old prototype (`baz` was never on it → `undefined`). `foo2` is created after reassignment and reads `baz` → `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 229,
@@ -7006,7 +6998,7 @@
         }
       ],
       "answer": "B",
-      "explanation": "The instance property `foo1.bar` shadows the prototype property, so `foo1.bar` is `30`. The prototype property `foo2.bar` is `20`.",
+      "explanation": "Own properties shadow prototype properties.\n\n`foo1.bar = 30` sets an instance property that hides the prototype's `bar`. `foo2` has no own `bar`, so it reads the prototype value `20`.\n\nOwn properties always win over prototype properties in lookup.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 230,
@@ -7017,7 +7009,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\na: 20,\nfoo: function() {\nconsole.log(this.a);\n}\n};\nvar bar = obj.foo;\nbar();\n```",
+      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar();\n```",
       "options": [
         {
           "key": "A",
@@ -7037,7 +7029,7 @@
         }
       ],
       "answer": "A",
-      "explanation": "The `this` context of `bar` is the global object, so `this.a` is `10`.",
+      "explanation": "Same detached-method rule: `var bar = obj.foo` then `bar()` invokes with global `this`.\n\nGlobal `a` is `10` (from `var a = 10`), not `obj.a` which is `20`.\n\nWithout `call`/`bind`, detached calls use global `this` in sloppy scripts.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
       "id": 231,

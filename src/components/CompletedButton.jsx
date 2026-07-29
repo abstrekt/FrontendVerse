@@ -28,9 +28,9 @@ export default function CompletedButton({ isCompleted, onToggle, className = '' 
       type="button"
       className={`completed-btn${isCompleted ? ' active' : ''}${className ? ` ${className}` : ''}`}
       aria-pressed={isCompleted}
-      aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+      aria-label={isCompleted ? 'Unmark mastered' : 'Mark as mastered'}
       onClick={onToggle}
-      title={isCompleted ? 'Completed' : 'Mark as completed'}
+      title={isCompleted ? 'Mastered' : 'Mark as mastered'}
     >
       {isCompleted ? <CircleCheckIcon /> : <CircleIcon />}
     </button>

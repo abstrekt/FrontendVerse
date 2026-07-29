@@ -70,9 +70,9 @@ export default function OutputQuizQuestion({
     <div className="quiz-container output-quiz">
       <div className="quiz-header">
         <div className="quiz-header-top">
-          <span className="progress">Remaining {remaining}/{sessionTotal}</span>
+          <span className="progress">Left in pass {remaining}/{sessionTotal}</span>
           <div className="quiz-header-badges">
-            {isCompleted && <span className="completed-badge">Completed</span>}
+            {isCompleted && <span className="completed-badge">Mastered</span>}
             <span className="score-badge">
               Answered {answered}
               {answered > 0 ? ` · Score ${score}/${answered}` : ''}

@@ -27,18 +27,18 @@ export default function FilterPanel({
 
   const topicRows = useMemo(() => {
     return [...topicCompletion.entries()]
-      .map(([topic, { solved, total, pct }]) => ({ topic, solved, total, pct }))
+      .map(([topic, { attempted, total, pct }]) => ({ topic, attempted, total, pct }))
       .sort((a, b) => b.total - a.total);
   }, [topicCompletion]);
 
   const difficultyRows = useMemo(() => {
     return DIFFICULTY_LEVELS.map((difficulty) => {
-      const { solved, total, pct } = difficultyCompletion.get(difficulty) || {
-        solved: 0,
+      const { attempted, total, pct } = difficultyCompletion.get(difficulty) || {
+        attempted: 0,
         total: 0,
         pct: 0,
       };
-      return { difficulty, label: DIFFICULTY_LABELS[difficulty], solved, total, pct };
+      return { difficulty, label: DIFFICULTY_LABELS[difficulty], attempted, total, pct };
     });
   }, [difficultyCompletion]);
 
@@ -74,7 +74,7 @@ export default function FilterPanel({
         </div>
 
         <ul className="filter-list difficulty-filter-list">
-          {difficultyRows.map(({ difficulty, label, solved, total, pct }) => (
+          {difficultyRows.map(({ difficulty, label, attempted, total, pct }) => (
             <li key={difficulty}>
               <label
                 className={`filter-item difficulty-${difficulty}${selectedDifficulties.includes(difficulty) ? ' selected' : ''}${pct === 100 ? ' complete' : ''}`}
@@ -87,7 +87,7 @@ export default function FilterPanel({
                   onChange={() => onToggleDifficulty(difficulty)}
                 />
                 <span className="filter-topic-name">{label}</span>
-                <span className="filter-count">{solved}/{total}</span>
+                <span className="filter-count" title="Attempted / total">{attempted}/{total}</span>
               </label>
             </li>
           ))}
@@ -102,7 +102,7 @@ export default function FilterPanel({
         <div className="no-filters">No topics available</div>
       ) : (
         <ul className="filter-list">
-          {topicRows.map(({ topic, solved, total, pct }) => (
+          {topicRows.map(({ topic, attempted, total, pct }) => (
             <li key={topic}>
               <label
                 className={`filter-item${selectedTopics.includes(topic) ? ' selected' : ''}${pct === 100 ? ' complete' : ''}`}
@@ -115,7 +115,7 @@ export default function FilterPanel({
                   onChange={() => onToggleTopic(topic)}
                 />
                 <span className="filter-topic-name">{topic}</span>
-                <span className="filter-count">{solved}/{total}</span>
+                <span className="filter-count" title="Attempted / total">{attempted}/{total}</span>
               </label>
             </li>
           ))}

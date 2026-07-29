@@ -70,7 +70,7 @@ export default function LearningsView({
           <div className="learning-title-row">
             <h2 className="learning-title">{stripMarkdown(learning.title)}</h2>
             <div className="learning-title-actions">
-              {isCompleted && <span className="completed-badge">Completed</span>}
+              {isCompleted && <span className="completed-badge">Mastered</span>}
               {onToggleCompleted && <CompletedButton isCompleted={isCompleted} onToggle={onToggleCompleted} />}
               {onToggleStar && <StarButton isStarred={isStarred} onToggle={onToggleStar} />}
               <button

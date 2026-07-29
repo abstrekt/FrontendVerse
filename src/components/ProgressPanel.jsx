@@ -59,7 +59,7 @@ export default function ProgressPanel({
           )}
           <div className="progress-stat">
             <span className="progress-stat-value">{completedCount}</span>
-            <span className="progress-stat-label">completed</span>
+            <span className="progress-stat-label">mastered</span>
           </div>
         </div>
       )}
@@ -110,7 +110,7 @@ export default function ProgressPanel({
         )}
         {hasData && (
           <button className="progress-clear" onClick={onClearProgress}>
-            Clear progress
+            Clear answer history
           </button>
         )}
       </div>
