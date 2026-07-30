@@ -61,6 +61,7 @@ export default function CodingChallenge({
   onToggleCompleted,
 }) {
   const submissionsRef = useRef(loadCodingSubmissions());
+  const questionIdRef = useRef(question.id);
   const [code, setCode] = useState(() => getInitialCode(submissionsRef.current, question));
   const [submissionHistory, setSubmissionHistory] = useState(
     () => submissionsRef.current.byQuestion[String(question.id)]?.history ?? []
@@ -77,11 +78,30 @@ export default function CodingChallenge({
   const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
 
   useEffect(() => {
+    questionIdRef.current = question.id;
+  }, [question.id]);
+
+  useEffect(() => {
+    submissionsRef.current = loadCodingSubmissions();
+    setCode(getInitialCode(submissionsRef.current, question));
+    setSubmissionHistory(submissionsRef.current.byQuestion[String(question.id)]?.history ?? []);
+    setChecked(false);
+    setTestResults(null);
+    setAllPassed(false);
+    scoredPassRef.current = false;
+    setShowSubmissions(false);
+  }, [question.id]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
-      submissionsRef.current = saveCodingDraft(submissionsRef.current, question.id, code);
+      submissionsRef.current = saveCodingDraft(
+        submissionsRef.current,
+        questionIdRef.current,
+        code,
+      );
     }, 400);
     return () => clearTimeout(timer);
-  }, [code, question.id]);
+  }, [code]);
 
   async function handleRunTests() {
     if (checking) return;
@@ -242,6 +262,7 @@ export default function CodingChallenge({
           )}
 
           <CodeEditor
+            key={question.id}
             id={`coding-editor-${question.id}`}
             value={code}
             onChange={setCode}

@@ -30,10 +30,20 @@ export function getQuestionSubmissions(submissions, questionId) {
   return normalizeEntry(submissions.byQuestion[String(questionId)]);
 }
 
+export function draftMatchesQuestion(draft, question) {
+  if (!draft) return false;
+  if (question.functionName) {
+    return draft.includes(question.functionName);
+  }
+  return true;
+}
+
 export function getInitialCode(submissions, question) {
   const entry = getQuestionSubmissions(submissions, question.id);
-  if (entry.draft) return entry.draft;
-  if (entry.history.length > 0) return entry.history[0].code;
+  if (draftMatchesQuestion(entry.draft, question)) return entry.draft;
+  if (entry.history.length > 0 && draftMatchesQuestion(entry.history[0].code, question)) {
+    return entry.history[0].code;
+  }
   return question.template;
 }
 
