@@ -23,8 +23,10 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 
 ## ID conventions
 
-- IDs are unique **within** each file, not globally across sections.
-- When merging supplemental JSON (e.g. `polyfill-learnings.json`), continue IDs from the base file.
+- **JS Learnings:** ids are **globally unique across all six merged files** (not per-file). Merged in `App.jsx` from `learnings.json`, `polyfill-learnings.json`, `tekion-interview-learnings.json`, `wtfjs-learnings.json`, `devto-interview-learnings.json`, and `senior-frontend-learnings.json`.
+- Before assigning a new JS Learnings id, run `pnpm run validate:learning-ids --next-id` to get `max(id) + 1` across the merged set.
+- **Other sections** (React Learnings, HLD, Algorithm, Coding, MCQ, Output): ids are unique within each file/section.
+- **Paired Learnings + Coding (opt-in):** reuse the coding question's id only if that id is **not already taken** in the merged JS learnings set. If taken, pick a new id and report the mismatch.
 - Sidebar counts update automatically — no manual wiring needed.
 
 ## Tagging
@@ -200,12 +202,12 @@ Rules:
 
 1. Choose **one section** by default (Learnings, Coding, MCQ, or Output). Dual-section (linked Learnings + Coding) only when the user explicitly requests it.
 2. Dedupe against existing entries (title / code / `functionName`); **compare content** — skip only if equal/worse; otherwise update or merge into the existing `id`.
-3. Pick next available id(s) in the target JSON file for **new** items only.
+3. Pick next globally unique id(s) for JS Learnings via `pnpm run validate:learning-ids --next-id` (or a reserved pair id when safe). For other sections, use next id in the target file.
 4. Write data with correct schema, tags, `source`, and test cases.
 5. If supplemental file: import + merge in `App.jsx`; set file-level `source` when the batch shares one origin.
 6. If new runner needed: extend `codingRunner.js`; keep result shape `{ passed, input, expected, got }`.
 7. If UI assumes a specific shape: update `CodingChallenge.jsx` generically, not per question.
-8. Run `pnpm dev`; spot-check render + test execution.
+8. Run `pnpm run validate:learning-ids` (must pass for JS Learnings); run `pnpm dev` and spot-check render + test execution.
 9. Do not commit unless asked.
 
 ## Reference example: polyfill batch

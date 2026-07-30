@@ -41,6 +41,11 @@ export function getCompletedCount(completed, section) {
   return completed?.[section]?.length ?? 0;
 }
 
+export function getActiveCompletedCount(completed, section, activeItems) {
+  const completedSet = getCompletedSet(completed, section);
+  return activeItems.filter((item) => completedSet.has(item.id)).length;
+}
+
 export function getTotalCompletedCount(completed) {
   return SECTIONS.reduce((sum, section) => sum + getCompletedCount(completed, section), 0);
 }

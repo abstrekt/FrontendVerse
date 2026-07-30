@@ -100,7 +100,7 @@ import {
   isCompleted,
   markCompletedId,
   toggleCompletedId,
-  getCompletedCount,
+  getActiveCompletedCount,
   sortCompletedToEnd,
   syncCompletedFromProgress,
   syncOutputCompletedFromProgress,
@@ -254,9 +254,34 @@ export default function App() {
     [activeOutputQuestions, starredFilter.output, starred]
   );
   const mcqStarredCount = useMemo(() => getStarredCount(starred, 'mcq'), [starred]);
-  const mcqCompletedCount = useMemo(() => getCompletedCount(completed, 'mcq'), [completed]);
-  const codingCompletedCount = useMemo(() => getCompletedCount(completed, 'coding'), [completed]);
-  const outputCompletedCount = useMemo(() => getCompletedCount(completed, 'output'), [completed]);
+  const mcqCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'mcq', activeQuestions),
+    [completed, activeQuestions]
+  );
+  const codingCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'coding', activeCodingQuestions),
+    [completed, activeCodingQuestions]
+  );
+  const outputCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'output', activeOutputQuestions),
+    [completed, activeOutputQuestions]
+  );
+  const learningsCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'learnings', activeLearnings),
+    [completed, activeLearnings]
+  );
+  const reactLearningsCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'react-learnings', activeReactLearnings),
+    [completed, activeReactLearnings]
+  );
+  const hldCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'hld', activeHldLearnings),
+    [completed, activeHldLearnings]
+  );
+  const algorithmCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'algorithm', activeAlgorithmLearnings),
+    [completed, activeAlgorithmLearnings]
+  );
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
@@ -1551,9 +1576,13 @@ export default function App() {
             onSectionChange={setSection}
             totalQuestions={activeQuestions.length}
             learningsCount={activeLearnings.length}
+            learningsCompletedCount={learningsCompletedCount}
             reactLearningsCount={activeReactLearnings.length}
+            reactLearningsCompletedCount={reactLearningsCompletedCount}
             hldLearningsCount={activeHldLearnings.length}
+            hldCompletedCount={hldCompletedCount}
             algorithmLearningsCount={activeAlgorithmLearnings.length}
+            algorithmCompletedCount={algorithmCompletedCount}
             outputQuestionsCount={activeOutputQuestions.length}
             codingQuestionsCount={activeCodingQuestions.length}
             archivedCount={archivedCount}

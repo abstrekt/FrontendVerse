@@ -869,9 +869,10 @@ body {
 .sidebar-nav .nav-count {
   margin-left: auto;
   font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
   background: var(--toggle-bg);
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 10px;
 }
 

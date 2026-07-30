@@ -11,8 +11,9 @@
     "build:output-questions": "node scripts/build-output-questions.mjs",
     "format:snippets": "node scripts/format-code-snippets.mjs",
     "scan:mcq-duplicates": "node scripts/scan-mcq-duplicates.mjs",
+    "validate:learning-ids": "node scripts/validate-learning-ids.mjs",
     "audit:mcq-explanations": "node scripts/audit-mcq-explanations.mjs",
-    "test": "node --test src/utils/practiceQueue.test.js src/utils/questionState.test.js src/utils/completed.test.js"
+    "test": "node --test src/utils/practiceQueue.test.js src/utils/questionState.test.js src/utils/completed.test.js && node scripts/validate-learning-ids.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

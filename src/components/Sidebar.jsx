@@ -8,9 +8,13 @@ export default function Sidebar({
   totalQuestions,
   filteredCount,
   learningsCount,
+  learningsCompletedCount,
   reactLearningsCount,
+  reactLearningsCompletedCount,
   hldLearningsCount,
+  hldCompletedCount,
   algorithmLearningsCount,
+  algorithmCompletedCount,
   outputQuestionsCount,
   codingQuestionsCount,
   archivedCount,
@@ -85,7 +89,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">JS</span>
                 <span>JavaScript MCQs</span>
-                <span className="nav-count">{count}</span>
+                <span className="nav-count">{mcqCompletedCount}/{totalQuestions}</span>
               </button>
             </li>
             <li>
@@ -96,7 +100,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">LR</span>
                 <span>Javascript learnings</span>
-                <span className="nav-count">{learningsCount}</span>
+                <span className="nav-count">{learningsCompletedCount}/{learningsCount}</span>
               </button>
             </li>
             <li>
@@ -107,7 +111,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">RL</span>
                 <span>React Learnings</span>
-                <span className="nav-count">{reactLearningsCount}</span>
+                <span className="nav-count">{reactLearningsCompletedCount}/{reactLearningsCount}</span>
               </button>
             </li>
             <li>
@@ -118,7 +122,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">HD</span>
                 <span>HLD</span>
-                <span className="nav-count">{hldLearningsCount}</span>
+                <span className="nav-count">{hldCompletedCount}/{hldLearningsCount}</span>
               </button>
             </li>
             <li>
@@ -129,7 +133,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">AL</span>
                 <span>Algorithm</span>
-                <span className="nav-count">{algorithmLearningsCount}</span>
+                <span className="nav-count">{algorithmCompletedCount}/{algorithmLearningsCount}</span>
               </button>
             </li>
             <li>
@@ -140,7 +144,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">CD</span>
                 <span>Javascript coding</span>
-                <span className="nav-count">{codingQuestionsCount}</span>
+                <span className="nav-count">{codingCompletedCount}/{codingQuestionsCount}</span>
               </button>
             </li>
             <li>
@@ -151,7 +155,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">OP</span>
                 <span>Javascript output</span>
-                <span className="nav-count">{outputQuestionsCount}</span>
+                <span className="nav-count">{outputCompletedCount}/{outputQuestionsCount}</span>
               </button>
             </li>
             <li>

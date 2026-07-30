@@ -44,4 +44,5 @@ The polyfill batch (ids 2–18) shows the **paired** dual-section import pattern
 ## Build scripts
 
 - `pnpm run build:output-questions` — regenerate output questions from external README
+- `pnpm run validate:learning-ids` — fail on duplicate ids across merged JS learnings files
 - `pnpm build` — production build
