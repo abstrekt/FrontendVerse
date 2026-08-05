@@ -362,7 +362,7 @@
         "20",
         "Banglore"
       ],
-      "explanation": "",
+      "explanation": "The spread operator makes a **shallow** copy. Primitive values are copied by value, but nested objects are copied by *reference*.\n\n`age` is a number, so `cloneUserDetails` got its own copy of `20`. Reassigning `userDetails.age = 22` afterwards has no effect on the clone — it still logs `20`.\n\n`address` is an object, so both `userDetails.address` and `cloneUserDetails.address` point at the *same* object in memory. Mutating `userDetails.address.city` is therefore visible through the clone, which logs `Banglore`.\n\nTo copy nested structures independently, use `structuredClone(userDetails)` or a deep-clone helper.",
       "readmeOutput": "20, \"Banglore\"",
       "async": false
     },

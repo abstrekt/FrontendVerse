@@ -1,7 +1,7 @@
-import { shuffle } from './shuffle';
-import { filterExcludedCompleted } from './completed';
-import { todayKey, updateStreak } from './streak';
-import { reconcileStored } from '../hooks/useLocalStorage';
+import { shuffle } from './shuffle.js';
+import { filterExcludedCompleted } from './completed.js';
+import { todayKey, updateStreak } from './streak.js';
+import { reconcileStored } from '../hooks/useLocalStorage.js';
 
 const MAX_SESSIONS = 30;
 

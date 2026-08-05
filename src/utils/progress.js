@@ -1,5 +1,5 @@
-import { shuffle } from './shuffle';
-import { todayKey, updateStreak } from './streak';
+import { shuffle } from './shuffle.js';
+import { todayKey, updateStreak } from './streak.js';
 
 export const EMPTY_PROGRESS = {
   sessions: [],

@@ -1,6 +1,6 @@
-import { shuffle } from './shuffle';
-import { filterExcludedCompleted } from './completed';
-import { todayKey, updateStreak } from './streak';
+import { shuffle } from './shuffle.js';
+import { filterExcludedCompleted } from './completed.js';
+import { todayKey, updateStreak } from './streak.js';
 
 export const EMPTY_OUTPUT_PROGRESS = {
   sessions: [],

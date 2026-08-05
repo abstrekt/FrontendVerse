@@ -3964,3 +3964,45 @@ body {
   color: var(--text-muted);
   font-size: 0.8rem;
 }
+
+/* ── Runner errors and captured console output ────────────────────────── */
+
+.coding-run-error,
+.output-run-error {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: var(--wrong-bg);
+  border: 1px solid var(--wrong-border);
+  border-radius: var(--radius);
+  color: var(--wrong);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.coding-test-logs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.coding-test-log-lines {
+  margin: 0;
+  padding: 8px 10px;
+  max-height: 140px;
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+.output-result-hint {
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

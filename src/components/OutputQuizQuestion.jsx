@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import CodeBody from './CodeBody';
-import { runOutputCode } from '../utils/jsRunner';
+import { runOutputCodeSafely } from '../utils/sandboxClient';
 import { compareOutputAnswer, formatExpectedOutput } from '../utils/outputCompare';
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
@@ -18,6 +18,7 @@ export default function OutputQuizQuestion({
   sourceUrl,
   onCheck,
   onNext,
+  onSkip,
   onArchive,
   isStarred = false,
   onToggleStar,
@@ -27,7 +28,9 @@ export default function OutputQuizQuestion({
   const [checked, setChecked] = useState(false);
   const [checking, setChecking] = useState(false);
   const [correct, setCorrect] = useState(false);
+  const [caseMismatch, setCaseMismatch] = useState(false);
   const [runtimeOutput, setRuntimeOutput] = useState('');
+  const [runError, setRunError] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
 
   const isLast = remaining === 1;
@@ -37,17 +40,22 @@ export default function OutputQuizQuestion({
     if (checking) return;
 
     setChecking(true);
+    setRunError(null);
     try {
-      const runtimeResult = await runOutputCode(question.code, { async: question.async });
+      const runtimeResult = await runOutputCodeSafely(question.code, { async: question.async });
       const comparison = compareOutputAnswer(answer, runtimeResult, question.expectedLines);
-      const actualOutput = formatExpectedOutput(runtimeResult.lines, runtimeResult.error);
 
-      setRuntimeOutput(actualOutput);
+      setRuntimeOutput(formatExpectedOutput(runtimeResult.lines, runtimeResult.error));
       setCorrect(comparison.correct);
+      setCaseMismatch(Boolean(comparison.caseMismatch));
+      // Only the first check counts toward the score; later ones let you
+      // compare a revised guess without being penalised twice.
       if (!checked) {
         setChecked(true);
         onCheck(comparison.correct, question);
       }
+    } catch (err) {
+      setRunError(err?.message || 'Could not run this snippet.');
     } finally {
       setChecking(false);
     }
@@ -58,8 +66,15 @@ export default function OutputQuizQuestion({
     setChecked(false);
     setChecking(false);
     setCorrect(false);
+    setCaseMismatch(false);
     setRuntimeOutput('');
+    setRunError(null);
     setShowExplanation(false);
+  }
+
+  function handleSkip() {
+    onSkip?.(question);
+    resetQuestionView();
   }
 
   function handleNext() {
@@ -107,19 +122,30 @@ export default function OutputQuizQuestion({
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Type the console output (e.g. 10, true, ReferenceError: ...)"
               rows={4}
-              disabled={checked}
               spellCheck={false}
             />
             <p className="output-answer-hint">
-              For multiple lines, separate values with commas or new lines.
+              Case matters. For multiple lines, separate values with commas or new lines.
             </p>
           </div>
 
+          {runError && (
+            <p className="output-run-error" role="alert">
+              {runError}
+            </p>
+          )}
+
           {checked && (
-            <div className={`output-result ${correct ? 'correct' : 'incorrect'}`}>
+            <div className={`output-result ${correct ? 'correct' : 'incorrect'}`} role="status">
               <p className="output-result-title">
                 {correct ? 'Correct!' : 'Not quite'}
               </p>
+              {caseMismatch && (
+                <p className="output-result-hint">
+                  That is right apart from capitalisation — in JavaScript, case is
+                  often the whole answer.
+                </p>
+              )}
               <p className="output-result-text">
                 Runtime output: <code className="output-runtime-output">{runtimeOutput || '(no output)'}</code>
               </p>
@@ -139,7 +165,7 @@ export default function OutputQuizQuestion({
 
               {showExplanation && (
                 <div className="explanation-panel expanded output-explanation-panel">
-                  <p>{question.explanation}</p>
+                  <CodeBody content={question.explanation} highlight={highlight} theme={theme} />
                 </div>
               )}
             </div>
@@ -152,8 +178,13 @@ export default function OutputQuizQuestion({
               onClick={handleCheck}
               disabled={checking}
             >
-              {checking ? 'Running code...' : 'Check answer'}
+              {checking ? 'Running code...' : checked ? 'Check again' : 'Check answer'}
             </button>
+            {onSkip && (
+              <button type="button" className="skip-btn" onClick={handleSkip}>
+                Skip
+              </button>
+            )}
             <button type="button" className="archive-btn" onClick={() => onArchive(question)}>
               Archive
             </button>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import CodeBody from './CodeBody';
 import CodeEditor from './CodeEditor';
 import DifficultyBadge from './DifficultyBadge';
-import { runCodingTests } from '../utils/codingRunner';
+import { runCodingTestsSafely } from '../utils/sandboxClient';
 import {
   loadCodingSubmissions,
   saveCodingDraft,
@@ -25,15 +25,6 @@ function formatTestCase(tc) {
     tc.calls.forEach((c) => lines.push(`  ${c.expr ?? ''}${c.advance ? ` (advance ${c.advance}ms)` : ''}`));
   }
   return lines.join('\n') || JSON.stringify(tc, null, 2);
-}
-
-function formatValue(value) {
-  if (value === undefined) return 'undefined';
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
 }
 
 function formatSubmissionTime(ts) {
@@ -61,8 +52,12 @@ export default function CodingChallenge({
   isCompleted = false,
   onToggleCompleted,
 }) {
-  const submissionsRef = useRef(loadCodingSubmissions());
+  // Lazy initialiser: passing the call directly re-parsed the entire
+  // submission store on every render, including every keystroke in the editor.
+  const submissionsRef = useRef(null);
+  if (submissionsRef.current === null) submissionsRef.current = loadCodingSubmissions();
   const questionIdRef = useRef(question.id);
+  const codeRef = useRef('');
   const [code, setCode] = useState(() => getInitialCode(submissionsRef.current, question));
   const [submissionHistory, setSubmissionHistory] = useState(
     () => submissionsRef.current.byQuestion[String(question.id)]?.history ?? []
@@ -73,7 +68,7 @@ export default function CodingChallenge({
   const [showExplanation, setShowExplanation] = useState(false);
   const [showSubmissions, setShowSubmissions] = useState(false);
   const [allPassed, setAllPassed] = useState(false);
-  const scoredPassRef = useRef(false);
+  const [runError, setRunError] = useState(null);
 
   const isLast = remaining === 1;
   const progressPct = clampPct(sessionTotal, remaining);
@@ -89,26 +84,39 @@ export default function CodingChallenge({
     setChecked(false);
     setTestResults(null);
     setAllPassed(false);
-    scoredPassRef.current = false;
+    setRunError(null);
     setShowSubmissions(false);
   }, [question.id]);
 
   useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
+
+  // Debounced draft autosave.
+  useEffect(() => {
+    const questionId = questionIdRef.current;
     const timer = setTimeout(() => {
-      submissionsRef.current = saveCodingDraft(
-        submissionsRef.current,
-        questionIdRef.current,
-        code,
-      );
+      submissionsRef.current = saveCodingDraft(submissionsRef.current, questionId, code);
     }, 400);
     return () => clearTimeout(timer);
   }, [code]);
 
+  // Flush the pending draft when leaving the question. Without this, typing and
+  // switching away inside the 400ms window discarded the edit: the debounce
+  // cleanup cancelled the timer and nothing ever wrote it.
+  useEffect(() => {
+    const questionId = question.id;
+    return () => {
+      submissionsRef.current = saveCodingDraft(submissionsRef.current, questionId, codeRef.current);
+    };
+  }, [question.id]);
+
   async function handleRunTests() {
     if (checking) return;
     setChecking(true);
+    setRunError(null);
     try {
-      const { passed, total, results } = await runCodingTests(code, question);
+      const { passed, total, results } = await runCodingTestsSafely(code, question);
       setTestResults(results);
       const passedAll = passed === total;
 
@@ -119,15 +127,15 @@ export default function CodingChallenge({
       });
       setSubmissionHistory(submissionsRef.current.byQuestion[String(question.id)]?.history ?? []);
 
-      if (!checked) {
-        setChecked(true);
-        onCheck(passedAll, question);
-        if (passedAll) scoredPassRef.current = true;
-      } else if (passedAll && !scoredPassRef.current) {
-        onCheck(passedAll, question, { isRetry: true });
-        scoredPassRef.current = true;
-      }
+      if (!checked) setChecked(true);
+      onCheck(passedAll, question);
       setAllPassed(passedAll);
+    } catch (err) {
+      // Timeouts and worker crashes land here. Without this the spinner just
+      // stopped and the UI sat there with no explanation.
+      setRunError(err?.message || 'Could not run your code.');
+      setTestResults(null);
+      setAllPassed(false);
     } finally {
       setChecking(false);
     }
@@ -182,7 +190,7 @@ export default function CodingChallenge({
             <CodeBody content={question.description} highlight={highlight} theme={theme} />
           </div>
 
-          {testResults && testResults.length > 0 && (
+          {question.testCases?.length > 0 && (
             <div className="coding-sample-cases">
               <h3 className="coding-sample-heading">Sample Cases</h3>
               {question.testCases.map((tc, i) => (
@@ -255,7 +263,7 @@ export default function CodingChallenge({
                     onClick={() => handleLoadSubmission(submission)}
                     disabled={code === submission.code}
                   >
-                    {i === 0 && code === submission.code ? 'Current' : 'Load'}
+                    {code === submission.code ? 'In editor' : 'Load'}
                   </button>
                 </li>
               ))}
@@ -281,6 +289,12 @@ export default function CodingChallenge({
             </button>
           </div>
 
+          {runError && (
+            <p className="coding-run-error" role="alert">
+              {runError}
+            </p>
+          )}
+
           {testResults && (
             <div className="coding-results">
               <div className="coding-results-header">
@@ -304,16 +318,18 @@ export default function CodingChallenge({
                     <div className="coding-test-detail">
                       <div className="coding-test-row">
                         <span className="coding-test-label">Expected:</span>
-                        <code className="coding-test-value">
-                          {formatValue(result.expected)}
-                        </code>
+                        <code className="coding-test-value">{result.expectedDisplay}</code>
                       </div>
                       <div className="coding-test-row">
                         <span className="coding-test-label">Got:</span>
-                        <code className="coding-test-value">
-                          {formatValue(result.got)}
-                        </code>
+                        <code className="coding-test-value">{result.gotDisplay}</code>
                       </div>
+                    </div>
+                  )}
+                  {result.logs?.length > 0 && (
+                    <div className="coding-test-logs">
+                      <span className="coding-test-label">console:</span>
+                      <pre className="coding-test-log-lines">{result.logs.join('\n')}</pre>
                     </div>
                   )}
                 </div>

@@ -1159,6 +1159,13 @@ export default function App() {
     [setOutputProgress, setOutputQueue, setCompleted, outputQueueRef]
   );
 
+  const handleOutputSkip = useCallback(
+    (question) => {
+      setOutputQueue((state) => skipQuestionInQueue(state, question.id));
+    },
+    [setOutputQueue]
+  );
+
   const handleOutputNext = useCallback(() => {
     setOutputQueue((state) => advancePass(state));
   }, [setOutputQueue]);
@@ -1398,6 +1405,7 @@ export default function App() {
           sourceUrl={outputSourceUrl}
           onCheck={handleOutputCheck}
           onNext={handleOutputNext}
+          onSkip={handleOutputSkip}
           onArchive={handleArchiveOutput}
           isStarred={isStarred(currentOutputQuestion.id, 'output', starred)}
           onToggleStar={() => handleToggleStar('output', currentOutputQuestion.id)}
