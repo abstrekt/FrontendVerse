@@ -16,6 +16,7 @@ import CodingResults from './components/CodingResults';
 import ArchivedView from './components/ArchivedView';
 import CommandPalette from './components/CommandPalette';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useLatestRef } from './hooks/useLatestRef';
 import { useAppRoute } from './hooks/useAppRoute';
 import {
   EMPTY_PROGRESS,
@@ -43,6 +44,9 @@ import {
   EMPTY_PRACTICE_QUEUE,
   createPracticeQueue,
   restorePracticeQueue,
+  restrictQueueToPool,
+  recordAnswerInQueue,
+  markAnswerCorrectInQueue,
   isRestorablePracticeQueue,
   advancePass,
   archiveFromQueue,
@@ -108,6 +112,9 @@ import {
 import StarredFilterToggle from './components/StarredFilterToggle';
 import { buildSearchIndex } from './utils/searchIndex';
 import { getPassScopeQuestions } from './utils/questionState';
+import { hasRunMigration, markMigrationRun } from './utils/migrations';
+
+const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
 
 function makeLearningToggleCompleted(section, orderedList, setId, completed, setCompleted) {
   return (id) => {
@@ -176,7 +183,13 @@ export default function App() {
   const [starred, setStarred] = useLocalStorage('quiz-starred', EMPTY_STARRED);
   const [starredFilter, setStarredFilter] = useLocalStorage('quiz-starred-filter', EMPTY_STARRED_FILTER);
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
-  const completedSyncedRef = useRef(false);
+
+  // Latest-value refs so answer handlers can guard against double-recording
+  // without depending on (and re-creating themselves for) every state change.
+  const mcqQueueRef = useLatestRef(mcqQueue);
+  const outputQueueRef = useLatestRef(outputQueue);
+  const codingQueueRef = useLatestRef(codingQueue);
+  const completedRef = useLatestRef(completed);
 
   const activeQuestions = useMemo(
     () => filterActive(questions, 'mcq', archived),
@@ -316,48 +329,101 @@ export default function App() {
   const codingPassRecordedRef = useRef(false);
   const skippedIds = useMemo(() => getSkippedPracticeQueueIds(mcqQueue), [mcqQueue]);
 
-  const mcqRestored = useMemo(
-    () => restorePracticeQueue(mcqQueue, starredActiveQuestions),
+  // Counters must come from the queue restricted to what is actually visible.
+  // Reading them off the raw stored queue counts ids that a filter has hidden,
+  // so "Next" stalls on the same question and remaining can exceed passTotal.
+  const mcqVisibleQueue = useMemo(
+    () => restrictQueueToPool(mcqQueue, starredActiveQuestions),
     [mcqQueue, starredActiveQuestions]
   );
-  const score = mcqQueue?.score ?? 0;
-  const answered = mcqQueue?.answered ?? 0;
+  const mcqRestored = useMemo(
+    () => restorePracticeQueue(mcqVisibleQueue, starredActiveQuestions),
+    [mcqVisibleQueue, starredActiveQuestions]
+  );
+  const score = mcqVisibleQueue?.score ?? 0;
+  const answered = mcqVisibleQueue?.answered ?? 0;
   const mode = mcqQueue?.mode ?? 'all';
   const selectedTopics = mcqQueue?.selectedTopics ?? [];
   const selectedDifficulties = mcqQueue?.selectedDifficulties ?? [];
   const sessionTotal = mcqRestored.length;
-  const remaining = mcqQueue?.remaining ?? 0;
-  const passTotal = mcqQueue?.passTotal ?? sessionTotal;
+  const remaining = mcqVisibleQueue?.remaining ?? 0;
+  const passTotal = mcqVisibleQueue?.passTotal ?? sessionTotal;
   const currentQuestion = mcqRestored[0] ?? null;
   const isPassComplete = remaining === 0 && sessionTotal > 0;
 
-  const outputRestored = useMemo(
-    () => restorePracticeQueue(outputQueue, starredActiveOutputQuestions),
+  const outputVisibleQueue = useMemo(
+    () => restrictQueueToPool(outputQueue, starredActiveOutputQuestions),
     [outputQueue, starredActiveOutputQuestions]
   );
-  const outputScore = outputQueue?.score ?? 0;
-  const outputAnswered = outputQueue?.answered ?? 0;
+  const outputRestored = useMemo(
+    () => restorePracticeQueue(outputVisibleQueue, starredActiveOutputQuestions),
+    [outputVisibleQueue, starredActiveOutputQuestions]
+  );
+  const outputScore = outputVisibleQueue?.score ?? 0;
+  const outputAnswered = outputVisibleQueue?.answered ?? 0;
   const outputSessionTotal = outputRestored.length;
-  const outputRemaining = outputQueue?.remaining ?? 0;
-  const outputPassTotal = outputQueue?.passTotal ?? outputSessionTotal;
+  const outputRemaining = outputVisibleQueue?.remaining ?? 0;
+  const outputPassTotal = outputVisibleQueue?.passTotal ?? outputSessionTotal;
   const currentOutputQuestion = outputRestored[0] ?? null;
   const isOutputPassComplete = outputRemaining === 0 && outputSessionTotal > 0;
   const outputQueueEmpty =
     starredActiveOutputQuestions.length > 0 && outputRestored.length === 0;
 
-  const codingRestored = useMemo(
-    () => restorePracticeQueue(codingQueue, starredActiveCodingQuestions),
+  const codingVisibleQueue = useMemo(
+    () => restrictQueueToPool(codingQueue, starredActiveCodingQuestions),
     [codingQueue, starredActiveCodingQuestions]
   );
-  const codingScore = codingQueue?.score ?? 0;
-  const codingAnswered = codingQueue?.answered ?? 0;
+  const codingRestored = useMemo(
+    () => restorePracticeQueue(codingVisibleQueue, starredActiveCodingQuestions),
+    [codingVisibleQueue, starredActiveCodingQuestions]
+  );
+  const codingScore = codingVisibleQueue?.score ?? 0;
+  const codingAnswered = codingVisibleQueue?.answered ?? 0;
   const codingSessionTotal = codingRestored.length;
-  const codingRemaining = codingQueue?.remaining ?? 0;
-  const codingPassTotal = codingQueue?.passTotal ?? codingSessionTotal;
+  const codingRemaining = codingVisibleQueue?.remaining ?? 0;
+  const codingPassTotal = codingVisibleQueue?.passTotal ?? codingSessionTotal;
   const currentCodingQuestion = codingRestored[0] ?? null;
   const isCodingPassComplete = codingRemaining === 0 && codingSessionTotal > 0;
   const codingQueueEmpty =
     starredActiveCodingQuestions.length > 0 && codingRestored.length === 0;
+
+  // Write the restriction back so the stored pass stops carrying ids that are
+  // no longer reachable. Skipped while loading, when every pool is still empty.
+  useEffect(() => {
+    if (loading) return;
+    const prune = (stored, visible, setter) => {
+      if (!stored || !visible) return;
+      if (visible.queueIds.length === getPracticeQueueQuestionIds(stored).length) return;
+      setter(visible);
+    };
+    prune(mcqQueue, mcqVisibleQueue, setMcqQueue);
+    prune(outputQueue, outputVisibleQueue, setOutputQueue);
+    prune(codingQueue, codingVisibleQueue, setCodingQueue);
+  }, [
+    loading,
+    mcqQueue,
+    mcqVisibleQueue,
+    setMcqQueue,
+    outputQueue,
+    outputVisibleQueue,
+    setOutputQueue,
+    codingQueue,
+    codingVisibleQueue,
+    setCodingQueue,
+  ]);
+
+  // A pass can be completed more than once (unarchiving or jumping to a
+  // question refills it). Re-arm the recorder whenever there is work left,
+  // otherwise only the first completion is ever recorded as a session.
+  useEffect(() => {
+    if (remaining > 0) passRecordedRef.current = false;
+  }, [remaining]);
+  useEffect(() => {
+    if (outputRemaining > 0) outputPassRecordedRef.current = false;
+  }, [outputRemaining]);
+  useEffect(() => {
+    if (codingRemaining > 0) codingPassRecordedRef.current = false;
+  }, [codingRemaining]);
 
   const selectedLearning = useMemo(() => {
     if (activeSection !== 'learnings') return null;
@@ -465,23 +531,22 @@ export default function App() {
 
   const mcqQueueEmpty = basePool.length > 0 && mcqRestored.length === 0;
 
+  // An empty pool means the filters matched nothing. Falling back to every
+  // question here would build a full-length queue behind an empty-state screen,
+  // and persist it — leave it empty and let the empty state stand.
   const buildMcqPool = useCallback(
-    (pool, includeCompleted = mcqIncludeCompleted) => {
-      const source = pool.length > 0 ? pool : starredActiveQuestions;
-      return filterPoolByCompleted(source, completed, {
+    (pool, includeCompleted = mcqIncludeCompleted) =>
+      filterPoolByCompleted(pool, completed, {
         includeCompleted,
         section: 'mcq',
-      });
-    },
-    [starredActiveQuestions, completed, mcqIncludeCompleted]
+      }),
+    [completed, mcqIncludeCompleted]
   );
 
   const buildOutputQuizQueue = useCallback(
-    (pool, includeCompleted = outputIncludeCompleted) => {
-      const source = pool.length > 0 ? pool : starredActiveOutputQuestions;
-      return buildOutputQueue(source, completed, { includeCompleted });
-    },
-    [starredActiveOutputQuestions, completed, outputIncludeCompleted]
+    (pool, includeCompleted = outputIncludeCompleted) =>
+      buildOutputQueue(pool, completed, { includeCompleted }),
+    [completed, outputIncludeCompleted]
   );
 
   const startMcqPass = useCallback(
@@ -494,9 +559,8 @@ export default function App() {
           topics,
           difficulties,
           resetPass,
-          score: resetPass ? 0 : (mcqQueue?.score ?? 0),
-          answered: resetPass ? 0 : (mcqQueue?.answered ?? 0),
-          answeredIds: resetPass ? [] : (mcqQueue?.answeredIds ?? []),
+          answeredIds: mcqQueue?.answeredIds ?? [],
+          correctIds: mcqQueue?.correctIds ?? [],
         })
       );
       passRecordedRef.current = false;
@@ -511,9 +575,8 @@ export default function App() {
       setOutputQueue(
         createPracticeQueue(queue, {
           resetPass,
-          score: resetPass ? 0 : (outputQueue?.score ?? 0),
-          answered: resetPass ? 0 : (outputQueue?.answered ?? 0),
-          answeredIds: resetPass ? [] : (outputQueue?.answeredIds ?? []),
+          answeredIds: outputQueue?.answeredIds ?? [],
+          correctIds: outputQueue?.correctIds ?? [],
         })
       );
       outputPassRecordedRef.current = false;
@@ -529,9 +592,8 @@ export default function App() {
       setCodingQueue(
         createPracticeQueue(queue, {
           resetPass,
-          score: resetPass ? 0 : (codingQueue?.score ?? 0),
-          answered: resetPass ? 0 : (codingQueue?.answered ?? 0),
-          answeredIds: resetPass ? [] : (codingQueue?.answeredIds ?? []),
+          answeredIds: codingQueue?.answeredIds ?? [],
+          correctIds: codingQueue?.correctIds ?? [],
         })
       );
       codingPassRecordedRef.current = false;
@@ -618,16 +680,19 @@ export default function App() {
     setLegacySkippedIds([]);
   }, [legacySkippedIds, mcqQueue, setLegacySkippedIds]);
 
+  // Backfill the completed store from pre-existing answer history. This is a
+  // migration, not a sync: it must run exactly once ever, otherwise un-marking
+  // a question as mastered is silently undone on the next page load.
   useEffect(() => {
-    if (completedSyncedRef.current) return;
-    completedSyncedRef.current = true;
+    if (loading || hasRunMigration(COMPLETED_BACKFILL_MIGRATION)) return;
+    markMigrationRun(COMPLETED_BACKFILL_MIGRATION);
     setCompleted((prev) => {
       let next = syncOutputCompletedFromProgress(prev, outputProgress);
       next = syncCompletedFromProgress(next, 'mcq', progress);
       next = syncCompletedFromProgress(next, 'coding', codingProgress);
       return next;
     });
-  }, [outputProgress, progress, codingProgress, setCompleted]);
+  }, [loading, outputProgress, progress, codingProgress, setCompleted]);
 
   useEffect(() => {
     if (!isPassComplete || passRecordedRef.current) return;
@@ -688,21 +753,19 @@ export default function App() {
 
   const handlePick = useCallback(
     (correct, question) => {
-      setMcqQueue((state) => {
-        if (!state || state.answeredIds.includes(question.id)) return state;
-        setProgress((prev) => recordAnswer(prev, question, correct));
-        if (correct) {
-          setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
-        }
-        return {
-          ...state,
-          answeredIds: [...state.answeredIds, question.id],
-          answered: state.answered + 1,
-          score: state.score + (correct ? 1 : 0),
-        };
-      });
+      // Side effects must stay out of the updater: React may invoke an updater
+      // more than once (StrictMode in dev, rebasing under concurrent rendering),
+      // which would record the same answer twice.
+      const state = mcqQueueRef.current;
+      if (!state || state.answeredIds.includes(question.id)) return;
+
+      setProgress((prev) => recordAnswer(prev, question, correct));
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'mcq', question.id));
+      }
+      setMcqQueue((prev) => recordAnswerInQueue(prev, question.id, correct));
     },
-    [setProgress, setMcqQueue, setCompleted]
+    [setProgress, setMcqQueue, setCompleted, mcqQueueRef]
   );
 
   const handleNext = useCallback(() => {
@@ -1084,21 +1147,16 @@ export default function App() {
 
   const handleOutputCheck = useCallback(
     (correct, question) => {
-      setOutputQueue((state) => {
-        if (!state || state.answeredIds.includes(question.id)) return state;
-        setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
-        if (correct) {
-          setCompleted((prev) => markCompletedId(prev, 'output', question.id));
-        }
-        return {
-          ...state,
-          answeredIds: [...state.answeredIds, question.id],
-          answered: state.answered + 1,
-          score: state.score + (correct ? 1 : 0),
-        };
-      });
+      const state = outputQueueRef.current;
+      if (!state || state.answeredIds.includes(question.id)) return;
+
+      setOutputProgress((prev) => recordOutputAnswer(prev, question, correct));
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'output', question.id));
+      }
+      setOutputQueue((prev) => recordAnswerInQueue(prev, question.id, correct));
     },
-    [setOutputProgress, setOutputQueue, setCompleted]
+    [setOutputProgress, setOutputQueue, setCompleted, outputQueueRef]
   );
 
   const handleOutputNext = useCallback(() => {
@@ -1152,41 +1210,40 @@ export default function App() {
   );
 
   const handleCodingCheck = useCallback(
-    (correct, question, { isRetry = false } = {}) => {
-      if (isRetry) {
-        if (!correct) return;
-        setCodingQueue((state) => {
-          if (!state || !state.answeredIds.includes(question.id)) return state;
-          return { ...state, score: state.score + 1 };
-        });
+    (correct, question) => {
+      const state = codingQueueRef.current;
+      if (!state) return;
+
+      // Derive "is this a retry?" from state rather than trusting the caller:
+      // CodingChallenge remounts per question, so its local `checked` flag
+      // resets and a re-solve would otherwise look like a first attempt.
+      const alreadyAnswered = state.answeredIds.includes(question.id);
+      const alreadyCorrect = isCompleted(question.id, 'coding', completedRef.current);
+
+      if (alreadyAnswered) {
+        // Only a wrong -> right transition changes anything.
+        if (!correct || alreadyCorrect) return;
         setCodingProgress((prev) => {
           const updated = recordCodingAnswer(prev, question.id, true);
           saveCodingProgress(updated);
           return updated;
         });
         setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
+        setCodingQueue((prev) => markAnswerCorrectInQueue(prev, question.id));
         return;
       }
 
-      setCodingQueue((state) => {
-        if (!state || state.answeredIds.includes(question.id)) return state;
-        setCodingProgress((prev) => {
-          const updated = recordCodingAnswer(prev, question.id, correct);
-          saveCodingProgress(updated);
-          return updated;
-        });
-        if (correct) {
-          setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
-        }
-        return {
-          ...state,
-          answeredIds: [...state.answeredIds, question.id],
-          answered: state.answered + 1,
-          score: state.score + (correct ? 1 : 0),
-        };
+      setCodingProgress((prev) => {
+        const updated = recordCodingAnswer(prev, question.id, correct);
+        saveCodingProgress(updated);
+        return updated;
       });
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'coding', question.id));
+      }
+      setCodingQueue((prev) => recordAnswerInQueue(prev, question.id, correct));
     },
-    [setCodingProgress, setCodingQueue, setCompleted]
+    [setCodingProgress, setCodingQueue, setCompleted, codingQueueRef, completedRef]
   );
 
   const handleCodingNext = useCallback(() => {

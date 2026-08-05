@@ -8,10 +8,15 @@ import {
   createPracticeQueue,
   getPracticeQueueQuestionIds,
   getSkippedPracticeQueueIds,
+  markAnswerCorrectInQueue,
   normalizePracticeQueue,
   openQuestionInQueue,
+  recordAnswerInQueue,
+  restrictQueueToPool,
   skipQuestionInQueue,
 } from './practiceQueue.js';
+
+const pool = (...ids) => ids.map((id) => ({ id }));
 
 test('createPracticeQueue initializes explicit pending state', () => {
   const queue = createPracticeQueue([{ id: 1 }, { id: 2 }, { id: 3 }]);
@@ -74,6 +79,81 @@ test('archiveFromQueue removes archived ids from every pass bucket', () => {
   assert.deepEqual(archived.answeredIds, [2]);
   assert.deepEqual(getSkippedPracticeQueueIds(archived), []);
   assert.equal(archived.passTotal, 2);
+});
+
+test('recordAnswerInQueue derives score and answered, and is idempotent', () => {
+  let queue = createPracticeQueue(pool(1, 2, 3));
+  queue = recordAnswerInQueue(queue, 1, true);
+  queue = recordAnswerInQueue(queue, 2, false);
+
+  assert.equal(queue.answered, 2);
+  assert.equal(queue.score, 1);
+  assert.deepEqual(queue.correctIds, [1]);
+
+  // Re-invoking the updater (StrictMode, concurrent rebase) must not re-count.
+  const again = recordAnswerInQueue(queue, 1, true);
+  assert.equal(again.answered, 2);
+  assert.equal(again.score, 1);
+});
+
+test('markAnswerCorrectInQueue upgrades a wrong answer exactly once', () => {
+  let queue = recordAnswerInQueue(createPracticeQueue(pool(1, 2)), 1, false);
+  assert.equal(queue.score, 0);
+
+  queue = markAnswerCorrectInQueue(queue, 1);
+  assert.equal(queue.score, 1);
+
+  queue = markAnswerCorrectInQueue(queue, 1);
+  assert.equal(queue.score, 1, 'repeat upgrades must not inflate the score');
+
+  queue = markAnswerCorrectInQueue(queue, 2);
+  assert.equal(queue.score, 1, 'an unanswered question cannot be upgraded');
+});
+
+test('archiving an answered question removes its score with it', () => {
+  let queue = createPracticeQueue(pool(1, 2, 3, 4, 5));
+  for (const id of [1, 2, 3, 4, 5]) queue = recordAnswerInQueue(queue, id, true);
+  assert.equal(queue.score, 5);
+  assert.equal(queue.passTotal, 5);
+
+  for (const id of [1, 2, 3, 4]) queue = archiveFromQueue(queue, id);
+
+  // Previously score stayed at 5 while passTotal fell to 1, yielding pct 500.
+  assert.equal(queue.passTotal, 1);
+  assert.equal(queue.score, 1);
+  assert.ok(queue.score <= queue.passTotal);
+});
+
+test('restrictQueueToPool drops ids the current filter hides', () => {
+  let queue = createPracticeQueue(pool(1, 2, 3));
+  queue = recordAnswerInQueue(queue, 1, true);
+  queue = advancePass(queue);
+
+  const restricted = restrictQueueToPool(queue, pool(1));
+
+  assert.deepEqual(restricted.queueIds, [1]);
+  assert.equal(restricted.remaining, 0);
+  assert.equal(restricted.passTotal, 1);
+  assert.ok(restricted.remaining <= restricted.passTotal);
+});
+
+test('restrictQueueToPool leaves the queue alone while content is still loading', () => {
+  const queue = createPracticeQueue(pool(1, 2, 3));
+  assert.deepEqual(restrictQueueToPool(queue, []).queueIds, [1, 2, 3]);
+});
+
+test('normalizePracticeQueue reconstructs correctIds from a legacy score counter', () => {
+  const migrated = normalizePracticeQueue({
+    pendingIds: [3],
+    seenIds: [1, 2],
+    answeredIds: [1, 2],
+    score: 1,
+    answered: 2,
+  });
+
+  assert.equal(migrated.answered, 2);
+  assert.equal(migrated.score, 1);
+  assert.deepEqual(migrated.correctIds, [1]);
 });
 
 test('normalizePracticeQueue migrates legacy queueIds and remaining into pending and seen ids', () => {

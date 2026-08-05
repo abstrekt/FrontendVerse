@@ -3880,3 +3880,87 @@ body {
     display: none;
   }
 }
+
+/* ── Crash screen (ErrorBoundary) ─────────────────────────────────────── */
+
+.crash-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.crash-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.crash-title {
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.crash-text {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.crash-detail {
+  margin-bottom: 20px;
+  padding: 12px;
+  max-height: 160px;
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--wrong);
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+}
+
+.crash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.crash-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--option-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.crash-btn:hover {
+  background: var(--option-hover);
+}
+
+.crash-btn-danger {
+  background: var(--wrong-bg);
+  border-color: var(--wrong-border);
+  color: var(--wrong);
+}
+
+.crash-note {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}

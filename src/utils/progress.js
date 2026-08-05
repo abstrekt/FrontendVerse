@@ -1,4 +1,5 @@
 import { shuffle } from './shuffle';
+import { todayKey, updateStreak } from './streak';
 
 export const EMPTY_PROGRESS = {
   sessions: [],
@@ -35,30 +36,6 @@ export function filterQuestions(questions, { topics = [], difficulties = [] } = 
 const MAX_SESSIONS = 30;
 const WEAK_THRESHOLD = 70;
 const MIN_TOPIC_SAMPLES = 3;
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function yesterdayKey() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
-
-function updateStreak(stats) {
-  const today = todayKey();
-  const yesterday = yesterdayKey();
-  const last = stats.lastPlayedDate;
-
-  if (last === today) {
-    return stats.streakDays;
-  }
-  if (last === yesterday) {
-    return stats.streakDays + 1;
-  }
-  return 1;
-}
 
 export function recordAnswer(progress, question, correct) {
   const id = String(question.id);

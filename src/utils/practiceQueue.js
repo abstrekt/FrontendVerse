@@ -23,13 +23,20 @@ function toQuestionIds(pool = []) {
   return pool.map((item) => (typeof item === 'number' ? item : item.id));
 }
 
+/**
+ * `score` and `answered` are derived, never stored independently.
+ *
+ * They used to be free-running counters, which meant archiving an answered
+ * question shrank `passTotal` without shrinking `score` — producing session
+ * percentages of up to 500%. Deriving them from id lists that are themselves
+ * scoped to the queue makes that class of drift impossible.
+ */
 function buildQueueState({
   pendingIds = [],
   seenIds = [],
   skippedIds = [],
-  score = 0,
-  answered = 0,
   answeredIds = [],
+  correctIds = [],
   mode = 'all',
   selectedTopics = [],
   selectedDifficulties = [],
@@ -40,6 +47,9 @@ function buildQueueState({
   const queueIds = [...pending, ...seen];
   const queueSet = new Set(queueIds);
   const skipped = uniqueIds(skippedIds).filter((id) => queueSet.has(id));
+  const answered = uniqueIds(answeredIds).filter((id) => queueSet.has(id));
+  const answeredSet = new Set(answered);
+  const correct = uniqueIds(correctIds).filter((id) => answeredSet.has(id));
 
   return {
     queueIds,
@@ -48,13 +58,25 @@ function buildQueueState({
     skippedIds: skipped,
     remaining: pending.length,
     passTotal: queueIds.length,
-    score,
-    answered,
-    answeredIds: uniqueIds(answeredIds),
+    score: correct.length,
+    answered: answered.length,
+    answeredIds: answered,
+    correctIds: correct,
     mode,
     selectedTopics,
     selectedDifficulties,
   };
+}
+
+/**
+ * Legacy states stored `score`/`answered` as counters with no record of *which*
+ * answers were right. Approximate `correctIds` from the counter so an in-flight
+ * pass keeps a consistent score across the upgrade.
+ */
+function inferCorrectIds(state, answeredIds) {
+  if (Array.isArray(state?.correctIds)) return state.correctIds;
+  const score = Number.isFinite(state?.score) ? state.score : 0;
+  return uniqueIds(answeredIds).slice(0, Math.max(0, score));
 }
 
 function splitLegacyQueue(state) {
@@ -72,23 +94,18 @@ export function createPracticeQueue(
     mode = 'all',
     topics = [],
     difficulties = [],
-    score = 0,
-    answered = 0,
     answeredIds = [],
+    correctIds = [],
     skippedIds = [],
     resetPass = true,
   } = {}
 ) {
-  const pendingIds = toQuestionIds(pool);
-  const len = pendingIds.length;
   return buildQueueState({
-    pendingIds,
+    pendingIds: toQuestionIds(pool),
     seenIds: [],
     skippedIds,
-    passTotal: len,
-    score: resetPass ? 0 : score,
-    answered: resetPass ? 0 : answered,
     answeredIds: resetPass ? [] : answeredIds,
+    correctIds: resetPass ? [] : correctIds,
     mode,
     selectedTopics: topics,
     selectedDifficulties: difficulties,
@@ -97,34 +114,45 @@ export function createPracticeQueue(
 
 export function normalizePracticeQueue(state) {
   if (!state) return state;
-  if (state.pendingIds || state.seenIds) {
-    return buildQueueState({
-      pendingIds: state.pendingIds ?? [],
-      seenIds: state.seenIds ?? [],
-      skippedIds: state.skippedIds ?? [],
-      passTotal: state.passTotal,
-      score: state.score ?? 0,
-      answered: state.answered ?? 0,
-      answeredIds: state.answeredIds ?? [],
-      mode: state.mode ?? 'all',
-      selectedTopics: state.selectedTopics ?? [],
-      selectedDifficulties: state.selectedDifficulties ?? [],
-    });
-  }
 
-  const { pendingIds, seenIds } = splitLegacyQueue(state);
+  const legacy = !state.pendingIds && !state.seenIds;
+  const { pendingIds, seenIds } = legacy
+    ? splitLegacyQueue(state)
+    : { pendingIds: state.pendingIds ?? [], seenIds: state.seenIds ?? [] };
+  const answeredIds = state.answeredIds ?? [];
+
   return buildQueueState({
     pendingIds,
     seenIds,
     skippedIds: state.skippedIds ?? [],
-    passTotal: state.passTotal ?? pendingIds.length + seenIds.length,
-    score: state.score ?? 0,
-    answered: state.answered ?? 0,
-    answeredIds: state.answeredIds ?? [],
+    answeredIds,
+    correctIds: inferCorrectIds(state, answeredIds),
     mode: state.mode ?? 'all',
     selectedTopics: state.selectedTopics ?? [],
     selectedDifficulties: state.selectedDifficulties ?? [],
   });
+}
+
+/** Record an answer. Idempotent: answering the same question twice is a no-op. */
+export function recordAnswerInQueue(state, id, correct) {
+  const normalized = normalizePracticeQueue(state);
+  if (!normalized || normalized.answeredIds.includes(id)) return normalized;
+
+  return buildQueueState({
+    ...normalized,
+    answeredIds: [...normalized.answeredIds, id],
+    correctIds: correct ? [...normalized.correctIds, id] : normalized.correctIds,
+  });
+}
+
+/** Upgrade an already-answered question from wrong to right (a successful retry). */
+export function markAnswerCorrectInQueue(state, id) {
+  const normalized = normalizePracticeQueue(state);
+  if (!normalized) return normalized;
+  if (!normalized.answeredIds.includes(id) || normalized.correctIds.includes(id)) {
+    return normalized;
+  }
+  return buildQueueState({ ...normalized, correctIds: [...normalized.correctIds, id] });
 }
 
 export function getPracticeQueueQuestionIds(state) {
@@ -144,6 +172,34 @@ export function restorePracticeQueue(state, questions) {
   if (!queueIds.length || !questions.length) return [];
   const byId = new Map(questions.map((q) => [q.id, q]));
   return queueIds.map((id) => byId.get(id)).filter(Boolean);
+}
+
+/**
+ * Drop queued ids that aren't in the currently visible pool.
+ *
+ * Without this, a filter change leaves invisible ids in `pendingIds`: they still
+ * count toward `remaining`/`passTotal` but can never be rendered, so "Next"
+ * appears to do nothing and the header reads e.g. "Left in pass 2/1".
+ */
+export function restrictQueueToPool(state, questions) {
+  const normalized = normalizePracticeQueue(state);
+  if (!normalized) return normalized;
+  // An empty pool means the content hasn't loaded yet, not that every question
+  // was filtered away — restricting here would wipe the stored pass.
+  if (!questions.length) return normalized;
+
+  const visible = new Set(questions.map((q) => q.id));
+  if (normalized.queueIds.every((id) => visible.has(id))) return normalized;
+
+  const keep = (ids) => ids.filter((id) => visible.has(id));
+  return buildQueueState({
+    ...normalized,
+    pendingIds: keep(normalized.pendingIds),
+    seenIds: keep(normalized.seenIds),
+    skippedIds: keep(normalized.skippedIds),
+    answeredIds: keep(normalized.answeredIds),
+    correctIds: keep(normalized.correctIds),
+  });
 }
 
 export function isRestorablePracticeQueue(state, questions) {
@@ -267,13 +323,12 @@ export function sanitizePracticeQueue(state, section, archived) {
 export function migrateSessionToQueue(oldSession) {
   if (!oldSession?.queueIds?.length) return null;
   const currentIndex = oldSession.currentIndex ?? 0;
-  const queueLen = oldSession.queueIds.length;
+  const answeredIds = oldSession.answeredIds ?? [];
   return buildQueueState({
     pendingIds: oldSession.queueIds.slice(currentIndex),
     seenIds: oldSession.queueIds.slice(0, currentIndex),
-    score: oldSession.score ?? 0,
-    answered: oldSession.answered ?? 0,
-    answeredIds: oldSession.answeredIds ?? [],
+    answeredIds,
+    correctIds: inferCorrectIds(oldSession, answeredIds),
     mode: oldSession.mode ?? 'all',
     selectedTopics: oldSession.selectedTopics ?? [],
     selectedDifficulties: oldSession.selectedDifficulties ?? [],

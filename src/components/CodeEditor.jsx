@@ -1,4 +1,8 @@
 import { useRef } from 'react';
+// Must precede the editor import so `self.MonacoEnvironment` is set before
+// Monaco spawns a worker. Lives here rather than in main.jsx so the whole
+// Monaco graph stays out of the entry chunk.
+import '../utils/monacoSetup';
 import Editor from '@monaco-editor/react';
 
 const EDITOR_OPTIONS = {

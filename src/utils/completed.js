@@ -65,7 +65,14 @@ export function sortCompletedToEnd(items, section, completed) {
   return [...pending, ...done];
 }
 
-/** Merge correct answers from quiz progress into the completed store (one-time migration). */
+/**
+ * Merge correct answers from quiz progress into the completed store.
+ *
+ * Run once (see `utils/migrations.js`) — re-running it on every load would undo
+ * the user's manual un-mastering. Keyed on `lastCorrect` only, matching
+ * `syncOutputCompletedFromProgress`: a question answered right once and wrong
+ * ten times since is not mastered.
+ */
 export function syncCompletedFromProgress(completed, section, progress) {
   if (!progress?.answers) return completed;
 
@@ -73,7 +80,7 @@ export function syncCompletedFromProgress(completed, section, progress) {
   for (const [id, entry] of Object.entries(progress.answers)) {
     const numId = Number(id);
     if (Number.isNaN(numId)) continue;
-    if (entry.lastCorrect === true || entry.correct > 0) {
+    if (entry.lastCorrect === true) {
       next = markCompletedId(next, section, numId);
     }
   }

@@ -5,6 +5,7 @@ import OptionList from './OptionList';
 import Explanation from './Explanation';
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
+import { clampPct } from '../utils/passProgress';
 
 export default function QuizQuestion({
   question,
@@ -28,7 +29,7 @@ export default function QuizQuestion({
   const [selected, setSelected] = useState(null);
 
   const isLast = remaining === 1;
-  const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
+  const progressPct = clampPct(sessionTotal, remaining);
 
   function handlePick(key) {
     if (selected !== null) return;

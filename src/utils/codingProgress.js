@@ -1,5 +1,7 @@
 import { shuffle } from './shuffle';
 import { filterExcludedCompleted } from './completed';
+import { todayKey, updateStreak } from './streak';
+import { reconcileStored } from '../hooks/useLocalStorage';
 
 const MAX_SESSIONS = 30;
 
@@ -14,37 +16,26 @@ export const EMPTY_CODING_PROGRESS = {
   },
 };
 
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function yesterdayKey() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
-
-function updateStreak(stats) {
-  const today = todayKey();
-  const yesterday = yesterdayKey();
-  const last = stats.lastPlayedDate;
-  if (last === today) return stats.streakDays;
-  if (last === yesterday) return stats.streakDays + 1;
-  return 1;
-}
+const STORAGE_KEY = 'js-mcq-coding-progress';
 
 export function loadCodingProgress() {
   try {
-    const raw = localStorage.getItem('js-mcq-coding-progress');
-    if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const stored = reconcileStored(JSON.parse(raw), EMPTY_CODING_PROGRESS);
+      // `stats` is nested, so the shallow merge above can still leave it stale.
+      return { ...stored, stats: { ...EMPTY_CODING_PROGRESS.stats, ...stored.stats } };
+    }
+  } catch { /* fall through to defaults */ }
   return { ...EMPTY_CODING_PROGRESS };
 }
 
 export function saveCodingProgress(progress) {
   try {
-    localStorage.setItem('js-mcq-coding-progress', JSON.stringify(progress));
-  } catch { /* ignore */ }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  } catch (err) {
+    console.error('Could not persist coding progress to localStorage.', err);
+  }
 }
 
 export function recordCodingAnswer(progress, questionId, correct) {

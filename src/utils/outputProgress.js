@@ -1,5 +1,6 @@
 import { shuffle } from './shuffle';
 import { filterExcludedCompleted } from './completed';
+import { todayKey, updateStreak } from './streak';
 
 export const EMPTY_OUTPUT_PROGRESS = {
   sessions: [],
@@ -39,30 +40,6 @@ export function buildOutputQueue(pool, completed, { includeCompleted = true, sec
 }
 
 const MAX_SESSIONS = 30;
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function yesterdayKey() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
-
-function updateStreak(stats) {
-  const today = todayKey();
-  const yesterday = yesterdayKey();
-  const last = stats.lastPlayedDate;
-
-  if (last === today) {
-    return stats.streakDays;
-  }
-  if (last === yesterday) {
-    return stats.streakDays + 1;
-  }
-  return 1;
-}
 
 export function recordOutputAnswer(progress, question, correct) {
   const id = String(question.id);

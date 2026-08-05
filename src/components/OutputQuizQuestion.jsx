@@ -4,6 +4,7 @@ import { runOutputCode } from '../utils/jsRunner';
 import { compareOutputAnswer, formatExpectedOutput } from '../utils/outputCompare';
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
+import { clampPct } from '../utils/passProgress';
 
 export default function OutputQuizQuestion({
   question,
@@ -30,7 +31,7 @@ export default function OutputQuizQuestion({
   const [showExplanation, setShowExplanation] = useState(false);
 
   const isLast = remaining === 1;
-  const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
+  const progressPct = clampPct(sessionTotal, remaining);
 
   async function handleCheck() {
     if (checking) return;

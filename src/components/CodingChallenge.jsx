@@ -10,6 +10,7 @@ import {
   getInitialCode,
 } from '../utils/codingSubmissions';
 import StarButton from './StarButton';
+import { clampPct } from '../utils/passProgress';
 import CompletedButton from './CompletedButton';
 
 function formatTestCase(tc) {
@@ -75,7 +76,7 @@ export default function CodingChallenge({
   const scoredPassRef = useRef(false);
 
   const isLast = remaining === 1;
-  const progressPct = sessionTotal > 0 ? ((sessionTotal - remaining) / sessionTotal) * 100 : 0;
+  const progressPct = clampPct(sessionTotal, remaining);
 
   useEffect(() => {
     questionIdRef.current = question.id;
