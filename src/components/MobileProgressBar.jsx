@@ -31,8 +31,9 @@ export default function MobileProgressBar({
           className="mobile-theme-btn"
           onClick={onToggleTheme}
           title="Toggle theme"
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
         >
-          {theme === 'light' ? '☽' : '☀'}
+          <span aria-hidden="true">{theme === 'light' ? '☽' : '☀'}</span>
         </button>
 
         {hasData || missedCount > 0 || inSpecialMode ? (

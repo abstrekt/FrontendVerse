@@ -15,7 +15,9 @@ import CodingChallenge from './components/CodingChallenge';
 import CodingResults from './components/CodingResults';
 import ArchivedView from './components/ArchivedView';
 import CommandPalette from './components/CommandPalette';
+import ShortcutsDialog from './components/ShortcutsDialog';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useLatestRef } from './hooks/useLatestRef';
 import { useAppRoute } from './hooks/useAppRoute';
 import {
@@ -116,6 +118,11 @@ import { hasRunMigration, markMigrationRun } from './utils/migrations';
 
 const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
 
+function getPreferredTheme() {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 function makeLearningToggleCompleted(section, orderedList, setId, completed, setCompleted) {
   return (id) => {
     const wasCompleted = isCompleted(id, section, completed);
@@ -163,7 +170,9 @@ export default function App() {
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
-  const [theme, setTheme] = useLocalStorage('quiz-theme', 'light');
+  // Default to the OS preference instead of always light, so a dark-mode user
+  // does not get a white flash and a manual toggle on every new device.
+  const [theme, setTheme] = useLocalStorage('quiz-theme', getPreferredTheme());
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
   const [mcqQueue, setMcqQueue] = usePracticeQueueStorage('mcq-queue', 'quiz-session');
@@ -183,6 +192,7 @@ export default function App() {
   const [starred, setStarred] = useLocalStorage('quiz-starred', EMPTY_STARRED);
   const [starredFilter, setStarredFilter] = useLocalStorage('quiz-starred-filter', EMPTY_STARRED_FILTER);
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Latest-value refs so answer handlers can guard against double-recording
   // without depending on (and re-creating themselves for) every state change.
@@ -1263,32 +1273,28 @@ export default function App() {
 
   const codingStats = useMemo(() => getCodingStats(codingProgress), [codingProgress]);
 
+  // Cmd/Ctrl-K needs its own listener: useKeyboardShortcuts deliberately
+  // ignores modified keypresses, and this must work from inside a text field.
   useEffect(() => {
     function onKeyDown(e) {
-      const target = e.target;
-      const isEditable =
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLInputElement ||
-        target?.isContentEditable ||
-        target?.closest?.('.monaco-editor');
-
+      if (!e.key) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setSearchPaletteOpen((open) => !open);
-        return;
-      }
-
-      if (searchPaletteOpen) return;
-
-      if (e.key === 'Enter' && !isPassComplete && !loading && !isEditable) {
-        e.preventDefault();
-        const btn = document.querySelector('.next-btn');
-        if (btn) btn.click();
       }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isPassComplete, loading, searchPaletteOpen]);
+  }, []);
+
+  const globalShortcuts = useMemo(
+    () => ({
+      '?': () => setShortcutsOpen((open) => !open),
+      '/': () => setSearchPaletteOpen(true),
+    }),
+    []
+  );
+  useKeyboardShortcuts(globalShortcuts, { enabled: !searchPaletteOpen });
 
   function handleToggleTopic(topic) {
     const next = selectedTopics.includes(topic)
@@ -1619,6 +1625,7 @@ export default function App() {
         onClose={() => setSearchPaletteOpen(false)}
         onSelect={handleSearchSelect}
       />
+      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <Layout
       mobileProgress={
         <MobileProgressBar
@@ -1693,11 +1700,10 @@ export default function App() {
         }
         center={
           <div className="center-with-toggle">
-            <div className="section-toggle" role="tablist" aria-label="Section">
+            <div className="section-toggle" role="group" aria-label="Section">
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'mcq'}
+                aria-pressed={activeSection === 'mcq'}
                 className={`section-toggle-btn${activeSection === 'mcq' ? ' active' : ''}`}
                 onClick={() => setSection('mcq', { viewMode })}
               >
@@ -1705,8 +1711,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'learnings'}
+                aria-pressed={activeSection === 'learnings'}
                 className={`section-toggle-btn${activeSection === 'learnings' ? ' active' : ''}`}
                 onClick={() => setSection('learnings')}
               >
@@ -1714,8 +1719,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'react-learnings'}
+                aria-pressed={activeSection === 'react-learnings'}
                 className={`section-toggle-btn${activeSection === 'react-learnings' ? ' active' : ''}`}
                 onClick={() => setSection('react-learnings')}
               >
@@ -1723,8 +1727,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'hld'}
+                aria-pressed={activeSection === 'hld'}
                 className={`section-toggle-btn${activeSection === 'hld' ? ' active' : ''}`}
                 onClick={() => setSection('hld')}
               >
@@ -1732,8 +1735,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'algorithm'}
+                aria-pressed={activeSection === 'algorithm'}
                 className={`section-toggle-btn${activeSection === 'algorithm' ? ' active' : ''}`}
                 onClick={() => setSection('algorithm')}
               >
@@ -1741,8 +1743,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'coding'}
+                aria-pressed={activeSection === 'coding'}
                 className={`section-toggle-btn${activeSection === 'coding' ? ' active' : ''}`}
                 onClick={() => setSection('coding')}
               >
@@ -1750,8 +1751,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'output'}
+                aria-pressed={activeSection === 'output'}
                 className={`section-toggle-btn${activeSection === 'output' ? ' active' : ''}`}
                 onClick={() => setSection('output')}
               >
@@ -1759,8 +1759,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={activeSection === 'archived'}
+                aria-pressed={activeSection === 'archived'}
                 className={`section-toggle-btn${activeSection === 'archived' ? ' active' : ''}`}
                 onClick={() => setSection('archived')}
               >
@@ -1769,11 +1768,10 @@ export default function App() {
             </div>
 
             {activeSection === 'mcq' && (
-              <div className="view-toggle" role="tablist" aria-label="View mode">
+              <div className="view-toggle" role="group" aria-label="View mode">
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={viewMode === 'quiz'}
+                  aria-pressed={viewMode === 'quiz'}
                   className={`view-toggle-btn${viewMode === 'quiz' ? ' active' : ''}`}
                   onClick={() => setViewMode('quiz')}
                 >
@@ -1781,8 +1779,7 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={viewMode === 'list'}
+                  aria-pressed={viewMode === 'list'}
                   className={`view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
                   onClick={() => setViewMode('list')}
                 >

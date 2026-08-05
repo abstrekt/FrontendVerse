@@ -2,14 +2,68 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
-    <meta name="theme-color" content="#4338ca" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>JavaScript MCQ Quiz</title>
+    <meta
+      name="description"
+      content="Practise JavaScript with multiple-choice questions, output prediction, coding challenges and written learnings — with progress tracking, spaced repetition and full keyboard support."
+    />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- iOS ignores SVG here, so this must be a raster icon. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#f0f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="JavaScript MCQ Quiz" />
+    <meta
+      property="og:description"
+      content="Practise JavaScript with multiple-choice questions, output prediction, coding challenges and written learnings."
+    />
+    <meta name="twitter:card" content="summary" />
+
+    <!--
+      Applied before first paint. Without this, a user whose stored preference
+      is dark gets a white flash on every load while React boots.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = JSON.parse(localStorage.getItem('quiz-theme'));
+          var theme =
+            stored === 'dark' || stored === 'light'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div
+        style="
+          max-width: 40rem;
+          margin: 4rem auto;
+          padding: 0 1.5rem;
+          font-family: system-ui, sans-serif;
+          line-height: 1.6;
+        "
+      >
+        <h1>JavaScript MCQ Quiz</h1>
+        <p>
+          This quiz runs your answers against a real JavaScript engine in your browser, so it
+          needs JavaScript enabled. Please turn it on and reload.
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

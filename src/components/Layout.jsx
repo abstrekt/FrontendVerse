@@ -12,7 +12,8 @@ export default function Layout({
 }) {
   return (
     <div className={`layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}${panelCollapsed ? ' panel-collapsed' : ''}`}>
-      <aside className="layout-sidebar">
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <aside className="layout-sidebar" aria-label="Sections and progress">
         {sidebar}
         <button
           type="button"
@@ -25,10 +26,10 @@ export default function Layout({
           <span className="chevron">{sidebarCollapsed ? '\u25B7' : '\u25C1'}</span>
         </button>
       </aside>
-      <main className="layout-center">
+      <main className="layout-center" id="main-content" tabIndex={-1}>
         <div className="center-card">{center}</div>
       </main>
-      <aside className="layout-panel">
+      <aside className="layout-panel" aria-label="Filters and options">
         <button
           type="button"
           className="layout-collapse-btn panel-collapse-btn"

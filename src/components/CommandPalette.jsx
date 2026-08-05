@@ -6,6 +6,10 @@ import {
   searchIndex,
   tokenizeQuery,
 } from '../utils/searchIndex';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+
+const LISTBOX_ID = 'command-palette-results';
+const optionId = (index) => `command-palette-option-${index}`;
 
 const SECTION_CHIP_LABELS = {
   all: 'All',
@@ -35,15 +39,18 @@ function HighlightedText({ text, ranges, className }) {
   );
 }
 
-function SearchResultCard({ result, isActive, onSelect, onHover }) {
+function SearchResultCard({ result, id, isActive, onSelect, onHover }) {
   const matchedTagSet = useMemo(
     () => new Set(result.matchedTags.map((tag) => tag.toLowerCase())),
     [result.matchedTags]
   );
 
   return (
-    <button
-      type="button"
+    // A listbox option must not be independently focusable — focus stays in the
+    // combobox input and `aria-activedescendant` points here, which is what
+    // makes arrowing through results actually get announced.
+    <div
+      id={id}
       role="option"
       aria-selected={isActive}
       className={`search-result-card${isActive ? ' active' : ''}`}
@@ -93,7 +100,7 @@ function SearchResultCard({ result, isActive, onSelect, onHover }) {
           ) : null}
         </div>
       ) : null}
-    </button>
+    </div>
   );
 }
 
@@ -103,6 +110,7 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
 
   const results = useMemo(
@@ -140,8 +148,18 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
     previousFocusRef.current = document.activeElement;
     const timer = window.setTimeout(() => inputRef.current?.focus(), 0);
 
-    return () => window.clearTimeout(timer);
+    // Stop the page behind the dialog from scrolling with the wheel.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.clearTimeout(timer);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
+
+  // Tab used to walk straight out of the dialog into the page behind it.
+  useFocusTrap(dialogRef, open, handleClose);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -150,13 +168,8 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
   useEffect(() => {
     if (!open) return undefined;
 
+    // Escape is handled by the focus trap.
     function onKeyDown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        handleClose();
-        return;
-      }
-
       if (event.key === 'ArrowDown') {
         event.preventDefault();
         if (!results.length) return;
@@ -196,6 +209,7 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
         role="dialog"
         aria-modal="true"
         aria-label="Search"
+        ref={dialogRef}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="command-palette-input-row">
@@ -210,19 +224,22 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             aria-label="Search"
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls={LISTBOX_ID}
+            aria-activedescendant={results.length > 0 ? optionId(activeIndex) : undefined}
             autoComplete="off"
             spellCheck={false}
           />
           <kbd className="command-palette-kbd">Esc</kbd>
         </div>
 
-        <div className="command-palette-filters" role="tablist" aria-label="Filter by section">
+        <div className="command-palette-filters" role="group" aria-label="Filter by section">
           {SEARCH_SECTIONS.map((section) => (
             <button
               key={section}
               type="button"
-              role="tab"
-              aria-selected={sectionFilter === section}
+              aria-pressed={sectionFilter === section}
               className={`command-palette-filter${sectionFilter === section ? ' active' : ''}`}
               onClick={() => setSectionFilter(section)}
             >
@@ -231,7 +248,13 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
           ))}
         </div>
 
-        <div className="command-palette-results" ref={listRef} role="listbox" aria-label="Search results">
+        <div
+          className="command-palette-results"
+          ref={listRef}
+          id={LISTBOX_ID}
+          role="listbox"
+          aria-label="Search results"
+        >
           {!hasQuery ? (
             <div className="command-palette-empty">
               <p>Type to search across MCQs, learnings, coding challenges, and output questions.</p>
@@ -248,6 +271,7 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
             results.map((result, index) => (
               <SearchResultCard
                 key={result.key}
+                id={optionId(index)}
                 result={result}
                 isActive={index === activeIndex}
                 onSelect={handleSelect}

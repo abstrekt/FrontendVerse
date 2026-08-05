@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CodeBody from './CodeBody';
 import DifficultyBadge from './DifficultyBadge';
 import OptionList from './OptionList';
@@ -6,6 +6,8 @@ import Explanation from './Explanation';
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
 import { clampPct } from '../utils/passProgress';
+import { presentOptions } from '../utils/optionOrder';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 export default function QuizQuestion({
   question,
@@ -27,14 +29,28 @@ export default function QuizQuestion({
   const [showOptions, setShowOptions] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [selected, setSelected] = useState(null);
+  const headingRef = useRef(null);
 
   const isLast = remaining === 1;
   const progressPct = clampPct(sessionTotal, remaining);
 
+  // Options are presented in a stable, id-seeded order so the correct answer
+  // is not disproportionately B. `answer` is the *displayed* key.
+  const { options, answer } = useMemo(
+    () => presentOptions(question.options, question.answer, question.id),
+    [question.options, question.answer, question.id]
+  );
+
+  // Move focus to the question when a new one appears, so a screen-reader user
+  // pressing Next lands on the new content instead of losing their place.
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [question.id]);
+
   function handlePick(key) {
     if (selected !== null) return;
     setSelected(key);
-    onPick(key === question.answer, question);
+    onPick(key === answer, question);
   }
 
   function resetQuestionView() {
@@ -57,6 +73,34 @@ export default function QuizQuestion({
     onSkip(question);
     resetQuestionView();
   }
+
+  function pickByIndex(index) {
+    const option = options[index];
+    if (!option) return;
+    setShowOptions(true);
+    handlePick(option.key);
+  }
+
+  const shortcuts = useMemo(() => {
+    const map = {
+      Enter: handleNext,
+      n: handleNext,
+      ArrowRight: handleNext,
+      s: handleSkip,
+      o: () => setShowOptions((open) => !open),
+      e: () => setShowExplanation((open) => !open),
+    };
+    // 1-4 and a-d pick an option, matching what is on screen.
+    options.forEach((option, index) => {
+      map[String(index + 1)] = () => pickByIndex(index);
+      map[option.key.toLowerCase()] = () => pickByIndex(index);
+    });
+    return map;
+  }, [options, selected, question.id]);
+
+  useKeyboardShortcuts(shortcuts);
+
+  const answeredResult = selected === null ? null : selected === answer;
 
   return (
     <div className="quiz-container">
@@ -91,30 +135,45 @@ export default function QuizQuestion({
               ))}
             </div>
           )}
-          <h2 className="question-text">{question.question}</h2>
+          <h1 className="question-text" tabIndex={-1} ref={headingRef}>
+            {question.question}
+          </h1>
           {question.body && (
             <CodeBody content={question.body} highlight={highlight} theme={theme} />
           )}
         </div>
+
+        {/* Correct/incorrect is otherwise conveyed only by colour and an icon. */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {answeredResult === null
+            ? ''
+            : answeredResult
+              ? `Correct. The answer is ${answer}.`
+              : `Incorrect. You chose ${selected}. The answer is ${answer}.`}
+        </p>
 
         <div className="quiz-controls">
           <div className="quiz-toggles">
             <button
               type="button"
               className={`toggle-btn${showOptions ? ' open' : ''}`}
+              aria-expanded={showOptions}
               onClick={() => setShowOptions(!showOptions)}
             >
-              <span className="chevron">{showOptions ? '▾' : '▸'}</span>
+              <span className="chevron" aria-hidden="true">{showOptions ? '▾' : '▸'}</span>
               {showOptions ? 'Hide options' : 'Show options'}
+              <kbd className="shortcut-hint">O</kbd>
             </button>
 
             <button
               type="button"
               className={`toggle-btn${showExplanation ? ' open' : ''}`}
+              aria-expanded={showExplanation}
               onClick={() => setShowExplanation(!showExplanation)}
             >
-              <span className="chevron">{showExplanation ? '▾' : '▸'}</span>
+              <span className="chevron" aria-hidden="true">{showExplanation ? '▾' : '▸'}</span>
               {showExplanation ? 'Hide explanation' : 'Show explanation'}
+              <kbd className="shortcut-hint">E</kbd>
             </button>
           </div>
 
@@ -123,9 +182,9 @@ export default function QuizQuestion({
               {showOptions && (
                 <div className="options-panel expanded">
                   <OptionList
-                    options={question.options}
+                    options={options}
                     selected={selected}
-                    answer={question.answer}
+                    answer={answer}
                     onPick={handlePick}
                   />
                 </div>
@@ -135,7 +194,8 @@ export default function QuizQuestion({
                 <div className="explanation-panel expanded">
                   <Explanation
                     content={question.explanation}
-                    answer={question.answer}
+                    answer={answer}
+                    revealAnswer={selected !== null}
                     highlight={highlight}
                     theme={theme}
                   />

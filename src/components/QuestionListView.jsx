@@ -49,13 +49,12 @@ export default function QuestionListView({
         <div className="quiz-header-top">
           <span className="progress">{scopeLabel} ({visible.length})</span>
         </div>
-        <div className="list-status-filters" role="tablist" aria-label="Filter by status">
+        <div className="list-status-filters" role="group" aria-label="Filter by status">
           {QUESTION_STATUS_FILTERS.map((filter) => (
             <button
               key={filter.id}
               type="button"
-              role="tab"
-              aria-selected={statusFilter === filter.id}
+              aria-pressed={statusFilter === filter.id}
               className={`list-status-chip${statusFilter === filter.id ? ' active' : ''} status-${filter.id}`}
               onClick={() => setStatusFilter(filter.id)}
             >

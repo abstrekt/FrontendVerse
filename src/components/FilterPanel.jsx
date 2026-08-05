@@ -62,15 +62,13 @@ export default function FilterPanel({
       <div className="difficulty-panel">
         <div className="panel-subheader">
           <span>Difficulty</span>
-          <button
-            type="button"
-            className={`clear-btn${hasActiveFilters ? '' : ' hidden'}`}
-            onClick={onClear}
-            disabled={!hasActiveFilters}
-            aria-hidden={!hasActiveFilters}
-          >
-            Clear all
-          </button>
+          {/* Conditionally rendered rather than hidden: aria-hidden on a
+              focusable button is a well-known antipattern. */}
+          {hasActiveFilters && (
+            <button type="button" className="clear-btn" onClick={onClear}>
+              Clear all
+            </button>
+          )}
         </div>
 
         <ul className="filter-list difficulty-filter-list">

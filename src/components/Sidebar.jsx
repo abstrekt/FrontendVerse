@@ -53,9 +53,12 @@ export default function Sidebar({
   onOpenSearch,
 }) {
   const count = filteredCount ?? totalQuestions;
-  const searchShortcut = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-    ? '⌘K'
-    : 'Ctrl+K';
+  // `navigator.platform` is deprecated and frozen or absent in some browsers,
+  // which had Mac users seeing the Ctrl+K hint.
+  const isApple =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPhone|iPad|iPod/.test(navigator.userAgentData?.platform ?? navigator.userAgent);
+  const searchShortcut = isApple ? '⌘K' : 'Ctrl+K';
 
   const subtitle =
     activeSection === "archived"
@@ -242,16 +245,19 @@ export default function Sidebar({
           className={`panel-control-btn${syntaxHighlight ? " active" : ""}`}
           onClick={onToggleHighlight}
           title="Toggle syntax highlighting"
+          aria-label="Syntax highlighting"
+          aria-pressed={syntaxHighlight}
         >
-          {"{ }"}
+          <span aria-hidden="true">{"{ }"}</span>
         </button>
         <button
           type="button"
           className="panel-control-btn"
           onClick={onToggleTheme}
           title="Toggle theme"
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
         >
-          {theme === "light" ? "☽" : "☀"}
+          <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
         </button>
         </div>
       </div>
