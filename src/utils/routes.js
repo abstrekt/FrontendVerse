@@ -23,6 +23,15 @@ export function parseRoute(pathname) {
     };
   }
 
+  if (parts[0] === 'react-guide') {
+    const parsedId = parts[1] ? Number(parts[1]) : null;
+    return {
+      section: 'react-guide',
+      viewMode: 'quiz',
+      learningId: Number.isFinite(parsedId) ? parsedId : null,
+    };
+  }
+
   if (parts[0] === 'hld') {
     const parsedId = parts[1] ? Number(parts[1]) : null;
     return {
@@ -64,6 +73,10 @@ export function buildRoute({ section = 'mcq', viewMode = 'quiz', learningId = nu
 
   if (section === 'react-learnings') {
     return learningId ? `/react-learnings/${learningId}` : '/react-learnings';
+  }
+
+  if (section === 'react-guide') {
+    return learningId ? `/react-guide/${learningId}` : '/react-guide';
   }
 
   if (section === 'hld') {

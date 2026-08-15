@@ -69,6 +69,7 @@ import polyfillLearningsData from '../data/polyfill-learnings.json';
 import tekionInterviewLearningsData from '../data/tekion-interview-learnings.json';
 import wtfjsLearningsData from '../data/wtfjs-learnings.json';
 import reactLearningsData from '../data/react-learnings.json';
+import reactGuideData from '../data/react-guide.json';
 import hldLearningsData from '../data/hld-learnings.json';
 import algorithmLearningsData from '../data/algorithm-learnings.json';
 import devtoInterviewLearningsData from '../data/devto-interview-learnings.json';
@@ -162,11 +163,12 @@ export default function App() {
   const [questions, setQuestions] = useState([]);
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
+  const [reactGuide, setReactGuide] = useState([]);
   const [hldLearnings, setHldLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
   const [outputQuestions, setOutputQuestions] = useState([]);
   const [outputSourceUrl, setOutputSourceUrl] = useState('');
-  const { route, navigate, setSection, setViewMode, setLearningId, setReactLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
+  const { route, navigate, setSection, setViewMode, setLearningId, setReactLearningId, setReactGuideLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
@@ -213,6 +215,10 @@ export default function App() {
     () => filterActive(reactLearnings, 'react-learnings', archived),
     [reactLearnings, archived]
   );
+  const activeReactGuide = useMemo(
+    () => filterActive(reactGuide, 'react-guide', archived),
+    [reactGuide, archived]
+  );
   const activeHldLearnings = useMemo(
     () => filterActive(hldLearnings, 'hld', archived),
     [hldLearnings, archived]
@@ -244,6 +250,10 @@ export default function App() {
     () => (starredFilter['react-learnings'] ? filterStarred(activeReactLearnings, 'react-learnings', starred) : activeReactLearnings),
     [activeReactLearnings, starredFilter, starred]
   );
+  const starredActiveReactGuide = useMemo(
+    () => (starredFilter['react-guide'] ? filterStarred(activeReactGuide, 'react-guide', starred) : activeReactGuide),
+    [activeReactGuide, starredFilter, starred]
+  );
   const starredActiveHldLearnings = useMemo(
     () => (starredFilter.hld ? filterStarred(activeHldLearnings, 'hld', starred) : activeHldLearnings),
     [activeHldLearnings, starredFilter.hld, starred]
@@ -259,6 +269,10 @@ export default function App() {
   const orderedStarredActiveReactLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveReactLearnings, 'react-learnings', completed),
     [starredActiveReactLearnings, completed]
+  );
+  const orderedStarredActiveReactGuide = useMemo(
+    () => sortCompletedToEnd(starredActiveReactGuide, 'react-guide', completed),
+    [starredActiveReactGuide, completed]
   );
   const orderedStarredActiveHldLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveHldLearnings, 'hld', completed),
@@ -297,6 +311,10 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'react-learnings', activeReactLearnings),
     [completed, activeReactLearnings]
   );
+  const reactGuideCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'react-guide', activeReactGuide),
+    [completed, activeReactGuide]
+  );
   const hldCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'hld', activeHldLearnings),
     [completed, activeHldLearnings]
@@ -307,6 +325,7 @@ export default function App() {
   );
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
+  const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
   const algorithmStarredCount = useMemo(() => getStarredCount(starred, 'algorithm'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
@@ -318,6 +337,7 @@ export default function App() {
         mcq: activeQuestions,
         learnings: activeLearnings,
         reactLearnings: activeReactLearnings,
+        reactGuide: activeReactGuide,
         hld: activeHldLearnings,
         algorithm: activeAlgorithmLearnings,
         coding: activeCodingQuestions,
@@ -327,6 +347,7 @@ export default function App() {
       activeQuestions,
       activeLearnings,
       activeReactLearnings,
+      activeReactGuide,
       activeHldLearnings,
       activeAlgorithmLearnings,
       activeCodingQuestions,
@@ -451,6 +472,14 @@ export default function App() {
     return orderedStarredActiveReactLearnings[0] ?? null;
   }, [orderedStarredActiveReactLearnings, route.learningId, activeSection]);
 
+  const selectedReactGuideEntry = useMemo(() => {
+    if (activeSection !== 'react-guide') return null;
+    if (route.learningId) {
+      return orderedStarredActiveReactGuide.find((item) => item.id === route.learningId) ?? orderedStarredActiveReactGuide[0] ?? null;
+    }
+    return orderedStarredActiveReactGuide[0] ?? null;
+  }, [orderedStarredActiveReactGuide, route.learningId, activeSection]);
+
   const selectedHldLearning = useMemo(() => {
     if (activeSection !== 'hld') return null;
     if (route.learningId) {
@@ -490,6 +519,13 @@ export default function App() {
       setReactLearningId(orderedStarredActiveReactLearnings[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveReactLearnings, setReactLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'react-guide' || !orderedStarredActiveReactGuide.length) return;
+    if (route.learningId && !orderedStarredActiveReactGuide.some((item) => item.id === route.learningId)) {
+      setReactGuideLearningId(orderedStarredActiveReactGuide[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveReactGuide, setReactGuideLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'hld' || !orderedStarredActiveHldLearnings.length) return;
@@ -629,6 +665,7 @@ export default function App() {
     setQuestions(allQuestions);
     setLearnings(allLearnings);
     setReactLearnings(reactLearningsData.learnings);
+    setReactGuide(reactGuideData.learnings);
     setHldLearnings(hldLearningsData.learnings);
     setAlgorithmLearnings(algorithmLearningsData.learnings);
     setOutputQuestions(allOutputQuestions);
@@ -871,6 +908,10 @@ export default function App() {
         setSection('react-learnings', { learningId: id });
         return;
       }
+      if (section === 'react-guide') {
+        setSection('react-guide', { learningId: id });
+        return;
+      }
       if (section === 'hld') {
         setSection('hld', { learningId: id });
         return;
@@ -934,6 +975,10 @@ export default function App() {
   const handleToggleReactLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('react-learnings', orderedStarredActiveReactLearnings, setReactLearningId, completed, setCompleted),
     [orderedStarredActiveReactLearnings, setReactLearningId, completed, setCompleted]
+  );
+  const handleToggleReactGuideCompleted = useMemo(
+    () => makeLearningToggleCompleted('react-guide', orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted),
+    [orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted]
   );
   const handleToggleHldLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('hld', orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted),
@@ -1010,6 +1055,23 @@ export default function App() {
       }
     },
     [setStarredFilter, activeReactLearnings, starred, route.learningId, setReactLearningId]
+  );
+
+  const handleReactGuideStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'react-guide': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeReactGuide, 'react-guide', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setReactGuideLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeReactGuide, starred, route.learningId, setReactGuideLearningId]
   );
 
   const handleHldStarredFilterChange = useCallback(
@@ -1110,6 +1172,18 @@ export default function App() {
       }
     },
     [setArchived, archived, reactLearnings, route.learningId, setReactLearningId]
+  );
+
+  const handleArchiveReactGuide = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'react-guide', learning.id));
+      const nextArchived = archiveId(archived, 'react-guide', learning.id);
+      const nextActive = filterActive(reactGuide, 'react-guide', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setReactGuideLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, reactGuide, route.learningId, setReactGuideLearningId]
   );
 
   const handleArchiveHldLearning = useCallback(
@@ -1651,6 +1725,8 @@ export default function App() {
             learningsCompletedCount={learningsCompletedCount}
             reactLearningsCount={activeReactLearnings.length}
             reactLearningsCompletedCount={reactLearningsCompletedCount}
+            reactGuideCount={activeReactGuide.length}
+            reactGuideCompletedCount={reactGuideCompletedCount}
             hldLearningsCount={activeHldLearnings.length}
             hldCompletedCount={hldCompletedCount}
             algorithmLearningsCount={activeAlgorithmLearnings.length}
@@ -1724,6 +1800,14 @@ export default function App() {
                 onClick={() => setSection('react-learnings')}
               >
                 React
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeSection === 'react-guide'}
+                className={`section-toggle-btn${activeSection === 'react-guide' ? ' active' : ''}`}
+                onClick={() => setSection('react-guide')}
+              >
+                Guide
               </button>
               <button
                 type="button"
@@ -1816,6 +1900,20 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'react-guide' ? (
+              <LearningsView
+                learning={selectedReactGuideEntry}
+                learnings={orderedStarredActiveReactGuide}
+                selectedLearningId={selectedReactGuideEntry?.id ?? null}
+                onSelectLearning={setReactGuideLearningId}
+                onArchive={handleArchiveReactGuide}
+                isStarred={selectedReactGuideEntry ? isStarred(selectedReactGuideEntry.id, 'react-guide', starred) : false}
+                onToggleStar={() => selectedReactGuideEntry && handleToggleStar('react-guide', selectedReactGuideEntry.id)}
+                isCompleted={selectedReactGuideEntry ? isCompleted(selectedReactGuideEntry.id, 'react-guide', completed) : false}
+                onToggleCompleted={() => selectedReactGuideEntry && handleToggleReactGuideCompleted(selectedReactGuideEntry.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+              />
             ) : activeSection === 'hld' ? (
               <LearningsView
                 learning={selectedHldLearning}
@@ -1850,6 +1948,7 @@ export default function App() {
                 questions={questions}
                 learnings={learnings}
                 reactLearnings={reactLearnings}
+                reactGuide={reactGuide}
                 hldLearnings={hldLearnings}
                 algorithmLearnings={algorithmLearnings}
                 codingQuestions={codingQuestions}
@@ -1902,6 +2001,20 @@ export default function App() {
                 onStarredOnlyChange={handleReactLearningsStarredFilterChange}
                 onSelect={setReactLearningId}
                 title="React learnings"
+              />
+            </div>
+          ) : activeSection === 'react-guide' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={orderedStarredActiveReactGuide}
+                starredIds={starred['react-guide']}
+                completedIds={completed['react-guide']}
+                selectedLearningId={selectedReactGuideEntry?.id ?? null}
+                starredOnly={starredFilter['react-guide']}
+                starredCount={reactGuideStarredCount}
+                onStarredOnlyChange={handleReactGuideStarredFilterChange}
+                onSelect={setReactGuideLearningId}
+                title="React Interview Mastery Guide"
               />
             </div>
           ) : activeSection === 'hld' ? (

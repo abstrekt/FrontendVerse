@@ -16,6 +16,7 @@ const SECTION_CHIP_LABELS = {
   mcq: 'MCQ',
   learnings: 'Learnings',
   'react-learnings': 'React',
+  'react-guide': 'React Guide',
   hld: 'HLD',
   algorithm: 'Algorithm',
   coding: 'Coding',

@@ -4,6 +4,7 @@ export const EMPTY_COMPLETED = {
   mcq: [],
   learnings: [],
   'react-learnings': [],
+  'react-guide': [],
   hld: [],
   algorithm: [],
   coding: [],

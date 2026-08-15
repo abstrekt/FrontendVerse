@@ -11,6 +11,8 @@ export default function Sidebar({
   learningsCompletedCount,
   reactLearningsCount,
   reactLearningsCompletedCount,
+  reactGuideCount,
+  reactGuideCompletedCount,
   hldLearningsCount,
   hldCompletedCount,
   algorithmLearningsCount,
@@ -69,6 +71,8 @@ export default function Sidebar({
         ? `${learningsCount} learning${learningsCount !== 1 ? "s" : ""} available`
         : activeSection === "react-learnings"
           ? `${reactLearningsCount} learning${reactLearningsCount !== 1 ? "s" : ""} available`
+          : activeSection === "react-guide"
+            ? `${reactGuideCount} entr${reactGuideCount !== 1 ? "ies" : "y"} available`
           : activeSection === "hld"
             ? `${hldLearningsCount} learning${hldLearningsCount !== 1 ? "s" : ""} available`
             : activeSection === "algorithm"
@@ -115,6 +119,17 @@ export default function Sidebar({
                 <span className="nav-icon">RL</span>
                 <span>React Learnings</span>
                 <span className="nav-count">{reactLearningsCompletedCount}/{reactLearningsCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "react-guide" ? "active" : ""}
+                onClick={() => onSectionChange("react-guide")}
+              >
+                <span className="nav-icon">RG</span>
+                <span>React Guide</span>
+                <span className="nav-count">{reactGuideCompletedCount}/{reactGuideCount}</span>
               </button>
             </li>
             <li>

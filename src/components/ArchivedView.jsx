@@ -6,7 +6,13 @@ function stripMarkdown(text) {
 
 function getItemLabel(section, item) {
   if (section === 'mcq') return item.question;
-  if (section === 'learnings' || section === 'react-learnings' || section === 'hld' || section === 'algorithm') {
+  if (
+    section === 'learnings' ||
+    section === 'react-learnings' ||
+    section === 'react-guide' ||
+    section === 'hld' ||
+    section === 'algorithm'
+  ) {
     return stripMarkdown(item.title);
   }
   if (section === 'coding') return item.title;
@@ -18,6 +24,7 @@ const SECTION_ITEMS = {
   mcq: 'questions',
   learnings: 'learnings',
   'react-learnings': 'reactLearnings',
+  'react-guide': 'reactGuide',
   hld: 'hldLearnings',
   algorithm: 'algorithmLearnings',
   coding: 'codingQuestions',
@@ -29,13 +36,14 @@ export default function ArchivedView({
   questions,
   learnings,
   reactLearnings,
+  reactGuide,
   hldLearnings,
   algorithmLearnings,
   codingQuestions,
   outputQuestions,
   onUnarchive,
 }) {
-  const pools = { questions, learnings, reactLearnings, hldLearnings, algorithmLearnings, codingQuestions, outputQuestions };
+  const pools = { questions, learnings, reactLearnings, reactGuide, hldLearnings, algorithmLearnings, codingQuestions, outputQuestions };
   const groups = SECTIONS.map((section) => ({
     section,
     label: SECTION_LABELS[section],
