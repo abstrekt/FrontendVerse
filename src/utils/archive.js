@@ -1,21 +1,27 @@
 export const EMPTY_ARCHIVED = {
+  'test-prep': [],
   mcq: [],
   learnings: [],
+  css: [],
   'react-learnings': [],
   'react-guide': [],
+  'advanced-react': [],
   hld: [],
   algorithm: [],
   coding: [],
   output: [],
 };
 
-export const SECTIONS = ['mcq', 'learnings', 'react-learnings', 'react-guide', 'hld', 'algorithm', 'coding', 'output'];
+export const SECTIONS = ['test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'coding', 'output'];
 
 export const SECTION_LABELS = {
+  'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  css: 'CSS',
   'react-learnings': 'React Learnings',
   'react-guide': 'React Guide',
+  'advanced-react': 'Advanced React',
   hld: 'HLD',
   algorithm: 'Algorithm',
   coding: 'Coding',

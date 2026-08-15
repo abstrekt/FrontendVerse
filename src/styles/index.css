@@ -1830,6 +1830,25 @@ body {
   margin: 14px 0;
 }
 
+.code-body a {
+  color: var(--accent, #4f46e5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.code-body a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.code-body a.internal-link {
+  font-weight: 600;
+  text-decoration-style: dotted;
+}
+
+.code-body a.internal-link:hover {
+  text-decoration-style: solid;
+}
+
 .code-body pre {
   background: var(--code-bg);
   border: 1px solid var(--border);
@@ -3719,6 +3738,26 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.search-section-badge.section-test-prep {
+  background: color-mix(in srgb, #db2777 14%, var(--card-bg));
+  color: #db2777;
+}
+
+.search-section-badge.section-css {
+  background: color-mix(in srgb, #0ea5e9 14%, var(--card-bg));
+  color: #0284c7;
+}
+
+.search-section-badge.section-advanced-react {
+  background: color-mix(in srgb, #7e22ce 14%, var(--card-bg));
+  color: #7e22ce;
+}
+
+.search-section-badge.section-react-guide {
+  background: color-mix(in srgb, #2563eb 14%, var(--card-bg));
+  color: #2563eb;
 }
 
 .search-section-badge.section-mcq {

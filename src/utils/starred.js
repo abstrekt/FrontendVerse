@@ -1,10 +1,13 @@
 import { SECTIONS } from './archive';
 
 export const EMPTY_STARRED = {
+  'test-prep': [],
   mcq: [],
   learnings: [],
+  css: [],
   'react-learnings': [],
   'react-guide': [],
+  'advanced-react': [],
   hld: [],
   algorithm: [],
   coding: [],
@@ -12,10 +15,13 @@ export const EMPTY_STARRED = {
 };
 
 export const EMPTY_STARRED_FILTER = {
+  'test-prep': false,
   mcq: false,
   learnings: false,
+  css: false,
   'react-learnings': false,
   'react-guide': false,
+  'advanced-react': false,
   hld: false,
   algorithm: false,
   coding: false,

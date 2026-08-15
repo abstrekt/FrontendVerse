@@ -1,10 +1,13 @@
 import { SECTIONS } from './archive.js';
 
 export const EMPTY_COMPLETED = {
+  'test-prep': [],
   mcq: [],
   learnings: [],
+  css: [],
   'react-learnings': [],
   'react-guide': [],
+  'advanced-react': [],
   hld: [],
   algorithm: [],
   coding: [],

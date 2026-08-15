@@ -13,10 +13,13 @@ const optionId = (index) => `command-palette-option-${index}`;
 
 const SECTION_CHIP_LABELS = {
   all: 'All',
+  'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  css: 'CSS',
   'react-learnings': 'React',
   'react-guide': 'React Guide',
+  'advanced-react': 'Advanced React',
   hld: 'HLD',
   algorithm: 'Algorithm',
   coding: 'Coding',

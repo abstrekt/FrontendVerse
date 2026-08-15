@@ -29,8 +29,8 @@ export function useAppRoute() {
   }, []);
 
   const setSection = useCallback(
-    (section, { learningId = null, viewMode = 'quiz' } = {}) => {
-      navigate(buildRoute({ section, viewMode, learningId }));
+    (section, { learningId = null, itemId = null, viewMode = 'quiz' } = {}) => {
+      navigate(buildRoute({ section, viewMode, learningId, itemId }));
     },
     [navigate]
   );
@@ -49,6 +49,13 @@ export function useAppRoute() {
     [navigate]
   );
 
+  const setCssLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'css', learningId }), options);
+    },
+    [navigate]
+  );
+
   const setReactLearningId = useCallback(
     (learningId, options) => {
       navigate(buildRoute({ section: 'react-learnings', learningId }), options);
@@ -59,6 +66,20 @@ export function useAppRoute() {
   const setReactGuideLearningId = useCallback(
     (learningId, options) => {
       navigate(buildRoute({ section: 'react-guide', learningId }), options);
+    },
+    [navigate]
+  );
+
+  const setTestPrepLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'test-prep', learningId }), options);
+    },
+    [navigate]
+  );
+
+  const setAdvancedReactLearningId = useCallback(
+    (learningId, options) => {
+      navigate(buildRoute({ section: 'advanced-react', learningId }), options);
     },
     [navigate]
   );
@@ -83,8 +104,11 @@ export function useAppRoute() {
     setSection,
     setViewMode,
     setLearningId,
+    setCssLearningId,
     setReactLearningId,
     setReactGuideLearningId,
+    setTestPrepLearningId,
+    setAdvancedReactLearningId,
     setHldLearningId,
     setAlgorithmLearningId,
   };

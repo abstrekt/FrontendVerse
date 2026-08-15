@@ -1,103 +1,78 @@
+const LEARNING_SECTIONS = [
+  'test-prep',
+  'learnings',
+  'css',
+  'react-learnings',
+  'react-guide',
+  'advanced-react',
+  'hld',
+  'algorithm',
+];
+
+const ITEM_SECTIONS = ['coding', 'output'];
+
+function parseId(part) {
+  const parsed = part ? Number(part) : null;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function emptyRoute(section, overrides = {}) {
+  return {
+    section,
+    viewMode: 'quiz',
+    learningId: null,
+    itemId: null,
+    ...overrides,
+  };
+}
+
 export function parseRoute(pathname) {
   const parts = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
 
   if (parts.length === 0) {
-    return { section: 'mcq', viewMode: 'quiz', learningId: null };
+    return emptyRoute('mcq');
   }
 
-  if (parts[0] === 'learnings') {
-    const parsedId = parts[1] ? Number(parts[1]) : null;
-    return {
-      section: 'learnings',
-      viewMode: 'quiz',
-      learningId: Number.isFinite(parsedId) ? parsedId : null,
-    };
+  if (LEARNING_SECTIONS.includes(parts[0])) {
+    return emptyRoute(parts[0], { learningId: parseId(parts[1]) });
   }
 
-  if (parts[0] === 'react-learnings') {
-    const parsedId = parts[1] ? Number(parts[1]) : null;
-    return {
-      section: 'react-learnings',
-      viewMode: 'quiz',
-      learningId: Number.isFinite(parsedId) ? parsedId : null,
-    };
-  }
-
-  if (parts[0] === 'react-guide') {
-    const parsedId = parts[1] ? Number(parts[1]) : null;
-    return {
-      section: 'react-guide',
-      viewMode: 'quiz',
-      learningId: Number.isFinite(parsedId) ? parsedId : null,
-    };
-  }
-
-  if (parts[0] === 'hld') {
-    const parsedId = parts[1] ? Number(parts[1]) : null;
-    return {
-      section: 'hld',
-      viewMode: 'quiz',
-      learningId: Number.isFinite(parsedId) ? parsedId : null,
-    };
-  }
-
-  if (parts[0] === 'algorithm') {
-    const parsedId = parts[1] ? Number(parts[1]) : null;
-    return {
-      section: 'algorithm',
-      viewMode: 'quiz',
-      learningId: Number.isFinite(parsedId) ? parsedId : null,
-    };
-  }
-
-  if (parts[0] === 'output') {
-    return { section: 'output', viewMode: 'quiz', learningId: null };
-  }
-
-  if (parts[0] === 'coding') {
-    return { section: 'coding', viewMode: 'quiz', learningId: null };
+  if (ITEM_SECTIONS.includes(parts[0])) {
+    return emptyRoute(parts[0], { itemId: parseId(parts[1]) });
   }
 
   if (parts[0] === 'archived') {
-    return { section: 'archived', viewMode: 'quiz', learningId: null };
+    return emptyRoute('archived');
   }
 
-  const viewMode = parts[1] === 'list' ? 'list' : 'quiz';
-  return { section: 'mcq', viewMode, learningId: null };
+  if (parts[1] === 'list') {
+    return emptyRoute('mcq', { viewMode: 'list' });
+  }
+
+  return emptyRoute('mcq', { itemId: parseId(parts[1]) });
 }
 
-export function buildRoute({ section = 'mcq', viewMode = 'quiz', learningId = null } = {}) {
-  if (section === 'learnings') {
-    return learningId ? `/learnings/${learningId}` : '/learnings';
+export function buildRoute({
+  section = 'mcq',
+  viewMode = 'quiz',
+  learningId = null,
+  itemId = null,
+} = {}) {
+  if (LEARNING_SECTIONS.includes(section)) {
+    return learningId ? `/${section}/${learningId}` : `/${section}`;
   }
 
-  if (section === 'react-learnings') {
-    return learningId ? `/react-learnings/${learningId}` : '/react-learnings';
-  }
-
-  if (section === 'react-guide') {
-    return learningId ? `/react-guide/${learningId}` : '/react-guide';
-  }
-
-  if (section === 'hld') {
-    return learningId ? `/hld/${learningId}` : '/hld';
-  }
-
-  if (section === 'algorithm') {
-    return learningId ? `/algorithm/${learningId}` : '/algorithm';
-  }
-
-  if (section === 'output') {
-    return '/output';
-  }
-
-  if (section === 'coding') {
-    return '/coding';
+  if (ITEM_SECTIONS.includes(section)) {
+    return itemId ? `/${section}/${itemId}` : `/${section}`;
   }
 
   if (section === 'archived') {
     return '/archived';
   }
 
-  return viewMode === 'list' ? '/mcq/list' : '/mcq';
+  if (viewMode === 'list') {
+    return '/mcq/list';
+  }
+
+  return itemId ? `/mcq/${itemId}` : '/mcq';
 }

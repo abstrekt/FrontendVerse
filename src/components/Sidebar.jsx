@@ -7,12 +7,18 @@ export default function Sidebar({
   onSectionChange,
   totalQuestions,
   filteredCount,
+  testPrepCount,
+  testPrepCompletedCount,
   learningsCount,
   learningsCompletedCount,
+  cssCount,
+  cssCompletedCount,
   reactLearningsCount,
   reactLearningsCompletedCount,
   reactGuideCount,
   reactGuideCompletedCount,
+  advancedReactCount,
+  advancedReactCompletedCount,
   hldLearningsCount,
   hldCompletedCount,
   algorithmLearningsCount,
@@ -65,14 +71,20 @@ export default function Sidebar({
   const subtitle =
     activeSection === "archived"
       ? `${archivedCount} archived item${archivedCount !== 1 ? "s" : ""}`
+      : activeSection === "test-prep"
+      ? `${testPrepCount} entr${testPrepCount !== 1 ? "ies" : "y"} available`
       : activeSection === "mcq"
       ? `${count} question${count !== 1 ? "s" : ""} available`
       : activeSection === "learnings"
         ? `${learningsCount} learning${learningsCount !== 1 ? "s" : ""} available`
+        : activeSection === "css"
+          ? `${cssCount} entr${cssCount !== 1 ? "ies" : "y"} available`
         : activeSection === "react-learnings"
           ? `${reactLearningsCount} learning${reactLearningsCount !== 1 ? "s" : ""} available`
           : activeSection === "react-guide"
             ? `${reactGuideCount} entr${reactGuideCount !== 1 ? "ies" : "y"} available`
+          : activeSection === "advanced-react"
+            ? `${advancedReactCount} entr${advancedReactCount !== 1 ? "ies" : "y"} available`
           : activeSection === "hld"
             ? `${hldLearningsCount} learning${hldLearningsCount !== 1 ? "s" : ""} available`
             : activeSection === "algorithm"
@@ -88,6 +100,17 @@ export default function Sidebar({
           <div className="sidebar-header">Sections</div>
           <p className="sidebar-subtitle">{subtitle}</p>
           <ul className="sidebar-nav">
+            <li>
+              <button
+                type="button"
+                className={activeSection === "test-prep" ? "active" : ""}
+                onClick={() => onSectionChange("test-prep")}
+              >
+                <span className="nav-icon">TP</span>
+                <span>Test Prep</span>
+                <span className="nav-count">{testPrepCompletedCount}/{testPrepCount}</span>
+              </button>
+            </li>
             <li>
               <button
                 type="button"
@@ -113,6 +136,17 @@ export default function Sidebar({
             <li>
               <button
                 type="button"
+                className={activeSection === "css" ? "active" : ""}
+                onClick={() => onSectionChange("css")}
+              >
+                <span className="nav-icon">CS</span>
+                <span>CSS</span>
+                <span className="nav-count">{cssCompletedCount}/{cssCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
                 className={activeSection === "react-learnings" ? "active" : ""}
                 onClick={() => onSectionChange("react-learnings")}
               >
@@ -130,6 +164,17 @@ export default function Sidebar({
                 <span className="nav-icon">RG</span>
                 <span>React Guide</span>
                 <span className="nav-count">{reactGuideCompletedCount}/{reactGuideCount}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={activeSection === "advanced-react" ? "active" : ""}
+                onClick={() => onSectionChange("advanced-react")}
+              >
+                <span className="nav-icon">AR</span>
+                <span>Advanced React</span>
+                <span className="nav-count">{advancedReactCompletedCount}/{advancedReactCount}</span>
               </button>
             </li>
             <li>

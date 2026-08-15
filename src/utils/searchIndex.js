@@ -1,8 +1,11 @@
 const SECTION_LABELS = {
+  'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  css: 'CSS',
   'react-learnings': 'React',
   'react-guide': 'React Guide',
+  'advanced-react': 'Advanced React',
   hld: 'HLD',
   algorithm: 'Algorithm',
   coding: 'Coding',
@@ -41,10 +44,13 @@ const SNIPPET_FIELDS = new Set(['body', 'explanation', 'description', 'code', 'o
 
 export const SEARCH_SECTIONS = [
   'all',
+  'test-prep',
   'mcq',
   'learnings',
+  'css',
   'react-learnings',
   'react-guide',
+  'advanced-react',
   'hld',
   'algorithm',
   'coding',
@@ -166,20 +172,26 @@ function buildOutputDoc(item) {
 }
 
 export function buildSearchIndex({
+  testPrep = [],
   mcq = [],
   learnings = [],
+  css = [],
   reactLearnings = [],
   reactGuide = [],
+  advancedReact = [],
   hld = [],
   algorithm = [],
   coding = [],
   output = [],
 } = {}) {
   return [
+    ...testPrep.map((item) => buildLearningDoc(item, 'test-prep')),
     ...mcq.map(buildMcqDoc),
     ...learnings.map((item) => buildLearningDoc(item, 'learnings')),
+    ...css.map((item) => buildLearningDoc(item, 'css')),
     ...reactLearnings.map((item) => buildLearningDoc(item, 'react-learnings')),
     ...reactGuide.map((item) => buildLearningDoc(item, 'react-guide')),
+    ...advancedReact.map((item) => buildLearningDoc(item, 'advanced-react')),
     ...hld.map((item) => buildLearningDoc(item, 'hld')),
     ...algorithm.map((item) => buildLearningDoc(item, 'algorithm')),
     ...coding.map(buildCodingDoc),

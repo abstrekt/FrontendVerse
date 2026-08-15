@@ -15,7 +15,7 @@ function resolveLanguage(lang) {
   return lang;
 }
 
-export default function CodeBody({ content, highlight, theme = 'light' }) {
+export default function CodeBody({ content, highlight, theme = 'light', onNavigate }) {
   const syntaxStyle = getSyntaxStyle(theme);
 
   return (
@@ -23,6 +23,38 @@ export default function CodeBody({ content, highlight, theme = 'light' }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          a({ href, children, ...props }) {
+            const isInternal = typeof href === 'string' && href.startsWith('/');
+
+            if (isInternal && onNavigate) {
+              return (
+                <a
+                  href={href}
+                  className="internal-link"
+                  onClick={(event) => {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) {
+                      return;
+                    }
+                    event.preventDefault();
+                    onNavigate(href);
+                  }}
+                  {...props}
+                >
+                  {children}
+                </a>
+              );
+            }
+
+            if (isInternal) {
+              return <a href={href} {...props}>{children}</a>;
+            }
+
+            return (
+              <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+                {children}
+              </a>
+            );
+          },
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const codeStr = String(children).replace(/\n$/, '');

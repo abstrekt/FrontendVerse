@@ -20,6 +20,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useLatestRef } from './hooks/useLatestRef';
 import { useAppRoute } from './hooks/useAppRoute';
+import { parseRoute } from './utils/routes';
 import {
   EMPTY_PROGRESS,
   filterQuestions,
@@ -65,11 +66,14 @@ import {
 } from './utils/practiceQueue';
 import questionsData from '../questions.json';
 import learningsData from '../data/learnings.json';
+import cssLearningsData from '../data/css-learnings.json';
 import polyfillLearningsData from '../data/polyfill-learnings.json';
 import tekionInterviewLearningsData from '../data/tekion-interview-learnings.json';
 import wtfjsLearningsData from '../data/wtfjs-learnings.json';
 import reactLearningsData from '../data/react-learnings.json';
 import reactGuideData from '../data/react-guide.json';
+import testPrepData from '../data/test-prep.json';
+import advancedReactData from '../data/advanced-react.json';
 import hldLearningsData from '../data/hld-learnings.json';
 import algorithmLearningsData from '../data/algorithm-learnings.json';
 import devtoInterviewLearningsData from '../data/devto-interview-learnings.json';
@@ -164,11 +168,14 @@ export default function App() {
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [reactGuide, setReactGuide] = useState([]);
+  const [testPrep, setTestPrep] = useState([]);
+  const [advancedReact, setAdvancedReact] = useState([]);
+  const [cssLearnings, setCssLearnings] = useState([]);
   const [hldLearnings, setHldLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
   const [outputQuestions, setOutputQuestions] = useState([]);
   const [outputSourceUrl, setOutputSourceUrl] = useState('');
-  const { route, navigate, setSection, setViewMode, setLearningId, setReactLearningId, setReactGuideLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
+  const { route, navigate, setSection, setViewMode, setLearningId, setCssLearningId, setReactLearningId, setReactGuideLearningId, setTestPrepLearningId, setAdvancedReactLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
@@ -219,6 +226,18 @@ export default function App() {
     () => filterActive(reactGuide, 'react-guide', archived),
     [reactGuide, archived]
   );
+  const activeTestPrep = useMemo(
+    () => filterActive(testPrep, 'test-prep', archived),
+    [testPrep, archived]
+  );
+  const activeAdvancedReact = useMemo(
+    () => filterActive(advancedReact, 'advanced-react', archived),
+    [advancedReact, archived]
+  );
+  const activeCssLearnings = useMemo(
+    () => filterActive(cssLearnings, 'css', archived),
+    [cssLearnings, archived]
+  );
   const activeHldLearnings = useMemo(
     () => filterActive(hldLearnings, 'hld', archived),
     [hldLearnings, archived]
@@ -254,6 +273,18 @@ export default function App() {
     () => (starredFilter['react-guide'] ? filterStarred(activeReactGuide, 'react-guide', starred) : activeReactGuide),
     [activeReactGuide, starredFilter, starred]
   );
+  const starredActiveTestPrep = useMemo(
+    () => (starredFilter['test-prep'] ? filterStarred(activeTestPrep, 'test-prep', starred) : activeTestPrep),
+    [activeTestPrep, starredFilter, starred]
+  );
+  const starredActiveCssLearnings = useMemo(
+    () => (starredFilter.css ? filterStarred(activeCssLearnings, 'css', starred) : activeCssLearnings),
+    [activeCssLearnings, starredFilter, starred]
+  );
+  const starredActiveAdvancedReact = useMemo(
+    () => (starredFilter['advanced-react'] ? filterStarred(activeAdvancedReact, 'advanced-react', starred) : activeAdvancedReact),
+    [activeAdvancedReact, starredFilter, starred]
+  );
   const starredActiveHldLearnings = useMemo(
     () => (starredFilter.hld ? filterStarred(activeHldLearnings, 'hld', starred) : activeHldLearnings),
     [activeHldLearnings, starredFilter.hld, starred]
@@ -273,6 +304,18 @@ export default function App() {
   const orderedStarredActiveReactGuide = useMemo(
     () => sortCompletedToEnd(starredActiveReactGuide, 'react-guide', completed),
     [starredActiveReactGuide, completed]
+  );
+  const orderedStarredActiveTestPrep = useMemo(
+    () => sortCompletedToEnd(starredActiveTestPrep, 'test-prep', completed),
+    [starredActiveTestPrep, completed]
+  );
+  const orderedStarredActiveCssLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveCssLearnings, 'css', completed),
+    [starredActiveCssLearnings, completed]
+  );
+  const orderedStarredActiveAdvancedReact = useMemo(
+    () => sortCompletedToEnd(starredActiveAdvancedReact, 'advanced-react', completed),
+    [starredActiveAdvancedReact, completed]
   );
   const orderedStarredActiveHldLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveHldLearnings, 'hld', completed),
@@ -315,6 +358,18 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'react-guide', activeReactGuide),
     [completed, activeReactGuide]
   );
+  const testPrepCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'test-prep', activeTestPrep),
+    [completed, activeTestPrep]
+  );
+  const cssCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'css', activeCssLearnings),
+    [completed, activeCssLearnings]
+  );
+  const advancedReactCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'advanced-react', activeAdvancedReact),
+    [completed, activeAdvancedReact]
+  );
   const hldCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'hld', activeHldLearnings),
     [completed, activeHldLearnings]
@@ -326,6 +381,9 @@ export default function App() {
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
+  const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
+  const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
+  const advancedReactStarredCount = useMemo(() => getStarredCount(starred, 'advanced-react'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
   const algorithmStarredCount = useMemo(() => getStarredCount(starred, 'algorithm'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
@@ -334,20 +392,26 @@ export default function App() {
   const searchDocs = useMemo(
     () =>
       buildSearchIndex({
+        testPrep: activeTestPrep,
         mcq: activeQuestions,
         learnings: activeLearnings,
         reactLearnings: activeReactLearnings,
         reactGuide: activeReactGuide,
+        advancedReact: activeAdvancedReact,
+        css: activeCssLearnings,
         hld: activeHldLearnings,
         algorithm: activeAlgorithmLearnings,
         coding: activeCodingQuestions,
         output: activeOutputQuestions,
       }),
     [
+      activeTestPrep,
       activeQuestions,
       activeLearnings,
       activeReactLearnings,
       activeReactGuide,
+      activeAdvancedReact,
+      activeCssLearnings,
       activeHldLearnings,
       activeAlgorithmLearnings,
       activeCodingQuestions,
@@ -480,6 +544,30 @@ export default function App() {
     return orderedStarredActiveReactGuide[0] ?? null;
   }, [orderedStarredActiveReactGuide, route.learningId, activeSection]);
 
+  const selectedTestPrepEntry = useMemo(() => {
+    if (activeSection !== 'test-prep') return null;
+    if (route.learningId) {
+      return orderedStarredActiveTestPrep.find((item) => item.id === route.learningId) ?? orderedStarredActiveTestPrep[0] ?? null;
+    }
+    return orderedStarredActiveTestPrep[0] ?? null;
+  }, [orderedStarredActiveTestPrep, route.learningId, activeSection]);
+
+  const selectedCssLearning = useMemo(() => {
+    if (activeSection !== 'css') return null;
+    if (route.learningId) {
+      return orderedStarredActiveCssLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveCssLearnings[0] ?? null;
+    }
+    return orderedStarredActiveCssLearnings[0] ?? null;
+  }, [orderedStarredActiveCssLearnings, route.learningId, activeSection]);
+
+  const selectedAdvancedReactEntry = useMemo(() => {
+    if (activeSection !== 'advanced-react') return null;
+    if (route.learningId) {
+      return orderedStarredActiveAdvancedReact.find((item) => item.id === route.learningId) ?? orderedStarredActiveAdvancedReact[0] ?? null;
+    }
+    return orderedStarredActiveAdvancedReact[0] ?? null;
+  }, [orderedStarredActiveAdvancedReact, route.learningId, activeSection]);
+
   const selectedHldLearning = useMemo(() => {
     if (activeSection !== 'hld') return null;
     if (route.learningId) {
@@ -526,6 +614,27 @@ export default function App() {
       setReactGuideLearningId(orderedStarredActiveReactGuide[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveReactGuide, setReactGuideLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'test-prep' || !orderedStarredActiveTestPrep.length) return;
+    if (route.learningId && !orderedStarredActiveTestPrep.some((item) => item.id === route.learningId)) {
+      setTestPrepLearningId(orderedStarredActiveTestPrep[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveTestPrep, setTestPrepLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'css' || !orderedStarredActiveCssLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveCssLearnings.some((item) => item.id === route.learningId)) {
+      setCssLearningId(orderedStarredActiveCssLearnings[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveCssLearnings, setCssLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'advanced-react' || !orderedStarredActiveAdvancedReact.length) return;
+    if (route.learningId && !orderedStarredActiveAdvancedReact.some((item) => item.id === route.learningId)) {
+      setAdvancedReactLearningId(orderedStarredActiveAdvancedReact[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveAdvancedReact, setAdvancedReactLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'hld' || !orderedStarredActiveHldLearnings.length) return;
@@ -666,6 +775,9 @@ export default function App() {
     setLearnings(allLearnings);
     setReactLearnings(reactLearningsData.learnings);
     setReactGuide(reactGuideData.learnings);
+    setTestPrep(testPrepData.learnings);
+    setAdvancedReact(advancedReactData.learnings);
+    setCssLearnings(cssLearningsData.learnings);
     setHldLearnings(hldLearningsData.learnings);
     setAlgorithmLearnings(algorithmLearningsData.learnings);
     setOutputQuestions(allOutputQuestions);
@@ -912,6 +1024,18 @@ export default function App() {
         setSection('react-guide', { learningId: id });
         return;
       }
+      if (section === 'test-prep') {
+        setSection('test-prep', { learningId: id });
+        return;
+      }
+      if (section === 'advanced-react') {
+        setSection('advanced-react', { learningId: id });
+        return;
+      }
+      if (section === 'css') {
+        setSection('css', { learningId: id });
+        return;
+      }
       if (section === 'hld') {
         setSection('hld', { learningId: id });
         return;
@@ -921,8 +1045,7 @@ export default function App() {
         return;
       }
       if (section === 'mcq') {
-        setSection('mcq');
-        setViewMode('quiz');
+        setSection('mcq', { itemId: id });
         setMcqQueue((state) => {
           const question = activeQuestions.find((q) => q.id === id);
           if (!question) return state;
@@ -934,12 +1057,12 @@ export default function App() {
         return;
       }
       if (section === 'coding') {
-        setSection('coding');
+        setSection('coding', { itemId: id });
         handleOpenCodingQuestion(id);
         return;
       }
       if (section === 'output') {
-        setSection('output');
+        setSection('output', { itemId: id });
         handleOpenOutputQuestion(id);
       }
     },
@@ -950,9 +1073,35 @@ export default function App() {
       getPracticeQueueQuestionIds,
       setMcqQueue,
       setSection,
-      setViewMode,
     ]
   );
+
+  // Markdown bodies can link to any item in the app (e.g. "/coding/13"). Reuse the
+  // search-result navigation rather than duplicating the per-section routing rules.
+  const handleInternalLink = useCallback(
+    (href) => {
+      const target = parseRoute(href);
+      const id = target.learningId ?? target.itemId;
+      if (id == null) {
+        setSection(target.section, { viewMode: target.viewMode });
+        return;
+      }
+      handleSearchSelect({ section: target.section, id });
+    },
+    [handleSearchSelect, setSection]
+  );
+
+  // A pasted or reloaded "/coding/13" has to promote that question once the data
+  // has loaded. Queue-backed sections cannot derive the item from the URL alone.
+  const deepLinkAppliedRef = useRef(false);
+  useEffect(() => {
+    if (loading || deepLinkAppliedRef.current) return;
+    if (route.itemId == null) return;
+    if (!['coding', 'output', 'mcq'].includes(route.section)) return;
+
+    deepLinkAppliedRef.current = true;
+    handleSearchSelect({ section: route.section, id: route.itemId });
+  }, [loading, route.section, route.itemId, handleSearchSelect]);
 
   const handleToggleStar = useCallback(
     (section, id) => {
@@ -979,6 +1128,21 @@ export default function App() {
   const handleToggleReactGuideCompleted = useMemo(
     () => makeLearningToggleCompleted('react-guide', orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted),
     [orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted]
+  );
+
+  const handleToggleTestPrepCompleted = useMemo(
+    () => makeLearningToggleCompleted('test-prep', orderedStarredActiveTestPrep, setTestPrepLearningId, completed, setCompleted),
+    [orderedStarredActiveTestPrep, setTestPrepLearningId, completed, setCompleted]
+  );
+
+  const handleToggleCssLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('css', orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted),
+    [orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted]
+  );
+
+  const handleToggleAdvancedReactCompleted = useMemo(
+    () => makeLearningToggleCompleted('advanced-react', orderedStarredActiveAdvancedReact, setAdvancedReactLearningId, completed, setCompleted),
+    [orderedStarredActiveAdvancedReact, setAdvancedReactLearningId, completed, setCompleted]
   );
   const handleToggleHldLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('hld', orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted),
@@ -1072,6 +1236,57 @@ export default function App() {
       }
     },
     [setStarredFilter, activeReactGuide, starred, route.learningId, setReactGuideLearningId]
+  );
+
+  const handleTestPrepStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'test-prep': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeTestPrep, 'test-prep', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setTestPrepLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeTestPrep, starred, route.learningId, setTestPrepLearningId]
+  );
+
+  const handleCssStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, css: value }));
+      if (value) {
+        const nextStarred = filterStarred(activeCssLearnings, 'css', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setCssLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeCssLearnings, starred, route.learningId, setCssLearningId]
+  );
+
+  const handleAdvancedReactStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'advanced-react': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeAdvancedReact, 'advanced-react', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setAdvancedReactLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeAdvancedReact, starred, route.learningId, setAdvancedReactLearningId]
   );
 
   const handleHldStarredFilterChange = useCallback(
@@ -1184,6 +1399,42 @@ export default function App() {
       }
     },
     [setArchived, archived, reactGuide, route.learningId, setReactGuideLearningId]
+  );
+
+  const handleArchiveTestPrep = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'test-prep', learning.id));
+      const nextArchived = archiveId(archived, 'test-prep', learning.id);
+      const nextActive = filterActive(testPrep, 'test-prep', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setTestPrepLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, testPrep, route.learningId, setTestPrepLearningId]
+  );
+
+  const handleArchiveCssLearning = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'css', learning.id));
+      const nextArchived = archiveId(archived, 'css', learning.id);
+      const nextActive = filterActive(cssLearnings, 'css', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setCssLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, cssLearnings, route.learningId, setCssLearningId]
+  );
+
+  const handleArchiveAdvancedReact = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'advanced-react', learning.id));
+      const nextArchived = archiveId(archived, 'advanced-react', learning.id);
+      const nextActive = filterActive(advancedReact, 'advanced-react', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setAdvancedReactLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, advancedReact, route.learningId, setAdvancedReactLearningId]
   );
 
   const handleArchiveHldLearning = useCallback(
@@ -1727,6 +1978,12 @@ export default function App() {
             reactLearningsCompletedCount={reactLearningsCompletedCount}
             reactGuideCount={activeReactGuide.length}
             reactGuideCompletedCount={reactGuideCompletedCount}
+            testPrepCount={activeTestPrep.length}
+            testPrepCompletedCount={testPrepCompletedCount}
+            cssCount={activeCssLearnings.length}
+            cssCompletedCount={cssCompletedCount}
+            advancedReactCount={activeAdvancedReact.length}
+            advancedReactCompletedCount={advancedReactCompletedCount}
             hldLearningsCount={activeHldLearnings.length}
             hldCompletedCount={hldCompletedCount}
             algorithmLearningsCount={activeAlgorithmLearnings.length}
@@ -1779,6 +2036,14 @@ export default function App() {
             <div className="section-toggle" role="group" aria-label="Section">
               <button
                 type="button"
+                aria-pressed={activeSection === 'test-prep'}
+                className={`section-toggle-btn${activeSection === 'test-prep' ? ' active' : ''}`}
+                onClick={() => setSection('test-prep')}
+              >
+                Test Prep
+              </button>
+              <button
+                type="button"
                 aria-pressed={activeSection === 'mcq'}
                 className={`section-toggle-btn${activeSection === 'mcq' ? ' active' : ''}`}
                 onClick={() => setSection('mcq', { viewMode })}
@@ -1800,6 +2065,14 @@ export default function App() {
                 onClick={() => setSection('react-learnings')}
               >
                 React
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeSection === 'advanced-react'}
+                className={`section-toggle-btn${activeSection === 'advanced-react' ? ' active' : ''}`}
+                onClick={() => setSection('advanced-react')}
+              >
+                Advanced
               </button>
               <button
                 type="button"
@@ -1900,6 +2173,51 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'test-prep' ? (
+              <LearningsView
+                learning={selectedTestPrepEntry}
+                learnings={orderedStarredActiveTestPrep}
+                selectedLearningId={selectedTestPrepEntry?.id ?? null}
+                onSelectLearning={setTestPrepLearningId}
+                onArchive={handleArchiveTestPrep}
+                isStarred={selectedTestPrepEntry ? isStarred(selectedTestPrepEntry.id, 'test-prep', starred) : false}
+                onToggleStar={() => selectedTestPrepEntry && handleToggleStar('test-prep', selectedTestPrepEntry.id)}
+                isCompleted={selectedTestPrepEntry ? isCompleted(selectedTestPrepEntry.id, 'test-prep', completed) : false}
+                onToggleCompleted={() => selectedTestPrepEntry && handleToggleTestPrepCompleted(selectedTestPrepEntry.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+                onNavigate={handleInternalLink}
+              />
+            ) : activeSection === 'css' ? (
+              <LearningsView
+                learning={selectedCssLearning}
+                learnings={orderedStarredActiveCssLearnings}
+                selectedLearningId={selectedCssLearning?.id ?? null}
+                onSelectLearning={setCssLearningId}
+                onArchive={handleArchiveCssLearning}
+                isStarred={selectedCssLearning ? isStarred(selectedCssLearning.id, 'css', starred) : false}
+                onToggleStar={() => selectedCssLearning && handleToggleStar('css', selectedCssLearning.id)}
+                isCompleted={selectedCssLearning ? isCompleted(selectedCssLearning.id, 'css', completed) : false}
+                onToggleCompleted={() => selectedCssLearning && handleToggleCssLearningCompleted(selectedCssLearning.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+                onNavigate={handleInternalLink}
+              />
+            ) : activeSection === 'advanced-react' ? (
+              <LearningsView
+                learning={selectedAdvancedReactEntry}
+                learnings={orderedStarredActiveAdvancedReact}
+                selectedLearningId={selectedAdvancedReactEntry?.id ?? null}
+                onSelectLearning={setAdvancedReactLearningId}
+                onArchive={handleArchiveAdvancedReact}
+                isStarred={selectedAdvancedReactEntry ? isStarred(selectedAdvancedReactEntry.id, 'advanced-react', starred) : false}
+                onToggleStar={() => selectedAdvancedReactEntry && handleToggleStar('advanced-react', selectedAdvancedReactEntry.id)}
+                isCompleted={selectedAdvancedReactEntry ? isCompleted(selectedAdvancedReactEntry.id, 'advanced-react', completed) : false}
+                onToggleCompleted={() => selectedAdvancedReactEntry && handleToggleAdvancedReactCompleted(selectedAdvancedReactEntry.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+                onNavigate={handleInternalLink}
+              />
             ) : activeSection === 'react-guide' ? (
               <LearningsView
                 learning={selectedReactGuideEntry}
@@ -1945,10 +2263,13 @@ export default function App() {
             ) : activeSection === 'archived' ? (
               <ArchivedView
                 archived={archived}
+                testPrep={testPrep}
                 questions={questions}
                 learnings={learnings}
                 reactLearnings={reactLearnings}
                 reactGuide={reactGuide}
+                advancedReact={advancedReact}
+                cssLearnings={cssLearnings}
                 hldLearnings={hldLearnings}
                 algorithmLearnings={algorithmLearnings}
                 codingQuestions={codingQuestions}
@@ -2001,6 +2322,48 @@ export default function App() {
                 onStarredOnlyChange={handleReactLearningsStarredFilterChange}
                 onSelect={setReactLearningId}
                 title="React learnings"
+              />
+            </div>
+          ) : activeSection === 'test-prep' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={orderedStarredActiveTestPrep}
+                starredIds={starred['test-prep']}
+                completedIds={completed['test-prep']}
+                selectedLearningId={selectedTestPrepEntry?.id ?? null}
+                starredOnly={starredFilter['test-prep']}
+                starredCount={testPrepStarredCount}
+                onStarredOnlyChange={handleTestPrepStarredFilterChange}
+                onSelect={setTestPrepLearningId}
+                title="HackerEarth Frontend Test Prep"
+              />
+            </div>
+          ) : activeSection === 'css' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={orderedStarredActiveCssLearnings}
+                starredIds={starred.css}
+                completedIds={completed.css}
+                selectedLearningId={selectedCssLearning?.id ?? null}
+                starredOnly={starredFilter.css}
+                starredCount={cssStarredCount}
+                onStarredOnlyChange={handleCssStarredFilterChange}
+                onSelect={setCssLearningId}
+                title="CSS"
+              />
+            </div>
+          ) : activeSection === 'advanced-react' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                learnings={orderedStarredActiveAdvancedReact}
+                starredIds={starred['advanced-react']}
+                completedIds={completed['advanced-react']}
+                selectedLearningId={selectedAdvancedReactEntry?.id ?? null}
+                starredOnly={starredFilter['advanced-react']}
+                starredCount={advancedReactStarredCount}
+                onStarredOnlyChange={handleAdvancedReactStarredFilterChange}
+                onSelect={setAdvancedReactLearningId}
+                title="Advanced React Course"
               />
             </div>
           ) : activeSection === 'react-guide' ? (

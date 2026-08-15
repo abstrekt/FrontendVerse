@@ -26,6 +26,7 @@ export default function LearningsView({
   onToggleCompleted,
   highlight,
   theme,
+  onNavigate,
 }) {
   const scrollRef = useRef(null);
 
@@ -86,7 +87,12 @@ export default function LearningsView({
 
       <div ref={scrollRef} className="learning-answer-scroll">
         <div className="learning-content learning-answer">
-          <CodeBody content={learning.answer} highlight={highlight} theme={theme} />
+          <CodeBody
+            content={learning.answer}
+            highlight={highlight}
+            theme={theme}
+            onNavigate={onNavigate}
+          />
         </div>
       </div>
     </div>
