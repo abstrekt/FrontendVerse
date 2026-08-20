@@ -21,7 +21,7 @@ Schemas, IDs, runners, merges, and verification live there. This command owns **
 2. If the source is a URL, fetch it (or ask only if fetch fails).
 3. Skim existing tags/topics in the target file(s) so new tags stay consistent with the corpus.
 4. **Dedupe** — search existing content before writing (see below). On a match, **compare** explanations/solutions/tests; skip, update, or merge — never silently re-add, never discard without comparing.
-5. Pick next available id(s) only for items that will actually be **added** (not updated/merged).
+5. Pick next globally unique id(s) for JS Learnings via `jq '.learnings | map(.id) | max' data/learnings.json` (or check other files). For other sections, use next id in the target file. Only for items that will actually be **added** (not updated/merged).
 6. Write content with a **`source`** field on every new or updated entry (see below). Do **not** commit unless asked.
 
 Ask the user only when the source is empty, contradictory (e.g. “add as MCQ and Coding only” with no material), or unsafe to guess (wrong language / not JS-quiz related). Prefer a one-line plan (“→ Coding, tags X; updated 1 duplicate, skipped 1”) then proceed, rather than a questionnaire.
