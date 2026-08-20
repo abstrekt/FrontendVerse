@@ -193,6 +193,7 @@ export default function App() {
   const [codingIncludeCompleted, setCodingIncludeCompleted] = useLocalStorage('coding-include-completed', true);
   const [completed, setCompleted] = useLocalStorage('quiz-completed', EMPTY_COMPLETED);
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
+  const [sectionCategory, setSectionCategory] = useLocalStorage('sidebar-section-category', 'all');
   const [panelCollapsed, setPanelCollapsed] = useLocalStorage('layout-panel-collapsed', false);
   const [codingProgress, setCodingProgress] = useState(() => loadCodingProgress());
   const [codingQueue, setCodingQueue] = usePracticeQueueStorage('coding-queue', 'coding-quiz-session');
@@ -1971,6 +1972,8 @@ export default function App() {
           <Sidebar
             activeSection={activeSection}
             onSectionChange={setSection}
+            sectionCategory={sectionCategory}
+            onSectionCategoryChange={setSectionCategory}
             totalQuestions={activeQuestions.length}
             learningsCount={activeLearnings.length}
             learningsCompletedCount={learningsCompletedCount}

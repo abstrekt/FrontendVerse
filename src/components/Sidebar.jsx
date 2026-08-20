@@ -2,9 +2,34 @@ import ProgressPanel from "./ProgressPanel";
 import OutputSidebarStats from "./OutputSidebarStats";
 import CodingSidebarStats from "./CodingSidebarStats";
 
+// Sections with no entry here (test-prep, archived) aren't tied to one
+// technology, so they stay visible no matter which category chip is active.
+const SECTION_CATEGORIES = {
+  "react-learnings": "react",
+  "react-guide": "react",
+  "advanced-react": "react",
+  mcq: "js",
+  learnings: "js",
+  coding: "js",
+  output: "js",
+  css: "css",
+  hld: "algo",
+  algorithm: "algo",
+};
+
+const CATEGORY_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "react", label: "React" },
+  { id: "js", label: "JS" },
+  { id: "css", label: "CSS" },
+  { id: "algo", label: "Algo" },
+];
+
 export default function Sidebar({
   activeSection,
   onSectionChange,
+  sectionCategory = "all",
+  onSectionCategoryChange,
   totalQuestions,
   filteredCount,
   testPrepCount,
@@ -68,6 +93,11 @@ export default function Sidebar({
     /Mac|iPhone|iPad|iPod/.test(navigator.userAgentData?.platform ?? navigator.userAgent);
   const searchShortcut = isApple ? '⌘K' : 'Ctrl+K';
 
+  const isSectionVisible = (sectionId) =>
+    sectionCategory === "all" ||
+    !SECTION_CATEGORIES[sectionId] ||
+    SECTION_CATEGORIES[sectionId] === sectionCategory;
+
   const subtitle =
     activeSection === "archived"
       ? `${archivedCount} archived item${archivedCount !== 1 ? "s" : ""}`
@@ -99,6 +129,21 @@ export default function Sidebar({
         <div className="sidebar-section">
           <div className="sidebar-header">Sections</div>
           <p className="sidebar-subtitle">{subtitle}</p>
+
+          <div className="sidebar-category-filter" role="group" aria-label="Filter sections by category">
+            {CATEGORY_FILTERS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={`category-chip${sectionCategory === id ? " active" : ""}`}
+                onClick={() => onSectionCategoryChange(id)}
+                aria-pressed={sectionCategory === id}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <ul className="sidebar-nav">
             <li>
               <button
@@ -111,116 +156,136 @@ export default function Sidebar({
                 <span className="nav-count">{testPrepCompletedCount}/{testPrepCount}</span>
               </button>
             </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "mcq" ? "active" : ""}
-                onClick={() => onSectionChange("mcq")}
-              >
-                <span className="nav-icon">JS</span>
-                <span>JavaScript MCQs</span>
-                <span className="nav-count">{mcqCompletedCount}/{totalQuestions}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "learnings" ? "active" : ""}
-                onClick={() => onSectionChange("learnings")}
-              >
-                <span className="nav-icon">LR</span>
-                <span>Javascript learnings</span>
-                <span className="nav-count">{learningsCompletedCount}/{learningsCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "css" ? "active" : ""}
-                onClick={() => onSectionChange("css")}
-              >
-                <span className="nav-icon">CS</span>
-                <span>CSS</span>
-                <span className="nav-count">{cssCompletedCount}/{cssCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "react-learnings" ? "active" : ""}
-                onClick={() => onSectionChange("react-learnings")}
-              >
-                <span className="nav-icon">RL</span>
-                <span>React Learnings</span>
-                <span className="nav-count">{reactLearningsCompletedCount}/{reactLearningsCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "react-guide" ? "active" : ""}
-                onClick={() => onSectionChange("react-guide")}
-              >
-                <span className="nav-icon">RG</span>
-                <span>React Guide</span>
-                <span className="nav-count">{reactGuideCompletedCount}/{reactGuideCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "advanced-react" ? "active" : ""}
-                onClick={() => onSectionChange("advanced-react")}
-              >
-                <span className="nav-icon">AR</span>
-                <span>Advanced React</span>
-                <span className="nav-count">{advancedReactCompletedCount}/{advancedReactCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "hld" ? "active" : ""}
-                onClick={() => onSectionChange("hld")}
-              >
-                <span className="nav-icon">HD</span>
-                <span>HLD</span>
-                <span className="nav-count">{hldCompletedCount}/{hldLearningsCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "algorithm" ? "active" : ""}
-                onClick={() => onSectionChange("algorithm")}
-              >
-                <span className="nav-icon">AL</span>
-                <span>Algorithm</span>
-                <span className="nav-count">{algorithmCompletedCount}/{algorithmLearningsCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "coding" ? "active" : ""}
-                onClick={() => onSectionChange("coding")}
-              >
-                <span className="nav-icon">CD</span>
-                <span>Javascript coding</span>
-                <span className="nav-count">{codingCompletedCount}/{codingQuestionsCount}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={activeSection === "output" ? "active" : ""}
-                onClick={() => onSectionChange("output")}
-              >
-                <span className="nav-icon">OP</span>
-                <span>Javascript output</span>
-                <span className="nav-count">{outputCompletedCount}/{outputQuestionsCount}</span>
-              </button>
-            </li>
+            {isSectionVisible("mcq") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "mcq" ? "active" : ""}
+                  onClick={() => onSectionChange("mcq")}
+                >
+                  <span className="nav-icon">JS</span>
+                  <span>JavaScript MCQs</span>
+                  <span className="nav-count">{mcqCompletedCount}/{totalQuestions}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("learnings") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "learnings" ? "active" : ""}
+                  onClick={() => onSectionChange("learnings")}
+                >
+                  <span className="nav-icon">LR</span>
+                  <span>Javascript learnings</span>
+                  <span className="nav-count">{learningsCompletedCount}/{learningsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("css") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "css" ? "active" : ""}
+                  onClick={() => onSectionChange("css")}
+                >
+                  <span className="nav-icon">CS</span>
+                  <span>CSS</span>
+                  <span className="nav-count">{cssCompletedCount}/{cssCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("react-learnings") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "react-learnings" ? "active" : ""}
+                  onClick={() => onSectionChange("react-learnings")}
+                >
+                  <span className="nav-icon">RL</span>
+                  <span>React Learnings</span>
+                  <span className="nav-count">{reactLearningsCompletedCount}/{reactLearningsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("react-guide") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "react-guide" ? "active" : ""}
+                  onClick={() => onSectionChange("react-guide")}
+                >
+                  <span className="nav-icon">RG</span>
+                  <span>React Guide</span>
+                  <span className="nav-count">{reactGuideCompletedCount}/{reactGuideCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("advanced-react") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "advanced-react" ? "active" : ""}
+                  onClick={() => onSectionChange("advanced-react")}
+                >
+                  <span className="nav-icon">AR</span>
+                  <span>Advanced React</span>
+                  <span className="nav-count">{advancedReactCompletedCount}/{advancedReactCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("hld") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "hld" ? "active" : ""}
+                  onClick={() => onSectionChange("hld")}
+                >
+                  <span className="nav-icon">HD</span>
+                  <span>HLD</span>
+                  <span className="nav-count">{hldCompletedCount}/{hldLearningsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("algorithm") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "algorithm" ? "active" : ""}
+                  onClick={() => onSectionChange("algorithm")}
+                >
+                  <span className="nav-icon">AL</span>
+                  <span>Algorithm</span>
+                  <span className="nav-count">{algorithmCompletedCount}/{algorithmLearningsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("coding") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "coding" ? "active" : ""}
+                  onClick={() => onSectionChange("coding")}
+                >
+                  <span className="nav-icon">CD</span>
+                  <span>Javascript coding</span>
+                  <span className="nav-count">{codingCompletedCount}/{codingQuestionsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("output") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "output" ? "active" : ""}
+                  onClick={() => onSectionChange("output")}
+                >
+                  <span className="nav-icon">OP</span>
+                  <span>Javascript output</span>
+                  <span className="nav-count">{outputCompletedCount}/{outputQuestionsCount}</span>
+                </button>
+              </li>
+            )}
             <li>
               <button
                 type="button"
