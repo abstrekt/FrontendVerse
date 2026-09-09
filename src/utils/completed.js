@@ -1,6 +1,7 @@
 import { SECTIONS } from './archive.js';
 
 export const EMPTY_COMPLETED = {
+  'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],

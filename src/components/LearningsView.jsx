@@ -8,17 +8,8 @@ function stripMarkdown(text) {
   return text.replace(/`([^`]+)`/g, '$1');
 }
 
-function truncateTitle(text, max = 26) {
-  const plain = stripMarkdown(text);
-  if (plain.length <= max) return plain;
-  return `${plain.slice(0, max)}…`;
-}
-
 export default function LearningsView({
   learning,
-  learnings,
-  selectedLearningId,
-  onSelectLearning,
   onArchive,
   isStarred = false,
   onToggleStar,
@@ -48,22 +39,6 @@ export default function LearningsView({
 
   return (
     <div className="quiz-container learnings-view">
-      <div className="learning-mobile-picker" role="group" aria-label="Select learning">
-        {learnings.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-pressed={item.id === selectedLearningId}
-            className={`learning-mobile-chip${item.id === selectedLearningId ? ' active' : ''}`}
-            onClick={() => onSelectLearning(item.id)}
-            title={`#${item.id} ${stripMarkdown(item.title)}`}
-          >
-            <span className="learning-mobile-chip-id">#{item.id}</span>
-            <span className="learning-mobile-chip-title">{truncateTitle(item.title)}</span>
-          </button>
-        ))}
-      </div>
-
       <div className="learning-header">
         <div className="learning-content">
           <LearningBadges company={learning.company} tags={learning.tags} />

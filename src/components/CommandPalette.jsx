@@ -252,6 +252,12 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
           ))}
         </div>
 
+        <p className="sr-only" role="status" aria-live="polite">
+          {hasQuery
+            ? `${results.length} result${results.length === 1 ? '' : 's'} for ${query.trim()}.`
+            : ''}
+        </p>
+
         <div
           className="command-palette-results"
           ref={listRef}
@@ -269,7 +275,23 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
           ) : results.length === 0 ? (
             <div className="command-palette-empty">
               <p>No results for &ldquo;{query.trim()}&rdquo;</p>
-              <p className="command-palette-hint">Try different keywords or clear the section filter.</p>
+              {sectionFilter !== 'all' ? (
+                <p className="command-palette-hint">
+                  You are only searching{' '}
+                  <strong>{SECTION_CHIP_LABELS[sectionFilter] ?? getSectionLabel(sectionFilter)}</strong>.{' '}
+                  <button
+                    type="button"
+                    className="command-palette-empty-action"
+                    onClick={() => setSectionFilter('all')}
+                  >
+                    Search all sections
+                  </button>
+                </p>
+              ) : (
+                <p className="command-palette-hint">
+                  Try fewer words, or a single term like <strong>closure</strong>.
+                </p>
+              )}
             </div>
           ) : (
             results.map((result, index) => (

@@ -1,4 +1,5 @@
 export const EMPTY_ARCHIVED = {
+  'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
@@ -12,9 +13,10 @@ export const EMPTY_ARCHIVED = {
   output: [],
 };
 
-export const SECTIONS = ['test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'coding', 'output'];
+export const SECTIONS = ['interview-prep', 'test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'coding', 'output'];
 
 export const SECTION_LABELS = {
+  'interview-prep': 'Interview Prep',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',

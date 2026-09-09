@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Icon from './Icon';
+import { themeButtonState } from '../utils/themeButton';
 
 const MODE_LABELS = {
   weak: 'Weak topics',
@@ -16,9 +18,11 @@ export default function MobileProgressBar({
   onReviewMistakes,
   onBackToAll,
   theme,
+  themeSource,
   onToggleTheme,
 }) {
   const [expanded, setExpanded] = useState(false);
+  const themeBtn = themeButtonState(theme, themeSource);
   const hasWeakTopics = weakTopics.length > 0;
   const hasData = sessionCount > 0 || lifetimeAccuracy !== null;
   const inSpecialMode = mode !== 'all';
@@ -30,10 +34,10 @@ export default function MobileProgressBar({
           type="button"
           className="mobile-theme-btn"
           onClick={onToggleTheme}
-          title="Toggle theme"
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          title={themeBtn.label}
+          aria-label={themeBtn.label}
         >
-          <span aria-hidden="true">{theme === 'light' ? '☽' : '☀'}</span>
+          <Icon name={themeBtn.icon} size={17} />
         </button>
 
         {hasData || missedCount > 0 || inSpecialMode ? (
@@ -60,7 +64,7 @@ export default function MobileProgressBar({
                 </span>
               )}
             </span>
-            <span className="mobile-chevron">{expanded ? '▾' : '▸'}</span>
+            <span className="mobile-chevron"><Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={14} /></span>
           </button>
         ) : (
           <span className="mobile-progress-placeholder">Your progress appears here</span>

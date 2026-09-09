@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import FilterPanel from './components/FilterPanel';
 import LearningsView from './components/LearningsView';
+import Skeleton from './components/Skeleton';
 import LearningsPanel from './components/LearningsPanel';
 import CodingPanel from './components/CodingPanel';
 import QuizQuestion from './components/QuizQuestion';
@@ -65,19 +66,6 @@ import {
   skipQuestionInQueue,
 } from './utils/practiceQueue';
 import questionsData from '../questions.json';
-import learningsData from '../data/learnings.json';
-import cssLearningsData from '../data/css-learnings.json';
-import polyfillLearningsData from '../data/polyfill-learnings.json';
-import tekionInterviewLearningsData from '../data/tekion-interview-learnings.json';
-import wtfjsLearningsData from '../data/wtfjs-learnings.json';
-import reactLearningsData from '../data/react-learnings.json';
-import reactGuideData from '../data/react-guide.json';
-import testPrepData from '../data/test-prep.json';
-import advancedReactData from '../data/advanced-react.json';
-import hldLearningsData from '../data/hld-learnings.json';
-import algorithmLearningsData from '../data/algorithm-learnings.json';
-import devtoInterviewLearningsData from '../data/devto-interview-learnings.json';
-import seniorFrontendLearningsData from '../data/senior-frontend-learnings.json';
 import outputQuestionsData from '../data/output-questions.json';
 import scopeOutputQuestionsData from '../data/scope-output-questions.json';
 import codingQuestionsData from '../data/coding-questions.json';
@@ -118,14 +106,28 @@ import {
 } from './utils/completed';
 import StarredFilterToggle from './components/StarredFilterToggle';
 import { buildSearchIndex } from './utils/searchIndex';
+import { loadLearningSection, LEARNING_LOADERS } from './data/datasets';
+import datasetCounts from '../data/counts.json';
 import { getPassScopeQuestions } from './utils/questionState';
 import { hasRunMigration, markMigrationRun } from './utils/migrations';
+import { useSystemTheme, getSystemTheme } from './hooks/useSystemTheme';
+import { useAnnounce } from './hooks/useAnnouncer';
+import { sectionLabel } from './sections/registry';
 
 const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
 
 function getPreferredTheme() {
-  if (typeof window === 'undefined' || !window.matchMedia) return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return getSystemTheme();
+}
+
+// Keeps the browser chrome in step with an explicit theme choice. The static
+// tags in index.html only respond to the OS setting, so without this the
+// address bar stays light while the app is dark.
+function syncThemeColorMeta(theme) {
+  const color = theme === 'dark' ? '#0f1117' : '#f0f2f7';
+  document
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((tag) => tag.setAttribute('content', color));
 }
 
 function makeLearningToggleCompleted(section, orderedList, setId, completed, setCompleted) {
@@ -168,20 +170,44 @@ export default function App() {
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [reactGuide, setReactGuide] = useState([]);
+  const [interviewPrep, setInterviewPrep] = useState([]);
   const [testPrep, setTestPrep] = useState([]);
   const [advancedReact, setAdvancedReact] = useState([]);
   const [cssLearnings, setCssLearnings] = useState([]);
   const [hldLearnings, setHldLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
+  // Which lazily-loaded learning datasets have arrived. Views read this to
+  // show a skeleton rather than an empty list while a chunk is in flight.
+  const [loadedSections, setLoadedSections] = useState({});
+
+  const sectionCount = useCallback(
+    (section, list) => (loadedSections[section] ? list.length : (datasetCounts[section] ?? 0)),
+    [loadedSections],
+  );
   const [outputQuestions, setOutputQuestions] = useState([]);
   const [outputSourceUrl, setOutputSourceUrl] = useState('');
-  const { route, navigate, setSection, setViewMode, setLearningId, setCssLearningId, setReactLearningId, setReactGuideLearningId, setTestPrepLearningId, setAdvancedReactLearningId, setHldLearningId, setAlgorithmLearningId } = useAppRoute();
+  const { route, navigate, setSection, setViewMode, learningSetters } = useAppRoute();
+  const {
+    'learnings': setLearningId,
+    'css': setCssLearningId,
+    'react-learnings': setReactLearningId,
+    'react-guide': setReactGuideLearningId,
+    'interview-prep': setInterviewPrepLearningId,
+    'test-prep': setTestPrepLearningId,
+    'advanced-react': setAdvancedReactLearningId,
+    'hld': setHldLearningId,
+    'algorithm': setAlgorithmLearningId,
+  } = learningSetters;
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
   // Default to the OS preference instead of always light, so a dark-mode user
   // does not get a white flash and a manual toggle on every new device.
   const [theme, setTheme] = useLocalStorage('quiz-theme', getPreferredTheme());
+  // Absent for anyone who used the app before the tri-state control existed.
+  // Defaulting them to 'system' is the intended behaviour, and it leaves the
+  // existing 'quiz-theme' value untouched.
+  const [themeSource, setThemeSource] = useLocalStorage('quiz-theme-source', 'system');
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
   const [mcqQueue, setMcqQueue] = usePracticeQueueStorage('mcq-queue', 'quiz-session');
@@ -226,6 +252,10 @@ export default function App() {
   const activeReactGuide = useMemo(
     () => filterActive(reactGuide, 'react-guide', archived),
     [reactGuide, archived]
+  );
+  const activeInterviewPrep = useMemo(
+    () => filterActive(interviewPrep, 'interview-prep', archived),
+    [interviewPrep, archived]
   );
   const activeTestPrep = useMemo(
     () => filterActive(testPrep, 'test-prep', archived),
@@ -274,6 +304,10 @@ export default function App() {
     () => (starredFilter['react-guide'] ? filterStarred(activeReactGuide, 'react-guide', starred) : activeReactGuide),
     [activeReactGuide, starredFilter, starred]
   );
+  const starredActiveInterviewPrep = useMemo(
+    () => (starredFilter['interview-prep'] ? filterStarred(activeInterviewPrep, 'interview-prep', starred) : activeInterviewPrep),
+    [activeInterviewPrep, starredFilter, starred]
+  );
   const starredActiveTestPrep = useMemo(
     () => (starredFilter['test-prep'] ? filterStarred(activeTestPrep, 'test-prep', starred) : activeTestPrep),
     [activeTestPrep, starredFilter, starred]
@@ -305,6 +339,10 @@ export default function App() {
   const orderedStarredActiveReactGuide = useMemo(
     () => sortCompletedToEnd(starredActiveReactGuide, 'react-guide', completed),
     [starredActiveReactGuide, completed]
+  );
+  const orderedStarredActiveInterviewPrep = useMemo(
+    () => sortCompletedToEnd(starredActiveInterviewPrep, 'interview-prep', completed),
+    [starredActiveInterviewPrep, completed]
   );
   const orderedStarredActiveTestPrep = useMemo(
     () => sortCompletedToEnd(starredActiveTestPrep, 'test-prep', completed),
@@ -359,6 +397,10 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'react-guide', activeReactGuide),
     [completed, activeReactGuide]
   );
+  const interviewPrepCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'interview-prep', activeInterviewPrep),
+    [completed, activeInterviewPrep]
+  );
   const testPrepCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'test-prep', activeTestPrep),
     [completed, activeTestPrep]
@@ -382,6 +424,7 @@ export default function App() {
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
+  const interviewPrepStarredCount = useMemo(() => getStarredCount(starred, 'interview-prep'), [starred]);
   const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
   const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
   const advancedReactStarredCount = useMemo(() => getStarredCount(starred, 'advanced-react'), [starred]);
@@ -393,6 +436,7 @@ export default function App() {
   const searchDocs = useMemo(
     () =>
       buildSearchIndex({
+        interviewPrep: activeInterviewPrep,
         testPrep: activeTestPrep,
         mcq: activeQuestions,
         learnings: activeLearnings,
@@ -406,6 +450,7 @@ export default function App() {
         output: activeOutputQuestions,
       }),
     [
+      activeInterviewPrep,
       activeTestPrep,
       activeQuestions,
       activeLearnings,
@@ -545,6 +590,14 @@ export default function App() {
     return orderedStarredActiveReactGuide[0] ?? null;
   }, [orderedStarredActiveReactGuide, route.learningId, activeSection]);
 
+  const selectedInterviewPrepEntry = useMemo(() => {
+    if (activeSection !== 'interview-prep') return null;
+    if (route.learningId) {
+      return orderedStarredActiveInterviewPrep.find((item) => item.id === route.learningId) ?? orderedStarredActiveInterviewPrep[0] ?? null;
+    }
+    return orderedStarredActiveInterviewPrep[0] ?? null;
+  }, [orderedStarredActiveInterviewPrep, route.learningId, activeSection]);
+
   const selectedTestPrepEntry = useMemo(() => {
     if (activeSection !== 'test-prep') return null;
     if (route.learningId) {
@@ -585,9 +638,40 @@ export default function App() {
     return orderedStarredActiveAlgorithmLearnings[0] ?? null;
   }, [orderedStarredActiveAlgorithmLearnings, route.learningId, activeSection]);
 
+  const announce = useAnnounce();
+
+  // Switching section swaps the whole centre pane with nothing spoken.
+  const handleSectionChange = useCallback(
+    (section, options) => {
+      setSection(section, options);
+      announce(sectionLabel(section));
+    },
+    [setSection, announce],
+  );
+
+  useSystemTheme(themeSource, setTheme);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    syncThemeColorMeta(theme);
   }, [theme]);
+
+  // System -> Light -> Dark -> System. Pinning light has to be reachable even
+  // when the OS is already light: otherwise a user who wants light gets
+  // switched to dark the moment the OS does.
+  const cycleTheme = useCallback(() => {
+    if (themeSource === 'system') {
+      setThemeSource('user');
+      setTheme('light');
+      return;
+    }
+    if (theme === 'light') {
+      setTheme('dark');
+      return;
+    }
+    setThemeSource('system');
+    setTheme(getSystemTheme());
+  }, [themeSource, theme, setTheme, setThemeSource]);
 
   useEffect(() => {
     if (window.location.pathname === '/' || window.location.pathname === '') {
@@ -615,6 +699,13 @@ export default function App() {
       setReactGuideLearningId(orderedStarredActiveReactGuide[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveReactGuide, setReactGuideLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'interview-prep' || !orderedStarredActiveInterviewPrep.length) return;
+    if (route.learningId && !orderedStarredActiveInterviewPrep.some((item) => item.id === route.learningId)) {
+      setInterviewPrepLearningId(orderedStarredActiveInterviewPrep[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveInterviewPrep, setInterviewPrepLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'test-prep' || !orderedStarredActiveTestPrep.length) return;
@@ -759,28 +850,12 @@ export default function App() {
 
   useEffect(() => {
     const allQuestions = questionsData.questions;
-    const allLearnings = [
-      ...learningsData.learnings,
-      ...polyfillLearningsData.learnings,
-      ...tekionInterviewLearningsData.learnings,
-      ...wtfjsLearningsData.learnings,
-      ...devtoInterviewLearningsData.learnings,
-      ...seniorFrontendLearningsData.learnings,
-    ];
     const allOutputQuestions = [
       ...outputQuestionsData.questions,
       ...scopeOutputQuestionsData.questions,
     ];
     const allCodingQuestions = codingQuestionsData.questions;
     setQuestions(allQuestions);
-    setLearnings(allLearnings);
-    setReactLearnings(reactLearningsData.learnings);
-    setReactGuide(reactGuideData.learnings);
-    setTestPrep(testPrepData.learnings);
-    setAdvancedReact(advancedReactData.learnings);
-    setCssLearnings(cssLearningsData.learnings);
-    setHldLearnings(hldLearningsData.learnings);
-    setAlgorithmLearnings(algorithmLearningsData.learnings);
     setOutputQuestions(allOutputQuestions);
     setOutputSourceUrl(outputQuestionsData.source);
     setCodingQuestions(allCodingQuestions);
@@ -832,6 +907,56 @@ export default function App() {
     });
 
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The learning datasets are code-split, so they arrive after first paint.
+  // The section the user actually landed on is fetched first; the rest follow
+  // when the main thread is idle, so opening the command palette or switching
+  // section is usually instant.
+  useEffect(() => {
+    const setters = {
+      learnings: setLearnings,
+      css: setCssLearnings,
+      'react-learnings': setReactLearnings,
+      'react-guide': setReactGuide,
+      'interview-prep': setInterviewPrep,
+      'test-prep': setTestPrep,
+      'advanced-react': setAdvancedReact,
+      hld: setHldLearnings,
+      algorithm: setAlgorithmLearnings,
+    };
+
+    let cancelled = false;
+
+    const load = (section) =>
+      loadLearningSection(section)
+        .then((items) => {
+          if (cancelled) return;
+          setters[section](items);
+          setLoadedSections((prev) => ({ ...prev, [section]: true }));
+        })
+        .catch((err) => {
+          // A failed chunk leaves that one section empty; the rest of the app
+          // keeps working, so this is logged rather than thrown.
+          console.error(`Could not load the "${section}" dataset.`, err);
+        });
+
+    const all = Object.keys(setters);
+    const first = all.includes(route.section) ? route.section : null;
+
+    const rest = () => all.filter((s) => s !== first).forEach(load);
+    const idle = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 200));
+
+    if (first) load(first).then(() => !cancelled && idle(rest));
+    else idle(rest);
+
+    return () => {
+      cancelled = true;
+    };
+    // Runs once: `route.section` is read only to decide which chunk to
+    // prioritise, and re-running on every navigation would refetch nothing
+    // useful (the loader caches) while resetting state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1025,6 +1150,10 @@ export default function App() {
         setSection('react-guide', { learningId: id });
         return;
       }
+      if (section === 'interview-prep') {
+        setSection('interview-prep', { learningId: id });
+        return;
+      }
       if (section === 'test-prep') {
         setSection('test-prep', { learningId: id });
         return;
@@ -1129,6 +1258,11 @@ export default function App() {
   const handleToggleReactGuideCompleted = useMemo(
     () => makeLearningToggleCompleted('react-guide', orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted),
     [orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted]
+  );
+
+  const handleToggleInterviewPrepCompleted = useMemo(
+    () => makeLearningToggleCompleted('interview-prep', orderedStarredActiveInterviewPrep, setInterviewPrepLearningId, completed, setCompleted),
+    [orderedStarredActiveInterviewPrep, setInterviewPrepLearningId, completed, setCompleted]
   );
 
   const handleToggleTestPrepCompleted = useMemo(
@@ -1237,6 +1371,23 @@ export default function App() {
       }
     },
     [setStarredFilter, activeReactGuide, starred, route.learningId, setReactGuideLearningId]
+  );
+
+  const handleInterviewPrepStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'interview-prep': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeInterviewPrep, 'interview-prep', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setInterviewPrepLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeInterviewPrep, starred, route.learningId, setInterviewPrepLearningId]
   );
 
   const handleTestPrepStarredFilterChange = useCallback(
@@ -1400,6 +1551,18 @@ export default function App() {
       }
     },
     [setArchived, archived, reactGuide, route.learningId, setReactGuideLearningId]
+  );
+
+  const handleArchiveInterviewPrep = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'interview-prep', learning.id));
+      const nextArchived = archiveId(archived, 'interview-prep', learning.id);
+      const nextActive = filterActive(interviewPrep, 'interview-prep', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setInterviewPrepLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, interviewPrep, route.learningId, setInterviewPrepLearningId]
   );
 
   const handleArchiveTestPrep = useCallback(
@@ -1965,31 +2128,34 @@ export default function App() {
           onReviewMistakes={handleStartReview}
           onBackToAll={handleBackToAll}
           theme={theme}
-          onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          onToggleTheme={cycleTheme}
+          themeSource={themeSource}
         />
       }
       sidebar={
           <Sidebar
             activeSection={activeSection}
-            onSectionChange={setSection}
+            onSectionChange={handleSectionChange}
             sectionCategory={sectionCategory}
             onSectionCategoryChange={setSectionCategory}
             totalQuestions={activeQuestions.length}
-            learningsCount={activeLearnings.length}
+            learningsCount={sectionCount('learnings', activeLearnings)}
             learningsCompletedCount={learningsCompletedCount}
-            reactLearningsCount={activeReactLearnings.length}
+            reactLearningsCount={sectionCount('react-learnings', activeReactLearnings)}
             reactLearningsCompletedCount={reactLearningsCompletedCount}
-            reactGuideCount={activeReactGuide.length}
+            reactGuideCount={sectionCount('react-guide', activeReactGuide)}
             reactGuideCompletedCount={reactGuideCompletedCount}
-            testPrepCount={activeTestPrep.length}
+            interviewPrepCount={sectionCount('interview-prep', activeInterviewPrep)}
+            interviewPrepCompletedCount={interviewPrepCompletedCount}
+            testPrepCount={sectionCount('test-prep', activeTestPrep)}
             testPrepCompletedCount={testPrepCompletedCount}
-            cssCount={activeCssLearnings.length}
+            cssCount={sectionCount('css', activeCssLearnings)}
             cssCompletedCount={cssCompletedCount}
-            advancedReactCount={activeAdvancedReact.length}
+            advancedReactCount={sectionCount('advanced-react', activeAdvancedReact)}
             advancedReactCompletedCount={advancedReactCompletedCount}
-            hldLearningsCount={activeHldLearnings.length}
+            hldLearningsCount={sectionCount('hld', activeHldLearnings)}
             hldCompletedCount={hldCompletedCount}
-            algorithmLearningsCount={activeAlgorithmLearnings.length}
+            algorithmLearningsCount={sectionCount('algorithm', activeAlgorithmLearnings)}
             algorithmCompletedCount={algorithmCompletedCount}
             outputQuestionsCount={activeOutputQuestions.length}
             codingQuestionsCount={activeCodingQuestions.length}
@@ -2028,7 +2194,8 @@ export default function App() {
             onOutputRestart={handleOutputRestart}
             onOutputClearProgress={handleOutputClearProgress}
             theme={theme}
-            onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            onToggleTheme={cycleTheme}
+            themeSource={themeSource}
             syntaxHighlight={syntaxHighlight}
             onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
             onOpenSearch={() => setSearchPaletteOpen(true)}
@@ -2036,97 +2203,6 @@ export default function App() {
         }
         center={
           <div className="center-with-toggle">
-            <div className="section-toggle" role="group" aria-label="Section">
-              <button
-                type="button"
-                aria-pressed={activeSection === 'test-prep'}
-                className={`section-toggle-btn${activeSection === 'test-prep' ? ' active' : ''}`}
-                onClick={() => setSection('test-prep')}
-              >
-                Test Prep
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'mcq'}
-                className={`section-toggle-btn${activeSection === 'mcq' ? ' active' : ''}`}
-                onClick={() => setSection('mcq', { viewMode })}
-              >
-                MCQs
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'learnings'}
-                className={`section-toggle-btn${activeSection === 'learnings' ? ' active' : ''}`}
-                onClick={() => setSection('learnings')}
-              >
-                Learnings
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'react-learnings'}
-                className={`section-toggle-btn${activeSection === 'react-learnings' ? ' active' : ''}`}
-                onClick={() => setSection('react-learnings')}
-              >
-                React
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'advanced-react'}
-                className={`section-toggle-btn${activeSection === 'advanced-react' ? ' active' : ''}`}
-                onClick={() => setSection('advanced-react')}
-              >
-                Advanced
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'react-guide'}
-                className={`section-toggle-btn${activeSection === 'react-guide' ? ' active' : ''}`}
-                onClick={() => setSection('react-guide')}
-              >
-                Guide
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'hld'}
-                className={`section-toggle-btn${activeSection === 'hld' ? ' active' : ''}`}
-                onClick={() => setSection('hld')}
-              >
-                HLD
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'algorithm'}
-                className={`section-toggle-btn${activeSection === 'algorithm' ? ' active' : ''}`}
-                onClick={() => setSection('algorithm')}
-              >
-                Algorithm
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'coding'}
-                className={`section-toggle-btn${activeSection === 'coding' ? ' active' : ''}`}
-                onClick={() => setSection('coding')}
-              >
-                Coding
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'output'}
-                className={`section-toggle-btn${activeSection === 'output' ? ' active' : ''}`}
-                onClick={() => setSection('output')}
-              >
-                Output
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeSection === 'archived'}
-                className={`section-toggle-btn${activeSection === 'archived' ? ' active' : ''}`}
-                onClick={() => setSection('archived')}
-              >
-                Archived
-              </button>
-            </div>
-
             {activeSection === 'mcq' && (
               <div className="view-toggle" role="group" aria-label="View mode">
                 <button
@@ -2148,12 +2224,14 @@ export default function App() {
               </div>
             )}
 
-            {activeSection === 'learnings' ? (
+            {/* A code-split dataset that has not arrived yet would otherwise
+                render as "No learnings available yet", which reads as an empty
+                section rather than a pending one. */}
+            {LEARNING_LOADERS[activeSection] && !loadedSections[activeSection] ? (
+              <Skeleton />
+            ) : activeSection === 'learnings' ? (
               <LearningsView
                 learning={selectedLearning}
-                learnings={orderedStarredActiveLearnings}
-                selectedLearningId={selectedLearning?.id ?? null}
-                onSelectLearning={setLearningId}
                 onArchive={handleArchiveLearning}
                 isStarred={selectedLearning ? isStarred(selectedLearning.id, 'learnings', starred) : false}
                 onToggleStar={() => selectedLearning && handleToggleStar('learnings', selectedLearning.id)}
@@ -2165,9 +2243,6 @@ export default function App() {
             ) : activeSection === 'react-learnings' ? (
               <LearningsView
                 learning={selectedReactLearning}
-                learnings={orderedStarredActiveReactLearnings}
-                selectedLearningId={selectedReactLearning?.id ?? null}
-                onSelectLearning={setReactLearningId}
                 onArchive={handleArchiveReactLearning}
                 isStarred={selectedReactLearning ? isStarred(selectedReactLearning.id, 'react-learnings', starred) : false}
                 onToggleStar={() => selectedReactLearning && handleToggleStar('react-learnings', selectedReactLearning.id)}
@@ -2176,12 +2251,21 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'interview-prep' ? (
+              <LearningsView
+                learning={selectedInterviewPrepEntry}
+                onArchive={handleArchiveInterviewPrep}
+                isStarred={selectedInterviewPrepEntry ? isStarred(selectedInterviewPrepEntry.id, 'interview-prep', starred) : false}
+                onToggleStar={() => selectedInterviewPrepEntry && handleToggleStar('interview-prep', selectedInterviewPrepEntry.id)}
+                isCompleted={selectedInterviewPrepEntry ? isCompleted(selectedInterviewPrepEntry.id, 'interview-prep', completed) : false}
+                onToggleCompleted={() => selectedInterviewPrepEntry && handleToggleInterviewPrepCompleted(selectedInterviewPrepEntry.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+                onNavigate={handleInternalLink}
+              />
             ) : activeSection === 'test-prep' ? (
               <LearningsView
                 learning={selectedTestPrepEntry}
-                learnings={orderedStarredActiveTestPrep}
-                selectedLearningId={selectedTestPrepEntry?.id ?? null}
-                onSelectLearning={setTestPrepLearningId}
                 onArchive={handleArchiveTestPrep}
                 isStarred={selectedTestPrepEntry ? isStarred(selectedTestPrepEntry.id, 'test-prep', starred) : false}
                 onToggleStar={() => selectedTestPrepEntry && handleToggleStar('test-prep', selectedTestPrepEntry.id)}
@@ -2194,9 +2278,6 @@ export default function App() {
             ) : activeSection === 'css' ? (
               <LearningsView
                 learning={selectedCssLearning}
-                learnings={orderedStarredActiveCssLearnings}
-                selectedLearningId={selectedCssLearning?.id ?? null}
-                onSelectLearning={setCssLearningId}
                 onArchive={handleArchiveCssLearning}
                 isStarred={selectedCssLearning ? isStarred(selectedCssLearning.id, 'css', starred) : false}
                 onToggleStar={() => selectedCssLearning && handleToggleStar('css', selectedCssLearning.id)}
@@ -2209,9 +2290,6 @@ export default function App() {
             ) : activeSection === 'advanced-react' ? (
               <LearningsView
                 learning={selectedAdvancedReactEntry}
-                learnings={orderedStarredActiveAdvancedReact}
-                selectedLearningId={selectedAdvancedReactEntry?.id ?? null}
-                onSelectLearning={setAdvancedReactLearningId}
                 onArchive={handleArchiveAdvancedReact}
                 isStarred={selectedAdvancedReactEntry ? isStarred(selectedAdvancedReactEntry.id, 'advanced-react', starred) : false}
                 onToggleStar={() => selectedAdvancedReactEntry && handleToggleStar('advanced-react', selectedAdvancedReactEntry.id)}
@@ -2224,9 +2302,6 @@ export default function App() {
             ) : activeSection === 'react-guide' ? (
               <LearningsView
                 learning={selectedReactGuideEntry}
-                learnings={orderedStarredActiveReactGuide}
-                selectedLearningId={selectedReactGuideEntry?.id ?? null}
-                onSelectLearning={setReactGuideLearningId}
                 onArchive={handleArchiveReactGuide}
                 isStarred={selectedReactGuideEntry ? isStarred(selectedReactGuideEntry.id, 'react-guide', starred) : false}
                 onToggleStar={() => selectedReactGuideEntry && handleToggleStar('react-guide', selectedReactGuideEntry.id)}
@@ -2238,9 +2313,6 @@ export default function App() {
             ) : activeSection === 'hld' ? (
               <LearningsView
                 learning={selectedHldLearning}
-                learnings={orderedStarredActiveHldLearnings}
-                selectedLearningId={selectedHldLearning?.id ?? null}
-                onSelectLearning={setHldLearningId}
                 onArchive={handleArchiveHldLearning}
                 isStarred={selectedHldLearning ? isStarred(selectedHldLearning.id, 'hld', starred) : false}
                 onToggleStar={() => selectedHldLearning && handleToggleStar('hld', selectedHldLearning.id)}
@@ -2252,9 +2324,6 @@ export default function App() {
             ) : activeSection === 'algorithm' ? (
               <LearningsView
                 learning={selectedAlgorithmLearning}
-                learnings={orderedStarredActiveAlgorithmLearnings}
-                selectedLearningId={selectedAlgorithmLearning?.id ?? null}
-                onSelectLearning={setAlgorithmLearningId}
                 onArchive={handleArchiveAlgorithmLearning}
                 isStarred={selectedAlgorithmLearning ? isStarred(selectedAlgorithmLearning.id, 'algorithm', starred) : false}
                 onToggleStar={() => selectedAlgorithmLearning && handleToggleStar('algorithm', selectedAlgorithmLearning.id)}
@@ -2266,9 +2335,9 @@ export default function App() {
             ) : activeSection === 'archived' ? (
               <ArchivedView
                 archived={archived}
+                interviewPrep={interviewPrep}
                 testPrep={testPrep}
                 questions={questions}
-                learnings={learnings}
                 reactLearnings={reactLearnings}
                 reactGuide={reactGuide}
                 advancedReact={advancedReact}
@@ -2302,10 +2371,12 @@ export default function App() {
           ) : activeSection === 'learnings' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveLearnings}
                 starredIds={starred.learnings}
                 completedIds={completed.learnings}
+                activeItem={selectedLearning}
+                learnings={orderedStarredActiveLearnings}
                 selectedLearningId={selectedLearning?.id ?? null}
+                sectionKey="learnings"
                 starredOnly={starredFilter.learnings}
                 starredCount={learningsStarredCount}
                 onStarredOnlyChange={handleLearningsStarredFilterChange}
@@ -2316,10 +2387,12 @@ export default function App() {
           ) : activeSection === 'react-learnings' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveReactLearnings}
                 starredIds={starred['react-learnings']}
                 completedIds={completed['react-learnings']}
+                activeItem={selectedReactLearning}
+                learnings={orderedStarredActiveReactLearnings}
                 selectedLearningId={selectedReactLearning?.id ?? null}
+                sectionKey="react-learnings"
                 starredOnly={starredFilter['react-learnings']}
                 starredCount={reactLearningsStarredCount}
                 onStarredOnlyChange={handleReactLearningsStarredFilterChange}
@@ -2327,13 +2400,31 @@ export default function App() {
                 title="React learnings"
               />
             </div>
+          ) : activeSection === 'interview-prep' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred['interview-prep']}
+                completedIds={completed['interview-prep']}
+                activeItem={selectedInterviewPrepEntry}
+                learnings={orderedStarredActiveInterviewPrep}
+                selectedLearningId={selectedInterviewPrepEntry?.id ?? null}
+                sectionKey="interview-prep"
+                starredOnly={starredFilter['interview-prep']}
+                starredCount={interviewPrepStarredCount}
+                onStarredOnlyChange={handleInterviewPrepStarredFilterChange}
+                onSelect={setInterviewPrepLearningId}
+                title="1-Day Interview Prep"
+              />
+            </div>
           ) : activeSection === 'test-prep' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveTestPrep}
                 starredIds={starred['test-prep']}
                 completedIds={completed['test-prep']}
+                activeItem={selectedTestPrepEntry}
+                learnings={orderedStarredActiveTestPrep}
                 selectedLearningId={selectedTestPrepEntry?.id ?? null}
+                sectionKey="test-prep"
                 starredOnly={starredFilter['test-prep']}
                 starredCount={testPrepStarredCount}
                 onStarredOnlyChange={handleTestPrepStarredFilterChange}
@@ -2344,10 +2435,12 @@ export default function App() {
           ) : activeSection === 'css' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveCssLearnings}
                 starredIds={starred.css}
                 completedIds={completed.css}
+                activeItem={selectedCssLearning}
+                learnings={orderedStarredActiveCssLearnings}
                 selectedLearningId={selectedCssLearning?.id ?? null}
+                sectionKey="css"
                 starredOnly={starredFilter.css}
                 starredCount={cssStarredCount}
                 onStarredOnlyChange={handleCssStarredFilterChange}
@@ -2358,10 +2451,12 @@ export default function App() {
           ) : activeSection === 'advanced-react' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveAdvancedReact}
                 starredIds={starred['advanced-react']}
                 completedIds={completed['advanced-react']}
+                activeItem={selectedAdvancedReactEntry}
+                learnings={orderedStarredActiveAdvancedReact}
                 selectedLearningId={selectedAdvancedReactEntry?.id ?? null}
+                sectionKey="advanced-react"
                 starredOnly={starredFilter['advanced-react']}
                 starredCount={advancedReactStarredCount}
                 onStarredOnlyChange={handleAdvancedReactStarredFilterChange}
@@ -2372,10 +2467,12 @@ export default function App() {
           ) : activeSection === 'react-guide' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveReactGuide}
                 starredIds={starred['react-guide']}
                 completedIds={completed['react-guide']}
+                activeItem={selectedReactGuideEntry}
+                learnings={orderedStarredActiveReactGuide}
                 selectedLearningId={selectedReactGuideEntry?.id ?? null}
+                sectionKey="react-guide"
                 starredOnly={starredFilter['react-guide']}
                 starredCount={reactGuideStarredCount}
                 onStarredOnlyChange={handleReactGuideStarredFilterChange}
@@ -2386,10 +2483,12 @@ export default function App() {
           ) : activeSection === 'hld' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveHldLearnings}
                 starredIds={starred.hld}
                 completedIds={completed.hld}
+                activeItem={selectedHldLearning}
+                learnings={orderedStarredActiveHldLearnings}
                 selectedLearningId={selectedHldLearning?.id ?? null}
+                sectionKey="hld"
                 starredOnly={starredFilter.hld}
                 starredCount={hldStarredCount}
                 onStarredOnlyChange={handleHldStarredFilterChange}
@@ -2400,10 +2499,12 @@ export default function App() {
           ) : activeSection === 'algorithm' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                learnings={orderedStarredActiveAlgorithmLearnings}
                 starredIds={starred.algorithm}
                 completedIds={completed.algorithm}
+                activeItem={selectedAlgorithmLearning}
+                learnings={orderedStarredActiveAlgorithmLearnings}
                 selectedLearningId={selectedAlgorithmLearning?.id ?? null}
+                sectionKey="algorithm"
                 starredOnly={starredFilter.algorithm}
                 starredCount={algorithmStarredCount}
                 onStarredOnlyChange={handleAlgorithmStarredFilterChange}

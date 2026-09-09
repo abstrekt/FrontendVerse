@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { DIFFICULTY_LEVELS, DIFFICULTY_LABELS, getDifficultyCompletion, getTopicCompletion } from '../utils/progress';
 import StarredFilterToggle from './StarredFilterToggle';
+import { useAnnounce } from '../hooks/useAnnouncer';
 
 export default function FilterPanel({
   questions,
@@ -15,6 +16,15 @@ export default function FilterPanel({
   onToggleDifficulty,
   onClear,
 }) {
+  const announce = useAnnounce();
+
+  // Toggling a topic or difficulty silently reshapes the question pool.
+  const activeFilters = selectedTopics.length + selectedDifficulties.length;
+  useEffect(() => {
+    if (!activeFilters) return;
+    announce(`${activeFilters} filter${activeFilters === 1 ? '' : 's'} active.`);
+  }, [activeFilters, announce]);
+
   const topicCompletion = useMemo(
     () => getTopicCompletion(progress, questions, completedIds),
     [progress, questions, completedIds]
@@ -85,7 +95,14 @@ export default function FilterPanel({
                   onChange={() => onToggleDifficulty(difficulty)}
                 />
                 <span className="filter-topic-name">{label}</span>
-                <span className="filter-count" title="Attempted / total">{attempted}/{total}</span>
+                <span className="filter-count">
+                  <span aria-hidden="true">
+                    {attempted}/{total}
+                  </span>
+                  <span className="sr-only">
+                    {attempted} attempted of {total}
+                  </span>
+                </span>
               </label>
             </li>
           ))}
@@ -113,7 +130,14 @@ export default function FilterPanel({
                   onChange={() => onToggleTopic(topic)}
                 />
                 <span className="filter-topic-name">{topic}</span>
-                <span className="filter-count" title="Attempted / total">{attempted}/{total}</span>
+                <span className="filter-count">
+                  <span aria-hidden="true">
+                    {attempted}/{total}
+                  </span>
+                  <span className="sr-only">
+                    {attempted} attempted of {total}
+                  </span>
+                </span>
               </label>
             </li>
           ))}

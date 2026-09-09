@@ -1,6 +1,8 @@
 import ProgressPanel from "./ProgressPanel";
 import OutputSidebarStats from "./OutputSidebarStats";
 import CodingSidebarStats from "./CodingSidebarStats";
+import Icon from './Icon';
+import { themeButtonState } from '../utils/themeButton';
 
 // Sections with no entry here (test-prep, archived) aren't tied to one
 // technology, so they stay visible no matter which category chip is active.
@@ -32,6 +34,8 @@ export default function Sidebar({
   onSectionCategoryChange,
   totalQuestions,
   filteredCount,
+  interviewPrepCount,
+  interviewPrepCompletedCount,
   testPrepCount,
   testPrepCompletedCount,
   learningsCount,
@@ -80,12 +84,14 @@ export default function Sidebar({
   onOutputRestart,
   onOutputClearProgress,
   theme,
+  themeSource,
   onToggleTheme,
   syntaxHighlight,
   onToggleHighlight,
   onOpenSearch,
 }) {
   const count = filteredCount ?? totalQuestions;
+  const themeBtn = themeButtonState(theme, themeSource);
   // `navigator.platform` is deprecated and frozen or absent in some browsers,
   // which had Mac users seeing the Ctrl+K hint.
   const isApple =
@@ -101,6 +107,8 @@ export default function Sidebar({
   const subtitle =
     activeSection === "archived"
       ? `${archivedCount} archived item${archivedCount !== 1 ? "s" : ""}`
+      : activeSection === "interview-prep"
+      ? `${interviewPrepCount} entr${interviewPrepCount !== 1 ? "ies" : "y"} available`
       : activeSection === "test-prep"
       ? `${testPrepCount} entr${testPrepCount !== 1 ? "ies" : "y"} available`
       : activeSection === "mcq"
@@ -145,22 +153,13 @@ export default function Sidebar({
           </div>
 
           <ul className="sidebar-nav">
-            <li>
-              <button
-                type="button"
-                className={activeSection === "test-prep" ? "active" : ""}
-                onClick={() => onSectionChange("test-prep")}
-              >
-                <span className="nav-icon">TP</span>
-                <span>Test Prep</span>
-                <span className="nav-count">{testPrepCompletedCount}/{testPrepCount}</span>
-              </button>
-            </li>
+
             {isSectionVisible("mcq") && (
               <li>
                 <button
                   type="button"
                   className={activeSection === "mcq" ? "active" : ""}
+                  aria-current={activeSection === "mcq" ? "page" : undefined}
                   onClick={() => onSectionChange("mcq")}
                 >
                   <span className="nav-icon">JS</span>
@@ -174,6 +173,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "learnings" ? "active" : ""}
+                  aria-current={activeSection === "learnings" ? "page" : undefined}
                   onClick={() => onSectionChange("learnings")}
                 >
                   <span className="nav-icon">LR</span>
@@ -187,6 +187,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "css" ? "active" : ""}
+                  aria-current={activeSection === "css" ? "page" : undefined}
                   onClick={() => onSectionChange("css")}
                 >
                   <span className="nav-icon">CS</span>
@@ -200,6 +201,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "react-learnings" ? "active" : ""}
+                  aria-current={activeSection === "react-learnings" ? "page" : undefined}
                   onClick={() => onSectionChange("react-learnings")}
                 >
                   <span className="nav-icon">RL</span>
@@ -213,6 +215,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "react-guide" ? "active" : ""}
+                  aria-current={activeSection === "react-guide" ? "page" : undefined}
                   onClick={() => onSectionChange("react-guide")}
                 >
                   <span className="nav-icon">RG</span>
@@ -226,6 +229,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "advanced-react" ? "active" : ""}
+                  aria-current={activeSection === "advanced-react" ? "page" : undefined}
                   onClick={() => onSectionChange("advanced-react")}
                 >
                   <span className="nav-icon">AR</span>
@@ -239,6 +243,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "hld" ? "active" : ""}
+                  aria-current={activeSection === "hld" ? "page" : undefined}
                   onClick={() => onSectionChange("hld")}
                 >
                   <span className="nav-icon">HD</span>
@@ -252,6 +257,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "algorithm" ? "active" : ""}
+                  aria-current={activeSection === "algorithm" ? "page" : undefined}
                   onClick={() => onSectionChange("algorithm")}
                 >
                   <span className="nav-icon">AL</span>
@@ -265,6 +271,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "coding" ? "active" : ""}
+                  aria-current={activeSection === "coding" ? "page" : undefined}
                   onClick={() => onSectionChange("coding")}
                 >
                   <span className="nav-icon">CD</span>
@@ -278,6 +285,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   className={activeSection === "output" ? "active" : ""}
+                  aria-current={activeSection === "output" ? "page" : undefined}
                   onClick={() => onSectionChange("output")}
                 >
                   <span className="nav-icon">OP</span>
@@ -290,9 +298,10 @@ export default function Sidebar({
               <button
                 type="button"
                 className={activeSection === "archived" ? "active" : ""}
+                  aria-current={activeSection === "archived" ? "page" : undefined}
                 onClick={() => onSectionChange("archived")}
               >
-                <span className="nav-icon">AR</span>
+                <span className="nav-icon">AV</span>
                 <span>Archived</span>
                 <span className="nav-count">{archivedCount}</span>
               </button>
@@ -373,16 +382,16 @@ export default function Sidebar({
           aria-label="Syntax highlighting"
           aria-pressed={syntaxHighlight}
         >
-          <span aria-hidden="true">{"{ }"}</span>
+          <Icon name="braces" size={15} />
         </button>
         <button
           type="button"
           className="panel-control-btn"
           onClick={onToggleTheme}
-          title="Toggle theme"
-          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+          title={themeBtn.label}
+          aria-label={themeBtn.label}
         >
-          <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
+          <Icon name={themeBtn.icon} size={15} />
         </button>
         </div>
       </div>

@@ -13,6 +13,23 @@
     <!-- iOS ignores SVG here, so this must be a raster icon. -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Self-hosted and used on every screen, so preloading removes a round
+         trip from the critical path. Both are variable fonts: one file each. -->
+    <link
+      rel="preload"
+      href="/fonts/ibm-plex-sans-var.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/jetbrains-mono-var.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <meta name="theme-color" content="#f0f2f7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)" />
 
@@ -25,19 +42,24 @@
     <meta name="twitter:card" content="summary" />
 
     <!--
-      Applied before first paint. Without this, a user whose stored preference
-      is dark gets a white flash on every load while React boots.
+      Applied before first paint. Without this, a user whose resolved theme is
+      dark gets a white flash on every load while React boots. Reads both the
+      stored theme and its source, so "follow the system" survives a reload.
     -->
     <script>
       (function () {
         try {
+          var system = window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
+          var source = JSON.parse(localStorage.getItem('quiz-theme-source'));
           var stored = JSON.parse(localStorage.getItem('quiz-theme'));
+          // Anyone who used the app before the tri-state control existed has
+          // no source key. Treating that as 'system' is the intended default.
           var theme =
-            stored === 'dark' || stored === 'light'
+            source === 'user' && (stored === 'dark' || stored === 'light')
               ? stored
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light';
+              : system;
           document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'light');

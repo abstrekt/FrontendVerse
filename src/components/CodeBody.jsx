@@ -15,6 +15,14 @@ function resolveLanguage(lang) {
   return lang;
 }
 
+export function headingToSlug(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[`*_[\]()#]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
 export default function CodeBody({ content, highlight, theme = 'light', onNavigate }) {
   const syntaxStyle = getSyntaxStyle(theme);
 
@@ -23,6 +31,20 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          h2({ children, ...props }) {
+            const rawText = Array.isArray(children)
+              ? children.map((c) => (typeof c === 'string' ? c : (c?.props?.children ?? ''))).join('')
+              : String(children ?? '');
+            const id = headingToSlug(rawText);
+            return <h2 id={id} className="code-body-heading" {...props}>{children}</h2>;
+          },
+          h3({ children, ...props }) {
+            const rawText = Array.isArray(children)
+              ? children.map((c) => (typeof c === 'string' ? c : (c?.props?.children ?? ''))).join('')
+              : String(children ?? '');
+            const id = headingToSlug(rawText);
+            return <h3 id={id} className="code-body-subheading" {...props}>{children}</h3>;
+          },
           a({ href, children, ...props }) {
             const isInternal = typeof href === 'string' && href.startsWith('/');
 

@@ -1,5 +1,6 @@
 import DifficultyBadge from './DifficultyBadge';
 import StarredFilterToggle from './StarredFilterToggle';
+import Icon from './Icon';
 
 export default function CodingPanel({
   questions,
@@ -47,10 +48,16 @@ export default function CodingPanel({
                 <span className="learning-nav-meta">
                   <span className="learning-nav-id">#{question.id}</span>
                   {starredSet.has(question.id) && (
-                    <span className="learning-nav-star" aria-label="Starred">★</span>
+                    <span className="learning-nav-star">
+                      <Icon name="star" size={12} filled />
+                      <span className="sr-only">Starred</span>
+                    </span>
                   )}
                   {completedSet.has(question.id) && (
-                    <span className="learning-nav-completed" aria-label="Mastered">✓</span>
+                    <span className="learning-nav-completed">
+                      <Icon name="check" size={12} />
+                      <span className="sr-only">Mastered</span>
+                    </span>
                   )}
                   <DifficultyBadge difficulty={question.difficulty} />
                 </span>

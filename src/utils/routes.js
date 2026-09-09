@@ -1,4 +1,5 @@
-const LEARNING_SECTIONS = [
+export const LEARNING_SECTIONS = [
+  'interview-prep',
   'test-prep',
   'learnings',
   'css',

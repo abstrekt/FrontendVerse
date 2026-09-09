@@ -1,6 +1,7 @@
 import { SECTIONS } from './archive';
 
 export const EMPTY_STARRED = {
+  'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
@@ -15,6 +16,7 @@ export const EMPTY_STARRED = {
 };
 
 export const EMPTY_STARRED_FILTER = {
+  'interview-prep': false,
   'test-prep': false,
   mcq: false,
   learnings: false,

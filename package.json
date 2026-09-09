@@ -13,7 +13,8 @@
     "scan:mcq-duplicates": "node scripts/scan-mcq-duplicates.mjs",
     "validate:learning-ids": "node scripts/validate-learning-ids.mjs",
     "audit:mcq-explanations": "node scripts/audit-mcq-explanations.mjs",
-    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs"
+    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs",
+    "build:data-manifest": "node scripts/build-data-manifest.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

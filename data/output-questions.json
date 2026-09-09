@@ -9,7 +9,7 @@
       "expectedLines": [
         "[]"
       ],
-      "explanation": "The length of the array has been set to 0, so the array becomes empty.",
+      "explanation": "In JavaScript, an array's `length` property is writable. When `arr.length` is set to a value smaller than its current length (here `0`), JavaScript mutates the array in-place, truncating and deleting all elements from index 0 onward. Hence, `arr` becomes an empty array `[]`.\n\n**Gotcha:** This empties the existing array without reallocating a new reference (`arr = []` creates a new array reference, leaving other references to the original array intact; `arr.length = 0` clears the underlying array for all references).",
       "readmeOutput": "[ ]",
       "async": false
     },
@@ -21,7 +21,7 @@
       "expectedLines": [
         "10"
       ],
-      "explanation": "The declaration of the variable x is hoisted to the top of its scope.",
+      "explanation": "During JavaScript's execution context creation phase, variable declarations with `var` are hoisted to the top of their enclosing function or global scope and initialized with `undefined`. In the execution phase, the assignment `x = 10` runs first, storing `10` in `x`. When `console.log(x)` executes, it outputs `10`. The subsequent `var x;` statement was already processed during creation and has no runtime effect.",
       "readmeOutput": "10",
       "async": false
     },
@@ -34,7 +34,7 @@
         "{\"x\":3,\"y\":2}",
         "{\"x\":3,\"y\":2}"
       ],
-      "explanation": "'a' and 'b' both are pointing to the same reference.",
+      "explanation": "Objects in JavaScript are reference types. The assignment `let b = a` copies the memory address (reference) of the object, not the object itself. Both `a` and `b` point to the exact same object in the heap. When `b.x = 3` mutates property `x`, accessing `a.x` also reflects `3`. Therefore, both `console.log(a)` and `console.log(b)` print `{ x: 3, y: 2 }`.\n\n**Tip:** To create an independent shallow copy, use `{ ...a }` or `Object.assign({}, a)`.",
       "readmeOutput": "{ x: 3, y: 2 } { x: 3, y: 2 }",
       "async": false
     },
@@ -102,7 +102,7 @@
       "expectedLines": [
         "10"
       ],
-      "explanation": "The expression (+f) is a shorthand way to convert the string value of f to a number. Therefore, (+f) evaluates to 8.",
+      "explanation": "The unary plus operator (`+f`) coerces the string `\"8\"` into the numeric value `8`. The expression then becomes `8 + a + 1`, which is evaluated left-to-right with numeric addition: `8 + 1 = 9`, then `9 + 1 = 10`. If the unary `+` were omitted (`f + a + 1`), string concatenation would occur instead, producing `\"811\"`.",
       "readmeOutput": "10",
       "async": false
     },
@@ -115,7 +115,7 @@
         "20 inside",
         "10 outside"
       ],
-      "explanation": "The variable \"a\" declared inside \"if\" has block scope and does not affect the value of the outer \"a\" variable.",
+      "explanation": "Variables declared with `let` (and `const`) have block scope delimited by `{ ... }`. The `let a = 20` inside the `if` block creates a new, independent variable that shadows the outer `a` within that block only. Inside the block, `console.log(a, \"inside\")` prints `20 inside`. Once execution leaves the block, the inner scope is discarded and the outer `a` remains `10`, so `console.log(a, \"outside\")` outputs `10 outside`.",
       "readmeOutput": "20, \"inside\" and 10, \"outside\"",
       "async": false
     },
@@ -139,7 +139,7 @@
       "expectedLines": [
         "[1,2,3,4,6,7,5]"
       ],
-      "explanation": "Spread operator (...) concatenates the two arrays into \"result\" array.",
+      "explanation": "The spread syntax (`...`) expands the elements of each iterable into a new array literal. `...arr1` unpacks `1, 2, 3, 4` and `...arr2` unpacks `6, 7, 5`, creating a brand-new combined array `[1, 2, 3, 4, 6, 7, 5]`. Unlike `arr1.concat(arr2)`, spread syntax is concise, works with any iterable (Sets, Maps, strings), and does not mutate either source array.",
       "readmeOutput": "[1, 2, 3, 4, 6, 7, 5]",
       "async": false
     },
@@ -151,7 +151,7 @@
       "expectedLines": [
         "{\"city\":\"abc\",\"name\":\"xyz\",\"age\":21}"
       ],
-      "explanation": "Spread operator (...) copies all the properties from person1 into person2.",
+      "explanation": "Object spread (`...person1`) performs a shallow copy of all own enumerable properties from `person1` into the new object literal `person2`. The resulting object contains `city: \"abc\"` followed by `name: \"xyz\"` and `age: 21`. If `person1` contained duplicate keys already declared in `person2`, the later spread properties would overwrite earlier ones.",
       "readmeOutput": "{ city: 'abc', name: 'xyz', age: 21 }",
       "async": false
     },
@@ -226,7 +226,7 @@
         "5",
         "6"
       ],
-      "explanation": "The post-increment operator increments and returns the value before incrementing.",
+      "explanation": "The postfix increment operator (`x++`) returns the current value of `x` *before* incrementing it. During `let y = x++`, the original value `5` is assigned to `y`, and then `x` is incremented to `6` in memory. Consequently, `console.log(y)` outputs `5`, and `console.log(x)` outputs `6`.",
       "readmeOutput": "5, 6",
       "async": false
     },
@@ -239,7 +239,7 @@
         "6",
         "6"
       ],
-      "explanation": "The pre-increment operator increments and returns the value after incrementing.",
+      "explanation": "The prefix increment operator (`++x`) increments the variable *first*, then returns the newly updated value. During `let y = ++x`, `x` is incremented from `5` to `6`, and the resulting value `6` is assigned to `y`. As a result, both `console.log(y)` and `console.log(x)` output `6`.",
       "readmeOutput": "6, 6",
       "async": false
     },
@@ -251,7 +251,7 @@
       "expectedLines": [
         "[\"a\",\"p\",\"p\",\"l\",\"e\"]"
       ],
-      "explanation": "split method is used to split a string into an array of substrings based on a specified separator.",
+      "explanation": "The `String.prototype.split()` method with an empty string `\"\"` as the separator divides the string between every UTF-16 code unit, returning an array of individual characters: `['a', 'p', 'p', 'l', 'e']`.\n\n**Note:** For strings containing surrogate pairs or complex emojis (e.g. `\"👨‍👩‍👧\"`), use `[...\"apple\"]` or `Array.from(\"apple\")` to split correctly by Unicode code points instead of code units.",
       "readmeOutput": "[ 'a', 'p', 'p', 'l', 'e' ]",
       "async": false
     },
@@ -263,7 +263,7 @@
       "expectedLines": [
         "2"
       ],
-      "explanation": "indexOf method returns the index of the first occurrence of the specified element in the array.",
+      "explanation": "`Array.prototype.indexOf(searchElement)` searches the array from index 0 using strict equality (`===`) and returns the index of the *first* occurrence of the element. In `[2, 3, 5, ...]`, the number `5` first appears at index 2. Even though `5` also appears at index 6, search halts upon the first match. If an element is not found, `indexOf` returns `-1`.",
       "readmeOutput": "2",
       "async": false
     },
@@ -275,7 +275,7 @@
       "expectedLines": [
         "[30,40]"
       ],
-      "explanation": "The code increments each element in the array by 2 using map and filters out elements greater than 25 using filter.",
+      "explanation": "This method chain runs in two steps:\n1. `.map((element) => element + 2)` transforms each element: `8+2=10`, `18+2=20`, `28+2=30`, `38+2=40`, producing `[10, 20, 30, 40]`.\n2. `.filter((element) => element > 25)` evaluates each transformed number against `element > 25`. Only `30` and `40` satisfy the predicate, returning `[30, 40]`. Neither `map` nor `filter` mutates the original `array`.",
       "readmeOutput": "[ 30, 40 ]",
       "async": false
     },
@@ -287,7 +287,7 @@
       "expectedLines": [
         "true"
       ],
-      "explanation": "Array.isArray() method is used to check if the provided value is an array.",
+      "explanation": "`Array.isArray()` reliably determines whether the passed value is an `Array`. Unlike `typeof value` (which returns `\"object\"` for arrays) or `instanceof Array` (which can fail across different iframes or execution realms with different globals), `Array.isArray()` checks the internal `[[Class]]` or Symbol tag of the object. Since `[1, 2, 3]` is an array, it logs `true`.",
       "readmeOutput": "true",
       "async": false
     },
@@ -312,7 +312,7 @@
         "105",
         "510"
       ],
-      "explanation": "Since one operand is a string, the + operator performs string concatenation.",
+      "explanation": "In JavaScript, if either operand of the binary `+` operator is a string, JavaScript coerces the other operand to a string and performs string concatenation rather than numeric addition. Therefore:\n- `10 + \"5\"` converts `10` to `\"10\"`, producing `\"105\"`.\n- `\"5\" + 10` converts `10` to `\"510\"`.\nIn contrast, subtraction (`-`), multiplication (`*`), and division (`/`) coerce strings to numbers (e.g., `\"5\" - 2 === 3`).",
       "readmeOutput": "105, 510",
       "async": false
     },
@@ -337,7 +337,7 @@
       "expectedLines": [
         "Hi my name is Bob"
       ],
-      "explanation": "Regular functions are hoisted to the top. And you can access and call them even before they are declared.",
+      "explanation": "Function declarations (e.g., `function printName() { ... }`) are fully hoisted to the top of their scope during the creation phase. Both the function identifier and its actual function body definition are loaded into memory before any line of code runs. Therefore, `printName()` can be safely invoked before its physical declaration in the source code, logging `\"Hi my name is Bob\"`.",
       "readmeOutput": "Hi my name is Bob",
       "async": false
     },
@@ -349,7 +349,7 @@
       "expectedLines": [
         "ReferenceError: Cannot access 'printName' before initialization"
       ],
-      "explanation": "Arrow functions cannot be accessed before they are initialised.",
+      "explanation": "Unlike function declarations, arrow functions assigned to variables (`const printName = () => ...`) follow variable declaration rules. Variables declared with `const` and `let` are hoisted to the top of the scope but remain in the Temporal Dead Zone (TDZ) uninitialized until execution reaches the assignment. Attempting to access or invoke `printName` before initialization throws a `ReferenceError: Cannot access 'printName' before initialization`.",
       "readmeOutput": "ReferenceError: Cannot access 'printName' before initialization",
       "async": false
     },
@@ -412,7 +412,7 @@
       "expectedLines": [
         "[-1,2,10]"
       ],
-      "explanation": "The compare function (a, b) => a - b sorts the numbers numerically in ascending order.",
+      "explanation": "By default, `arr.sort()` converts elements to strings and compares their UTF-16 code unit values (which would sort `[10, -1, 2]` as `[-1, 10, 2]` because `\"10\"` comes before `\"2\"`). Providing the numeric comparator `(a, b) => a - b` sorts numbers numerically:\n- If `a - b < 0`, `a` is placed before `b`.\n- If `a - b > 0`, `b` is placed before `a`.\n- If `0`, order is unchanged.\nThis sorts `[-1, 2, 10]` in ascending numerical order. `sort()` mutates `arr` in place.",
       "readmeOutput": "[-1, 2, 10]",
       "async": false
     },
@@ -436,7 +436,7 @@
       "expectedLines": [
         "10"
       ],
-      "explanation": "x = 0 is falsy and doesn't trigger the console.log(x), while y = 10 is truthy and triggers the console.log(y).",
+      "explanation": "In JavaScript conditionals, values are coerced to booleans:\n- `0` is one of the falsy values (along with `false`, `\"\"`, `null`, `undefined`, `NaN`, and `-0`). Thus, `if (x)` evaluates to `false`, and `console.log(x)` is skipped.\n- Any non-zero number (like `10` or `-5`) is truthy. Thus, `if (y)` evaluates to `true`, and `console.log(y)` executes, logging `10`.",
       "readmeOutput": "10",
       "async": false
     },
@@ -448,7 +448,7 @@
       "expectedLines": [
         "1 2"
       ],
-      "explanation": "Object destructuring extracts the values of var1 and var2 from obj object and prints them using console.log(var1, var2)",
+      "explanation": "Object destructuring syntax `const { var1, var2 } = obj` matches property names on the right-hand object `obj` and creates local constant variables of the same name. `var1` receives `1` and `var2` receives `2`. `console.log(var1, var2)` outputs `1 2` separated by a space.\n\n**Tip:** You can rename variables during destructuring using aliases: `const { var1: first } = obj;`.",
       "readmeOutput": "1, 2",
       "async": false
     },
@@ -496,7 +496,7 @@
       "expectedLines": [
         "SyntaxError: Identifier 'a' has already been declared"
       ],
-      "explanation": "In Javascript, we cannot redeclare a variable with let if it has already been declared in the same scope.",
+      "explanation": "In JavaScript, `let` and `const` disallow duplicate identifier declarations within the same scope. When the JavaScript engine parses this script, it detects that identifier `a` is declared twice in the same scope (`var a` and `let a`). This triggers an early syntax error before execution even starts: `SyntaxError: Identifier 'a' has already been declared`. Neither `console.log` nor any preceding line executes.",
       "readmeOutput": "SyntaxError: Identifier 'a' has already been declared",
       "async": false
     },

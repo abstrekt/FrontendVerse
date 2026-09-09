@@ -6,6 +6,7 @@ import {
   QUESTION_STATUS_FILTERS,
   QUESTION_STATUS_LABELS,
 } from '../utils/questionState';
+import Icon from './Icon';
 
 export default function QuestionListView({
   questions,
@@ -85,8 +86,18 @@ export default function QuestionListView({
                   >
                     <span className="question-list-meta">
                       <span className="question-list-id">#{question.id}</span>
-                      {isStarred && <span className="list-star-indicator" aria-label="Starred">★</span>}
-                      {isCompleted && <span className="list-completed-indicator" aria-label="Mastered">✓</span>}
+                      {isStarred && (
+                        <span className="list-star-indicator">
+                          <Icon name="star" size={12} filled />
+                          <span className="sr-only">Starred</span>
+                        </span>
+                      )}
+                      {isCompleted && (
+                        <span className="list-completed-indicator">
+                          <Icon name="check" size={12} />
+                          <span className="sr-only">Mastered</span>
+                        </span>
+                      )}
                       <span className={`question-list-status status-${status}`}>
                         {QUESTION_STATUS_LABELS[status]}
                       </span>

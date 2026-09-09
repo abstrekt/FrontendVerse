@@ -5,6 +5,7 @@ import { compareOutputAnswer, formatExpectedOutput } from '../utils/outputCompar
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
 import { clampPct } from '../utils/passProgress';
+import Icon from './Icon';
 
 export default function OutputQuizQuestion({
   question,
@@ -135,8 +136,20 @@ export default function OutputQuizQuestion({
             </p>
           )}
 
+          {/* The visible result block only mounts once an answer is checked, and
+              a live region inserted already-populated is announced
+              unreliably. This one is always present, so the text change is
+              what gets spoken. */}
+          <p className="sr-only" role="status" aria-live="polite">
+            {!checked
+              ? ''
+              : `${correct ? 'Correct.' : 'Not quite.'}${
+                  caseMismatch ? ' Right apart from capitalisation.' : ''
+                } Runtime output: ${runtimeOutput || 'no output'}.`}
+          </p>
+
           {checked && (
-            <div className={`output-result ${correct ? 'correct' : 'incorrect'}`} role="status">
+            <div className={`output-result ${correct ? 'correct' : 'incorrect'}`}>
               <p className="output-result-title">
                 {correct ? 'Correct!' : 'Not quite'}
               </p>
@@ -159,7 +172,7 @@ export default function OutputQuizQuestion({
                 className={`toggle-btn${showExplanation ? ' open' : ''}`}
                 onClick={() => setShowExplanation(!showExplanation)}
               >
-                <span className="chevron">{showExplanation ? '▾' : '▸'}</span>
+                <span className="chevron"><Icon name={showExplanation ? 'chevron-down' : 'chevron-right'} size={14} /></span>
                 {showExplanation ? 'Hide explanation' : 'Show explanation'}
               </button>
 
@@ -193,7 +206,8 @@ export default function OutputQuizQuestion({
               className="next-btn"
               onClick={handleNext}
             >
-              {isLast ? 'Finish quiz →' : 'Next question →'}
+              {isLast ? 'Finish quiz' : 'Next question'}
+              <Icon name="arrow-right" size={15} />
             </button>
           </div>
         </div>

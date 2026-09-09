@@ -13,6 +13,7 @@ const LEARNING_SOURCES = [
   { file: 'data/wtfjs-learnings.json', key: 'learnings' },
   { file: 'data/devto-interview-learnings.json', key: 'learnings' },
   { file: 'data/senior-frontend-learnings.json', key: 'learnings' },
+  { file: 'data/browser-learnings.json', key: 'learnings' },
 ];
 
 function loadAllLearnings() {

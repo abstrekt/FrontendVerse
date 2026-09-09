@@ -1,4 +1,5 @@
 const SECTION_LABELS = {
+  'interview-prep': 'Interview Prep',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
@@ -44,6 +45,7 @@ const SNIPPET_FIELDS = new Set(['body', 'explanation', 'description', 'code', 'o
 
 export const SEARCH_SECTIONS = [
   'all',
+  'interview-prep',
   'test-prep',
   'mcq',
   'learnings',
@@ -172,6 +174,7 @@ function buildOutputDoc(item) {
 }
 
 export function buildSearchIndex({
+  interviewPrep = [],
   testPrep = [],
   mcq = [],
   learnings = [],
@@ -185,6 +188,7 @@ export function buildSearchIndex({
   output = [],
 } = {}) {
   return [
+    ...interviewPrep.map((item) => buildLearningDoc(item, 'interview-prep')),
     ...testPrep.map((item) => buildLearningDoc(item, 'test-prep')),
     ...mcq.map(buildMcqDoc),
     ...learnings.map((item) => buildLearningDoc(item, 'learnings')),

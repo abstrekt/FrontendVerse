@@ -1777,6 +1777,630 @@
         }
       ],
       "explanation": "### Solution\n\n```javascript\nfunction buildQueryString(params) {\n  const parts = [];\n\n  for (const [key, value] of Object.entries(params)) {\n    if (value === null || value === undefined || value === \"\") continue;\n\n    const values = Array.isArray(value) ? value : [value];\n    for (const v of values) {\n      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);\n    }\n  }\n\n  return parts.join(\"&\");\n}\n\nfunction parseQueryString(str) {\n  const clean = str.replace(/^\\?/, \"\");\n  if (!clean) return {};\n\n  const out = {};\n\n  for (const pair of clean.split(\"&\")) {\n    if (!pair) continue;\n\n    const eq = pair.indexOf(\"=\");\n    const rawKey = eq === -1 ? pair : pair.slice(0, eq);\n    const rawValue = eq === -1 ? \"\" : pair.slice(eq + 1);\n\n    const key = decodeURIComponent(rawKey);\n    const value = decodeURIComponent(rawValue);\n\n    if (key in out) {\n      out[key] = Array.isArray(out[key]) ? [...out[key], value] : [out[key], value];\n    } else {\n      out[key] = value;\n    }\n  }\n\n  return out;\n}\n```\n\n### How it works\n\nBuilding normalizes every value to an array so the repeat-key case and the single-value case share one code path.\n\nParsing splits on the **first** `=` using `indexOf` rather than `split(\"=\")`, because a base64 or encoded value can legitimately contain `=` and `split` would truncate it. The duplicate-key branch promotes a scalar to an array on second sight and appends thereafter.\n\n### Key points\n\n- **Skip empty values when building.** `?q=&page=` is noise; a cleared filter should leave the URL.\n- **Everything parses back as a string.** `parseQueryString(\"page=2\").page` is `\"2\"`, not `2` — coerce with `Number()` where you need it. This bites people restoring pagination state.\n- `encodeURIComponent` (not `encodeURI`) is the right tool for a single key or value — it escapes `&`, `=`, and `?`.\n- In real code, `new URLSearchParams(obj).toString()` does the whole job. Interviewers ask for the manual version to see whether you know what it handles."
+    },
+    {
+      "id": 39,
+      "title": "curry",
+      "difficulty": "medium",
+      "topics": [
+        "closures",
+        "functions",
+        "currying"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "curry",
+      "description": "Implement `curry(fn)` so the returned function can be called with arguments **one at a time, or several at a time**, and only runs the original function once it has received enough.\n\n\"Enough\" means `fn.length` — the number of declared parameters.\n\n### Example\n\n```javascript\nconst add = (a, b, c) => a + b + c;\nconst curried = curry(add);\n\ncurried(1)(2)(3);   // 6\ncurried(1, 2)(3);   // 6\ncurried(1)(2, 3);   // 6\ncurried(1, 2, 3);   // 6\n```\n\nThe classic \"explain it, then implement it\" question — it tests closures, rest/spread, and `fn.length` in one go.\n\nComplete the implementation in the editor.",
+      "template": "function curry(fn) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const add3 = (a, b, c) => a + b + c;",
+          "code": "curry(add3)(1)(2)(3)",
+          "expected": 6
+        },
+        {
+          "setup": "const add3 = (a, b, c) => a + b + c;",
+          "code": "curry(add3)(1, 2)(3)",
+          "expected": 6
+        },
+        {
+          "setup": "const add3 = (a, b, c) => a + b + c;",
+          "code": "curry(add3)(1)(2, 3)",
+          "expected": 6
+        },
+        {
+          "setup": "const add3 = (a, b, c) => a + b + c;",
+          "code": "curry(add3)(1, 2, 3)",
+          "expected": 6
+        },
+        {
+          "setup": "const mul = (a, b) => a * b;\nconst double = curry(mul)(2);",
+          "code": "[double(5), double(7)]",
+          "expected": [
+            10,
+            14
+          ]
+        },
+        {
+          "setup": "const noop = () => 42;",
+          "code": "curry(noop)()",
+          "expected": 42
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction curry(fn) {\n  return function curried(...args) {\n    // Enough arguments? Run the real function.\n    if (args.length >= fn.length) {\n      return fn.apply(this, args);\n    }\n\n    // Not yet — return a collector that remembers what we have so far.\n    return function (...rest) {\n      return curried.apply(this, [...args, ...rest]);\n    };\n  };\n}\n```\n\n### How it works\n\n`curried` is a **named function expression**, so it can call itself recursively without depending on the outer variable name.\n\nEach partial call closes over `args`. When more arguments arrive, they're concatenated onto the previous ones and `curried` runs again with the fuller list. The recursion bottoms out the moment `args.length >= fn.length`.\n\n`fn.length` is the count of **declared parameters before any default or rest parameter**. That's the detail that trips people up:\n\n```javascript\n((a, b) => 0).length;        // 2\n((a, b = 1) => 0).length;    // 1 — defaults are not counted\n((...args) => 0).length;     // 0 — rest is not counted\n```\n\nSo currying a variadic function doesn't work — it fires immediately. Worth saying out loud.\n\n### The follow-ups\n\n**\"Support placeholders,\" e.g. `curried(_, 2)(1)`:**\n\n```javascript\nconst _ = Symbol('placeholder');\n\nfunction curry(fn) {\n  return function curried(...args) {\n    const filled = args.filter((a) => a !== _).length;\n\n    if (filled >= fn.length && !args.includes(_)) {\n      return fn.apply(this, args);\n    }\n\n    return function (...rest) {\n      const merged = args.map((a) => (a === _ && rest.length ? rest.shift() : a));\n      return curried.apply(this, [...merged, ...rest]);\n    };\n  };\n}\n```\n\n**\"Why `apply(this, …)` and not just `fn(...args)`?\"** — So a curried method keeps its receiver. Without it, `curry(obj.method)(x)` loses `this`.\n\n**\"What's the point?\"** — Specialization: `const double = curry(multiply)(2)`. It shows up constantly in functional pipelines and in creating pre-configured handlers.\n\n### Key points\n\n- Closures are what hold the accumulated arguments between calls\n- `fn.length` defines \"enough\" — and ignores defaults and rest params\n- A named function expression lets the inner function recurse safely\n- Currying (one argument at a time) is not the same as partial application (some arguments now, the rest later)"
+    },
+    {
+      "id": 40,
+      "title": "Two Sum",
+      "difficulty": "easy",
+      "topics": [
+        "DSA",
+        "hash map",
+        "arrays"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "twoSum",
+      "description": "Given an array of integers `nums` and a `target`, return the **indices** of the two numbers that add up to the target.\n\nExactly one solution exists, and you may not use the same element twice. Return `[]` if there is none.\n\n### Example\n\n```javascript\ntwoSum([2, 7, 11, 15], 9);  // [0, 1]  because 2 + 7 === 9\ntwoSum([3, 2, 4], 6);       // [1, 2]\n```\n\nThe canonical hash-map warm-up. Aim for **O(n)** in a single pass — the nested-loop version is the wrong answer here even though it works.\n\nComplete the implementation in the editor.",
+      "template": "function twoSum(nums, target) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "twoSum([2, 7, 11, 15], 9)",
+          "expected": [
+            0,
+            1
+          ]
+        },
+        {
+          "setup": "",
+          "code": "twoSum([3, 2, 4], 6)",
+          "expected": [
+            1,
+            2
+          ]
+        },
+        {
+          "setup": "",
+          "code": "twoSum([3, 3], 6)",
+          "expected": [
+            0,
+            1
+          ]
+        },
+        {
+          "setup": "",
+          "code": "twoSum([1, 2, 3], 100)",
+          "expected": []
+        },
+        {
+          "setup": "",
+          "code": "twoSum([-1, -2, -3, -4], -7)",
+          "expected": [
+            2,
+            3
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction twoSum(nums, target) {\n  const seen = new Map();   // value → index\n\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n\n    // Check BEFORE inserting, so an element can't pair with itself\n    if (seen.has(need)) return [seen.get(need), i];\n\n    seen.set(nums[i], i);\n  }\n\n  return [];\n}\n```\n\n### How it works\n\nThe brute-force version asks, for each element, *\"is my complement somewhere in the rest of this array?\"* — and answers it by searching, which is O(n) per element and O(n²) overall.\n\nA hash map makes that search free. Walk once, and at each element ask the map whether the complement has **already been seen**. Because you only ever look backwards, you find each pair exactly once, at its second element.\n\n**O(n) time, O(n) space.**\n\n### Why check before inserting\n\nIf you inserted first, then `twoSum([3, 3], 6)` on the first `3` would find itself and return `[0, 0]`. Checking first means the map only ever contains *earlier* elements.\n\n### The follow-ups\n\n**\"What if the array is sorted?\"** — Then two pointers gives O(n) time and **O(1) space**, which is strictly better. See [/algorithm/3](/algorithm/3).\n\n**\"What if there are multiple answers?\"** — Collect instead of returning early, and be careful about counting the same pair twice.\n\n**\"Three numbers instead of two?\"** — Sort, then fix one element and run two pointers on the rest: O(n²). Skipping equal neighbours is what avoids duplicate triples.\n\n### Key points\n\n- Any \"have I seen this before?\" inside a loop is a hash-map signal\n- Store the **index** as the value, since indices are what's being returned\n- O(n) time costs O(n) space — name that trade-off out loud"
+    },
+    {
+      "id": 41,
+      "title": "Longest Substring Without Repeating Characters",
+      "difficulty": "medium",
+      "topics": [
+        "DSA",
+        "sliding window",
+        "strings"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "lengthOfLongestSubstring",
+      "description": "Given a string, return the **length** of the longest substring that contains no repeated characters.\n\nSubstrings are contiguous — `\"abc\"` is a substring of `\"abcd\"`, `\"acd\"` is not.\n\n### Example\n\n```javascript\nlengthOfLongestSubstring(\"abcabcbb\");  // 3  (\"abc\")\nlengthOfLongestSubstring(\"bbbbb\");     // 1  (\"b\")\nlengthOfLongestSubstring(\"pwwkew\");    // 3  (\"wke\")\n```\n\nThe canonical variable-size sliding window. Target **O(n)**.\n\nComplete the implementation in the editor.",
+      "template": "function lengthOfLongestSubstring(s) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('abcabcbb')",
+          "expected": 3
+        },
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('bbbbb')",
+          "expected": 1
+        },
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('pwwkew')",
+          "expected": 3
+        },
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('')",
+          "expected": 0
+        },
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('abcdefg')",
+          "expected": 7
+        },
+        {
+          "setup": "",
+          "code": "lengthOfLongestSubstring('dvdf')",
+          "expected": 3
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction lengthOfLongestSubstring(s) {\n  const seen = new Set();\n  let left = 0;\n  let best = 0;\n\n  for (let right = 0; right < s.length; right++) {\n    // Shrink from the left until the incoming char is no longer a duplicate\n    while (seen.has(s[right])) {\n      seen.delete(s[left]);\n      left++;\n    }\n\n    seen.add(s[right]);\n    best = Math.max(best, right - left + 1);\n  }\n\n  return best;\n}\n```\n\n### How it works\n\nThe window `[left, right]` always holds a run of **distinct** characters. Extend it by moving `right`. If the new character is already inside the window, shrink from the left — deleting as you go — until it isn't. Then record the size.\n\n`right - left + 1` is the window length. The `+ 1` is inclusive-bounds arithmetic and it is the most common bug in this pattern.\n\n### Why this is O(n), not O(n²)\n\nThis is the follow-up they will ask, and it's worth being able to answer crisply:\n\n> `left` never decreases. Across the whole run it advances at most `n` times in total, regardless of how those advances are distributed among iterations. So the nested `while` contributes O(n) overall, not O(n) per iteration. Total O(2n) = **O(n)**.\n\n**Space is O(min(n, k))** where k is the alphabet size — the set can never exceed the number of distinct characters.\n\n### The `\"dvdf\"` trap\n\nA common wrong version jumps `left` straight to `lastIndex + 1` from a map. On `\"dvdf\"`, that can move `left` *backwards* if the stale index is behind the current window, corrupting the count. Either guard with `left = Math.max(left, lastIndex + 1)`, or use the `Set`-and-shrink version above, which cannot go wrong.\n\n### The follow-ups\n\n**\"Return the substring, not the length.\"** — Track `bestLeft` when you update `best`, then `s.slice(bestLeft, bestLeft + best)`.\n\n**\"At most K distinct characters instead of zero repeats.\"** — Swap the `Set` for a `Map` of counts and shrink while `map.size > k`. Same skeleton — which is the point of learning the skeleton.\n\n### Key points\n\n- \"Contiguous\" plus \"longest such that\" means sliding window\n- Choosing the right window state (`Set` here, count `Map` elsewhere) is the real work\n- Be ready to explain the amortized O(n) argument"
+    },
+    {
+      "id": 42,
+      "title": "Valid Parentheses",
+      "difficulty": "easy",
+      "topics": [
+        "DSA",
+        "stack",
+        "strings"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "isValid",
+      "description": "Given a string containing only `()`, `[]`, and `{}`, decide whether the brackets are correctly balanced and nested.\n\nEvery opener must be closed by the **same type**, and in the **right order**.\n\n### Example\n\n```javascript\nisValid(\"()[]{}\");   // true\nisValid(\"([)]\");     // false — wrong order\nisValid(\"(\");        // false — never closed\nisValid(\"{[()]}\");   // true\n```\n\nCounting brackets is not enough — `\"([)]\"` has balanced counts and is still invalid. That's what makes this a stack problem.\n\nComplete the implementation in the editor.",
+      "template": "function isValid(s) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "isValid('()[]{}')",
+          "expected": true
+        },
+        {
+          "setup": "",
+          "code": "isValid('([)]')",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "isValid('{[()]}')",
+          "expected": true
+        },
+        {
+          "setup": "",
+          "code": "isValid('(')",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "isValid(')')",
+          "expected": false
+        },
+        {
+          "setup": "",
+          "code": "isValid('')",
+          "expected": true
+        },
+        {
+          "setup": "",
+          "code": "isValid('((((()))))')",
+          "expected": true
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction isValid(s) {\n  const pairs = { ')': '(', ']': '[', '}': '{' };\n  const stack = [];\n\n  for (const char of s) {\n    if (char === '(' || char === '[' || char === '{') {\n      stack.push(char);\n    } else {\n      // Wrong opener on top, or nothing open at all (pop() gives undefined)\n      if (stack.pop() !== pairs[char]) return false;\n    }\n  }\n\n  return stack.length === 0;   // anything still open is invalid\n}\n```\n\n### How it works\n\nAt every closing bracket, the only thing that matters is **the most recent unclosed opener**. That is exactly what a stack gives you in O(1), which is why this problem is a stack problem rather than a counting problem.\n\nPush openers. On a closer, pop and verify the pair. Two failure modes fall out for free:\n\n- **Popping an empty stack** returns `undefined`, which never equals a valid opener — so a stray `\")\"` fails immediately.\n- **A non-empty stack at the end** means something was opened and never closed — hence the final length check.\n\nThat last check is the one candidates forget. Without it, `\"(((\"` returns `true`.\n\n**O(n) time, O(n) space.**\n\n### The follow-ups\n\n**\"What if other characters can appear, like `\"a(b)c\"`?\"** — Ignore anything that isn't a bracket. Change the `else` to only run for known closers.\n\n**\"Return the index of the first invalid bracket.\"** — Switch to an indexed `for` loop and push `{ char, index }` objects instead of bare characters.\n\n**\"What's the minimum number of insertions to make it valid?\"** — Same traversal; count unmatched closers as you go and add the leftover stack size at the end.\n\n### Key points\n\n- \"Matching\", \"nesting\", \"balanced\" → stack\n- In JavaScript a stack is **just an array** — `push`/`pop`, both O(1)\n- Map closers to openers, not the other way round: you look up on the closer\n- Never forget the final `stack.length === 0`"
+    },
+    {
+      "id": 43,
+      "title": "Binary Search",
+      "difficulty": "easy",
+      "topics": [
+        "DSA",
+        "binary search",
+        "arrays"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "binarySearch",
+      "description": "Given a **sorted** array of integers and a target, return the index of the target, or `-1` if it isn't present.\n\nMust run in **O(log n)** — a linear scan is not an acceptable answer here.\n\n### Example\n\n```javascript\nbinarySearch([-1, 0, 3, 5, 9, 12], 9);  // 4\nbinarySearch([-1, 0, 3, 5, 9, 12], 2);  // -1\n```\n\nSimple to describe, easy to get subtly wrong under pressure. Learn one boundary convention and never improvise.\n\nComplete the implementation in the editor.",
+      "template": "function binarySearch(arr, target) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "binarySearch([-1, 0, 3, 5, 9, 12], 9)",
+          "expected": 4
+        },
+        {
+          "setup": "",
+          "code": "binarySearch([-1, 0, 3, 5, 9, 12], 2)",
+          "expected": -1
+        },
+        {
+          "setup": "",
+          "code": "binarySearch([5], 5)",
+          "expected": 0
+        },
+        {
+          "setup": "",
+          "code": "binarySearch([], 1)",
+          "expected": -1
+        },
+        {
+          "setup": "",
+          "code": "binarySearch([1, 2, 3, 4, 5], 1)",
+          "expected": 0
+        },
+        {
+          "setup": "",
+          "code": "binarySearch([1, 2, 3, 4, 5], 5)",
+          "expected": 4
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction binarySearch(arr, target) {\n  let lo = 0;\n  let hi = arr.length - 1;      // inclusive upper bound\n\n  while (lo <= hi) {            // <= because lo === hi is still a valid window\n    const mid = Math.floor((lo + hi) / 2);\n\n    if (arr[mid] === target) return mid;\n\n    if (arr[mid] < target) lo = mid + 1;   // mid is ruled out\n    else hi = mid - 1;                     // mid is ruled out\n  }\n\n  return -1;\n}\n```\n\n### How it works\n\nEach comparison eliminates half of what remains, so the search finishes in about `log₂(n)` steps — roughly 20 for a million elements, 30 for a billion. **O(log n) time, O(1) space.**\n\n### The three details that cause every bug\n\n1. **`hi = arr.length - 1` pairs with `while (lo <= hi)`.** The other valid convention is `hi = arr.length` with `while (lo < hi)`. Both are correct; mixing them is not. Pick one and keep it.\n2. **`mid + 1` and `mid - 1`, never bare `mid`.** You already tested `mid`, so leaving it inside the range means the window stops shrinking and you loop forever.\n3. **The empty array works for free** — `hi` starts at `-1`, the loop never runs, and you return `-1`.\n\nIn JavaScript `Math.floor((lo + hi) / 2)` is safe. In a fixed-width-integer language you'd write `lo + Math.floor((hi - lo) / 2)` to avoid overflow — mentioning that you know *why* the idiom exists is a nice touch.\n\n### The follow-ups\n\n**\"Return the first index `>= target` instead\"** (lower bound):\n\n```javascript\nfunction lowerBound(arr, target) {\n  let lo = 0;\n  let hi = arr.length;        // exclusive — returning length is meaningful\n\n  while (lo < hi) {\n    const mid = Math.floor((lo + hi) / 2);\n    if (arr[mid] < target) lo = mid + 1;\n    else hi = mid;            // mid might BE the answer — don't discard it\n  }\n\n  return lo;\n}\n```\n\nThe entire difference is `hi = mid` rather than `hi = mid - 1`.\n\n**\"First and last occurrence of a duplicated value?\"** — Two searches, one biased left and one biased right.\n\n**\"Rotated sorted array?\"** — One half is always properly sorted. Determine which, check whether the target falls inside it, and recurse into the correct half.\n\n### Key points\n\n- \"Sorted\" or an O(log n) constraint essentially always means binary search\n- Commit one boundary convention to muscle memory\n- The generalization — searching an *answer space* rather than an array — is what unlocks the harder variants ([/algorithm/7](/algorithm/7))"
+    },
+    {
+      "id": 44,
+      "title": "Reverse Linked List",
+      "difficulty": "easy",
+      "topics": [
+        "DSA",
+        "linked list",
+        "pointers"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "reverseList",
+      "description": "Reverse a singly linked list and return the new head.\n\nA node is a plain object: `{ val, next }`, with `next` being `null` at the tail.\n\n### Example\n\n```javascript\n// 1 → 2 → 3  becomes  3 → 2 → 1\n```\n\nThe tests build lists from arrays and read your result back into an array, so you only need to handle the node rewiring.\n\nAim for **O(n) time and O(1) space** — the iterative version.\n\nComplete the implementation in the editor.",
+      "template": "function reverseList(head) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const toList = (a) => a.reduceRight((next, val) => ({ val, next }), null);\nconst toArray = (n) => { const out = []; while (n) { out.push(n.val); n = n.next; } return out; };",
+          "code": "toArray(reverseList(toList([1, 2, 3, 4, 5])))",
+          "expected": [
+            5,
+            4,
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "setup": "const toList = (a) => a.reduceRight((next, val) => ({ val, next }), null);\nconst toArray = (n) => { const out = []; while (n) { out.push(n.val); n = n.next; } return out; };",
+          "code": "toArray(reverseList(toList([1, 2])))",
+          "expected": [
+            2,
+            1
+          ]
+        },
+        {
+          "setup": "const toList = (a) => a.reduceRight((next, val) => ({ val, next }), null);\nconst toArray = (n) => { const out = []; while (n) { out.push(n.val); n = n.next; } return out; };",
+          "code": "toArray(reverseList(toList([1])))",
+          "expected": [
+            1
+          ]
+        },
+        {
+          "setup": "const toList = (a) => a.reduceRight((next, val) => ({ val, next }), null);\nconst toArray = (n) => { const out = []; while (n) { out.push(n.val); n = n.next; } return out; };",
+          "code": "reverseList(toList([]))",
+          "expected": null
+        },
+        {
+          "setup": "const toList = (a) => a.reduceRight((next, val) => ({ val, next }), null);\nconst toArray = (n) => { const out = []; while (n) { out.push(n.val); n = n.next; } return out; };",
+          "code": "toArray(reverseList(toList([7, 7, 8])))",
+          "expected": [
+            8,
+            7,
+            7
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction reverseList(head) {\n  let prev = null;\n  let current = head;\n\n  while (current) {\n    const next = current.next;   // save it BEFORE we destroy the link\n    current.next = prev;         // flip the arrow backwards\n    prev = current;              // advance both pointers\n    current = next;\n  }\n\n  return prev;                   // current is null; prev is the new head\n}\n```\n\n### How it works\n\nWalk the list once, turning each `next` pointer around as you pass it.\n\n**Saving `next` first is the entire problem.** The instant you execute `current.next = prev`, the remainder of the list becomes unreachable — you have overwritten your only reference to it. Say that out loud while you type it; it is precisely what the question is testing.\n\nTrace `1 → 2 → 3`:\n\n| Step | prev | current | List so far |\n| --- | --- | --- | --- |\n| start | `null` | 1 | `1 → 2 → 3` |\n| 1 | 1 | 2 | `1 → null`, `2 → 3` |\n| 2 | 2 | 3 | `2 → 1 → null`, `3` |\n| 3 | 3 | `null` | `3 → 2 → 1 → null` |\n\nThe loop exits when `current` is `null`, at which point `prev` is sitting on the last node visited — the new head.\n\n**O(n) time, O(1) space.** The empty list works for free: the loop never runs and `prev` is still `null`.\n\n### The follow-ups\n\n**\"Do it recursively.\"**\n\n```javascript\nfunction reverseList(head) {\n  if (!head || !head.next) return head;\n\n  const newHead = reverseList(head.next);\n  head.next.next = head;   // the node ahead now points back at me\n  head.next = null;        // and I become the tail\n\n  return newHead;\n}\n```\n\nSame O(n) time, but **O(n) stack space** — strictly worse here, and worth naming as a trade-off rather than presenting as an upgrade.\n\n**\"Reverse only between positions m and n.\"** — Use a dummy head to sidestep the \"what if m is 1\" special case, walk to the node before `m`, reverse that stretch, then reattach both ends.\n\n**\"Why does frontend care about linked lists?\"** — An LRU cache is a linked list plus a hash map ([/coding/28](/coding/28)). And React stores a fiber's hook state as a linked list, which is exactly *why* hooks must be called in the same order on every render.\n\n### Key points\n\n- Three pointers: `prev`, `current`, and the saved `next`\n- Save `next` before overwriting `current.next` — everything else follows\n- Return `prev`, not `current` — `current` is `null` by then\n- Iterative is O(1) space; recursive is O(n)"
+    },
+    {
+      "id": 45,
+      "title": "Binary Tree Level Order Traversal",
+      "difficulty": "medium",
+      "topics": [
+        "DSA",
+        "trees",
+        "BFS",
+        "queue"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "levelOrder",
+      "description": "Given the root of a binary tree, return its values **grouped by level**, top to bottom, left to right.\n\nA node is a plain object: `{ val, left, right }`.\n\n### Example\n\n```javascript\n//     3\n//    / \\\n//   9  20\n//      / \\\n//     15  7\n\nlevelOrder(root);  // [[3], [9, 20], [15, 7]]\n```\n\nThe tests build trees with a `node(val, left, right)` helper. Return `[]` for an empty tree.\n\nComplete the implementation in the editor.",
+      "template": "function levelOrder(root) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "const node = (val, left = null, right = null) => ({ val, left, right });",
+          "code": "levelOrder(node(3, node(9), node(20, node(15), node(7))))",
+          "expected": [
+            [
+              3
+            ],
+            [
+              9,
+              20
+            ],
+            [
+              15,
+              7
+            ]
+          ]
+        },
+        {
+          "setup": "const node = (val, left = null, right = null) => ({ val, left, right });",
+          "code": "levelOrder(node(1))",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "setup": "const node = (val, left = null, right = null) => ({ val, left, right });",
+          "code": "levelOrder(null)",
+          "expected": []
+        },
+        {
+          "setup": "const node = (val, left = null, right = null) => ({ val, left, right });",
+          "code": "levelOrder(node(1, node(2, node(4)), node(3)))",
+          "expected": [
+            [
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4
+            ]
+          ]
+        },
+        {
+          "setup": "const node = (val, left = null, right = null) => ({ val, left, right });",
+          "code": "levelOrder(node(1, node(2, node(3, node(4)))))",
+          "expected": [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ]
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction levelOrder(root) {\n  if (!root) return [];\n\n  const result = [];\n  const queue = [root];\n\n  while (queue.length) {\n    const levelSize = queue.length;   // snapshot BEFORE we add any children\n    const level = [];\n\n    for (let i = 0; i < levelSize; i++) {\n      const node = queue.shift();\n      level.push(node.val);\n\n      if (node.left) queue.push(node.left);\n      if (node.right) queue.push(node.right);\n    }\n\n    result.push(level);\n  }\n\n  return result;\n}\n```\n\n### How it works\n\nBreadth-first search with a queue visits nodes in exactly the order you want: everything one step from the root, then everything two steps away, and so on.\n\nThe one trick is **capturing `levelSize` before the inner loop.** At the top of each outer iteration the queue contains precisely one level. Snapshot that count, drain exactly that many nodes, and every child you push lands *after* the snapshot — so it belongs to the next level. Without the snapshot the queue grows while you drain it and the levels smear into each other.\n\n**O(n) time.** Space is **O(w)** where `w` is the widest level — for a balanced tree that's about n/2, so O(n).\n\n### The `shift()` caveat\n\n`Array.prototype.shift()` re-indexes the whole array: **O(n)**. Inside this loop that technically makes the traversal O(n²).\n\nFor interview-sized inputs it does not matter, and over-engineering it is the wrong instinct. But *say that you know*, then offer the fix — a read pointer instead of a mutation:\n\n```javascript\nconst queue = [root];\nlet head = 0;\n\nwhile (head < queue.length) {\n  const levelSize = queue.length - head;\n  for (let i = 0; i < levelSize; i++) {\n    const node = queue[head++];\n    // …\n  }\n}\n```\n\nThat awareness is worth more than the optimization itself.\n\n### The follow-ups\n\n**\"Bottom-up order?\"** — Same traversal, then `result.reverse()`. Or `unshift` each level, though that's O(n) per insert.\n\n**\"Zigzag order?\"** — Reverse every other level before pushing it. Keep a boolean and flip it each iteration.\n\n**\"Right-side view?\"** — Push only the last value of each level.\n\n**\"Could you do this with DFS?\"** — Yes: recurse with a `depth` argument and append into `result[depth]`. It produces the same output but uses O(h) stack space instead of O(w) queue space. On a wide shallow tree DFS wins on memory; on a deep narrow one BFS does.\n\n### Key points\n\n- \"Level by level\" or \"shortest path\" → BFS with a queue\n- Snapshot the level size before pushing children — that's the whole pattern\n- Guard the empty tree first\n- Know the `shift()` cost even when you choose to live with it"
+    },
+    {
+      "id": 46,
+      "title": "Group Anagrams",
+      "difficulty": "medium",
+      "topics": [
+        "DSA",
+        "hash map",
+        "strings"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "groupAnagrams",
+      "description": "Given an array of strings, group the anagrams together. Return an array of groups, each group preserving the input order of its words.\n\nTwo words are anagrams if one is a rearrangement of the other's letters.\n\n### Example\n\n```javascript\ngroupAnagrams([\"eat\", \"tea\", \"tan\", \"ate\", \"nat\", \"bat\"]);\n// [[\"eat\", \"tea\", \"ate\"], [\"tan\", \"nat\"], [\"bat\"]]\n```\n\nGroups should appear in order of **first appearance**. The real question here is: *what makes a good grouping key?*\n\nComplete the implementation in the editor.",
+      "template": "function groupAnagrams(words) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat'])",
+          "expected": [
+            [
+              "eat",
+              "tea",
+              "ate"
+            ],
+            [
+              "tan",
+              "nat"
+            ],
+            [
+              "bat"
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "groupAnagrams([''])",
+          "expected": [
+            [
+              ""
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "groupAnagrams(['a'])",
+          "expected": [
+            [
+              "a"
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "groupAnagrams([])",
+          "expected": []
+        },
+        {
+          "setup": "",
+          "code": "groupAnagrams(['abc', 'cba', 'xyz'])",
+          "expected": [
+            [
+              "abc",
+              "cba"
+            ],
+            [
+              "xyz"
+            ]
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction groupAnagrams(words) {\n  const groups = new Map();\n\n  for (const word of words) {\n    // Anagrams share the same sorted letters — a perfect group key\n    const key = word.split('').sort().join('');\n\n    if (!groups.has(key)) groups.set(key, []);\n    groups.get(key).push(word);\n  }\n\n  return [...groups.values()];\n}\n```\n\n### How it works\n\nThe entire problem is **choosing a key that is identical for anagrams and different for everything else.**\n\nSorted letters do exactly that: `\"eat\"`, `\"tea\"`, and `\"ate\"` all sort to `\"aet\"`. Once you see that, this becomes an ordinary bucketing problem.\n\nA `Map` is the right container rather than a plain object for two reasons: it preserves **insertion order** for any key type (so groups come out in first-appearance order), and it avoids the prototype-pollution edge cases you get with `{}` — a word like `\"constructor\"` would collide with an inherited property.\n\n**O(n · k log k)** where n is the word count and k the average word length — the `sort` inside the loop dominates. Space is O(n · k).\n\n### The faster key\n\nIf they push on complexity, replace sorting with a character-count signature:\n\n```javascript\nfunction keyFor(word) {\n  const counts = new Array(26).fill(0);\n  for (const ch of word) counts[ch.charCodeAt(0) - 97]++;\n  return counts.join('#');   // '#' separator so 1,11 ≠ 11,1\n}\n```\n\nThat's **O(n · k)** — you've traded the `log k` for a fixed 26-slot scan. The `'#'` separator matters: without it, counts of `[1, 11]` and `[11, 1]` both stringify to `\"111\"`.\n\nOnly reach for this if asked. Sorting is clearer, and clarity is worth more until complexity is explicitly challenged.\n\n### The follow-ups\n\n**\"What about Unicode or uppercase?\"** — The 26-slot version assumes lowercase ASCII. Normalize first, or fall back to sorting. Worth flagging as an assumption *before* they raise it.\n\n**\"Just check whether two words are anagrams.\"** — Compare frequency maps in O(n), with an early exit on differing lengths.\n\n### Key points\n\n- \"Group by\" → hash map; the skill is picking the key\n- Sorted letters is the clear key; a count signature is the fast one\n- `Map` over `{}` for insertion order and prototype safety\n- State the assumption about the character set out loud"
+    },
+    {
+      "id": 47,
+      "title": "Merge Intervals",
+      "difficulty": "medium",
+      "topics": [
+        "DSA",
+        "arrays",
+        "sorting"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "merge",
+      "description": "Given an array of intervals `[start, end]`, merge all overlapping intervals and return the result sorted by start.\n\nIntervals that merely touch — `[1, 3]` and `[3, 5]` — count as overlapping.\n\n### Example\n\n```javascript\nmerge([[1, 3], [2, 6], [8, 10], [15, 18]]);\n// [[1, 6], [8, 10], [15, 18]]\n```\n\nThe input is **not** sorted. Realising that sorting comes first is most of the solution.\n\nComplete the implementation in the editor.",
+      "template": "function merge(intervals) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "merge([[1, 3], [2, 6], [8, 10], [15, 18]])",
+          "expected": [
+            [
+              1,
+              6
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              15,
+              18
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "merge([[1, 4], [4, 5]])",
+          "expected": [
+            [
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "merge([[1, 4], [2, 3]])",
+          "expected": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "merge([])",
+          "expected": []
+        },
+        {
+          "setup": "",
+          "code": "merge([[5, 6]])",
+          "expected": [
+            [
+              5,
+              6
+            ]
+          ]
+        },
+        {
+          "setup": "",
+          "code": "merge([[8, 10], [1, 3], [2, 6]])",
+          "expected": [
+            [
+              1,
+              6
+            ],
+            [
+              8,
+              10
+            ]
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction merge(intervals) {\n  if (intervals.length === 0) return [];\n\n  // Sort by start — copy first so we don't mutate the caller's array\n  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);\n  const result = [sorted[0]];\n\n  for (let i = 1; i < sorted.length; i++) {\n    const [start, end] = sorted[i];\n    const last = result[result.length - 1];\n\n    if (start <= last[1]) {\n      // Overlaps (or touches) — extend the last interval\n      last[1] = Math.max(last[1], end);\n    } else {\n      result.push([start, end]);\n    }\n  }\n\n  return result;\n}\n```\n\n### How it works\n\nUnsorted, any interval could overlap any other — that's O(n²) comparisons. **Sorting by start** collapses the problem: once sorted, an interval can only ever overlap the one immediately before it in the output. So a single sweep suffices.\n\nAt each step there are exactly two cases:\n\n- **`start <= last.end`** — they overlap or touch, so absorb it by pushing `last.end` outward.\n- **Otherwise** — there is a genuine gap, so start a new interval.\n\n`Math.max` on the merge is essential and easy to miss: `[[1, 10], [2, 3]]` must stay `[1, 10]`. Without the max you'd shrink it to `[1, 3]`.\n\n**O(n log n)** — dominated by the sort. The sweep itself is O(n).\n\n### Two details worth saying out loud\n\n1. **`sort((a, b) => a[0] - b[0])`, never bare `sort()`.** The default comparator stringifies, so `[10, …]` sorts before `[9, …]`. This is the single most common JavaScript sorting bug.\n2. **`[...intervals]` before sorting.** `sort` mutates in place; copying keeps the function pure. Interviewers notice this.\n\n### The follow-ups\n\n**\"Insert a new interval into an already-sorted list.\"** — No sort needed: skip everything ending before the new start, merge everything overlapping, append the rest. O(n).\n\n**\"Find the minimum number of meeting rooms.\"** — Same family. Separate the starts and ends, sort both, and sweep with a counter — or use a min-heap of end times. The answer is the peak concurrent count.\n\n**\"How would you detect if any two intervals overlap at all?\"** — Sort, then a single pass checking `start < previousEnd`. O(n log n), no merging required.\n\n### Key points\n\n- Intervals plus \"overlap\" almost always means **sort by start, then sweep**\n- Always pass a numeric comparator to `sort`\n- Copy before sorting to avoid mutating the input\n- `Math.max` when extending — the contained-interval case depends on it"
+    },
+    {
+      "id": 48,
+      "title": "Move Zeroes",
+      "difficulty": "easy",
+      "topics": [
+        "DSA",
+        "two pointers",
+        "arrays"
+      ],
+      "source": "user request: 1-day interview prep - DSA drills",
+      "runner": "expression",
+      "functionName": "moveZeroes",
+      "description": "Move all `0`s in an array to the end while keeping the **relative order** of the non-zero elements. Modify the array **in place** and return it.\n\n### Example\n\n```javascript\nmoveZeroes([0, 1, 0, 3, 12]);  // [1, 3, 12, 0, 0]\nmoveZeroes([0, 0, 1]);         // [1, 0, 0]\n```\n\nNo extra array. Aim for **O(n) time, O(1) space** — the two-pointer write-index pattern.\n\nComplete the implementation in the editor.",
+      "template": "function moveZeroes(arr) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "moveZeroes([0, 1, 0, 3, 12])",
+          "expected": [
+            1,
+            3,
+            12,
+            0,
+            0
+          ]
+        },
+        {
+          "setup": "",
+          "code": "moveZeroes([0, 0, 1])",
+          "expected": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "setup": "",
+          "code": "moveZeroes([1, 2, 3])",
+          "expected": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "setup": "",
+          "code": "moveZeroes([0, 0, 0])",
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "setup": "",
+          "code": "moveZeroes([])",
+          "expected": []
+        },
+        {
+          "setup": "const a = [4, 0, 5];",
+          "code": "(moveZeroes(a), a)",
+          "expected": [
+            4,
+            5,
+            0
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction moveZeroes(arr) {\n  let write = 0;   // next slot that should receive a non-zero value\n\n  for (let read = 0; read < arr.length; read++) {\n    if (arr[read] !== 0) {\n      [arr[write], arr[read]] = [arr[read], arr[write]];\n      write++;\n    }\n  }\n\n  return arr;\n}\n```\n\n### How it works\n\nTwo pointers moving in the **same direction**, at different speeds.\n\n`read` visits every element. `write` only advances when a non-zero is placed. That gives you an invariant worth stating out loud:\n\n> Everything before `write` is finished — non-zero and in original order. Everything between `write` and `read` is zeros.\n\nWhen `read` finds a non-zero, swapping it into `arr[write]` sends whatever was there — necessarily a zero, or the element itself if the pointers coincide — out to `read`'s position. The zeros accumulate at the back automatically. No second pass needed.\n\n**O(n) time, O(1) extra space.** The last test asserts the array was mutated in place rather than replaced.\n\n### Why swap instead of overwrite-then-fill\n\nThe alternative is: copy non-zeros forward, then fill the tail with zeros.\n\n```javascript\nlet write = 0;\nfor (const value of arr) if (value !== 0) arr[write++] = value;\nwhile (write < arr.length) arr[write++] = 0;\n```\n\nAlso correct and also O(n). The swap version does one pass instead of two, and generalizes to problems where the displaced value matters — like partitioning around a pivot. Either answer is fine; being able to compare them is the point.\n\n### The follow-ups\n\n**\"Minimize the number of writes.\"** — The swap version writes on every non-zero even when nothing needs to move. Guard with `if (read !== write)` to skip the no-op swaps.\n\n**\"Move zeroes to the front instead.\"** — Same pattern walking from the right, with `write` starting at `arr.length - 1`.\n\n**\"Remove all instances of a given value, returning the new length.\"** — Identical write-pointer pattern; return `write` instead of the array.\n\n### Key points\n\n- \"In place\", \"without extra space\", \"preserve order\" → same-direction two pointers\n- `write` marks the boundary between finished and unprocessed\n- State the invariant out loud — it is what proves the code correct\n- The whole family (dedupe sorted array, remove element, partition) is this one skeleton"
     }
   ]
 }

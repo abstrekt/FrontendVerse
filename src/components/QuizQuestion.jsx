@@ -8,6 +8,7 @@ import CompletedButton from './CompletedButton';
 import { clampPct } from '../utils/passProgress';
 import { presentOptions } from '../utils/optionOrder';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import Icon from './Icon';
 
 export default function QuizQuestion({
   question,
@@ -160,7 +161,7 @@ export default function QuizQuestion({
               aria-expanded={showOptions}
               onClick={() => setShowOptions(!showOptions)}
             >
-              <span className="chevron" aria-hidden="true">{showOptions ? '▾' : '▸'}</span>
+              <span className="chevron"><Icon name={showOptions ? 'chevron-down' : 'chevron-right'} size={14} /></span>
               {showOptions ? 'Hide options' : 'Show options'}
               <kbd className="shortcut-hint">O</kbd>
             </button>
@@ -171,7 +172,7 @@ export default function QuizQuestion({
               aria-expanded={showExplanation}
               onClick={() => setShowExplanation(!showExplanation)}
             >
-              <span className="chevron" aria-hidden="true">{showExplanation ? '▾' : '▸'}</span>
+              <span className="chevron"><Icon name={showExplanation ? 'chevron-down' : 'chevron-right'} size={14} /></span>
               {showExplanation ? 'Hide explanation' : 'Show explanation'}
               <kbd className="shortcut-hint">E</kbd>
             </button>
@@ -215,7 +216,8 @@ export default function QuizQuestion({
             Archive
           </button>
           <button type="button" className="next-btn" onClick={handleNext}>
-            {isLast ? 'Finish quiz →' : 'Next question →'}
+            {isLast ? 'Finish quiz' : 'Next question'}
+            <Icon name="arrow-right" size={15} />
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import Icon from './Icon';
 
 function InlineMd({ text }) {
   return (
@@ -48,7 +49,9 @@ export default function OptionList({ options, selected, answer, onPick }) {
                 unless you happened to have picked it. */}
             {isAnswered && isCorrect && (
               <span className="option-marker">
-                <span className="icon correct-icon" aria-hidden="true">✓</span>
+                <span className="icon correct-icon" aria-hidden="true">
+                  <Icon name="check" size={13} />
+                </span>
                 <span className="sr-only">
                   {isPicked ? 'Correct, your answer' : 'Correct answer'}
                 </span>
@@ -56,7 +59,9 @@ export default function OptionList({ options, selected, answer, onPick }) {
             )}
             {isAnswered && isPicked && !isCorrect && (
               <span className="option-marker">
-                <span className="icon wrong-icon" aria-hidden="true">✗</span>
+                <span className="icon wrong-icon" aria-hidden="true">
+                  <Icon name="x" size={13} />
+                </span>
                 <span className="sr-only">Incorrect, your answer</span>
               </span>
             )}

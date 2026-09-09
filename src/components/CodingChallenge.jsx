@@ -284,10 +284,29 @@ export default function CodingChallenge({
               className="output-check-btn coding-run-btn"
               onClick={handleRunTests}
               disabled={checking}
+              aria-busy={checking}
             >
               {checking ? 'Running tests...' : 'Run tests'}
             </button>
           </div>
+
+          {/* The pass/fail list below is visual only. Always mounted so the
+              text change is what gets announced. */}
+          <p className="sr-only" role="status" aria-live="polite">
+            {checking
+              ? 'Running tests.'
+              : testResults
+                ? (() => {
+                    const passed = testResults.filter((r) => r.passed).length;
+                    const failed = testResults
+                      .map((r, i) => (r.passed ? null : i + 1))
+                      .filter(Boolean);
+                    return `${passed} of ${testResults.length} tests passed.${
+                      failed.length ? ` Failed: test ${failed.join(', test ')}.` : ''
+                    }`;
+                  })()
+                : ''}
+          </p>
 
           {runError && (
             <p className="coding-run-error" role="alert">

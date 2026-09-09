@@ -142,17 +142,6 @@
       "answer": "## Document Object Model\n\n**DOM** stands for **Document Object Model** — an interface (API) for HTML and XML documents.\n\nWhen the browser parses an HTML document, it creates a **tree-like structure** from it — this is the DOM. It's used for interacting with and modifying the document structure, elements, and nodes.\n\n## Example\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>Document Object Model</title>\n  </head>\n  <body>\n    <div>\n      <p>\n        <span></span>\n      </p>\n      <label></label>\n      <input />\n    </div>\n  </body>\n</html>\n```\n\nThe DOM equivalent is a tree:\n\n```\ndocument\n └── html\n      ├── head\n      │    ├── meta\n      │    └── title\n      └── body\n           └── div\n                ├── p\n                │    └── span\n                ├── label\n                └── input\n```\n\nThe `document` object in JavaScript represents the DOM. It provides methods to select elements, update content, and manage events."
     },
     {
-      "id": 96,
-      "title": "Event Propagation — Bubbling and Capturing",
-      "tags": [
-        "DOM",
-        "events",
-        "browser"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## Three phases of event propagation\n\nWhen an event occurs on a DOM element, it goes through three phases:\n\n1. **Capturing Phase** — event starts from `window` and travels down to the target element\n2. **Target Phase** — event has reached the target element\n3. **Bubbling Phase** — event bubbles up from target to `window`\n\n## Event Bubbling\n\nThe default behavior (`useCapture = false`). The event fires on the target element first, then bubbles up through ancestors:\n\n```javascript\n// Clicking .child logs: child → parent → grandparent → html → document → window\naddEvent(child, \"click\", () => console.log(\"child\"));\naddEvent(parent, \"click\", () => console.log(\"parent\"));\naddEvent(grandparent, \"click\", () => console.log(\"grandparent\"));\n```\n\n## Event Capturing\n\nWhen `useCapture = true` (3rd param to `addEventListener`), the event fires during the capturing phase — top-down:\n\n```javascript\n// Clicking .child logs: window → document → html → grandparent → parent → child\naddEvent(child, \"click\", () => console.log(\"child\"), true);\naddEvent(parent, \"click\", () => console.log(\"parent\"), true);\naddEvent(grandparent, \"click\", () => console.log(\"grandparent\"), true);\n```"
-    },
-    {
       "id": 97,
       "title": "event.preventDefault() vs event.stopPropagation()",
       "tags": [
@@ -195,17 +184,6 @@
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
       "answer": "## What is Scope?\n\n**Scope** is the area where variables and functions are validly accessible. JavaScript has three types:\n\n### 1. Global Scope\nVariables declared in the global namespace are accessible everywhere:\n\n```javascript\nvar g = \"global\";\n\nfunction globalFunc() {\n  function innerFunc() {\n    console.log(g); // can access \"g\"\n  }\n  innerFunc();\n}\n```\n\n### 2. Function Scope\nVariables declared inside a function are only accessible within it:\n\n```javascript\nfunction myFavoriteFunc(a) {\n  if (true) {\n    var b = \"Hello \" + a;\n  }\n  return b; // b accessible here (var is function-scoped)\n}\nmyFavoriteFunc(\"World\");\nconsole.log(a); // ReferenceError\n```\n\n### 3. Block Scope (ES6)\nVariables declared with `let` or `const` inside `{}` are only accessible within that block:\n\n```javascript\nfunction testBlock() {\n  if (true) {\n    let z = 5;\n  }\n  return z; // ReferenceError\n}\n```\n\n## Scope Chain\n\nWhen accessing a variable, JavaScript searches from the **innermost scope outward** until it finds the variable or reaches the global scope. It stops at the **nearest match**:\n\n```javascript\nvar variable1 = \"Comrades\";\nvar variable2 = \"Sayonara\";\n\nfunction outer() {\n  var variable1 = \"World\";\n  function inner() {\n    var variable2 = \"Hello\";\n    console.log(variable2 + \" \" + variable1);\n  }\n  inner();\n}\nouter(); // \"Hello World\"\n```\n\nThe lookup: `inner`'s scope → `outer`'s scope → global scope. Finds `variable2` in `inner`, `variable1` in `outer`."
-    },
-    {
-      "id": 101,
-      "title": "Closures",
-      "tags": [
-        "closures",
-        "scope",
-        "functions"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## What is a Closure?\n\nA **closure** is the ability of a function to **remember and access** variables from its lexical scope even when the function is executed outside that scope.\n\n## Simple example\n\n```javascript\nvar globalVar = \"abc\";\n\nfunction a() {\n  console.log(globalVar);\n}\n\na(); // \"abc\" — globalVar is in a's closure\n```\n\n## Complex example\n\n```javascript\nvar globalVar = \"global\";\nvar outerVar = \"outer\";\n\nfunction outerFunc(outerParam) {\n  function innerFunc(innerParam) {\n    console.log(globalVar, outerParam, innerParam);\n  }\n  return innerFunc;\n}\n\nconst x = outerFunc(outerVar);\nouterVar = \"outer-2\";\nglobalVar = \"guess\";\nx(\"inner\"); // \"guess outer inner\"\n```\n\n**Why \"outer\" and not \"outer-2\"?** `outerParam` captured the value of `outerVar` **at the time `outerFunc` was called**, which was `\"outer\"`. But `globalVar` was reassigned **before `x()` was called**, so the closure sees the updated value `\"guess\"`.\n\n## The classic loop problem\n\n```javascript\nconst arrFuncs = [];\nfor (var i = 0; i < 5; i++) {\n  arrFuncs.push(function () {\n    return i;\n  });\n}\n\nconsole.log(i); // 5\narrFuncs.forEach((fn) => console.log(fn())); // all log 5\n```\n\n`var i` is function-scoped (global here). All functions close over the **same `i`** — its final value `5`.\n\n### Fixes:\n\n1. Use `let` (block-scoped — each iteration gets its own `i`):\n```javascript\nfor (let i = 0; i < 5; i++) { ... }\n```\n\n2. Use an IIFE to capture each value:\n```javascript\nfor (var i = 0; i < 5; i++) {\n  (function (currentIndex) {\n    arrFuncs.push(function () {\n      return currentIndex;\n    });\n  })(i);\n}\n```"
     },
     {
       "id": 102,
@@ -285,18 +263,6 @@
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
       "answer": "## What is `arguments`?\n\nThe `arguments` object is an **array-like** collection of all parameter values passed to a function. It has a `length` property and index-based access, but lacks array methods like `forEach`, `map`, `filter`, etc.\n\n```javascript\nfunction one() {\n  return arguments; // { 0: ..., 1: ..., length: 2 }\n}\none(1, 2);\n```\n\n## Converting to an array\n\n```javascript\nfunction one() {\n  return Array.prototype.slice.call(arguments);\n}\n```\n\n## Arrow functions DON'T have `arguments`\n\n```javascript\nconst four = () => arguments;\nfour(); // ReferenceError: arguments is not defined\n```\n\nUse **rest parameters** instead:\n\n```javascript\nconst four = (...args) => args;\nfour(1, 2, 3); // [1, 2, 3]\n```"
-    },
-    {
-      "id": 109,
-      "title": "Arrow functions",
-      "tags": [
-        "arrow functions",
-        "ES6",
-        "functions",
-        "this"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## Syntax\n\nArrow functions provide a shorter syntax by omitting the `function` keyword:\n\n```javascript\n// ES5\nvar getCurrentDate = function () {\n  return new Date();\n};\n\n// ES6\nconst getCurrentDate = () => new Date(); // implicit return\n\n// With parameters\nconst greet = (name) => `Hello ${name}`;\nconst greet2 = (name) => `Hello ${name}`; // single param — parens optional\n```\n\n## Key Differences from Regular Functions\n\n### 1. No own `this`\nArrow functions capture `this` from the **enclosing lexical scope**:\n\n```javascript\nconst data = {\n  result: 0,\n  nums: [1, 2, 3, 4, 5],\n  computeResult() {\n    const addAll = () => {\n      return this.nums.reduce((total, cur) => total + cur, 0);\n    };\n    this.result = addAll(); // this = data object\n  },\n};\n```\n\n### 2. No `arguments` object\nUse rest parameters instead:\n\n```javascript\nconst getArgs = (...rest) => rest;\n```\n\n### 3. Cannot be used as constructors\n`new` with an arrow function throws a TypeError.\n\n### 4. No `prototype` property\nArrow functions don't have a `.prototype`."
     },
     {
       "id": 110,

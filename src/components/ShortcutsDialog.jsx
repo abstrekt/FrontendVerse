@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import Icon from './Icon';
 
 const GROUPS = [
   {
@@ -53,7 +54,7 @@ export default function ShortcutsDialog({ open, onClose }) {
         <div className="dialog-header">
           <h2 id="shortcuts-title" className="dialog-title">Keyboard shortcuts</h2>
           <button type="button" className="dialog-close" onClick={onClose} aria-label="Close">
-            ✕
+            <Icon name="x" size={18} />
           </button>
         </div>
 

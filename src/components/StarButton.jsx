@@ -1,3 +1,5 @@
+import Icon from './Icon';
+
 export default function StarButton({ isStarred, onToggle, className = '' }) {
   return (
     <button
@@ -7,7 +9,7 @@ export default function StarButton({ isStarred, onToggle, className = '' }) {
       aria-label={isStarred ? 'Unstar' : 'Star'}
       onClick={onToggle}
     >
-      {isStarred ? '★' : '☆'}
+      <Icon name="star" filled={isStarred} />
     </button>
   );
 }
