@@ -176,6 +176,7 @@ export default function App() {
   const [cssLearnings, setCssLearnings] = useState([]);
   const [hldLearnings, setHldLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
+  const [blind75Learnings, setBlind75Learnings] = useState([]);
   // Which lazily-loaded learning datasets have arrived. Views read this to
   // show a skeleton rather than an empty list while a chunk is in flight.
   const [loadedSections, setLoadedSections] = useState({});
@@ -197,6 +198,7 @@ export default function App() {
     'advanced-react': setAdvancedReactLearningId,
     'hld': setHldLearningId,
     'algorithm': setAlgorithmLearningId,
+    'blind75': setBlind75LearningId,
   } = learningSetters;
   const activeSection = route.section;
   const viewMode = route.viewMode;
@@ -277,6 +279,10 @@ export default function App() {
     () => filterActive(algorithmLearnings, 'algorithm', archived),
     [algorithmLearnings, archived]
   );
+  const activeBlind75Learnings = useMemo(
+    () => filterActive(blind75Learnings, 'blind75', archived),
+    [blind75Learnings, archived]
+  );
   const activeCodingQuestions = useMemo(
     () => filterActive(codingQuestions, 'coding', archived),
     [codingQuestions, archived]
@@ -328,6 +334,10 @@ export default function App() {
     () => (starredFilter.algorithm ? filterStarred(activeAlgorithmLearnings, 'algorithm', starred) : activeAlgorithmLearnings),
     [activeAlgorithmLearnings, starredFilter.algorithm, starred]
   );
+  const starredActiveBlind75Learnings = useMemo(
+    () => (starredFilter.blind75 ? filterStarred(activeBlind75Learnings, 'blind75', starred) : activeBlind75Learnings),
+    [activeBlind75Learnings, starredFilter.blind75, starred]
+  );
   const orderedStarredActiveLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveLearnings, 'learnings', completed),
     [starredActiveLearnings, completed]
@@ -363,6 +373,10 @@ export default function App() {
   const orderedStarredActiveAlgorithmLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveAlgorithmLearnings, 'algorithm', completed),
     [starredActiveAlgorithmLearnings, completed]
+  );
+  const orderedStarredActiveBlind75Learnings = useMemo(
+    () => sortCompletedToEnd(starredActiveBlind75Learnings, 'blind75', completed),
+    [starredActiveBlind75Learnings, completed]
   );
   const starredActiveCodingQuestions = useMemo(
     () => (starredFilter.coding ? filterStarred(activeCodingQuestions, 'coding', starred) : activeCodingQuestions),
@@ -421,6 +435,10 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'algorithm', activeAlgorithmLearnings),
     [completed, activeAlgorithmLearnings]
   );
+  const blind75CompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'blind75', activeBlind75Learnings),
+    [completed, activeBlind75Learnings]
+  );
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
@@ -430,6 +448,7 @@ export default function App() {
   const advancedReactStarredCount = useMemo(() => getStarredCount(starred, 'advanced-react'), [starred]);
   const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
   const algorithmStarredCount = useMemo(() => getStarredCount(starred, 'algorithm'), [starred]);
+  const blind75StarredCount = useMemo(() => getStarredCount(starred, 'blind75'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
   const outputStarredCount = useMemo(() => getStarredCount(starred, 'output'), [starred]);
 
@@ -446,6 +465,7 @@ export default function App() {
         css: activeCssLearnings,
         hld: activeHldLearnings,
         algorithm: activeAlgorithmLearnings,
+        blind75: activeBlind75Learnings,
         coding: activeCodingQuestions,
         output: activeOutputQuestions,
       }),
@@ -460,6 +480,7 @@ export default function App() {
       activeCssLearnings,
       activeHldLearnings,
       activeAlgorithmLearnings,
+      activeBlind75Learnings,
       activeCodingQuestions,
       activeOutputQuestions,
     ]
@@ -638,6 +659,14 @@ export default function App() {
     return orderedStarredActiveAlgorithmLearnings[0] ?? null;
   }, [orderedStarredActiveAlgorithmLearnings, route.learningId, activeSection]);
 
+  const selectedBlind75Learning = useMemo(() => {
+    if (activeSection !== 'blind75') return null;
+    if (route.learningId) {
+      return orderedStarredActiveBlind75Learnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveBlind75Learnings[0] ?? null;
+    }
+    return orderedStarredActiveBlind75Learnings[0] ?? null;
+  }, [orderedStarredActiveBlind75Learnings, route.learningId, activeSection]);
+
   const announce = useAnnounce();
 
   // Switching section swaps the whole centre pane with nothing spoken.
@@ -741,6 +770,13 @@ export default function App() {
       setAlgorithmLearningId(orderedStarredActiveAlgorithmLearnings[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'blind75' || !orderedStarredActiveBlind75Learnings.length) return;
+    if (route.learningId && !orderedStarredActiveBlind75Learnings.some((item) => item.id === route.learningId)) {
+      setBlind75LearningId(orderedStarredActiveBlind75Learnings[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveBlind75Learnings, setBlind75LearningId]);
 
   const weakTopics = useMemo(
     () => getWeakTopics(progress, activeQuestions),
@@ -925,6 +961,7 @@ export default function App() {
       'advanced-react': setAdvancedReact,
       hld: setHldLearnings,
       algorithm: setAlgorithmLearnings,
+      blind75: setBlind75Learnings,
     };
 
     let cancelled = false;
@@ -1174,6 +1211,10 @@ export default function App() {
         setSection('algorithm', { learningId: id });
         return;
       }
+      if (section === 'blind75') {
+        setSection('blind75', { learningId: id });
+        return;
+      }
       if (section === 'mcq') {
         setSection('mcq', { itemId: id });
         setMcqQueue((state) => {
@@ -1286,6 +1327,10 @@ export default function App() {
   const handleToggleAlgorithmLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('algorithm', orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId, completed, setCompleted),
     [orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId, completed, setCompleted]
+  );
+  const handleToggleBlind75LearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('blind75', orderedStarredActiveBlind75Learnings, setBlind75LearningId, completed, setCompleted),
+    [orderedStarredActiveBlind75Learnings, setBlind75LearningId, completed, setCompleted]
   );
 
   const getMcqPoolForMode = useCallback(
@@ -1475,6 +1520,23 @@ export default function App() {
     [setStarredFilter, activeAlgorithmLearnings, starred, route.learningId, setAlgorithmLearningId]
   );
 
+  const handleBlind75StarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, blind75: value }));
+      if (value) {
+        const nextStarred = filterStarred(activeBlind75Learnings, 'blind75', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setBlind75LearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeBlind75Learnings, starred, route.learningId, setBlind75LearningId]
+  );
+
   const handleCodingStarredFilterChange = useCallback(
     (value) => {
       setStarredFilter((prev) => ({ ...prev, coding: value }));
@@ -1623,6 +1685,18 @@ export default function App() {
       }
     },
     [setArchived, archived, algorithmLearnings, route.learningId, setAlgorithmLearningId]
+  );
+
+  const handleArchiveBlind75Learning = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'blind75', learning.id));
+      const nextArchived = archiveId(archived, 'blind75', learning.id);
+      const nextActive = filterActive(blind75Learnings, 'blind75', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setBlind75LearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, blind75Learnings, route.learningId, setBlind75LearningId]
   );
 
   const handleUnarchive = useCallback(
@@ -2157,6 +2231,8 @@ export default function App() {
             hldCompletedCount={hldCompletedCount}
             algorithmLearningsCount={sectionCount('algorithm', activeAlgorithmLearnings)}
             algorithmCompletedCount={algorithmCompletedCount}
+            blind75Count={sectionCount('blind75', activeBlind75Learnings)}
+            blind75CompletedCount={blind75CompletedCount}
             outputQuestionsCount={activeOutputQuestions.length}
             codingQuestionsCount={activeCodingQuestions.length}
             archivedCount={archivedCount}
@@ -2332,6 +2408,17 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={theme}
               />
+            ) : activeSection === 'blind75' ? (
+              <LearningsView
+                learning={selectedBlind75Learning}
+                onArchive={handleArchiveBlind75Learning}
+                isStarred={selectedBlind75Learning ? isStarred(selectedBlind75Learning.id, 'blind75', starred) : false}
+                onToggleStar={() => selectedBlind75Learning && handleToggleStar('blind75', selectedBlind75Learning.id)}
+                isCompleted={selectedBlind75Learning ? isCompleted(selectedBlind75Learning.id, 'blind75', completed) : false}
+                onToggleCompleted={() => selectedBlind75Learning && handleToggleBlind75LearningCompleted(selectedBlind75Learning.id)}
+                highlight={syntaxHighlight}
+                theme={theme}
+              />
             ) : activeSection === 'archived' ? (
               <ArchivedView
                 archived={archived}
@@ -2344,6 +2431,7 @@ export default function App() {
                 cssLearnings={cssLearnings}
                 hldLearnings={hldLearnings}
                 algorithmLearnings={algorithmLearnings}
+                blind75Learnings={blind75Learnings}
                 codingQuestions={codingQuestions}
                 outputQuestions={outputQuestions}
                 onUnarchive={handleUnarchive}
@@ -2510,6 +2598,22 @@ export default function App() {
                 onStarredOnlyChange={handleAlgorithmStarredFilterChange}
                 onSelect={setAlgorithmLearningId}
                 title="Algorithm"
+              />
+            </div>
+          ) : activeSection === 'blind75' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred.blind75}
+                completedIds={completed.blind75}
+                activeItem={selectedBlind75Learning}
+                learnings={orderedStarredActiveBlind75Learnings}
+                selectedLearningId={selectedBlind75Learning?.id ?? null}
+                sectionKey="blind75"
+                starredOnly={starredFilter.blind75}
+                starredCount={blind75StarredCount}
+                onStarredOnlyChange={handleBlind75StarredFilterChange}
+                onSelect={setBlind75LearningId}
+                title="Blind 75"
               />
             </div>
           ) : activeSection === 'coding' ? (

@@ -8,6 +8,7 @@ export const LEARNING_SECTIONS = [
   'advanced-react',
   'hld',
   'algorithm',
+  'blind75',
 ];
 
 const ITEM_SECTIONS = ['coding', 'output'];

@@ -11,6 +11,7 @@ export const EMPTY_COMPLETED = {
   'advanced-react': [],
   hld: [],
   algorithm: [],
+  blind75: [],
   coding: [],
   output: [],
 };

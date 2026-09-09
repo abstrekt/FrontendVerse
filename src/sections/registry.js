@@ -60,6 +60,13 @@ export const SECTIONS = {
     kind: 'learning',
     subtitle: LEARNINGS,
   },
+  blind75: {
+    label: 'Blind 75',
+    navIcon: '75',
+    category: 'algo',
+    kind: 'learning',
+    subtitle: counter('problem', 'problems'),
+  },
   coding: {
     label: 'Javascript coding',
     navIcon: 'CD',

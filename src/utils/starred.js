@@ -11,6 +11,7 @@ export const EMPTY_STARRED = {
   'advanced-react': [],
   hld: [],
   algorithm: [],
+  blind75: [],
   coding: [],
   output: [],
 };
@@ -26,6 +27,7 @@ export const EMPTY_STARRED_FILTER = {
   'advanced-react': false,
   hld: false,
   algorithm: false,
+  blind75: false,
   coding: false,
   output: false,
 };

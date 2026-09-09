@@ -17,6 +17,7 @@ const SECTION_CATEGORIES = {
   css: "css",
   hld: "algo",
   algorithm: "algo",
+  blind75: "algo",
 };
 
 const CATEGORY_FILTERS = [
@@ -52,6 +53,8 @@ export default function Sidebar({
   hldCompletedCount,
   algorithmLearningsCount,
   algorithmCompletedCount,
+  blind75Count,
+  blind75CompletedCount,
   outputQuestionsCount,
   codingQuestionsCount,
   archivedCount,
@@ -127,6 +130,8 @@ export default function Sidebar({
             ? `${hldLearningsCount} learning${hldLearningsCount !== 1 ? "s" : ""} available`
             : activeSection === "algorithm"
               ? `${algorithmLearningsCount} learning${algorithmLearningsCount !== 1 ? "s" : ""} available`
+            : activeSection === "blind75"
+              ? `${blind75Count} problem${blind75Count !== 1 ? "s" : ""} available`
         : activeSection === "coding"
           ? `${codingQuestionsCount} challenge${codingQuestionsCount !== 1 ? "s" : ""} available`
           : `${outputQuestionsCount} question${outputQuestionsCount !== 1 ? "s" : ""} available`;
@@ -263,6 +268,20 @@ export default function Sidebar({
                   <span className="nav-icon">AL</span>
                   <span>Algorithm</span>
                   <span className="nav-count">{algorithmCompletedCount}/{algorithmLearningsCount}</span>
+                </button>
+              </li>
+            )}
+            {isSectionVisible("blind75") && (
+              <li>
+                <button
+                  type="button"
+                  className={activeSection === "blind75" ? "active" : ""}
+                  aria-current={activeSection === "blind75" ? "page" : undefined}
+                  onClick={() => onSectionChange("blind75")}
+                >
+                  <span className="nav-icon">75</span>
+                  <span>Blind 75</span>
+                  <span className="nav-count">{blind75CompletedCount}/{blind75Count}</span>
                 </button>
               </li>
             )}

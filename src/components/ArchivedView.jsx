@@ -15,7 +15,8 @@ function getItemLabel(section, item) {
     section === 'react-guide' ||
     section === 'advanced-react' ||
     section === 'hld' ||
-    section === 'algorithm'
+    section === 'algorithm' ||
+    section === 'blind75'
   ) {
     return stripMarkdown(item.title);
   }
@@ -35,6 +36,7 @@ const SECTION_ITEMS = {
   'advanced-react': 'advancedReact',
   hld: 'hldLearnings',
   algorithm: 'algorithmLearnings',
+  blind75: 'blind75Learnings',
   coding: 'codingQuestions',
   output: 'outputQuestions',
 };
@@ -51,11 +53,12 @@ export default function ArchivedView({
   advancedReact,
   hldLearnings,
   algorithmLearnings,
+  blind75Learnings,
   codingQuestions,
   outputQuestions,
   onUnarchive,
 }) {
-  const pools = { interviewPrep, testPrep, questions, learnings, cssLearnings, reactLearnings, reactGuide, advancedReact, hldLearnings, algorithmLearnings, codingQuestions, outputQuestions };
+  const pools = { interviewPrep, testPrep, questions, learnings, cssLearnings, reactLearnings, reactGuide, advancedReact, hldLearnings, algorithmLearnings, blind75Learnings, codingQuestions, outputQuestions };
   const groups = SECTIONS.map((section) => ({
     section,
     label: SECTION_LABELS[section],

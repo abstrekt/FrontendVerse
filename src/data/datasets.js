@@ -45,6 +45,7 @@ export const LEARNING_LOADERS = {
   'advanced-react': single(() => import('../../data/advanced-react.json')),
   hld: single(() => import('../../data/hld-learnings.json')),
   algorithm: single(() => import('../../data/algorithm-learnings.json')),
+  blind75: single(() => import('../../data/blind75-learnings.json')),
 };
 
 // Returning to a section should be instant, and the search index asks for

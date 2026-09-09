@@ -9,6 +9,7 @@ const SECTION_LABELS = {
   'advanced-react': 'Advanced React',
   hld: 'HLD',
   algorithm: 'Algorithm',
+  blind75: 'Blind 75',
   coding: 'Coding',
   output: 'Output',
 };
@@ -55,6 +56,7 @@ export const SEARCH_SECTIONS = [
   'advanced-react',
   'hld',
   'algorithm',
+  'blind75',
   'coding',
   'output',
 ];
@@ -184,6 +186,7 @@ export function buildSearchIndex({
   advancedReact = [],
   hld = [],
   algorithm = [],
+  blind75 = [],
   coding = [],
   output = [],
 } = {}) {
@@ -198,6 +201,7 @@ export function buildSearchIndex({
     ...advancedReact.map((item) => buildLearningDoc(item, 'advanced-react')),
     ...hld.map((item) => buildLearningDoc(item, 'hld')),
     ...algorithm.map((item) => buildLearningDoc(item, 'algorithm')),
+    ...blind75.map((item) => buildLearningDoc(item, 'blind75')),
     ...coding.map(buildCodingDoc),
     ...output.map(buildOutputDoc),
   ];

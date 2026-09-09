@@ -415,7 +415,8 @@ body {
 }
 
 .learning-content {
-  max-width: 760px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .learning-tags.topic-badges {
@@ -466,7 +467,8 @@ body {
 }
 
 .learning-answer.learning-content {
-  max-width: 760px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .learning-answer .code-body p {
@@ -4536,6 +4538,11 @@ body {
 .search-section-badge.section-algorithm {
   background: color-mix(in srgb, #0891b2 14%, var(--card-bg));
   color: #0891b2;
+}
+
+.search-section-badge.section-blind75 {
+  background: color-mix(in srgb, #6366f1 14%, var(--card-bg));
+  color: #6366f1;
 }
 
 .search-section-badge.section-coding {

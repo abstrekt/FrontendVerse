@@ -1,0 +1,1137 @@
+{
+  "learnings": [
+    {
+      "id": 1,
+      "title": "[Pattern 1/9] Arrays & Hashing Blueprint",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "easy",
+      "tags": [
+        "Arrays & Hashing",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nImagine you drop your winter coat off at a huge theatre cloakroom. \n- **The Brute Force Way ($O(N^2)$):** When you return to pick it up, the attendant walks row-by-row through thousands of coats comparing every single tag to yours. You wait 45 minutes.\n- **The Hash Map Way ($O(1)$):** The attendant gives you a ticket number `#42`. When you return, they walk straight to hook `#42` and hand you your coat in 2 seconds.\n\nA **Hash Map** or **Set** trades a tiny bit of extra memory to make search **instant ($O(1)$)**. Whenever an interviewer asks you a question that involves *\"have I seen this before?\"*, *\"find a pair that matches X\"*, or *\"count frequencies\"*, reaching for a Hash Map or Set should be muscle memory.\n\n---\n\n## 📊 Visual Architecture: The Cloakroom Ticket\n\n![Arrays and Hashing Pattern](/diagrams/blind75/arrays_and_hashing.svg)\n\n---\n\n## 🧠 The 3 Core Archetypes in this Pattern\n\n### 1. The Complement / Reverse Lookup\nInstead of checking every pair with nested loops, walk the array once. For each element `curr`, calculate what you **need** (`target - curr`). Ask the map: *\"Did someone earlier leave `need` in the cloakroom?\"*\n- Examples: **Two Sum**\n\n### 2. Frequency Counting / Histogram\nCount how often each letter or number appears using a Map or fixed 26-element array.\n- Examples: **Valid Anagram**, **Top K Frequent Elements**\n\n### 3. Prefix Accumulation (Running State)\nStore running totals or products from left-to-right, then right-to-left.\n- Examples: **Product of Array Except Self**, **Maximum Subarray (Kadane's)**\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// Archetype 1: Complement Lookup (O(N) time, O(N) space)\nfunction complementLookup(nums, target) {\n  const seen = new Map(); // value -> index\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (seen.has(need)) {\n      return [seen.get(need), i];\n    }\n    seen.set(nums[i], i);\n  }\n  return [];\n}\n\n// Archetype 2: Frequency Counter\nfunction frequencyCounter(items) {\n  const freq = new Map();\n  for (const item of items) {\n    freq.set(item, (freq.get(item) ?? 0) + 1);\n  }\n  return freq;\n}\n```\n\n---\n\n## ⚠️ Traps & Interview Gotchas\n1. **Never check after inserting:** In Two Sum, if you insert `nums[i]` into the Map *before* checking `seen.has(need)`, an element can pair with itself (e.g., target 6 on `[3]` would wrongly return `[0, 0]`). Always check **first**, insert **after**.\n2. **Plain Objects vs `Map` in JavaScript:** Plain `{}` keys are always coerced to strings (`obj[1]` is `obj[\"1\"]`) and can collide with prototype keys (e.g. `\"toString\"`). Use `new Map()` for arbitrary keys and safety.\n3. **Array Mutation:** Methods like `.sort()` mutate the array in place and convert elements to strings by default! Always pass a numerical comparator: `.sort((a, b) => a - b)`.\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Two Sum](/blind75/10)\n- [Contains Duplicate](/blind75/11)\n- [Valid Anagram](/blind75/12)\n- [Group Anagrams](/blind75/13)\n- [Top K Frequent Elements](/blind75/14)\n- [Product of Array Except Self](/blind75/15)\n- [Longest Consecutive Sequence](/blind75/16)\n- [Encode and Decode Strings](/blind75/17)\n- [Best Time to Buy and Sell Stock](/blind75/18)\n- [Maximum Subarray](/blind75/19)"
+    },
+    {
+      "id": 10,
+      "title": "Two Sum (LeetCode #1)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "easy",
+      "tags": [
+        "Arrays & Hashing",
+        "hash map",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/two-sum/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou have a list of numbers and a `target` sum. Find the **indices** of the two numbers that add up to that target. You can assume there's exactly one correct answer, and you cannot use the same element twice.\n\nExample: `nums = [2, 7, 11, 15], target = 9` -> `[0, 1]` because `2 + 7 = 9`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Don't look forward for partners; look backward in your notes.\"*\n\nThe naive way is nested loops ($O(N^2)$): for every number, scan the entire rest of the array. That's slow!\nInstead, carry a notepad (a JavaScript `Map`). As you walk through the array, at each number `curr`, ask: **\"What number do I need to reach `target`?\"** (`need = target - curr`).\n- If `need` is already written in your notepad, **you're done!** Return its index and your current index.\n- If not, write `curr -> current_index` in your notepad and take the next step.\n\n---\n\n## 📊 Visual Trace\n```\nnums = [3, 2, 4], target = 6\n\nStep 1: i=0, num=3. Need = 6 - 3 = 3.\n        Is 3 in map? No.\n        Map becomes: { 3: 0 }\n\nStep 2: i=1, num=2. Need = 6 - 2 = 4.\n        Is 4 in map? No.\n        Map becomes: { 3: 0, 2: 1 }\n\nStep 3: i=2, num=4. Need = 6 - 4 = 2.\n        Is 2 in map? YES! Index is 1.\n        Return [1, 2]! (Done in 1 pass)\n```\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction twoSum(nums, target) {\n  // Map stores: value -> its index in the array\n  const seen = new Map();\n\n  for (let i = 0; i < nums.length; i++) {\n    const current = nums[i];\n    const complement = target - current;\n\n    // Check BEFORE inserting to ensure we don't pair an element with itself\n    if (seen.has(complement)) {\n      return [seen.get(complement), i];\n    }\n\n    // Remember this number and its position for future elements\n    seen.set(current, i);\n  }\n\n  return [];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through the array. Hash map `.has()` and `.get()` are $O(1)$ on average.\n- **Space Complexity:** $O(N)$ — In the worst case, we store up to $N$ elements in the map.\n\n---\n\n## ⚠️ Traps & Follow-ups\n- **Trap:** Inserting into the map *before* checking. E.g. with `nums = [3, 3], target = 6`, checking first guarantees index 0 matches index 1 correctly.\n- **Follow-up:** *\"What if the array is already sorted?\"* -> Use **Two Pointers** from both ends for $O(1)$ extra space!\n- **In-App Practice:** [/coding/40](/coding/40)"
+    },
+    {
+      "id": 11,
+      "title": "Contains Duplicate (LeetCode #217)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "easy",
+      "tags": [
+        "Arrays & Hashing",
+        "Set",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/contains-duplicate/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, return `true` if any value appears at least twice in the array, and return `false` if every element is distinct.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"A Set cannot hold duplicates. Compare array length to Set size, or use early exit.\"*\n\nIn JavaScript, a `Set` only stores unique values. If you throw all elements into a Set, any duplicate is automatically swallowed.\n- **One-liner:** `new Set(nums).size !== nums.length`\n- **Early-exit optimization:** Walk through the array and add elements to a Set. The moment `set.has(num)` is true, return `true` immediately without checking the rest of the array!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n// Method 1: Early exit (optimal in practice when duplicates occur early)\nfunction containsDuplicate(nums) {\n  const seen = new Set();\n  for (const num of nums) {\n    if (seen.has(num)) return true;\n    seen.add(num);\n  }\n  return false;\n}\n\n// Method 2: Concise one-liner\nfunction containsDuplicateOneLiner(nums) {\n  return new Set(nums).size !== nums.length;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Adding to and checking a Set is $O(1)$ on average.\n- **Space Complexity:** $O(N)$ — To store the unique elements."
+    },
+    {
+      "id": 12,
+      "title": "Valid Anagram (LeetCode #242)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "easy",
+      "tags": [
+        "Arrays & Hashing",
+        "strings",
+        "hash map",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/valid-anagram/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise. An anagram is a word formed by rearranging the letters of another word using all original letters exactly once.\n\nExample: `s = \"anagram\", t = \"nagaram\"` -> `true`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Character tally balance sheet: count up for s, count down for t. If everything hits zero, it's an anagram.\"*\n\n1. Quick exit: If their lengths aren't equal, they can't be anagrams.\n2. Build a frequency table for `s`.\n3. Subtract counts using letters from `t`. If any letter runs out or doesn't exist, return `false`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction isAnagram(s, t) {\n  if (s.length !== t.length) return false;\n\n  const counts = new Map();\n\n  // Tally letters from s\n  for (const char of s) {\n    counts.set(char, (counts.get(char) ?? 0) + 1);\n  }\n\n  // Deduct letters using t\n  for (const char of t) {\n    const count = counts.get(char);\n    if (!count) return false; // Absent or already exhausted\n    counts.set(char, count - 1);\n  }\n\n  return true;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Linear scan of strings of length $N$.\n- **Space Complexity:** $O(1)$ — Since the English alphabet has at most 26 lowercase letters, the map never exceeds 26 entries!"
+    },
+    {
+      "id": 13,
+      "title": "Group Anagrams (LeetCode #49)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "hash map",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/group-anagrams/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of strings, group all anagrams together into sub-lists.\nExample: `[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]`\nResult: `[[\"eat\",\"tea\",\"ate\"], [\"tan\",\"nat\"], [\"bat\"]]`\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Every anagram family shares the exact same sorted string as its fingerprint.\"*\n\nIf you sort the characters of `\"eat\"`, `\"tea\"`, and `\"ate\"`, all three turn into `\"aet\"`.\nTherefore, use the sorted string as the **key** in a Hash Map, and the value will be an array of all words with that fingerprint!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction groupAnagrams(strs) {\n  const groups = new Map();\n\n  for (const word of strs) {\n    // Fingerprint: sorted letters\n    const key = word.split('').sort().join('');\n\n    if (!groups.has(key)) {\n      groups.set(key, []);\n    }\n    groups.get(key).push(word);\n  }\n\n  return Array.from(groups.values());\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\cdot K \\log K)$ where $N$ is the number of words and $K$ is the max length of a word (sorting each word takes $K \\log K$).\n- **Space Complexity:** $O(N \\cdot K)$ to store all grouped words.\n- **In-App Practice:** [/coding/46](/coding/46)"
+    },
+    {
+      "id": 14,
+      "title": "Top K Frequent Elements (LeetCode #347)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "bucket sort",
+        "heap",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/top-k-frequent-elements/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums` and an integer `k`, return the `k` most frequent elements.\nExample: `nums = [1,1,1,2,2,3], k = 2` -> `[1, 2]` (1 appears thrice, 2 appears twice).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Bucket Sort by Frequency: an element can appear at most N times, so use frequency as the array index!\"*\n\nNormally people think of sorting ($O(N \\log N)$) or a Heap ($O(N \\log K)$). But we can do it in **$O(N)$ linear time** using **Bucket Sort**:\n1. Count frequencies using a Map.\n2. Create an array of buckets where `buckets[freq]` holds all numbers that appeared `freq` times.\n3. Iterate backwards from bucket $N$ down to 1 and collect elements until you have $k$ items!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction topKFrequent(nums, k) {\n  const count = new Map();\n  for (const n of nums) {\n    count.set(n, (count.get(n) ?? 0) + 1);\n  }\n\n  // buckets[i] will store all numbers with frequency i\n  const buckets = Array.from({ length: nums.length + 1 }, () => []);\n  for (const [num, freq] of count.entries()) {\n    buckets[freq].push(num);\n  }\n\n  const result = [];\n  // Traverse from highest possible frequency down to 1\n  for (let freq = buckets.length - 1; freq >= 0 && result.length < k; freq--) {\n    for (const num of buckets[freq]) {\n      result.push(num);\n      if (result.length === k) break;\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Counting takes $O(N)$, populating buckets takes $O(N)$, and draining buckets takes $O(N)$.\n- **Space Complexity:** $O(N)$ — For the map and buckets."
+    },
+    {
+      "id": 15,
+      "title": "Product of Array Except Self (LeetCode #238)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "prefix sum",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/product-of-array-except-self/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all elements of `nums` except `nums[i]`.\n**Rule:** You must solve it in $O(N)$ time **without using the division operator `/`**!\n\nExample: `[1, 2, 3, 4]` -> `[24, 12, 8, 6]`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Everything except self = (Everything to my left) × (Everything to my right).\"*\n\n1. Make a first pass from left to right: store the prefix product (product of all numbers to the left of $i$).\n2. Make a second pass from right to left: maintain a running suffix product and multiply it into the prefix result!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction productExceptSelf(nums) {\n  const n = nums.length;\n  const result = new Array(n).fill(1);\n\n  // Pass 1: Prefix products (everything to the left)\n  let prefix = 1;\n  for (let i = 0; i < n; i++) {\n    result[i] = prefix;\n    prefix *= nums[i];\n  }\n\n  // Pass 2: Suffix products (everything to the right)\n  let suffix = 1;\n  for (let i = n - 1; i >= 0; i--) {\n    result[i] *= suffix;\n    suffix *= nums[i];\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Two sequential passes through the array.\n- **Space Complexity:** $O(1)$ extra space — We reuse the output array!"
+    },
+    {
+      "id": 16,
+      "title": "Longest Consecutive Sequence (LeetCode #128)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "Set",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-consecutive-sequence/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an unsorted array of integers `nums`, return the length of the longest consecutive elements sequence (e.g. 1, 2, 3, 4).\nYou must write an algorithm that runs in $O(N)$ time!\n\nExample: `nums = [100, 4, 200, 1, 3, 2]` -> Sequence is `[1, 2, 3, 4]`, so return `4`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Only start counting a sequence from the true beginning. How do you know? If (num - 1) is NOT in the set!\"*\n\nIf you check every number's sequence naively, you repeat work. \nPut everything in a `Set`. Then, only check sequences starting from numbers where `!set.has(num - 1)`. That guarantees each consecutive streak is traversed only once!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction longestConsecutive(nums) {\n  const set = new Set(nums);\n  let longest = 0;\n\n  for (const num of set) {\n    // Check if 'num' is the start of a streak\n    if (!set.has(num - 1)) {\n      let currentNum = num;\n      let currentStreak = 1;\n\n      while (set.has(currentNum + 1)) {\n        currentNum += 1;\n        currentStreak += 1;\n      }\n\n      longest = Math.max(longest, currentStreak);\n    }\n  }\n\n  return longest;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Each number is visited at most twice (once in the outer loop, and at most once inside the while loop).\n- **Space Complexity:** $O(N)$ — To store the numbers in a Set."
+    },
+    {
+      "id": 17,
+      "title": "Encode and Decode Strings (LeetCode #271)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/encode-and-decode-strings/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nDesign an algorithm to encode a list of strings to a single string, and decode that string back to the original list.\n**The catch:** The strings can contain any characters, including delimiters like commas, slashes, or hashes!\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Length Prefixing with a delimiter: `[length]#[string]`.\"*\n\nFor `[\"neet\", \"code\"]`, encode as:\n`\"4#neet4#code\"`\nWhen decoding:\n1. Read digits until you hit `#` to find the length $L$.\n2. Read the next $L$ characters as the exact string! It doesn't matter if the string contains `#` itself because we know its exact length.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nclass Codec {\n  // Encodes a list of strings to a single string.\n  encode(strs) {\n    let result = '';\n    for (const s of strs) {\n      result += `${s.length}#${s}`;\n    }\n    return result;\n  }\n\n  // Decodes a single string to a list of strings.\n  decode(s) {\n    const result = [];\n    let i = 0;\n\n    while (i < s.length) {\n      const hashIndex = s.indexOf('#', i);\n      const length = Number(s.substring(i, hashIndex));\n      const start = hashIndex + 1;\n      const end = start + length;\n\n      result.push(s.substring(start, end));\n      i = end;\n    }\n\n    return result;\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ for both encode and decode.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 18,
+      "title": "Best Time to Buy and Sell Stock (LeetCode #121)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "easy",
+      "tags": [
+        "Arrays & Hashing",
+        "two pointers",
+        "sliding window",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an array `prices` where `prices[i]` is the price of a given stock on day `i`.\nYou want to maximize your profit by choosing **one day** to buy and **one different day in the future** to sell.\n\nExample: `[7, 1, 5, 3, 6, 4]` -> Buy on day 2 (price = 1), sell on day 5 (price = 6), profit = $6 - 1 = 5$.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Remember the lowest valley seen so far, and calculate potential profit on every new peak.\"*\n\nAs you walk across days:\n1. Track `minPrice` seen so far.\n2. Calculate `profit = currentPrice - minPrice`.\n3. Keep the max profit found.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxProfit(prices) {\n  let minPrice = Infinity;\n  let maxProfit = 0;\n\n  for (const price of prices) {\n    if (price < minPrice) {\n      minPrice = price; // Found a cheaper day to buy\n    } else {\n      maxProfit = Math.max(maxProfit, price - minPrice); // Potential sale\n    }\n  }\n\n  return maxProfit;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through prices.\n- **Space Complexity:** $O(1)$ — Only two scalar variables."
+    },
+    {
+      "id": 19,
+      "title": "Maximum Subarray — Kadane's Algorithm (LeetCode #53)",
+      "pattern": "Arrays & Hashing",
+      "difficulty": "medium",
+      "tags": [
+        "Arrays & Hashing",
+        "dynamic programming",
+        "Kadane",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/maximum-subarray/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.\n\nExample: `[-2, 1, -3, 4, -1, 2, 1, -5, 4]` -> Subarray `[4, -1, 2, 1]` has largest sum `6`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook (Kadane's Algorithm):** *\"A negative prefix is toxic baggage. Discard it and start fresh!\"*\n\nIf your running sum ever drops below 0, it can never help future numbers increase their total. So reset running sum to 0 whenever it turns negative!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxSubArray(nums) {\n  let maxSoFar = nums[0];\n  let currentSum = 0;\n\n  for (const num of nums) {\n    // If currentSum was negative, reset it to 0\n    if (currentSum < 0) currentSum = 0;\n\n    currentSum += num;\n    maxSoFar = Math.max(maxSoFar, currentSum);\n  }\n\n  return maxSoFar;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — One loop.\n- **Space Complexity:** $O(1)$ — Constant extra memory."
+    },
+    {
+      "id": 2,
+      "title": "[Pattern 2/9] Two Pointers & Sliding Window Blueprint",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "easy",
+      "tags": [
+        "Two Pointers",
+        "Sliding Window",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nImagine two searchlights scanning a stage:\n1. **Converging Pointers:** Two searchlights start at opposite ends of a long line and walk toward each other. Every time they take a step, they permanently eliminate half the stage without needing to check it.\n2. **Sliding Window:** Like a sliding viewfinder or camera lens on a rail. You stretch the right edge of the lens to capture more content, and when the frame gets blurry (violates a rule), you slide the left edge forward until the image is crystal clear again.\n\n---\n\n## 📊 Visual Architecture: Converging Pointers & Dynamic Window\n\n![Two Pointers and Sliding Window Pattern](/diagrams/blind75/two_pointers_sliding_window.svg)\n\n---\n\n## 🧠 Two Distinct Archetypes\n\n### 1. Inward Converging Two Pointers (Sorted Arrays)\n- **Invariant:** `arr[left] + arr[right]`\n- If sum is too small -> `left++` (need larger elements)\n- If sum is too big -> `right--` (need smaller elements)\n- Eliminates $O(N^2)$ checks in a single $O(N)$ sweep.\n\n### 2. Sliding Window (Substrings & Subarrays)\n- **Invariant:** Window `[left, right]` satisfies problem condition (e.g. at most $K$ distinct letters, no duplicates).\n- Loop `right` across array: expand window state.\n- While condition broken: contract from `left` and shrink state.\n- Record optimal window size `(right - left + 1)`.\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// Blueprint 1: Converging Pointers\nfunction twoPointersSorted(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left < right) {\n    const sum = arr[left] + arr[right];\n    if (sum === target) return [left, right];\n    if (sum < target) left++;\n    else right--;\n  }\n  return [];\n}\n\n// Blueprint 2: Variable-Size Sliding Window\nfunction slidingWindow(s) {\n  const windowState = new Map();\n  let left = 0, best = 0;\n\n  for (let right = 0; right < s.length; right++) {\n    // 1. Add s[right] into windowState\n    windowState.set(s[right], (windowState.get(s[right]) ?? 0) + 1);\n\n    // 2. Shrink while window is invalid\n    while (/* window is invalid */ false) {\n      windowState.set(s[left], windowState.get(s[left]) - 1);\n      left++;\n    }\n\n    // 3. Record answer\n    best = Math.max(best, right - left + 1);\n  }\n\n  return best;\n}\n```\n\n---\n\n## ⚠️ Common Traps & Edge Cases\n- **Off-by-one window length:** The length of `[left, right]` is always **`right - left + 1`**. Memorize that `+ 1`.\n- **Amortized Time:** People often assume the inner `while` loop makes sliding window $O(N^2)$. It does **not**! Both `left` and `right` only move forward at most $N$ times. Total steps $\\le 2N$, which is strictly $O(N)$.\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Valid Palindrome](/blind75/20)\n- [3Sum](/blind75/21)\n- [Container With Most Water](/blind75/22)\n- [Trapping Rain Water](/blind75/23)\n- [Longest Substring Without Repeating Characters](/blind75/24)\n- [Longest Repeating Character Replacement](/blind75/25)\n- [Minimum Window Substring](/blind75/26)\n- [Maximum Product Subarray](/blind75/27)"
+    },
+    {
+      "id": 20,
+      "title": "Valid Palindrome (LeetCode #125)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "easy",
+      "tags": [
+        "Two Pointers",
+        "strings",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/valid-palindrome/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nA phrase is a palindrome if, after converting all uppercase letters to lowercase and removing all non-alphanumeric characters, it reads the same forward and backward.\n\nExample: `\"A man, a plan, a canal: Panama\"` -> `true` (`\"amanaplanacanalpanama\"`).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Two pointers meeting in the center; skip junk characters as you walk.\"*\n\nPlace `left = 0` and `right = s.length - 1`. Skip any character that isn't a letter or digit. When both are pointing at valid alphanumeric characters, compare lowercase values. If they differ, return `false`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction isPalindrome(s) {\n  // Normalize string: lowercase and remove non-alphanumeric\n  const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');\n  let left = 0;\n  let right = clean.length - 1;\n\n  while (left < right) {\n    if (clean[left] !== clean[right]) {\n      return false;\n    }\n    left++;\n    right--;\n  }\n\n  return true;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through string.\n- **Space Complexity:** $O(1)$ extra space if skipping in-place, or $O(N)$ for the cleaned string."
+    },
+    {
+      "id": 21,
+      "title": "3Sum (LeetCode #15)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "medium",
+      "tags": [
+        "Two Pointers",
+        "arrays",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/3sum/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, return all unique triplets `[nums[i], nums[j], nums[k]]` such that `i != j != k` and `nums[i] + nums[j] + nums[k] === 0`.\n**Rule:** The solution set must not contain duplicate triplets.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Sort first! Fix one number, then run Two Sum with converging pointers on the rest. Skip consecutive duplicates.\"*\n\n1. **Sort the array:** $O(N \\log N)$. Sorting allows us to easily skip duplicate values and use converging two pointers.\n2. Loop `i` from 0 to $N-3$:\n   - If `nums[i] > 0`, stop! Since the array is sorted, three positive numbers can never sum to 0.\n   - If `i > 0 && nums[i] === nums[i-1]`, skip to avoid duplicate triplets.\n   - Run two pointers: `left = i + 1`, `right = nums.length - 1`.\n   - On match (`sum === 0`), push triplet and advance past all duplicate `left` and `right` values.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction threeSum(nums) {\n  nums.sort((a, b) => a - b);\n  const result = [];\n\n  for (let i = 0; i < nums.length - 2; i++) {\n    // Early termination: if smallest number is > 0, sum cannot be 0\n    if (nums[i] > 0) break;\n\n    // Skip duplicate first numbers\n    if (i > 0 && nums[i] === nums[i - 1]) continue;\n\n    let left = i + 1;\n    let right = nums.length - 1;\n\n    while (left < right) {\n      const sum = nums[i] + nums[left] + nums[right];\n\n      if (sum === 0) {\n        result.push([nums[i], nums[left], nums[right]]);\n\n        // Skip duplicates for second and third numbers\n        while (left < right && nums[left] === nums[left + 1]) left++;\n        while (left < right && nums[right] === nums[right - 1]) right--;\n\n        left++;\n        right--;\n      } else if (sum < 0) {\n        left++; // Need larger sum\n      } else {\n        right--; // Need smaller sum\n      }\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N^2)$ — Outer loop runs $N$ times, inner two-pointer scan takes $O(N)$.\n- **Space Complexity:** $O(1)$ extra space (ignoring output and sort stack)."
+    },
+    {
+      "id": 22,
+      "title": "Container With Most Water (LeetCode #11)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "medium",
+      "tags": [
+        "Two Pointers",
+        "greedy",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/container-with-most-water/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an integer array `height` representing vertical lines on a graph. Find two lines that, together with the x-axis, form a container that holds the most water. Return the maximum amount of water.\n\nWater capacity = `width × min(height[left], height[right])`\nwhere `width = right - left`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Always advance the shorter wall. The shorter wall is the bottleneck; moving the taller wall can only ever decrease the area!\"*\n\nStart with the widest possible container: `left = 0`, `right = height.length - 1`.\nCalculate the area. Now, to try and find a larger area with a smaller width, we **must** find a taller wall. Because the shorter wall dictates the water level, moving the taller wall is useless. Therefore, advance whichever pointer has the smaller height!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxArea(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxWater = 0;\n\n  while (left < right) {\n    const width = right - left;\n    const h = Math.min(height[left], height[right]);\n    maxWater = Math.max(maxWater, width * h);\n\n    // Discard the limiting bottleneck wall\n    if (height[left] < height[right]) {\n      left++;\n    } else {\n      right--;\n    }\n  }\n\n  return maxWater;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — The two pointers traverse the array in a single pass.\n- **Space Complexity:** $O(1)$ — Only a few numbers stored."
+    },
+    {
+      "id": 23,
+      "title": "Trapping Rain Water (LeetCode #42)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "hard",
+      "tags": [
+        "Two Pointers",
+        "arrays",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/trapping-rain-water/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven $N$ non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Water trapped at index i depends strictly on: `min(maxLeft, maxRight) - height[i]`. Use two pointers tracking leftMax and rightMax inward!\"*\n\nInstead of storing precomputed arrays for left-max and right-max, maintain two pointers `left` and `right`:\n- Whichever side has the smaller max determines the water level for that bar!\n- If `maxLeft < maxRight`, water above `left` is `maxLeft - height[left]`, then `left++`.\n- Otherwise water above `right` is `maxRight - height[right]`, then `right--`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction trap(height) {\n  let left = 0, right = height.length - 1;\n  let leftMax = 0, rightMax = 0;\n  let totalWater = 0;\n\n  while (left < right) {\n    if (height[left] <= height[right]) {\n      if (height[left] >= leftMax) {\n        leftMax = height[left];\n      } else {\n        totalWater += leftMax - height[left];\n      }\n      left++;\n    } else {\n      if (height[right] >= rightMax) {\n        rightMax = height[right];\n      } else {\n        totalWater += rightMax - height[right];\n      }\n      right--;\n    }\n  }\n\n  return totalWater;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass.\n- **Space Complexity:** $O(1)$ — No extra arrays needed!"
+    },
+    {
+      "id": 24,
+      "title": "Longest Substring Without Repeating Characters (LeetCode #3)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "medium",
+      "tags": [
+        "Sliding Window",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a string `s`, find the length of the longest contiguous substring without repeating characters.\n\nExample: `s = \"abcabcbb\"` -> Answer is `3` (`\"abc\"`).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Sliding Window with a Set: Expand right; shrink left while the incoming char is already inside the window.\"*\n\nMaintain a `Set` representing all distinct characters currently in the window `[left, right]`.\n1. Expand `right`.\n2. If `set.has(s[right])`, shrink the window from `left` (deleting from set) until the duplicate is gone.\n3. Add `s[right]` to the set and update `best = Math.max(best, right - left + 1)`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction lengthOfLongestSubstring(s) {\n  const seen = new Set();\n  let left = 0;\n  let maxLen = 0;\n\n  for (let right = 0; right < s.length; right++) {\n    // Contract from left while the incoming character is a duplicate\n    while (seen.has(s[right])) {\n      seen.delete(s[left]);\n      left++;\n    }\n\n    seen.add(s[right]);\n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n\n  return maxLen;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Each character is visited by `right` once and `left` at most once.\n- **Space Complexity:** $O(\\min(N, M))$ where $M$ is the size of the alphabet.\n- **In-App Practice:** [/coding/41](/coding/41)"
+    },
+    {
+      "id": 25,
+      "title": "Longest Repeating Character Replacement (LeetCode #424)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "medium",
+      "tags": [
+        "Sliding Window",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-repeating-character-replacement/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given a string `s` and an integer `k`. You can choose any character of the string and change it to any other uppercase English character at most `k` times.\nReturn the length of the longest substring containing the same letter after performing at most `k` replacements.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Window is valid if: `(Window Length - Max Frequency in Window) <= k`.\"*\n\nIf a window of length 5 has three `'A'`s and two other letters, we need $5 - 3 = 2$ replacements. If $k=2$, this window is valid!\nIf `(right - left + 1) - maxFreq > k`, the window has too many distinct characters to convert; shift `left++` to shrink.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction characterReplacement(s, k) {\n  const count = new Map();\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n\n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    count.set(char, (count.get(char) ?? 0) + 1);\n    maxFreq = Math.max(maxFreq, count.get(char));\n\n    // If characters that need replacing exceed k, shrink window\n    while ((right - left + 1) - maxFreq > k) {\n      count.set(s[left], count.get(s[left]) - 1);\n      left++;\n    }\n\n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n\n  return maxLen;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Linear scan.\n- **Space Complexity:** $O(1)$ — At most 26 uppercase English letters in the map."
+    },
+    {
+      "id": 26,
+      "title": "Minimum Window Substring (LeetCode #76)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "hard",
+      "tags": [
+        "Sliding Window",
+        "strings",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/minimum-window-substring/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven two strings `s` and `t`, return the minimum window substring of `s` such that every character in `t` (including duplicates) is included in the window. If there is no such substring, return the empty string `\"\"`.\n\nExample: `s = \"ADOBECODEBANC\", t = \"ABC\"` -> `\"BANC\"`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Track 'have' vs 'need'. When have === need, shrink from the left to find the tightest valid window!\"*\n\n1. Create a frequency map `need` for `t`. We need `need.size` distinct characters satisfied.\n2. Expand `right`. When `windowCount.get(char) === need.get(char)`, increment `have++`.\n3. Whenever `have === needCount`, the window is valid! Try shrinking `left++` while updating the minimum window substring until it becomes invalid again.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction minWindow(s, t) {\n  if (!s || !t || s.length < t.length) return \"\";\n\n  const need = new Map();\n  for (const c of t) need.set(c, (need.get(c) ?? 0) + 1);\n\n  const window = new Map();\n  let have = 0;\n  const needCount = need.size;\n\n  let result = [-1, -1];\n  let minLen = Infinity;\n  let left = 0;\n\n  for (let right = 0; right < s.length; right++) {\n    const c = s[right];\n    window.set(c, (window.get(c) ?? 0) + 1);\n\n    if (need.has(c) && window.get(c) === need.get(c)) {\n      have++;\n    }\n\n    // Try to shrink the window while it's valid\n    while (have === needCount) {\n      if (right - left + 1 < minLen) {\n        minLen = right - left + 1;\n        result = [left, right];\n      }\n\n      const leftChar = s[left];\n      window.set(leftChar, window.get(leftChar) - 1);\n      if (need.has(leftChar) && window.get(leftChar) < need.get(leftChar)) {\n        have--;\n      }\n      left++;\n    }\n  }\n\n  return minLen === Infinity ? \"\" : s.substring(result[0], result[1] + 1);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N + M)$ where $N = \\text{len}(s), M = \\text{len}(t)$.\n- **Space Complexity:** $O(N + M)$ for frequency maps."
+    },
+    {
+      "id": 27,
+      "title": "Maximum Product Subarray (LeetCode #152)",
+      "pattern": "Two Pointers & Sliding Window",
+      "difficulty": "medium",
+      "tags": [
+        "Two Pointers",
+        "dynamic programming",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/maximum-product-subarray/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, find a subarray that has the largest product, and return the product.\n**The Catch:** Negative numbers flip signs! Multiplying two negative numbers creates a positive number, so a small negative product can suddenly become the largest positive product!\n\nExample: `[2, 3, -2, 4]` -> Output is `6` (`[2, 3]`).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Track BOTH `currentMax` and `currentMin` at every step. When you encounter a negative number, swap them!\"*\n\nBecause multiplying by a negative turns a min into a max, maintain:\n- `currentMax = Math.max(num, num * currentMax, num * currentMin)`\n- `currentMin = Math.min(num, num * currentMax, num * currentMin)`\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxProduct(nums) {\n  let result = nums[0];\n  let currentMax = 1;\n  let currentMin = 1;\n\n  for (const num of nums) {\n    // If num is negative, max and min flip!\n    if (num < 0) {\n      const temp = currentMax;\n      currentMax = currentMin;\n      currentMin = temp;\n    }\n\n    currentMax = Math.max(num, currentMax * num);\n    currentMin = Math.min(num, currentMin * num);\n\n    result = Math.max(result, currentMax);\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass.\n- **Space Complexity:** $O(1)$ — Constant extra space."
+    },
+    {
+      "id": 3,
+      "title": "[Pattern 3/9] Linked Lists Blueprint",
+      "pattern": "Linked Lists",
+      "difficulty": "easy",
+      "tags": [
+        "Linked Lists",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nThink of a **Linked List** as a **scavenger hunt**:\n- In an Array, clues are sitting side-by-side in labeled lockers `0, 1, 2, 3`. You can open locker `#42` instantly in $O(1)$ time.\n- In a Linked List, each clue is hidden in a random place, and inside the box is a note with the GPS coordinates of the **next clue**. You cannot skip to clue #5 without physically walking through clues 1, 2, 3, and 4.\n\nThe superpower of a linked list is that inserting or removing an item in the middle doesn't require shifting thousands of items—you just erase one arrow and draw a new arrow in $O(1)$ time!\n\n---\n\n## 📊 Visual Architecture: 3-Pointer Reversal & Tortoise-Hare\n\n![Linked Lists Pattern](/diagrams/blind75/linked_lists.svg)\n\n---\n\n## 🧠 The 3 Essential Master Tools\n\n### 1. The Dummy Head (Sentinel Node)\nWhenever the true head of the list might change or be deleted, allocate a fake dummy node:\n```javascript\nconst dummy = { val: 0, next: head };\n```\nReturn `dummy.next` at the end. This eliminates 90% of messy `if (head === null)` or `if (prev === null)` edge cases!\n\n### 2. In-Place Reversal (The 3-Pointer Dance)\nThree pointers: `prev`, `current`, and `next`.\n**The golden rule:** You must save `const next = current.next` **before** you overwrite `current.next = prev`. The moment you overwrite the link, the rest of the list is lost in memory forever!\n\n### 3. Fast & Slow Pointers (Floyd's Tortoise and Hare)\n- Move `slow` by 1 step. Move `fast` by 2 steps.\n- **Find middle:** When `fast` hits the end, `slow` is standing exactly in the middle.\n- **Cycle detection:** If there is a loop, `fast` is guaranteed to lap `slow` from behind. They must meet.\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// Blueprint 1: Reverse Linked List (O(N) time, O(1) space)\nfunction reverseList(head) {\n  let prev = null;\n  let current = head;\n\n  while (current) {\n    const next = current.next; // 1. Save link\n    current.next = prev;       // 2. Reverse arrow\n    prev = current;            // 3. Advance prev\n    current = next;            // 4. Advance current\n  }\n\n  return prev; // New head of reversed list\n}\n\n// Blueprint 2: Floyd's Cycle Detection\nfunction hasCycle(head) {\n  let slow = head;\n  let fast = head;\n\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n    if (slow === fast) return true; // Lapped!\n  }\n\n  return false;\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Reverse Linked List](/blind75/28)\n- [Merge Two Sorted Lists](/blind75/29)\n- [Linked List Cycle](/blind75/30)\n- [Reorder List](/blind75/31)\n- [Remove Nth Node From End of List](/blind75/32)\n- [Merge k Sorted Lists](/blind75/33)"
+    },
+    {
+      "id": 28,
+      "title": "Reverse Linked List (LeetCode #206)",
+      "pattern": "Linked Lists",
+      "difficulty": "easy",
+      "tags": [
+        "Linked Lists",
+        "pointers",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/reverse-linked-list/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the `head` of a singly linked list, reverse the list, and return the reversed list.\n\nExample: `1 -> 2 -> 3 -> 4 -> 5` becomes `5 -> 4 -> 3 -> 2 -> 1`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Save next before you cut the wire! Four steps: save next, flip pointer, slide prev, slide current.\"*\n\n1. `const next = curr.next;`\n2. `curr.next = prev;`\n3. `prev = curr;`\n4. `curr = next;`\nWhen `curr` becomes `null`, `prev` is the new head!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction reverseList(head) {\n  let prev = null;\n  let current = head;\n\n  while (current) {\n    const next = current.next; // Save next node\n    current.next = prev;       // Reverse pointer\n    prev = current;            // Step forward\n    current = next;\n  }\n\n  return prev;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Visits every node once.\n- **Space Complexity:** $O(1)$ — Only two pointer variables.\n- **In-App Practice:** [/coding/44](/coding/44)"
+    },
+    {
+      "id": 29,
+      "title": "Merge Two Sorted Lists (LeetCode #21)",
+      "pattern": "Linked Lists",
+      "difficulty": "easy",
+      "tags": [
+        "Linked Lists",
+        "two pointers",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/merge-two-sorted-lists/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given the heads of two sorted linked lists `list1` and `list2`.\nMerge the two lists into one sorted list by splicing together the nodes of the first two lists.\n\nExample: `1 -> 2 -> 4` and `1 -> 3 -> 4` -> `1 -> 1 -> 2 -> 3 -> 4 -> 4`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Use a Dummy Head. Compare list1 vs list2, append the smaller node to tail, and finally splice on whichever list has leftover nodes!\"*\n\nCreate a dummy node `dummy = { val: 0, next: null }` and `tail = dummy`.\nCompare `list1.val` vs `list2.val`. Attach the smaller to `tail.next` and advance that list. When one list runs out, directly attach the other list in $O(1)$!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction mergeTwoLists(list1, list2) {\n  const dummy = { val: 0, next: null };\n  let tail = dummy;\n\n  while (list1 && list2) {\n    if (list1.val <= list2.val) {\n      tail.next = list1;\n      list1 = list1.next;\n    } else {\n      tail.next = list2;\n      list2 = list2.next;\n    }\n    tail = tail.next;\n  }\n\n  // Attach remaining elements in O(1)\n  tail.next = list1 || list2;\n\n  return dummy.next;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N + M)$ — Where $N, M$ are lengths of the lists.\n- **Space Complexity:** $O(1)$ — Merged in place without allocating new list nodes."
+    },
+    {
+      "id": 30,
+      "title": "Linked List Cycle (LeetCode #141)",
+      "pattern": "Linked Lists",
+      "difficulty": "easy",
+      "tags": [
+        "Linked Lists",
+        "Floyd",
+        "two pointers",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/linked-list-cycle/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven `head`, the head of a linked list, determine if the linked list has a cycle in it. A cycle exists if some node in the list can be reached again by continuously following the `next` pointer.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Floyd's Tortoise and Hare: If two runners are on a circular track, the faster runner will always lap and collide with the slower runner.\"*\n\n- `slow` moves 1 step at a time.\n- `fast` moves 2 steps at a time.\n- If there is no cycle, `fast` reaches `null`.\n- If there is a cycle, the gap between `fast` and `slow` closes by 1 node on every single step until `slow === fast`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction hasCycle(head) {\n  let slow = head;\n  let fast = head;\n\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n\n    if (slow === fast) {\n      return true; // Cycle confirmed!\n    }\n  }\n\n  return false;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — In the worst case, fast catches slow within $N$ steps.\n- **Space Complexity:** $O(1)$ — No extra Set needed!"
+    },
+    {
+      "id": 31,
+      "title": "Reorder List (LeetCode #143)",
+      "pattern": "Linked Lists",
+      "difficulty": "medium",
+      "tags": [
+        "Linked Lists",
+        "two pointers",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/reorder-list/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the head of a singly linked list:\n`L0 → L1 → … → Ln - 1 → Ln`\nReorder it to:\n`L0 → Ln → L1 → Ln - 1 → L2 → Ln - 2 → …`\n\nExample: `1 -> 2 -> 3 -> 4` becomes `1 -> 4 -> 2 -> 3`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"The 3-act play: 1. Find middle with slow/fast. 2. Reverse second half. 3. Zipper merge the two halves together!\"*\n\nThis problem is a masterclass because it combines all 3 linked list fundamentals in one:\n1. Fast/slow pointers to split the list in half.\n2. In-place reversal of the second half.\n3. Two-pointer merge zipping nodes alternatingly.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction reorderList(head) {\n  if (!head || !head.next) return;\n\n  // 1. Find middle of list\n  let slow = head;\n  let fast = head;\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n  }\n\n  // 2. Reverse second half\n  let prev = null;\n  let curr = slow.next;\n  slow.next = null; // Split the two halves\n\n  while (curr) {\n    const next = curr.next;\n    curr.next = prev;\n    prev = curr;\n    curr = next;\n  }\n\n  // 3. Zipper merge first half (head) and second half (prev)\n  let first = head;\n  let second = prev;\n\n  while (second) {\n    const temp1 = first.next;\n    const temp2 = second.next;\n\n    first.next = second;\n    second.next = temp1;\n\n    first = temp1;\n    second = temp2;\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Half pass + reverse half + merge half = linear.\n- **Space Complexity:** $O(1)$ — Complete in-place rewiring."
+    },
+    {
+      "id": 32,
+      "title": "Remove Nth Node From End of List (LeetCode #19)",
+      "pattern": "Linked Lists",
+      "difficulty": "medium",
+      "tags": [
+        "Linked Lists",
+        "two pointers",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/remove-nth-node-from-end-of-list/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the head of a linked list, remove the $n^{\\text{th}}$ node from the end of the list and return its head in **one single pass**.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Two pointers with a gap of N. When fast reaches the end, slow is standing right before the victim node!\"*\n\n1. Create a dummy head in front: `dummy.next = head`.\n2. Advance `fast` pointer $n$ steps ahead.\n3. Advance both `slow` and `fast` together until `fast.next === null`.\n4. Now `slow.next` is the target! Delete it with:\n   `slow.next = slow.next.next`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction removeNthFromEnd(head, n) {\n  const dummy = { val: 0, next: head };\n  let slow = dummy;\n  let fast = dummy;\n\n  // Move fast pointer n steps ahead\n  for (let i = 0; i < n; i++) {\n    fast = fast.next;\n  }\n\n  // Move both until fast is at the tail\n  while (fast.next) {\n    slow = slow.next;\n    fast = fast.next;\n  }\n\n  // Delete the nth node from end\n  slow.next = slow.next.next;\n\n  return dummy.next;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass traversal.\n- **Space Complexity:** $O(1)$ — Dummy node and two pointers."
+    },
+    {
+      "id": 33,
+      "title": "Merge k Sorted Lists (LeetCode #23)",
+      "pattern": "Linked Lists",
+      "difficulty": "hard",
+      "tags": [
+        "Linked Lists",
+        "divide and conquer",
+        "heap",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/merge-k-sorted-lists/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an array of $k$ linked-lists `lists`, each linked-list is sorted in ascending order.\nMerge all the linked-lists into one sorted linked-list and return it.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Divide and Conquer: Merge lists pairwise in tournament brackets like the FIFA World Cup ($O(N \\log K)$).\"*\n\nMerging lists one by one takes $O(k \\cdot N)$.\nInstead, merge lists in pairs:\n- Round 1: List 0 with 1, List 2 with 3... ($k/2$ lists remain)\n- Round 2: Pair remaining lists... ($k/4$ lists remain)\nIn $\\log k$ rounds, all lists are merged cleanly into one!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction mergeKLists(lists) {\n  if (!lists || lists.length === 0) return null;\n\n  // Helper function to merge two sorted lists (LeetCode #21)\n  function merge2Lists(l1, l2) {\n    const dummy = { val: 0, next: null };\n    let tail = dummy;\n    while (l1 && l2) {\n      if (l1.val <= l2.val) {\n        tail.next = l1;\n        l1 = l1.next;\n      } else {\n        tail.next = l2;\n        l2 = l2.next;\n      }\n      tail = tail.next;\n    }\n    tail.next = l1 || l2;\n    return dummy.next;\n  }\n\n  // Divide and conquer pairwise merge\n  while (lists.length > 1) {\n    const mergedList = [];\n    for (let i = 0; i < lists.length; i += 2) {\n      const l1 = lists[i];\n      const l2 = i + 1 < lists.length ? lists[i + 1] : null;\n      mergedList.push(merge2Lists(l1, l2));\n    }\n    lists = mergedList;\n  }\n\n  return lists[0];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log K)$ where $N$ is total nodes across all lists, and $K$ is number of lists.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 4,
+      "title": "[Pattern 4/9] Trees & BST Blueprint",
+      "pattern": "Trees & BST",
+      "difficulty": "easy",
+      "tags": [
+        "Trees & BST",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nThink of a **Tree** as an **org chart** or **file system folder hierarchy**:\n- The CEO is the `root`.\n- Vice Presidents are `children`.\n- An individual worker with no direct reports is a `leaf`.\n- The beauty of trees is that **every sub-department is itself a valid tree!** This is why recursion feels like magic on trees: if you can write code that works on one manager and their two deputies, you have solved the problem for a million employees.\n\n---\n\n## 📊 Visual Architecture: Traversals & BST Invariant\n\n![Trees and BST Pattern](/diagrams/blind75/trees_and_bst.svg)\n\n---\n\n## 🧠 The 4 Foundational Archetypes\n\n### 1. Depth-First Search (DFS)\nGo down to the leaves before coming back up. Three classic orders:\n- **Pre-order (Visit -> Left -> Right):** Copying or serializing a tree.\n- **In-order (Left -> Visit -> Right):** **Yields strictly sorted values on a Binary Search Tree (BST)!**\n- **Post-order (Left -> Right -> Visit):** Bottom-up aggregation (computing depths, sub-tree sizes, deleting nodes).\n\n### 2. Breadth-First Search (BFS / Level-Order)\nExplore the tree floor-by-floor using a `queue`.\n**The snapshot trick:** Snapshot `levelSize = queue.length` before the inner loop so you don't blend floors together.\n\n### 3. The BST Invariant\nFor every node:\n`All Left Subtree Values < Node.val < All Right Subtree Values`\nSearching a BST is just Binary Search with pointers: $O(\\log N)$.\n\n### 4. Prefix Tree (Trie)\nA tree where each node holds an alphabet map (26 letters). Used for dictionary auto-complete, spell-check, and prefix searching in $O(L)$ time.\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// 1. Recursive DFS Skeleton (Bottom-up aggregation)\nfunction maxDepth(root) {\n  if (!root) return 0; // Base case: leaf reached\n  const leftDepth = maxDepth(root.left);\n  const rightDepth = maxDepth(root.right);\n  return 1 + Math.max(leftDepth, rightDepth);\n}\n\n// 2. BFS Level-Order Traversal (Snapshot queue)\nfunction levelOrder(root) {\n  if (!root) return [];\n  const result = [];\n  const queue = [root];\n\n  while (queue.length) {\n    const levelSize = queue.length; // SNAPSHOT current floor\n    const currentFloor = [];\n\n    for (let i = 0; i < levelSize; i++) {\n      const node = queue.shift();\n      currentFloor.push(node.val);\n      if (node.left) queue.push(node.left);\n      if (node.right) queue.push(node.right);\n    }\n    result.push(currentFloor);\n  }\n\n  return result;\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Invert Binary Tree](/blind75/34)\n- [Maximum Depth of Binary Tree](/blind75/35)\n- [Same Tree](/blind75/36)\n- [Subtree of Another Tree](/blind75/37)\n- [Lowest Common Ancestor of a BST](/blind75/38)\n- [Binary Tree Level Order Traversal](/blind75/39)\n- [Validate Binary Search Tree](/blind75/40)\n- [Kth Smallest Element in a BST](/blind75/41)\n- [Construct Binary Tree from Preorder and Inorder](/blind75/42)\n- [Binary Tree Maximum Path Sum](/blind75/43)\n- [Serialize and Deserialize Binary Tree](/blind75/44)\n- [Implement Trie](/blind75/45)\n- [Design Add and Search Words](/blind75/46)\n- [Word Search II](/blind75/47)"
+    },
+    {
+      "id": 34,
+      "title": "Invert Binary Tree (LeetCode #226)",
+      "pattern": "Trees & BST",
+      "difficulty": "easy",
+      "tags": [
+        "Trees & BST",
+        "recursion",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/invert-binary-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the `root` of a binary tree, invert the tree (mirror image), and return its root.\nThe famous problem that inspired the tweet: *\"Google: 90% of our engineers use the software you wrote (Homebrew), but you can't invert a binary tree on a whiteboard so f*** off.\"*\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Swap left and right children at the current node, then tell recursion to do the same for both children!\"*\n\n1. Base case: If `root === null`, return `null`.\n2. Swap: `[root.left, root.right] = [root.right, root.left]`.\n3. Recurse: `invertTree(root.left)` and `invertTree(root.right)`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction invertTree(root) {\n  if (!root) return null;\n\n  // Swap left and right subtrees\n  const temp = root.left;\n  root.left = invertTree(root.right);\n  root.right = invertTree(temp);\n\n  return root;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Every node is visited once.\n- **Space Complexity:** $O(H)$ — Call stack proportional to tree height $H$ ($O(\\log N)$ balanced, $O(N)$ worst case)."
+    },
+    {
+      "id": 35,
+      "title": "Maximum Depth of Binary Tree (LeetCode #104)",
+      "pattern": "Trees & BST",
+      "difficulty": "easy",
+      "tags": [
+        "Trees & BST",
+        "recursion",
+        "DFS",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/maximum-depth-of-binary-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the `root` of a binary tree, return its maximum depth. The maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"My depth = 1 + max(leftDepth, rightDepth).\"*\n\nAsk your left child: *\"What's your depth?\"*\nAsk your right child: *\"What's your depth?\"*\nTake the bigger of the two and add 1 for yourself.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxDepth(root) {\n  if (!root) return 0;\n  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Touches each node once.\n- **Space Complexity:** $O(H)$ — Call stack height."
+    },
+    {
+      "id": 36,
+      "title": "Same Tree (LeetCode #100)",
+      "pattern": "Trees & BST",
+      "difficulty": "easy",
+      "tags": [
+        "Trees & BST",
+        "recursion",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/same-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the roots of two binary trees `p` and `q`, write a function to check if they are the same or not.\nTwo binary trees are considered the same if they are structurally identical, and the nodes have the same value.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"3-part checklist: Both null? True. One null? False. Values match? Recurse both left and right.\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction isSameTree(p, q) {\n  // Both empty -> identical\n  if (!p && !q) return true;\n\n  // One empty or values differ -> not identical\n  if (!p || !q || p.val !== q.val) return false;\n\n  // Check subtrees recursively\n  return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Traverses both trees in parallel.\n- **Space Complexity:** $O(H)$ — Call stack space."
+    },
+    {
+      "id": 37,
+      "title": "Subtree of Another Tree (LeetCode #572)",
+      "pattern": "Trees & BST",
+      "difficulty": "easy",
+      "tags": [
+        "Trees & BST",
+        "recursion",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/subtree-of-another-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the roots of two binary trees `root` and `subRoot`, return `true` if there is a subtree of `root` with the same structure and node values as `subRoot`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Is subRoot identical to me, or is it inside my left child, or is it inside my right child?\"*\n\nReuse the `isSameTree` function from LeetCode #100!\nCheck if `isSameTree(root, subRoot)` is true. If not, recursively ask `isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot)`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction isSubtree(root, subRoot) {\n  if (!root) return false;\n\n  function isSame(t1, t2) {\n    if (!t1 && !t2) return true;\n    if (!t1 || !t2 || t1.val !== t2.val) return false;\n    return isSame(t1.left, t2.left) && isSame(t1.right, t2.right);\n  }\n\n  if (isSame(root, subRoot)) return true;\n\n  return isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\cdot M)$ where $N$ and $M$ are node counts.\n- **Space Complexity:** $O(H)$ — Recursion call stack."
+    },
+    {
+      "id": 38,
+      "title": "Lowest Common Ancestor of a BST (LeetCode #235)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "BST",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a binary search tree (BST), find the lowest common ancestor (LCA) node of two given nodes `p` and `q`. The LCA is the lowest node that has both `p` and `q` as descendants.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Follow the split point! If both p and q are smaller than current, go left. If both are bigger, go right. The moment they diverge, current is the LCA!\"*\n\nBecause it is a BST:\n- If `p.val < curr.val` and `q.val < curr.val`, LCA must be in the left subtree.\n- If `p.val > curr.val` and `q.val > curr.val`, LCA must be in the right subtree.\n- If one is on the left and one is on the right (or `curr` equals `p` or `q`), this node is the ancestor!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction lowestCommonAncestor(root, p, q) {\n  let curr = root;\n\n  while (curr) {\n    if (p.val < curr.val && q.val < curr.val) {\n      curr = curr.left;\n    } else if (p.val > curr.val && q.val > curr.val) {\n      curr = curr.right;\n    } else {\n      // Split point found (or curr matches p or q)\n      return curr;\n    }\n  }\n\n  return null;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(H)$ — Proportional to tree height ($O(\\log N)$ for balanced BST).\n- **Space Complexity:** $O(1)$ — Iterative traversal."
+    },
+    {
+      "id": 39,
+      "title": "Binary Tree Level Order Traversal (LeetCode #102)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "BFS",
+        "queue",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the root of a binary tree, return the level order traversal of its nodes' values (i.e. from left to right, level by level).\n\nExample: Root 3 with children 9 and 20 -> `[[3], [9, 20]]`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"BFS with Queue: Snapshot levelSize = queue.length before draining the level!\"*\n\nAt the start of the outer while loop, the queue holds *only* the nodes for the current level.\nMeasure `levelSize = queue.length`. Run a loop exactly that many times. Every child you push lands after the snapshot, ready for the next level!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction levelOrder(root) {\n  if (!root) return [];\n  const result = [];\n  const queue = [root];\n\n  while (queue.length) {\n    const levelSize = queue.length; // Snapshot size\n    const currentLevel = [];\n\n    for (let i = 0; i < levelSize; i++) {\n      const node = queue.shift();\n      currentLevel.push(node.val);\n\n      if (node.left) queue.push(node.left);\n      if (node.right) queue.push(node.right);\n    }\n\n    result.push(currentLevel);\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Every node is enqueued and dequeued once.\n- **Space Complexity:** $O(W)$ — Where $W$ is maximum width of tree (up to $N/2$).\n- **In-App Practice:** [/coding/45](/coding/45)"
+    },
+    {
+      "id": 40,
+      "title": "Validate Binary Search Tree (LeetCode #98)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "BST",
+        "DFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/validate-binary-search-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the root of a binary tree, determine if it is a valid binary search tree (BST).\nA valid BST requires that **all** nodes in the left subtree are strictly less than the node's value, and all nodes in the right subtree are strictly greater.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Don't just check immediate children! Pass down a valid (min, max) range to every recursive call.\"*\n\n**The Trap:** Checking `node.left.val < node.val < node.right.val` locally is wrong! A node deep in the left subtree could be 100 while the root is 5.\nTo fix this, pass `(min, max)` boundaries down the tree:\n- Going left: `validate(node.left, min, node.val)`\n- Going right: `validate(node.right, node.val, max)`\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction isValidBST(root) {\n  function validate(node, min, max) {\n    if (!node) return true;\n\n    // Node value must be strictly between min and max\n    if (node.val <= min || node.val >= max) {\n      return false;\n    }\n\n    // Left child's upper bound is node.val\n    // Right child's lower bound is node.val\n    return (\n      validate(node.left, min, node.val) &&\n      validate(node.right, node.val, max)\n    );\n  }\n\n  return validate(root, -Infinity, Infinity);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Each node checked once.\n- **Space Complexity:** $O(H)$ — Call stack."
+    },
+    {
+      "id": 41,
+      "title": "Kth Smallest Element in a BST (LeetCode #230)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "BST",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven the root of a binary search tree and an integer `k`, return the $k^{\\text{th}}$ smallest value (1-indexed) of all the values of the nodes in the tree.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"In-order traversal on a BST visits nodes in strictly sorted ascending order!\"*\n\nTraverse in-order (Left -> Root -> Right).\nCount each node as you visit it (`count++`). When `count === k`, you have found the answer!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction kthSmallest(root, k) {\n  let count = 0;\n  let result = null;\n\n  function inorder(node) {\n    if (!node || result !== null) return;\n\n    inorder(node.left);\n\n    count++;\n    if (count === k) {\n      result = node.val;\n      return;\n    }\n\n    inorder(node.right);\n  }\n\n  inorder(root);\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(H + K)$ — Stops as soon as the $k^{\\text{th}}$ element is hit.\n- **Space Complexity:** $O(H)$ — Recursion stack."
+    },
+    {
+      "id": 42,
+      "title": "Construct Binary Tree from Preorder and Inorder Traversal (LeetCode #105)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "recursion",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven two integer arrays `preorder` and `inorder`, construct and return the binary tree.\n- `preorder` visits `Root -> Left -> Right` (First element is ALWAYS the root!).\n- `inorder` visits `Left -> Root -> Right` (Everything left of the root belongs to the left subtree!).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Preorder gives you the root; Inorder gives you the left/right subtree split.\"*\n\n1. Take `preorder[0]` as the root node.\n2. Find its position in `inorder`. Everything to the left is the left subtree; everything to the right is the right subtree!\n3. Recurse for left and right subtrees.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction buildTree(preorder, inorder) {\n  if (!preorder.length || !inorder.length) return null;\n\n  // Root is always first in preorder\n  const rootVal = preorder[0];\n  const root = { val: rootVal, left: null, right: null };\n\n  // Find root position in inorder to split subtrees\n  const mid = inorder.indexOf(rootVal);\n\n  root.left = buildTree(preorder.slice(1, mid + 1), inorder.slice(0, mid));\n  root.right = buildTree(preorder.slice(mid + 1), inorder.slice(mid + 1));\n\n  return root;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ with a Map for index lookups ($O(N^2)$ with `indexOf` / slice).\n- **Space Complexity:** $O(N)$ — Tree construction."
+    },
+    {
+      "id": 43,
+      "title": "Binary Tree Maximum Path Sum (LeetCode #124)",
+      "pattern": "Trees & BST",
+      "difficulty": "hard",
+      "tags": [
+        "Trees & BST",
+        "DFS",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/binary-tree-maximum-path-sum/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nA path in a binary tree is a sequence of nodes where each pair of adjacent nodes has an edge connecting them. A node can only appear at most once in a path. Return the maximum path sum of any non-empty path.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Distinguish what you return to the parent vs what you calculate as a complete arch path!\"*\n\nAt each node:\n- **Complete Path:** Can arch through `left + node.val + right`. Update global `maxSum` with this.\n- **Return to Parent:** A parent can only continue the path down **one single branch**! So return `node.val + Math.max(left, right)`.\n- **Ignore negative gains:** If a child's branch sum is negative, clamp it to 0 (`Math.max(0, sum)`).\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction maxPathSum(root) {\n  let globalMax = -Infinity;\n\n  function maxGain(node) {\n    if (!node) return 0;\n\n    // Ignore negative branches\n    const leftGain = Math.max(0, maxGain(node.left));\n    const rightGain = Math.max(0, maxGain(node.right));\n\n    // Price of path arching through current node\n    const currentPathSum = node.val + leftGain + rightGain;\n    globalMax = Math.max(globalMax, currentPathSum);\n\n    // Return maximum single branch path to parent\n    return node.val + Math.max(leftGain, rightGain);\n  }\n\n  maxGain(root);\n  return globalMax;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Each node visited once.\n- **Space Complexity:** $O(H)$ — Call stack height."
+    },
+    {
+      "id": 44,
+      "title": "Serialize and Deserialize Binary Tree (LeetCode #297)",
+      "pattern": "Trees & BST",
+      "difficulty": "hard",
+      "tags": [
+        "Trees & BST",
+        "DFS",
+        "strings",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nDesign an algorithm to serialize a binary tree to a string and deserialize that string back to the original tree structure.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Pre-order traversal with a null marker: serialize with `val,val,null,...`, deserialize using a queue of tokens.\"*\n\n- **Serialize:** Pre-order DFS (`Root, Left, Right`). Output node values delimited by commas; emit `\"N\"` for null nodes.\n- **Deserialize:** Split string into tokens. Shift tokens one by one. If token is `\"N\"`, return `null`. Otherwise create node and recurse for left and right!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction serialize(root) {\n  const parts = [];\n  function dfs(node) {\n    if (!node) {\n      parts.push(\"N\");\n      return;\n    }\n    parts.push(String(node.val));\n    dfs(node.left);\n    dfs(node.right);\n  }\n  dfs(root);\n  return parts.join(\",\");\n}\n\nfunction deserialize(data) {\n  const tokens = data.split(\",\");\n  let index = 0;\n\n  function dfs() {\n    if (tokens[index] === \"N\") {\n      index++;\n      return null;\n    }\n    const node = { val: Number(tokens[index++]), left: null, right: null };\n    node.left = dfs();\n    node.right = dfs();\n    return node;\n  }\n\n  return dfs();\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ for both serialization and deserialization.\n- **Space Complexity:** $O(N)$ to store string tokens."
+    },
+    {
+      "id": 45,
+      "title": "Implement Trie / Prefix Tree (LeetCode #208)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "Trie",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/implement-trie-prefix-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nA **Trie** (pronounced \"try\") or **prefix tree** is a tree data structure used to store and search strings efficiently, such as in auto-complete or spell checkers. Implement `insert`, `search`, and `startsWith`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Each node is a dictionary with two fields: `children: {}` and `isEnd: boolean`.\"*\n\n- `insert(word)`: Walk character by character. If character child doesn't exist, create it. At the last letter, set `isEnd = true`.\n- `search(word)`: Walk characters. If child missing, return false. At end, return `isEnd`.\n- `startsWith(prefix)`: Same as search, but return `true` if prefix path exists without needing `isEnd`!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nclass TrieNode {\n  constructor() {\n    this.children = {};\n    this.isEnd = false;\n  }\n}\n\nclass Trie {\n  constructor() {\n    this.root = new TrieNode();\n  }\n\n  insert(word) {\n    let node = this.root;\n    for (const ch of word) {\n      if (!node.children[ch]) {\n        node.children[ch] = new TrieNode();\n      }\n      node = node.children[ch];\n    }\n    node.isEnd = true;\n  }\n\n  search(word) {\n    let node = this.root;\n    for (const ch of word) {\n      if (!node.children[ch]) return false;\n      node = node.children[ch];\n    }\n    return node.isEnd;\n  }\n\n  startsWith(prefix) {\n    let node = this.root;\n    for (const ch of prefix) {\n      if (!node.children[ch]) return false;\n      node = node.children[ch];\n    }\n    return true;\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(L)$ for all operations, where $L$ is word length.\n- **Space Complexity:** $O(N \\cdot L)$ where $N$ is total inserted words."
+    },
+    {
+      "id": 46,
+      "title": "Design Add and Search Words Data Structure (LeetCode #211)",
+      "pattern": "Trees & BST",
+      "difficulty": "medium",
+      "tags": [
+        "Trees & BST",
+        "Trie",
+        "DFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/design-add-and-search-words-data-structure/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nDesign a data structure that supports adding new words and finding if a string matches any previously added string. The search string can contain `'.'` which can match **any letter**.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Standard Trie, but when encountering '.', try all children via recursive backtracking!\"*\n\nIf char is regular `'a'-'z'`, step forward normally.\nIf char is `'.'`, branch out across all existing keys in `node.children`. If any branch returns true, the word matches!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nclass WordDictionary {\n  constructor() {\n    this.root = {};\n  }\n\n  addWord(word) {\n    let node = this.root;\n    for (const ch of word) {\n      if (!node[ch]) node[ch] = {};\n      node = node[ch];\n    }\n    node.isEnd = true;\n  }\n\n  search(word) {\n    function dfs(node, index) {\n      if (index === word.length) return Boolean(node.isEnd);\n\n      const ch = word[index];\n\n      if (ch === '.') {\n        for (const key in node) {\n          if (key !== 'isEnd' && dfs(node[key], index + 1)) {\n            return true;\n          }\n        }\n        return false;\n      }\n\n      if (!node[ch]) return false;\n      return dfs(node[ch], index + 1);\n    }\n\n    return dfs(this.root, 0);\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(L)$ for exact search; $O(26^L)$ worst-case for strings of all dots.\n- **Space Complexity:** $O(N \\cdot L)$ storage."
+    },
+    {
+      "id": 47,
+      "title": "Word Search II (LeetCode #212)",
+      "pattern": "Trees & BST",
+      "difficulty": "hard",
+      "tags": [
+        "Trees & BST",
+        "Trie",
+        "DFS",
+        "backtracking",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/word-search-ii/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an `m x n` board of characters and a list of strings `words`, return all words on the board. Each word must be constructed from letters of sequentially adjacent cells (horizontally or vertically).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Don't search the board for each word. Build a Trie of all words, and let the board search the Trie!\"*\n\nDoing DFS on the board for every single word repeats the same grid traversals $W$ times ($O(W \\cdot M \\cdot N \\cdot 4^L)$).\nInstead:\n1. Insert all words into a **Trie**. Store the complete word string at the leaf node (`node.word = word`).\n2. Run DFS on every board cell. Walk the Trie simultaneously. If a letter isn't in the current Trie node, backtrack immediately (pruning the search tree)!\n3. When `node.word` is reached, add to results and set `node.word = null` to prevent duplicate additions.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction findWords(board, words) {\n  const root = {};\n  for (const w of words) {\n    let node = root;\n    for (const c of w) {\n      if (!node[c]) node[c] = {};\n      node = node[c];\n    }\n    node.word = w; // Store full word at leaf\n  }\n\n  const result = [];\n  const rows = board.length, cols = board[0].length;\n\n  function dfs(r, c, node) {\n    if (r < 0 || r >= rows || c < 0 || c >= cols) return;\n    const char = board[r][c];\n    if (!node[char]) return; // Prune!\n\n    const nextNode = node[char];\n    if (nextNode.word) {\n      result.push(nextNode.word);\n      nextNode.word = null; // Prevent duplicates\n    }\n\n    board[r][c] = '#'; // Mark visited\n\n    dfs(r + 1, c, nextNode);\n    dfs(r - 1, c, nextNode);\n    dfs(r, c + 1, nextNode);\n    dfs(r, c - 1, nextNode);\n\n    board[r][c] = char; // Unmark visited\n  }\n\n  for (let r = 0; r < rows; r++) {\n    for (let c = 0; c < cols; c++) {\n      dfs(r, c, root);\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N \\cdot 4^L)$ where $L$ is max word length — pruned dramatically by the Trie.\n- **Space Complexity:** $O(\\sum L)$ to store all words in the Trie."
+    },
+    {
+      "id": 5,
+      "title": "[Pattern 5/9] Heap & Priority Queue Blueprint",
+      "pattern": "Heap / Priority Queue",
+      "difficulty": "medium",
+      "tags": [
+        "Heap",
+        "Priority Queue",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nThink of a **Heap** as an **Emergency Room Triage Desk**:\n- At a normal doctor's office, people enter a Queue (First-In, First-Out).\n- At the Emergency Room, patients are prioritized by urgency. A heart-attack patient who just arrived skips ahead of someone with a sprained ankle who has waited 2 hours.\n- A **Min-Heap** always gives you the smallest element in $O(1)$ time.\n- A **Max-Heap** always gives you the largest element in $O(1)$ time.\n- Inserting a patient or discharging the top patient rearranges the tree in just $O(\\log K)$ time.\n\n---\n\n## 📊 Visual Architecture: Top-K & Dual-Heap Median Finder\n\n![Heap and Priority Queue Pattern](/diagrams/blind75/heap_priority_queue.svg)\n\n---\n\n## 🧠 Two Canonical Archetypes\n\n### 1. Top-K Elements with a Bounded Min-Heap\nTo find the $K$ largest elements from a stream of $N$ numbers:\n- Keep a **Min-Heap** of size $K$.\n- As new numbers arrive, insert them.\n- If `heap.size > K`, pop the top element.\n- Since it's a Min-Heap, the smallest element is always evicted! After processing all $N$ elements, the $K$ surviving elements in the heap are the **$K$ Largest**!\n- Time: $O(N \\log K)$ instead of $O(N \\log N)$ sorting.\n\n### 2. The Dual-Heap Median Finder\nHow do you find the median of a stream of numbers where data never stops arriving?\nSplit the numbers into two halves:\n- `maxHeap`: Stores the smaller half of the numbers.\n- `minHeap`: Stores the larger half of the numbers.\n- Keep the sizes balanced (difference $\\le 1$). The median is either the top of the larger heap or the average of both tops!\n\n---\n\n## 💻 Canonical JavaScript Heap Implementation\n\nJavaScript has no built-in PriorityQueue (in standard browser runtime), so knowing a concise MinHeap implementation is essential for interviews:\n\n```javascript\nclass MinHeap {\n  constructor() {\n    this.data = [];\n  }\n  push(val) {\n    this.data.push(val);\n    this._bubbleUp(this.data.length - 1);\n  }\n  pop() {\n    if (this.data.length === 0) return null;\n    const top = this.data[0];\n    const bottom = this.data.pop();\n    if (this.data.length > 0) {\n      this.data[0] = bottom;\n      this._bubbleDown(0);\n    }\n    return top;\n  }\n  peek() {\n    return this.data[0] ?? null;\n  }\n  size() {\n    return this.data.length;\n  }\n  _bubbleUp(idx) {\n    while (idx > 0) {\n      const parent = Math.floor((idx - 1) / 2);\n      if (this.data[idx] < this.data[parent]) {\n        [this.data[idx], this.data[parent]] = [this.data[parent], this.data[idx]];\n        idx = parent;\n      } else break;\n    }\n  }\n  _bubbleDown(idx) {\n    const last = this.data.length - 1;\n    while (true) {\n      let smallest = idx;\n      const left = 2 * idx + 1;\n      const right = 2 * idx + 2;\n      if (left <= last && this.data[left] < this.data[smallest]) smallest = left;\n      if (right <= last && this.data[right] < this.data[smallest]) smallest = right;\n      if (smallest !== idx) {\n        [this.data[idx], this.data[smallest]] = [this.data[smallest], this.data[idx]];\n        idx = smallest;\n      } else break;\n    }\n  }\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Find Median from Data Stream](/blind75/48)\n- [Kth Largest Element in an Array](/blind75/49)\n- [Task Scheduler](/blind75/50)"
+    },
+    {
+      "id": 48,
+      "title": "Find Median from Data Stream (LeetCode #295)",
+      "pattern": "Heap / Priority Queue",
+      "difficulty": "hard",
+      "tags": [
+        "Heap",
+        "Priority Queue",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/find-median-from-data-stream/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nThe median is the middle value in an ordered integer list. Design a data structure that continuously accepts a stream of numbers and returns the median at any moment in $O(1)$ time.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Two Heaps Meeting at the Equator: Max-Heap holds the small half, Min-Heap holds the large half. The median is right at their border!\"*\n\n1. **Smaller half:** Kept in a Max-Heap (`small`).\n2. **Larger half:** Kept in a Min-Heap (`large`).\n3. **Invariants:**\n   - Every element in `small` $\\le$ every element in `large`.\n   - Size difference between heaps $\\le 1$.\n4. **Result:**\n   - Odd count: Top of the bigger heap.\n   - Even count: Average of `small.peek()` and `large.peek()`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nclass MedianFinder {\n  constructor() {\n    this.small = []; // Max-heap (simulated with binary insertion)\n    this.large = []; // Min-heap\n  }\n\n  addNum(num) {\n    // Binary insert into small or large maintaining order\n    // In practice, use 2 priority queues or sorted array bisect\n    let left = 0, right = this.small.length;\n    while (left < right) {\n      const mid = Math.floor((left + right) / 2);\n      if (this.small[mid] < num) left = mid + 1;\n      else right = mid;\n    }\n    this.small.splice(left, 0, num);\n  }\n\n  findMedian() {\n    const n = this.small.length;\n    const mid = Math.floor(n / 2);\n    if (n % 2 === 1) {\n      return this.small[mid];\n    }\n    return (this.small[mid - 1] + this.small[mid]) / 2;\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(\\log N)$ insertion with heaps ($O(N)$ with binary splice), $O(1)$ lookup for median.\n- **Space Complexity:** $O(N)$ to store stream elements."
+    },
+    {
+      "id": 49,
+      "title": "Kth Largest Element in an Array (LeetCode #215)",
+      "pattern": "Heap / Priority Queue",
+      "difficulty": "medium",
+      "tags": [
+        "Heap",
+        "quickselect",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums` and an integer `k`, return the $k^{\\text{th}}$ largest element in the array without sorting the entire array in $O(N \\log N)$.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"QuickSelect: Partition around a pivot like QuickSort, but only recurse into the one half that contains K ($O(N)$ average time)!\"*\n\nInstead of sorting the whole array:\n1. Pick a random pivot.\n2. Partition the array into elements greater than pivot, equal to pivot, and less than pivot.\n3. Check which partition $K$ falls into, and only recurse into that single partition!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction findKthLargest(nums, k) {\n  // Quickselect algorithm (O(N) average time)\n  function quickSelect(arr, kTarget) {\n    const pivot = arr[Math.floor(Math.random() * arr.length)];\n    const left = [];   // > pivot\n    const mid = [];    // === pivot\n    const right = [];  // < pivot\n\n    for (const num of arr) {\n      if (num > pivot) left.push(num);\n      else if (num < pivot) right.push(num);\n      else mid.push(num);\n    }\n\n    if (kTarget <= left.length) {\n      return quickSelect(left, kTarget);\n    }\n    if (kTarget <= left.length + mid.length) {\n      return pivot;\n    }\n    return quickSelect(right, kTarget - left.length - mid.length);\n  }\n\n  return quickSelect(nums, k);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ average time ($N + N/2 + N/4 + \\dots = 2N$).\n- **Space Complexity:** $O(N)$ recursion memory."
+    },
+    {
+      "id": 50,
+      "title": "Task Scheduler (LeetCode #621)",
+      "pattern": "Heap / Priority Queue",
+      "difficulty": "medium",
+      "tags": [
+        "Heap",
+        "greedy",
+        "math",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/task-scheduler/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a characters array `tasks` representing tasks a CPU needs to do, and a non-negative integer `n` representing the cooldown period between two **same** tasks. Return the minimum number of intervals the CPU will take to finish all the given tasks.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"The task with the maximum frequency creates the framework! Formula: `(maxFreq - 1) × (n + 1) + countOfMaxFreq`.\"*\n\nIf task `A` appears 3 times with cooldown $n=2$:\n`A _ _ A _ _ A`\nThere are `maxFreq - 1` full blocks, each of size `n + 1`. Then add any other tasks that also share that same maximum frequency! If there are so many other tasks that no idle slots remain, the answer is just `tasks.length`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction leastInterval(tasks, n) {\n  const counts = new Map();\n  let maxFreq = 0;\n\n  for (const t of tasks) {\n    const freq = (counts.get(t) ?? 0) + 1;\n    counts.set(t, freq);\n    maxFreq = Math.max(maxFreq, freq);\n  }\n\n  // Count how many tasks share the highest frequency\n  let maxFreqCount = 0;\n  for (const freq of counts.values()) {\n    if (freq === maxFreq) maxFreqCount++;\n  }\n\n  const emptySlots = (maxFreq - 1) * (n + 1) + maxFreqCount;\n  return Math.max(tasks.length, emptySlots);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single frequency tally.\n- **Space Complexity:** $O(1)$ — At most 26 uppercase task letters."
+    },
+    {
+      "id": 6,
+      "title": "[Pattern 6/9] Dynamic Programming Blueprint",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nDynamic Programming is simply: **Remembering what you already computed so you never solve the same problem twice.**\n\nImagine someone asks you:\n- *\"What is 1 + 1 + 1 + 1 + 1?\"* -> You count and say: *\"5\"*.\n- Now they write another `+ 1` at the end and ask: *\"What is it now?\"*\n- Do you recount all six ones from the beginning? **Of course not!** You remember that the first part was 5, add 1, and immediately say *\"6\"*.\n\nThat is Dynamic Programming. If a problem has **overlapping subproblems** (the same question asked millions of times) and **optimal substructure** (the big answer is built from optimal smaller answers), DP collapses exponential $O(2^N)$ algorithms down to linear $O(N)$ or polynomial $O(N^2)$!\n\n---\n\n## 📊 Visual Architecture: Recursion Tree vs Tabulation\n\n![Dynamic Programming Pattern](/diagrams/blind75/dynamic_programming.svg)\n\n---\n\n## 🧠 The Universal 4-Step DP Framework\n\nWhenever you tackle a DP problem, follow this exact mental checklist:\n\n1. **State Definition:** What does `dp[i]` mean in plain English? (e.g. `dp[i]` = minimum coins to make amount `i`).\n2. **Base Cases:** What are the simplest possible answers? (e.g. `dp[0] = 0`).\n3. **Recurrence Relation:** How does `dp[i]` transition from earlier states? (e.g. `dp[i] = Math.min(dp[i - coin] + 1)`).\n4. **Order of Computation & Space Optimization:** Can we compute iteratively from 0 to $N$? Can we store only the last 2 variables instead of an entire array?\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// 1. Top-Down (Memoization)\nfunction climbStairsMemo(n, memo = new Map()) {\n  if (n <= 2) return n;\n  if (memo.has(n)) return memo.get(n);\n\n  const res = climbStairsMemo(n - 1, memo) + climbStairsMemo(n - 2, memo);\n  memo.set(n, res);\n  return res;\n}\n\n// 2. Bottom-Up (Tabulation with O(1) space)\nfunction climbStairsTabulation(n) {\n  if (n <= 2) return n;\n  let prev2 = 1; // dp[1]\n  let prev1 = 2; // dp[2]\n\n  for (let i = 3; i <= n; i++) {\n    const current = prev1 + prev2;\n    prev2 = prev1;\n    prev1 = current;\n  }\n\n  return prev1;\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Climbing Stairs](/blind75/51)\n- [Coin Change](/blind75/52)\n- [Longest Increasing Subsequence](/blind75/53)\n- [Longest Common Subsequence](/blind75/54)\n- [Word Break](/blind75/55)\n- [Combination Sum](/blind75/56)\n- [House Robber](/blind75/57)\n- [House Robber II](/blind75/58)\n- [Decode Ways](/blind75/59)\n- [Unique Paths](/blind75/60)\n- [Jump Game](/blind75/61)\n- [Palindromic Substrings](/blind75/62)"
+    },
+    {
+      "id": 51,
+      "title": "Climbing Stairs (LeetCode #70)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "easy",
+      "tags": [
+        "Dynamic Programming",
+        "fibonacci",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/climbing-stairs/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are climbing a staircase with $n$ steps. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"To land on step N, you must have taken 1 step from step (N-1) OR 2 steps from step (N-2). It's Fibonacci in disguise!\"*\n\nWays to step $N$ = `ways(N - 1) + ways(N - 2)`.\nInstead of recursion ($O(2^N)$), just track the last two numbers!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction climbStairs(n) {\n  if (n <= 2) return n;\n\n  let oneStepBefore = 2;\n  let twoStepsBefore = 1;\n\n  for (let i = 3; i <= n; i++) {\n    const current = oneStepBefore + twoStepsBefore;\n    twoStepsBefore = oneStepBefore;\n    oneStepBefore = current;\n  }\n\n  return oneStepBefore;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single loop from 3 to $n$.\n- **Space Complexity:** $O(1)$ — Only two scalar variables."
+    },
+    {
+      "id": 52,
+      "title": "Coin Change (LeetCode #322)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "knapsack",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/coin-change/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an integer array `coins` and an integer `amount`. Return the **fewest number of coins** that you need to make up that amount. If that amount cannot be made up by any combination, return `-1`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Bottom-Up DP: `dp[i]` = min coins to make amount `i`. For each coin, `dp[i] = Math.min(dp[i], 1 + dp[i - coin])`.\"*\n\n1. Initialize `dp` array of size `amount + 1` filled with `Infinity`. Set `dp[0] = 0` (0 coins to make $0).\n2. For each amount from 1 to `amount`, test every coin:\n   If `amount >= coin`, try using it: `dp[i] = Math.min(dp[i], 1 + dp[i - coin])`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0; // Base case\n\n  for (let i = 1; i <= amount; i++) {\n    for (const coin of coins) {\n      if (i - coin >= 0) {\n        dp[i] = Math.min(dp[i], 1 + dp[i - coin]);\n      }\n    }\n  }\n\n  return dp[amount] === Infinity ? -1 : dp[amount];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(\\text{amount} \\cdot \\text{coins.length})$.\n- **Space Complexity:** $O(\\text{amount})$ for the dp array."
+    },
+    {
+      "id": 53,
+      "title": "Longest Increasing Subsequence (LeetCode #300)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "binary search",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-increasing-subsequence/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer array `nums`, return the length of the longest strictly increasing subsequence (elements don't have to be contiguous).\n\nExample: `[10, 9, 2, 5, 3, 7, 101, 18]` -> Longest is `[2, 3, 7, 101]`, return `4`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Patience Sorting: Maintain an active tails array. Binary search to find where the new number can replace a larger number or extend the pile!\"*\n\n- **$O(N^2)$ DP:** `dp[i] = 1 + max(dp[j])` for all `j < i` where `nums[j] < nums[i]`.\n- **$O(N \\log N)$ Patience Sort:** Keep an array `tails`. For each number:\n  - If `num > all tails`, append it (sequence length grows!).\n  - If not, use Binary Search to replace the smallest tail that is $\\ge num$ (making future extensions easier).\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction lengthOfLIS(nums) {\n  const tails = [];\n\n  for (const num of nums) {\n    let left = 0, right = tails.length;\n\n    // Binary search for insertion point\n    while (left < right) {\n      const mid = Math.floor((left + right) / 2);\n      if (tails[mid] < num) left = mid + 1;\n      else right = mid;\n    }\n\n    tails[left] = num; // Replace or extend\n  }\n\n  return tails.length;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log N)$ with binary search ($O(N^2)$ with classic DP).\n- **Space Complexity:** $O(N)$ for the tails array."
+    },
+    {
+      "id": 54,
+      "title": "Longest Common Subsequence (LeetCode #1143)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "2D DP",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-common-subsequence/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven two strings `text1` and `text2`, return the length of their longest common subsequence. If there is no common subsequence, return 0.\n\nExample: `\"abcde\"` and `\"ace\"` -> Common subsequence is `\"ace\"`, return `3`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"2D Grid DP: If characters match, take diagonal + 1. If they don't match, take max(top, left)!\"*\n\n- If `text1[i-1] === text2[j-1]`: `dp[i][j] = 1 + dp[i-1][j-1]`\n- Else: `dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1])`\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction longestCommonSubsequence(text1, text2) {\n  const m = text1.length;\n  const n = text2.length;\n  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));\n\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (text1[i - 1] === text2[j - 1]) {\n        dp[i][j] = 1 + dp[i - 1][j - 1]; // Diagonal match\n      } else {\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }\n\n  return dp[m][n];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$.\n- **Space Complexity:** $O(M \\cdot N)$ (or $O(N)$ space-optimized)."
+    },
+    {
+      "id": 55,
+      "title": "Word Break (LeetCode #139)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/word-break/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a string `s` and a dictionary of strings `wordDict`, return `true` if `s` can be segmented into a space-separated sequence of one or more dictionary words.\n\nExample: `s = \"leetcode\", wordDict = [\"leet\", \"code\"]` -> `true`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"dp[i] is true if any prefix dp[j] is true AND the substring s[j...i] is a valid dictionary word.\"*\n\n`dp[i]` represents whether `s.substring(0, i)` can be segmented.\nBase case: `dp[0] = true`.\nFor each index `i` from 1 to $N$, check all previous split points `j`. If `dp[j]` is true and `wordSet.has(s.substring(j, i))`, set `dp[i] = true`!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction wordBreak(s, wordDict) {\n  const wordSet = new Set(wordDict);\n  const dp = new Array(s.length + 1).fill(false);\n  dp[0] = true; // Empty string is valid\n\n  for (let i = 1; i <= s.length; i++) {\n    for (let j = 0; j < i; j++) {\n      if (dp[j] && wordSet.has(s.substring(j, i))) {\n        dp[i] = true;\n        break; // Found a valid segmentation for length i\n      }\n    }\n  }\n\n  return dp[s.length];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N^3)$ due to nested loops and substring slicing.\n- **Space Complexity:** $O(N)$ for the dp array."
+    },
+    {
+      "id": 56,
+      "title": "Combination Sum (LeetCode #39)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "backtracking",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/combination-sum/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of distinct integers `candidates` and a target integer `target`, return a list of all unique combinations where the chosen numbers sum to `target`. The same number may be chosen unlimited times.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Backtracking Decision Tree: At each element, you have two choices: 1. Take candidate[i] again (target - candidate[i]). 2. Skip candidate[i] and move to i + 1.\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction combinationSum(candidates, target) {\n  const result = [];\n\n  function dfs(index, currentSum, currentComb) {\n    if (currentSum === target) {\n      result.push([...currentComb]);\n      return;\n    }\n    if (currentSum > target || index >= candidates.length) {\n      return;\n    }\n\n    // Choice 1: Include candidates[index] (can reuse, so pass index)\n    currentComb.push(candidates[index]);\n    dfs(index, currentSum + candidates[index], currentComb);\n\n    // Choice 2: Exclude candidates[index] and advance index\n    currentComb.pop();\n    dfs(index + 1, currentSum, currentComb);\n  }\n\n  dfs(0, 0, []);\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(2^T)$ where $T = \\text{target} / \\min(\\text{candidates})$.\n- **Space Complexity:** $O(T)$ recursion depth."
+    },
+    {
+      "id": 57,
+      "title": "House Robber (LeetCode #198)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/house-robber/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are a professional robber planning to rob houses along a street. Adjacent houses have security systems connected: robbing two adjacent houses on the same night will alert the police.\nMaximize the money robbed without hitting two adjacent houses.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"At each house, choose: Rob this house + rob 2 houses ago, OR skip this house and keep whatever we robbed up to last house!\"*\n\nFormula: `rob = Math.max(skipHouse, robHouse + num)`.\nTrack only the last two maximums: `rob1` and `rob2`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction rob(nums) {\n  let rob1 = 0; // max money up to i-2\n  let rob2 = 0; // max money up to i-1\n\n  for (const num of nums) {\n    const current = Math.max(rob2, rob1 + num);\n    rob1 = rob2;\n    rob2 = current;\n  }\n\n  return rob2;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass.\n- **Space Complexity:** $O(1)$ — Two scalar variables."
+    },
+    {
+      "id": 58,
+      "title": "House Robber II (LeetCode #213)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/house-robber-ii/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nSame as House Robber I, but the houses are arranged in a **circle**! The first house is the neighbor of the last house, so you cannot rob both the first and the last house together.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Run House Robber I twice: once excluding the first house, once excluding the last house. Take the maximum of both!\"*\n\n- Case 1: Rob houses from index `0` to `n - 2` (exclude last house).\n- Case 2: Rob houses from index `1` to `n - 1` (exclude first house).\n- Return `Math.max(case1, case2)`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction rob(nums) {\n  if (nums.length === 1) return nums[0];\n\n  function robLinear(houses) {\n    let rob1 = 0, rob2 = 0;\n    for (const money of houses) {\n      const current = Math.max(rob2, rob1 + money);\n      rob1 = rob2;\n      rob2 = current;\n    }\n    return rob2;\n  }\n\n  return Math.max(\n    robLinear(nums.slice(0, nums.length - 1)),\n    robLinear(nums.slice(1))\n  );\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Two linear passes.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 59,
+      "title": "Decode Ways (LeetCode #91)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/decode-ways/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nA message containing letters from A-Z can be encoded into numbers using `'A' -> \"1\"`, `'B' -> \"2\"`, ..., `'Z' -> \"26\"`.\nGiven a string `s` containing only digits, return the number of ways to decode it.\nNote: `\"06\"` is invalid because `'0'` has no mapping!\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Climbing Stairs with restrictions: You can step 1 digit (if between 1-9) or 2 digits (if between 10-26).\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction numDecodings(s) {\n  if (!s || s[0] === '0') return 0;\n\n  const n = s.length;\n  const dp = new Array(n + 1).fill(0);\n  dp[0] = 1;\n  dp[1] = 1;\n\n  for (let i = 2; i <= n; i++) {\n    const singleDigit = Number(s.substring(i - 1, i));\n    const doubleDigit = Number(s.substring(i - 2, i));\n\n    // Valid single digit 1-9\n    if (singleDigit >= 1 && singleDigit <= 9) {\n      dp[i] += dp[i - 1];\n    }\n\n    // Valid double digit 10-26\n    if (doubleDigit >= 10 && doubleDigit <= 26) {\n      dp[i] += dp[i - 2];\n    }\n  }\n\n  return dp[n];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass.\n- **Space Complexity:** $O(N)$ (or $O(1)$ with two variables)."
+    },
+    {
+      "id": 60,
+      "title": "Unique Paths (LeetCode #62)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "2D DP",
+        "matrix",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/unique-paths/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nA robot is located at the top-left corner of an `m x n` grid. The robot can only move either down or right at any point. Find the number of possible unique paths to reach the bottom-right corner.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"To land on cell (r, c), you came from above (r-1, c) OR left (r, c-1). `dp[r][c] = dp[r-1][c] + dp[r][c-1]`!\"*\n\nInitialize top row and left column to 1 (only 1 straight line to reach them). For every inner cell, sum the cell above and cell to the left.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction uniquePaths(m, n) {\n  // Use a 1D row array to optimize space from O(M*N) to O(N)\n  const row = new Array(n).fill(1);\n\n  for (let r = 1; r < m; r++) {\n    for (let c = 1; c < n; c++) {\n      row[c] += row[c - 1]; // row[c] was above, row[c-1] is left\n    }\n  }\n\n  return row[n - 1];\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$.\n- **Space Complexity:** $O(N)$ using a single 1D row buffer."
+    },
+    {
+      "id": 61,
+      "title": "Jump Game (LeetCode #55)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "greedy",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/jump-game/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an integer array `nums`. You start at index 0, and each element represents your maximum jump length from that position. Return `true` if you can reach the last index.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Greedy Farthest Reach: Track `maxReach`. If your current position is beyond `maxReach`, you're stranded in quicksand!\"*\n\nWalk from index 0 to $N-1$:\n- If `i > maxReach`, return `false`.\n- `maxReach = Math.max(maxReach, i + nums[i])`.\n- If `maxReach >= nums.length - 1`, return `true`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction canJump(nums) {\n  let maxReach = 0;\n\n  for (let i = 0; i < nums.length; i++) {\n    if (i > maxReach) return false; // Stranded!\n\n    maxReach = Math.max(maxReach, i + nums[i]);\n    if (maxReach >= nums.length - 1) return true;\n  }\n\n  return true;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass.\n- **Space Complexity:** $O(1)$ — Only one variable."
+    },
+    {
+      "id": 62,
+      "title": "Palindromic Substrings (LeetCode #647)",
+      "pattern": "Dynamic Programming",
+      "difficulty": "medium",
+      "tags": [
+        "Dynamic Programming",
+        "two pointers",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/palindromic-substrings/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a string `s`, return the number of palindromic substrings in it.\nExample: `s = \"aaa\"` -> `6` (`\"a\"`, `\"a\"`, `\"a\"`, `\"aa\"`, `\"aa\"`, `\"aaa\"`).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Expand around centers: Every palindrome expands outward from a single character (odd length) or two identical characters (even length)!\"*\n\nFor each index `i`:\n1. Expand outward with `left = i, right = i` (odd palindromes).\n2. Expand outward with `left = i, right = i + 1` (even palindromes).\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction countSubstrings(s) {\n  let count = 0;\n\n  function expand(left, right) {\n    while (left >= 0 && right < s.length && s[left] === s[right]) {\n      count++;\n      left--;\n      right++;\n    }\n  }\n\n  for (let i = 0; i < s.length; i++) {\n    expand(i, i);     // Odd-length centers\n    expand(i, i + 1); // Even-length centers\n  }\n\n  return count;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N^2)$ — $2N$ centers, each expanding up to $N$ steps.\n- **Space Complexity:** $O(1)$ — Constant memory."
+    },
+    {
+      "id": 7,
+      "title": "[Pattern 7/9] Intervals Blueprint",
+      "pattern": "Intervals",
+      "difficulty": "medium",
+      "tags": [
+        "Intervals",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nThink of the **Intervals Pattern** as **scheduling conference rooms in an office building**:\n- Meetings arrive with a start time and an end time: `[start, end]`.\n- If the calendar is totally unsorted, checking whether a new meeting clashes requires checking every other meeting in the database: $O(N^2)$ chaos.\n- **The Secret Weapon:** **Sort by start time!** Once meetings are ordered by start time, an event can **only ever clash with the meeting immediately before it!** The problem collapses into a simple 1-pass timeline sweep.\n\n---\n\n## 📊 Visual Architecture: Timeline Sweep & Overlap Condition\n\n![Intervals Pattern](/diagrams/blind75/intervals.svg)\n\n---\n\n## 🧠 The 3 Universal Interval Scenarios\n\nWhen comparing two intervals `A = [startA, endA]` and `B = [startB, endB]` (where `startA <= startB` because of sorting):\n\n```\n1. Disjoint (No Overlap):\n   A: [------]\n   B:          [------]\n   Condition: startB > endA -> Keep A, advance to B.\n\n2. Overlapping:\n   A: [----------]\n   B:      [----------]\n   Condition: startB <= endA -> Merge: [startA, Math.max(endA, endB)]\n\n3. Contained:\n   A: [------------------]\n   B:      [------]\n   Condition: startB <= endA && endB <= endA -> Swallowed: keep [startA, endA]!\n```\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// Blueprint: Merge Overlapping Intervals\nfunction mergeIntervals(intervals) {\n  if (intervals.length <= 1) return intervals;\n\n  // 1. Always sort by start time (copy array to keep pure)\n  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);\n  const result = [sorted[0]];\n\n  for (let i = 1; i < sorted.length; i++) {\n    const [currStart, currEnd] = sorted[i];\n    const last = result[result.length - 1];\n\n    if (currStart <= last[1]) {\n      // Overlaps: expand boundary\n      last[1] = Math.max(last[1], currEnd);\n    } else {\n      // Disjoint: start a new interval\n      result.push([currStart, currEnd]);\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Insert Interval](/blind75/63)\n- [Merge Intervals](/blind75/64)\n- [Non-overlapping Intervals](/blind75/65)\n- [Meeting Rooms](/blind75/66)\n- [Meeting Rooms II](/blind75/67)"
+    },
+    {
+      "id": 63,
+      "title": "Insert Interval (LeetCode #57)",
+      "pattern": "Intervals",
+      "difficulty": "medium",
+      "tags": [
+        "Intervals",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/insert-interval/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an array of non-overlapping intervals sorted by start time, and a `newInterval`. Insert `newInterval` into the list so that the intervals remain sorted and non-overlapping (merging if necessary).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"3 Phases: 1. Add all intervals ending before newInterval starts. 2. Merge all overlapping intervals into newInterval. 3. Add all remaining intervals!\"*\n\nNo sorting required! Because the input is already sorted:\n1. Push all intervals where `interval[1] < newInterval[0]`.\n2. While intervals overlap (`interval[0] <= newInterval[1]`):\n   `newInterval[0] = Math.min(newInterval[0], interval[0])`\n   `newInterval[1] = Math.max(newInterval[1], interval[1])`\n3. Push merged `newInterval`.\n4. Push all remaining intervals.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction insert(intervals, newInterval) {\n  const result = [];\n  let i = 0;\n  const n = intervals.length;\n\n  // 1. Add all intervals ending before newInterval starts\n  while (i < n && intervals[i][1] < newInterval[0]) {\n    result.push(intervals[i]);\n    i++;\n  }\n\n  // 2. Merge all overlapping intervals with newInterval\n  while (i < n && intervals[i][0] <= newInterval[1]) {\n    newInterval[0] = Math.min(newInterval[0], intervals[i][0]);\n    newInterval[1] = Math.max(newInterval[1], intervals[i][1]);\n    i++;\n  }\n  result.push(newInterval);\n\n  // 3. Add all remaining intervals\n  while (i < n) {\n    result.push(intervals[i]);\n    i++;\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through intervals.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 64,
+      "title": "Merge Intervals (LeetCode #56)",
+      "pattern": "Intervals",
+      "difficulty": "medium",
+      "tags": [
+        "Intervals",
+        "sorting",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/merge-intervals/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of `intervals` where `intervals[i] = [start, end]`, merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.\n\nExample: `[[1,3],[2,6],[8,10],[15,18]]` -> `[[1,6],[8,10],[15,18]]`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Sort by start time first! Then compare current start against previous end. If `curr.start <= prev.end`, merge using `Math.max`.\"*\n\nDon't forget `Math.max`! For `[[1, 4], [2, 3]]`, if you don't use `Math.max`, you might mistakenly shrink the end!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction merge(intervals) {\n  if (intervals.length <= 1) return intervals;\n\n  // Always copy and sort numerically by start time\n  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);\n  const result = [sorted[0]];\n\n  for (let i = 1; i < sorted.length; i++) {\n    const [currStart, currEnd] = sorted[i];\n    const last = result[result.length - 1];\n\n    if (currStart <= last[1]) {\n      // Overlapping: extend the end boundary\n      last[1] = Math.max(last[1], currEnd);\n    } else {\n      result.push([currStart, currEnd]);\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log N)$ dominated by sorting.\n- **Space Complexity:** $O(N)$ for output array.\n- **In-App Practice:** [/coding/47](/coding/47)"
+    },
+    {
+      "id": 65,
+      "title": "Non-overlapping Intervals (LeetCode #435)",
+      "pattern": "Intervals",
+      "difficulty": "medium",
+      "tags": [
+        "Intervals",
+        "greedy",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/non-overlapping-intervals/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of intervals, return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Greedy Choice: Sort by END time! Keep the interval that finishes earliest to leave maximum room for future intervals.\"*\n\nWhen two intervals overlap, which one should you delete?\nAlways delete the one that stretches farther into the future (the one with the larger end time)! Keeping the interval with the smaller end time leaves the calendar open for subsequent meetings.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction eraseOverlapIntervals(intervals) {\n  if (intervals.length <= 1) return 0;\n\n  // Sort by END time\n  intervals.sort((a, b) => a[1] - b[1]);\n\n  let removals = 0;\n  let prevEnd = intervals[0][1];\n\n  for (let i = 1; i < intervals.length; i++) {\n    const [start, end] = intervals[i];\n    if (start < prevEnd) {\n      // Overlap detected! Remove current interval\n      removals++;\n    } else {\n      // No overlap: keep and update prevEnd\n      prevEnd = end;\n    }\n  }\n\n  return removals;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log N)$ — Sorting by end time.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 66,
+      "title": "Meeting Rooms (LeetCode #252)",
+      "pattern": "Intervals",
+      "difficulty": "easy",
+      "tags": [
+        "Intervals",
+        "sorting",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/meeting-rooms/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of meeting time intervals consisting of start and end times `[[s1,e1],[s2,e2],...]`, determine if a single person could attend all meetings without overlap.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Sort by start time. Check if any meeting starts before the previous one finishes!\"*\n\nIf `intervals[i][0] < intervals[i - 1][1]`, return `false`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction canAttendMeetings(intervals) {\n  intervals.sort((a, b) => a[0] - b[0]);\n\n  for (let i = 1; i < intervals.length; i++) {\n    if (intervals[i][0] < intervals[i - 1][1]) {\n      return false; // Time conflict!\n    }\n  }\n\n  return true;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log N)$ for sorting.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 67,
+      "title": "Meeting Rooms II (LeetCode #253)",
+      "pattern": "Intervals",
+      "difficulty": "medium",
+      "tags": [
+        "Intervals",
+        "two pointers",
+        "heap",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/meeting-rooms-ii/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array of meeting time intervals `intervals`, return the minimum number of conference rooms required so that all meetings can take place without conflict.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Separate starts and ends! Two sorted arrays: When a meeting starts before a room frees up, allocate a new room. When a meeting ends, free a room.\"*\n\n1. Put all start times in a sorted array `starts`.\n2. Put all end times in a sorted array `ends`.\n3. Walk two pointers: if `starts[startPtr] < ends[endPtr]`, a meeting starts while another is in progress -> `roomsNeeded++`. Else, a meeting ended -> `endPtr++`.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction minMeetingRooms(intervals) {\n  const starts = intervals.map(i => i[0]).sort((a, b) => a - b);\n  const ends = intervals.map(i => i[1]).sort((a, b) => a - b);\n\n  let rooms = 0;\n  let endPtr = 0;\n\n  for (let startPtr = 0; startPtr < starts.length; startPtr++) {\n    if (starts[startPtr] < ends[endPtr]) {\n      // Room occupied, must add a new room\n      rooms++;\n    } else {\n      // Meeting ended, reuse that room!\n      endPtr++;\n    }\n  }\n\n  return rooms;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N \\log N)$ to sort starts and ends.\n- **Space Complexity:** $O(N)$ to store start and end times."
+    },
+    {
+      "id": 8,
+      "title": "[Pattern 8/9] Graphs & Matrix Blueprint",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "Matrix",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nThink of a **Graph** as a **Subway System**:\n- Stations are **Nodes / Vertices**.\n- Train tracks connecting stations are **Edges**.\n- A 2D Grid / Matrix (like a chess board or island map) is just an implicit graph where every cell `(r, c)` connects to its 4 cardinal neighbors `(r+1, c), (r-1, c), (r, c+1), (r, c-1)`.\n\n---\n\n## 📊 Visual Architecture: Graphs & Matrix Navigation\n\n![Graphs Pattern](/diagrams/blind75/graphs.svg)\n![Matrix Pattern](/diagrams/blind75/matrix.svg)\n\n---\n\n## 🧠 The 3 Core Graph Archetypes\n\n### 1. Grid Flood-Fill (Connected Components)\nTo count distinct islands or regions:\n- Loop through every cell `(r, c)`.\n- When you find unvisited land `'1'`, increment your island counter!\n- Launch a recursive `dfs(r, c)` that sinks or marks all connected land as `'0'` so you never count it again.\n\n### 2. Topological Sort (Dependency Resolution)\nUsed for course prerequisites (Course Schedule) or compilation orders:\n- Count how many incoming dependencies (in-degrees) each node has.\n- Start with nodes that have **0 dependencies**. Add them to a queue.\n- As you process a node, decrement the in-degree of its neighbors. If a neighbor hits 0, add it to the queue!\n- If you process all nodes, there are no cycles!\n\n### 3. Matrix Transformations (Spiral & In-Place Rotation)\n- **4 Directions Vector:** `const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0]];`\n- **Spiral Bounds:** Squeeze 4 boundary walls: `top++, bottom--, left++, right--`.\n- **Rotate Matrix 90°:** \n  1. Transpose (swap `matrix[r][c]` with `matrix[c][r]`).\n  2. Reverse each row.\n\n---\n\n## 💻 Canonical JavaScript Blueprints\n\n```javascript\n// 1. Grid DFS Flood-Fill Template\nfunction floodFill(grid) {\n  const rows = grid.length, cols = grid[0].length;\n  let components = 0;\n\n  function dfs(r, c) {\n    if (r < 0 || r >= rows || c < 0 || c >= cols || grid[r][c] === '0') {\n      return;\n    }\n    grid[r][c] = '0'; // Mark visited in-place\n\n    dfs(r + 1, c);\n    dfs(r - 1, c);\n    dfs(r, c + 1);\n    dfs(r, c - 1);\n  }\n\n  for (let r = 0; r < rows; r++) {\n    for (let c = 0; c < cols; c++) {\n      if (grid[r][c] === '1') {\n        components++;\n        dfs(r, c);\n      }\n    }\n  }\n\n  return components;\n}\n```\n\n---\n\n## 🎯 Blind 75 Problems in this Pattern\n- [Number of Islands](/blind75/68)\n- [Clone Graph](/blind75/69)\n- [Pacific Atlantic Water Flow](/blind75/70)\n- [Course Schedule](/blind75/71)\n- [Graph Valid Tree](/blind75/72)\n- [Number of Connected Components](/blind75/73)\n- [Alien Dictionary](/blind75/74)\n- [Set Matrix Zeroes](/blind75/75)\n- [Spiral Matrix](/blind75/76)\n- [Rotate Image](/blind75/77)\n- [Word Search](/blind75/78)\n- [Longest Palindromic Substring](/blind75/79)"
+    },
+    {
+      "id": 68,
+      "title": "Number of Islands (LeetCode #200)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "DFS",
+        "BFS",
+        "matrix",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/number-of-islands/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an `m x n` 2D binary grid which represents a map of `'1'`s (land) and `'0'`s (water), return the number of islands. An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Sink the island! When you discover land '1', increment island count and trigger DFS to sink all connected land to '0'.\"*\n\nBy mutating visited land to `'0'` in-place, you don't even need a visited Set ($O(1)$ extra space)!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction numIslands(grid) {\n  if (!grid || grid.length === 0) return 0;\n\n  const rows = grid.length;\n  const cols = grid[0].length;\n  let count = 0;\n\n  function dfs(r, c) {\n    // Boundary and water checks\n    if (r < 0 || r >= rows || c < 0 || c >= cols || grid[r][c] === '0') {\n      return;\n    }\n\n    // Sink land to '0'\n    grid[r][c] = '0';\n\n    dfs(r + 1, c); // Down\n    dfs(r - 1, c); // Up\n    dfs(r, c + 1); // Right\n    dfs(r, c - 1); // Left\n  }\n\n  for (let r = 0; r < rows; r++) {\n    for (let c = 0; c < cols; c++) {\n      if (grid[r][c] === '1') {\n        count++;\n        dfs(r, c); // Sink entire island\n      }\n    }\n  }\n\n  return count;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$ — Every cell is visited at most twice.\n- **Space Complexity:** $O(M \\cdot N)$ — Worst-case recursion stack (grid filled with land)."
+    },
+    {
+      "id": 69,
+      "title": "Clone Graph (LeetCode #133)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "hash map",
+        "DFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/clone-graph/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a reference of a node in a connected undirected graph, return a **deep copy** (clone) of the graph. Each node contains a value and a list of its neighbors.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Clone Map: Map originalNode -> cloneNode. If a node is already in the map, return its clone to prevent infinite loops from cycles!\"*\n\nGraph nodes can have circular references ($A \\to B \\to A$).\nPass a `Map` of `original -> clone`. Before recursing on neighbors, register the new clone node in the map.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction cloneGraph(node) {\n  if (!node) return null;\n\n  const clones = new Map(); // originalNode -> cloneNode\n\n  function dfs(curr) {\n    if (clones.has(curr)) {\n      return clones.get(curr);\n    }\n\n    // Create shallow clone shell and register immediately\n    const copy = { val: curr.val, neighbors: [] };\n    clones.set(curr, copy);\n\n    // Recursively clone all neighbors\n    for (const neighbor of curr.neighbors) {\n      copy.neighbors.push(dfs(neighbor));\n    }\n\n    return copy;\n  }\n\n  return dfs(node);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(V + E)$ where $V$ is vertices and $E$ is edges.\n- **Space Complexity:** $O(V)$ for clone map and call stack."
+    },
+    {
+      "id": 70,
+      "title": "Pacific Atlantic Water Flow (LeetCode #417)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "DFS",
+        "BFS",
+        "matrix",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/pacific-atlantic-water-flow/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou have an `m x n` grid representing heights of land. Rain water can flow to adjacent cells with equal or lower height. Pacific ocean touches top and left; Atlantic touches bottom and right. Return all coordinates where water can reach **both oceans**.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Reverse the flow! Instead of simulating water flowing downhill to the ocean, simulate ocean water climbing uphill!\"*\n\n1. Start DFS from all Pacific border cells into `pacificReachable` set (flowing uphill: `nextHeight >= currHeight`).\n2. Start DFS from all Atlantic border cells into `atlanticReachable` set.\n3. The cells in both sets are the answer!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction pacificAtlantic(heights) {\n  const rows = heights.length, cols = heights[0].length;\n  const pac = new Set();\n  const atl = new Set();\n\n  function dfs(r, c, visited) {\n    const key = `${r},${c}`;\n    visited.add(key);\n\n    const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];\n    for (const [dr, dc] of dirs) {\n      const nr = r + dr, nc = c + dc;\n      const nextKey = `${nr},${nc}`;\n      // Water flows uphill to next cell\n      if (\n        nr >= 0 && nr < rows &&\n        nc >= 0 && nc < cols &&\n        !visited.has(nextKey) &&\n        heights[nr][nc] >= heights[r][c]\n      ) {\n        dfs(nr, nc, visited);\n      }\n    }\n  }\n\n  // Pacific: top row & left col\n  for (let c = 0; c < cols; c++) dfs(0, c, pac);\n  for (let r = 0; r < rows; r++) dfs(r, 0, pac);\n\n  // Atlantic: bottom row & right col\n  for (let c = 0; c < cols; c++) dfs(rows - 1, c, atl);\n  for (let r = 0; r < rows; r++) dfs(r, cols - 1, atl);\n\n  const result = [];\n  for (let r = 0; r < rows; r++) {\n    for (let c = 0; c < cols; c++) {\n      const key = `${r},${c}`;\n      if (pac.has(key) && atl.has(key)) {\n        result.push([r, c]);\n      }\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$.\n- **Space Complexity:** $O(M \\cdot N)$ for reachable sets."
+    },
+    {
+      "id": 71,
+      "title": "Course Schedule (LeetCode #207)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "topological sort",
+        "BFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/course-schedule/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nThere are a total of `numCourses` courses you have to take, labeled from 0 to `numCourses - 1`. You are given an array `prerequisites` where `prerequisites[i] = [a, b]` indicates that you must take course `b` first if you want to take course `a`.\nReturn `true` if you can finish all courses, or `false` if there is a circular dependency (deadlock cycle).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Topological Sort (Kahn's Algorithm): Count in-degrees (prerequisites). Start with courses that have 0 prerequisites. Every time you take a course, decrement in-degree of dependent courses!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction canFinish(numCourses, prerequisites) {\n  const inDegree = new Array(numCourses).fill(0);\n  const adj = Array.from({ length: numCourses }, () => []);\n\n  // Build adjacency list & count in-degrees\n  for (const [course, pre] of prerequisites) {\n    adj[pre].push(course);\n    inDegree[course]++;\n  }\n\n  // Queue all courses with 0 prerequisites\n  const queue = [];\n  for (let i = 0; i < numCourses; i++) {\n    if (inDegree[i] === 0) queue.push(i);\n  }\n\n  let finishedCount = 0;\n  while (queue.length) {\n    const curr = queue.shift();\n    finishedCount++;\n\n    for (const neighbor of adj[curr]) {\n      inDegree[neighbor]--;\n      if (inDegree[neighbor] === 0) {\n        queue.push(neighbor);\n      }\n    }\n  }\n\n  return finishedCount === numCourses;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(V + E)$ where $V = \\text{numCourses}, E = \\text{prerequisites.length}$.\n- **Space Complexity:** $O(V + E)$ for adjacency list."
+    },
+    {
+      "id": 72,
+      "title": "Graph Valid Tree (LeetCode #261)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "union find",
+        "DFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/graph-valid-tree/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven $n$ nodes labeled from 0 to $n - 1$ and a list of undirected edges, write a function to check whether these edges make up a valid tree.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"A graph is a valid tree if and only if: 1. Exactly (n - 1) edges. 2. Fully connected (no isolated components / no cycles)!\"*\n\n1. Quick check: If `edges.length !== n - 1`, it cannot be a tree (either has a cycle or is disconnected)!\n2. Run DFS from node 0. If visited set size equals $n$, it's a valid tree!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction validTree(n, edges) {\n  if (edges.length !== n - 1) return false;\n\n  const adj = Array.from({ length: n }, () => []);\n  for (const [u, v] of edges) {\n    adj[u].push(v);\n    adj[v].push(u);\n  }\n\n  const visited = new Set();\n  function dfs(node) {\n    visited.add(node);\n    for (const neighbor of adj[node]) {\n      if (!visited.has(neighbor)) {\n        dfs(neighbor);\n      }\n    }\n  }\n\n  dfs(0);\n  return visited.size === n;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(V + E)$.\n- **Space Complexity:** $O(V + E)$."
+    },
+    {
+      "id": 73,
+      "title": "Number of Connected Components in an Undirected Graph (LeetCode #323)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Graphs",
+        "DFS",
+        "union find",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou have a graph of $n$ nodes. You are given an integer $n$ and an array `edges`. Return the number of connected components in the graph.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Island count on a graph: Loop 0 to n-1. If a node hasn't been visited, component++ and DFS its entire neighborhood.\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction countComponents(n, edges) {\n  const adj = Array.from({ length: n }, () => []);\n  for (const [u, v] of edges) {\n    adj[u].push(v);\n    adj[v].push(u);\n  }\n\n  const visited = new Set();\n  let count = 0;\n\n  function dfs(node) {\n    visited.add(node);\n    for (const neighbor of adj[node]) {\n      if (!visited.has(neighbor)) {\n        dfs(neighbor);\n      }\n    }\n  }\n\n  for (let i = 0; i < n; i++) {\n    if (!visited.has(i)) {\n      count++;\n      dfs(i);\n    }\n  }\n\n  return count;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(V + E)$.\n- **Space Complexity:** $O(V + E)$."
+    },
+    {
+      "id": 74,
+      "title": "Alien Dictionary (LeetCode #269)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "hard",
+      "tags": [
+        "Graphs",
+        "topological sort",
+        "hard"
+      ],
+      "source": "https://leetcode.com/problems/alien-dictionary/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given a list of strings `words` sorted lexicographically by the rules of a new alien language. Derive the order of letters in this language. If the order is invalid, return `\"\"`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Compare adjacent words to find letter ordering edges (word1[k] -> word2[k]), then Topological Sort the DAG!\"*\n\n1. For each pair of adjacent words, find the first differing letter: that gives directed edge `char1 -> char2`.\n2. Invalid prefix trap: If `word1` starts with `word2` but is longer (e.g. `\"apple\"` before `\"app\"`), return `\"\"`.\n3. Run Topological Sort (Kahn's algorithm). If output length matches unique letters, return string; else cycle detected!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction alienOrder(words) {\n  const adj = new Map();\n  const inDegree = new Map();\n\n  // Initialize unique characters\n  for (const w of words) {\n    for (const ch of w) {\n      if (!adj.has(ch)) adj.set(ch, new Set());\n      if (!inDegree.has(ch)) inDegree.set(ch, 0);\n    }\n  }\n\n  // Build edges by comparing adjacent words\n  for (let i = 0; i < words.length - 1; i++) {\n    const w1 = words[i], w2 = words[i + 1];\n    const minLen = Math.min(w1.length, w2.length);\n\n    // Prefix trap\n    if (w1.length > w2.length && w1.startsWith(w2)) return \"\";\n\n    for (let j = 0; j < minLen; j++) {\n      if (w1[j] !== w2[j]) {\n        if (!adj.get(w1[j]).has(w2[j])) {\n          adj.get(w1[j]).add(w2[j]);\n          inDegree.set(w2[j], inDegree.get(w2[j]) + 1);\n        }\n        break;\n      }\n    }\n  }\n\n  // Kahn's BFS\n  const queue = [];\n  for (const [ch, deg] of inDegree.entries()) {\n    if (deg === 0) queue.push(ch);\n  }\n\n  let result = \"\";\n  while (queue.length) {\n    const curr = queue.shift();\n    result += curr;\n\n    for (const neighbor of adj.get(curr)) {\n      inDegree.set(neighbor, inDegree.get(neighbor) - 1);\n      if (inDegree.get(neighbor) === 0) {\n        queue.push(neighbor);\n      }\n    }\n  }\n\n  return result.length === inDegree.size ? result : \"\";\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(C)$ where $C$ is total length of all words.\n- **Space Complexity:** $O(V + E)$ where $V \\le 26$."
+    },
+    {
+      "id": 75,
+      "title": "Set Matrix Zeroes (LeetCode #73)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Matrix",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/set-matrix-zeroes/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an `m x n` integer matrix `matrix`, if an element is 0, set its entire row and column to 0's.\n**Rule:** You must do it **in place** in $O(1)$ extra space!\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Use the 0th row and 0th column of the matrix itself as your marker arrays!\"*\n\nIf `matrix[r][c] === 0`, set `matrix[r][0] = 0` and `matrix[0][c] = 0`.\nUse a separate boolean `firstColHasZero` for the top-left corner overlap.\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction setZeroes(matrix) {\n  const rows = matrix.length, cols = matrix[0].length;\n  let firstColZero = false;\n\n  for (let r = 0; r < rows; r++) {\n    if (matrix[r][0] === 0) firstColZero = true;\n    for (let c = 1; c < cols; c++) {\n      if (matrix[r][c] === 0) {\n        matrix[r][0] = 0;\n        matrix[0][c] = 0;\n      }\n    }\n  }\n\n  // Fill inner matrix based on markers\n  for (let r = 1; r < rows; r++) {\n    for (let c = 1; c < cols; c++) {\n      if (matrix[r][0] === 0 || matrix[0][c] === 0) {\n        matrix[r][c] = 0;\n      }\n    }\n  }\n\n  // Handle first row\n  if (matrix[0][0] === 0) {\n    for (let c = 0; c < cols; c++) matrix[0][c] = 0;\n  }\n\n  // Handle first column\n  if (firstColZero) {\n    for (let r = 0; r < rows; r++) matrix[r][0] = 0;\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$.\n- **Space Complexity:** $O(1)$ in-place."
+    },
+    {
+      "id": 76,
+      "title": "Spiral Matrix (LeetCode #54)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Matrix",
+        "simulation",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/spiral-matrix/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an `m x n` matrix, return all elements of the matrix in spiral order (clockwise starting from top-left).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"4 Boundary Walls: top, bottom, left, right. Walk right -> top++, Walk down -> right--, Walk left -> bottom--, Walk up -> left++.\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction spiralOrder(matrix) {\n  const result = [];\n  let top = 0, bottom = matrix.length - 1;\n  let left = 0, right = matrix[0].length - 1;\n\n  while (top <= bottom && left <= right) {\n    // Traverse Right\n    for (let c = left; c <= right; c++) result.push(matrix[top][c]);\n    top++;\n\n    // Traverse Down\n    for (let r = top; r <= bottom; r++) result.push(matrix[r][right]);\n    right--;\n\n    // Traverse Left (if rows remain)\n    if (top <= bottom) {\n      for (let c = right; c >= left; c--) result.push(matrix[bottom][c]);\n      bottom--;\n    }\n\n    // Traverse Up (if cols remain)\n    if (left <= right) {\n      for (let r = bottom; r >= top; r--) result.push(matrix[r][left]);\n      left++;\n    }\n  }\n\n  return result;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N)$.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 77,
+      "title": "Rotate Image (LeetCode #48)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Matrix",
+        "math",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/rotate-image/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nYou are given an `n x n` 2D matrix representing an image, rotate the image by 90 degrees clockwise **in place**.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Rotate 90° Clockwise = Transpose + Reverse each row!\"*\n\n1. **Transpose:** Swap `matrix[i][j]` with `matrix[j][i]` along the main diagonal.\n2. **Reverse each row:** Flip the row horizontally!\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction rotate(matrix) {\n  const n = matrix.length;\n\n  // Step 1: Transpose matrix\n  for (let i = 0; i < n; i++) {\n    for (let j = i + 1; j < n; j++) {\n      [matrix[i][j], matrix[j][i]] = [matrix[j][i], matrix[i][j]];\n    }\n  }\n\n  // Step 2: Reverse each row\n  for (let i = 0; i < n; i++) {\n    matrix[i].reverse();\n  }\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N^2)$.\n- **Space Complexity:** $O(1)$ in-place."
+    },
+    {
+      "id": 78,
+      "title": "Word Search (LeetCode #79)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Matrix",
+        "backtracking",
+        "DFS",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/word-search/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an `m x n` grid of characters `board` and a string `word`, return `true` if `word` exists in the grid. Adjacent cells are connected horizontally or vertically, and the same letter cell cannot be used more than once.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Backtracking DFS: Temporarily mark board[r][c] = '#' to avoid self-crossing, and restore the letter upon returning!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction exist(board, word) {\n  const rows = board.length, cols = board[0].length;\n\n  function dfs(r, c, index) {\n    if (index === word.length) return true;\n    if (\n      r < 0 || r >= rows ||\n      c < 0 || c >= cols ||\n      board[r][c] !== word[index]\n    ) {\n      return false;\n    }\n\n    const temp = board[r][c];\n    board[r][c] = '#'; // Mark visited\n\n    const found =\n      dfs(r + 1, c, index + 1) ||\n      dfs(r - 1, c, index + 1) ||\n      dfs(r, c + 1, index + 1) ||\n      dfs(r, c - 1, index + 1);\n\n    board[r][c] = temp; // Backtrack restore\n    return found;\n  }\n\n  for (let r = 0; r < rows; r++) {\n    for (let c = 0; c < cols; c++) {\n      if (dfs(r, c, 0)) return true;\n    }\n  }\n\n  return false;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(M \\cdot N \\cdot 4^L)$ where $L$ is length of word.\n- **Space Complexity:** $O(L)$ recursion call stack."
+    },
+    {
+      "id": 79,
+      "title": "Longest Palindromic Substring (LeetCode #5)",
+      "pattern": "Graphs & Matrix",
+      "difficulty": "medium",
+      "tags": [
+        "Two Pointers",
+        "strings",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/longest-palindromic-substring/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a string `s`, return the longest palindromic substring in `s`.\n\nExample: `s = \"babad\"` -> `\"bab\"` (or `\"aba\"`).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Expand around centers: Every palindrome expands outward from index i (odd) or indices i, i+1 (even). Keep the widest boundaries!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\nfunction longestPalindrome(s) {\n  if (!s || s.length <= 1) return s;\n\n  let start = 0, maxLen = 0;\n\n  function expand(left, right) {\n    while (left >= 0 && right < s.length && s[left] === s[right]) {\n      const currentLen = right - left + 1;\n      if (currentLen > maxLen) {\n        start = left;\n        maxLen = currentLen;\n      }\n      left--;\n      right++;\n    }\n  }\n\n  for (let i = 0; i < s.length; i++) {\n    expand(i, i);     // Odd-length\n    expand(i, i + 1); // Even-length\n  }\n\n  return s.substring(start, start + maxLen);\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N^2)$.\n- **Space Complexity:** $O(1)$ extra space."
+    },
+    {
+      "id": 9,
+      "title": "[Pattern 9/9] Bit Manipulation Blueprint",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "Blueprint",
+        "foundation"
+      ],
+      "source": "https://www.youtube.com/watch?v=YPmNtpxj4Wg&list=PLB53ggSrd6qnIQVx7itPCTJG9U-0iWLKE",
+      "answer": "## 💡 The Big Picture (Plain English Analogy)\n\nImagine you are operating a control board of 32 physical light switches:\n- Instead of keeping a heavy diary or allocating new shelves in memory to record numbers, each switch represents a binary digit (`1` for ON, `0` for OFF).\n- When you do **Bit Manipulation**, you are directly flipping, testing, and clearing electrical currents at hardware speed inside CPU registers. There are no allocations, no garbage collection overhead, and zero extra memory.\n\n---\n\n## 📊 Visual Architecture: The 6 Bitwise Pillars & XOR Annihilator\n\n![Bit Manipulation Pattern](/diagrams/blind75/bit_manipulation.svg)\n\n---\n\n## 🧠 The 6 Core Bitwise Operators in JavaScript\n\n| Operator | Syntax | Description | Example |\n| :--- | :--- | :--- | :--- |\n| **AND** | `a & b` | 1 only if **both** bits are 1 | `5 & 3` (101 & 011 = 001 = 1) |\n| **OR** | `a | b` | 1 if **either** bit is 1 | `5 | 3` (101 | 011 = 111 = 7) |\n| **XOR** | `a ^ b` | 1 if bits are **different** | `5 ^ 3` (101 ^ 011 = 110 = 6) |\n| **NOT** | `~a` | Inverts all 32 bits (`-(a + 1)`) | `~5` = `-6` |\n| **Left Shift** | `a << k` | Shifts bits left by $k$ (multiplies by $2^k$) | `3 << 2` = `12` |\n| **Unsigned Right Shift** | `a >>> k` | Shifts bits right by $k$, fills 0 from left | `-1 >>> 0` = `4294967295` |\n\n---\n\n## ⚡ The 3 Golden Bit Tricks (Memorize These!)\n\n### 1. The Universal Annihilator (XOR Magic)\n- `x ^ x = 0` (any number XORed with itself cancels out to zero)\n- `x ^ 0 = x` (any number XORed with zero remains unchanged)\n- XOR is commutative and associative: `a ^ b ^ a = (a ^ a) ^ b = 0 ^ b = b`!\n- **Use Case:** Finding the single unique element among duplicates or finding missing numbers.\n\n### 2. Brian Kernighan’s Trick (Clear Lowest Set Bit)\n```javascript\nn = n & (n - 1);\n```\n- Subtracting 1 flips the lowest `1` bit and turns all subsequent trailing zeros to `1`s.\n- ANDing `n` with `n - 1` instantly extinguishes the lowest `1` bit in $O(1)$!\n- **Use Case:** Count set bits in $O(K)$ time (where $K$ is number of 1-bits, not 32).\n\n### 3. Extract Lowest Set Bit\n```javascript\nconst lowestSetBit = n & (-n);\n```\n- In two's complement, `-n === ~n + 1`.\n- ANDing `n` with `-n` isolates the single lowest `1` bit as a power of 2.\n\n---\n\n## ⚠️ Critical JavaScript Gotchas with Bits\n1. **32-Bit Truncation:** In JavaScript, bitwise operators cast double-precision 64-bit floats to **32-bit signed two's complement integers**.\n2. **Logical vs Arithmetic Right Shift:**\n   - `>>` preserves the sign bit (copies the sign bit from the left).\n   - `>>>` is **unsigned zero-fill right shift**. Always use `>>>` when dealing with unsigned 32-bit integers (e.g., LeetCode 190, 191).\n3. Convert to Unsigned: `val >>> 0` forces JavaScript to return a positive unsigned number up to $2^{32}-1$."
+    },
+    {
+      "id": 80,
+      "title": "Single Number (LeetCode #136)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "XOR",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/single-number/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven a non-empty array of integers `nums`, every element appears twice except for one unique element. Find that single one. You must implement a solution with linear runtime complexity and use only constant extra space.\n\nExample: `nums = [4, 1, 2, 1, 2]` -> Output: `4`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"XOR cancels twins! a ^ a = 0. All duplicates extinguish each other, leaving only the loner standing!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Finds the element appearing once when all others appear twice.\n * @param {number[]} nums\n * @return {number}\n */\nfunction singleNumber(nums) {\n  let result = 0;\n\n  // XORing all elements together\n  for (const num of nums) {\n    result ^= num;\n  }\n\n  return result;\n}\n\n// Visual Walkthrough: [4, 1, 2, 1, 2]\n// 0 ^ 4 = 4\n// 4 ^ 1 = 5\n// 5 ^ 2 = 7\n// 7 ^ 1 = 6  (1 cancels 1)\n// 6 ^ 2 = 4  (2 cancels 2)\n// Final result = 4!\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through the array.\n- **Space Complexity:** $O(1)$ — Only a single accumulator variable."
+    },
+    {
+      "id": 81,
+      "title": "Number of 1 Bits / Hamming Weight (LeetCode #191)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "Brian Kernighan",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/number-of-1-bits/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nWrite a function that takes the binary representation of a positive integer and returns the number of set bits (`1`s) it contains (also known as the Hamming weight).\n\nExample: `n = 11` (binary `00000000000000000000000000001011`) -> Output: `3`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Brian Kernighan's trick: n & (n - 1) wipes out the lowest set bit on every iteration! Loops only as many times as there are 1s, skipping all 0s!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Counts the number of set bits (1s) in a 32-bit integer.\n * @param {number} n\n * @return {number}\n */\nfunction hammingWeight(n) {\n  let count = 0;\n\n  while (n !== 0) {\n    // Clears the lowest set 1-bit\n    n = n & (n - 1);\n    count++;\n  }\n\n  return count;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(K)$ where $K$ is the number of `1` bits (at most 32). Much faster than testing all 32 bits!\n- **Space Complexity:** $O(1)$ constant space."
+    },
+    {
+      "id": 82,
+      "title": "Counting Bits (LeetCode #338)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "DP",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/counting-bits/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an integer `n`, return an array `ans` of length `n + 1` such that for each `i` (`0 <= i <= n`), `ans[i]` is the number of `1`s in the binary representation of `i`. You should solve it in linear $O(N)$ time.\n\nExample: `n = 5` -> `[0, 1, 1, 2, 1, 2]` (binary: 0->0, 1->1, 2->1, 3->2, 4->1, 5->2).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"DP on bit shift: Shifting i right by 1 (i >> 1) is a problem we already solved! ans[i] = ans[i >> 1] + (i & 1).\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Returns number of 1 bits for all integers from 0 to n.\n * @param {number} n\n * @return {number[]}\n */\nfunction countBits(n) {\n  const ans = new Array(n + 1).fill(0);\n\n  for (let i = 1; i <= n; i++) {\n    // i >> 1 drops the last bit (its bit count is already memoized in ans)\n    // (i & 1) checks if the dropped bit was a 1\n    ans[i] = ans[i >> 1] + (i & 1);\n  }\n\n  return ans;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Exactly one computation per number up to $n$.\n- **Space Complexity:** $O(1)$ auxiliary space (excluding the returned array of size $N + 1$)."
+    },
+    {
+      "id": 83,
+      "title": "Reverse Bits (LeetCode #190)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "bit shifts",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/reverse-bits/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nReverse the bits of a given 32-bit unsigned integer.\n\nExample: Input `00000010100101000001111010011100` -> Output `00111001011110000010100101000000` (964176192).\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Assembly line reversal: At each of 32 steps, shift result left, attach n's lowest bit, and shift n unsigned-right (>>> 1). End with >>> 0 for unsigned!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Reverses the bits of a 32-bit unsigned integer.\n * @param {number} n\n * @return {number}\n */\nfunction reverseBits(n) {\n  let result = 0;\n\n  for (let i = 0; i < 32; i++) {\n    // Shift result left to make room for the new bit\n    // Attach the lowest bit of n (n & 1)\n    result = (result << 1) | (n & 1);\n\n    // Unsigned right shift n by 1 to inspect the next bit\n    n = n >>> 1;\n  }\n\n  // >>> 0 converts signed 32-bit integer to unsigned 32-bit number\n  return result >>> 0;\n}\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(1)$ — Always runs exactly 32 loop iterations.\n- **Space Complexity:** $O(1)$ — Only a single integer result variable."
+    },
+    {
+      "id": 84,
+      "title": "Missing Number (LeetCode #268)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "easy",
+      "tags": [
+        "Bit Manipulation",
+        "XOR",
+        "math",
+        "easy"
+      ],
+      "source": "https://leetcode.com/problems/missing-number/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven an array `nums` containing `n` distinct numbers in the range `[0, n]`, return the only number in the range that is missing from the array.\n\nExample: `nums = [3, 0, 1]` (length is 3, expected range [0, 3]). Missing number: `2`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Two XOR sweeps: XOR all indices 0..n and XOR all array values. Everything matches up except the missing number!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Finds the missing number in range [0, n] using XOR.\n * @param {number[]} nums\n * @return {number}\n */\nfunction missingNumber(nums) {\n  const n = nums.length;\n  let xor = n; // Start with n\n\n  for (let i = 0; i < n; i++) {\n    // XOR both index i and the element nums[i]\n    xor ^= i ^ nums[i];\n  }\n\n  return xor;\n}\n\n// Alternative Mathematical Gauss Sum Formula:\n// function missingNumberGauss(nums) {\n//   const n = nums.length;\n//   const expectedSum = (n * (n + 1)) / 2;\n//   const actualSum = nums.reduce((acc, curr) => acc + curr, 0);\n//   return expectedSum - actualSum;\n// }\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(N)$ — Single pass through the array.\n- **Space Complexity:** $O(1)$ — Pure constant memory."
+    },
+    {
+      "id": 85,
+      "title": "Sum of Two Integers (LeetCode #371)",
+      "pattern": "Bit Manipulation",
+      "difficulty": "medium",
+      "tags": [
+        "Bit Manipulation",
+        "half adder",
+        "medium"
+      ],
+      "source": "https://leetcode.com/problems/sum-of-two-integers/",
+      "answer": "## 💡 Easy Explainer (The Problem in Plain Words)\nGiven two integers `a` and `b`, return the sum of the two integers without using the operators `+` and `-`.\n\nExample: `a = 2, b = 3` -> Output: `5`.\n\n---\n\n## 🧠 The Trick & \"What to Remember\"\n> **The Mental Hook:** *\"Hardware half-adder: a ^ b is the sum without carry. (a & b) << 1 is the carry! Keep repeating until carry becomes 0!\"*\n\n---\n\n## 💻 Full JavaScript Solution\n\n```javascript\n/**\n * Adds two integers without using + or - operators.\n * @param {number} a\n * @param {number} b\n * @return {number}\n */\nfunction getSum(a, b) {\n  while (b !== 0) {\n    // Carry bits occur where both bits are 1, shifted left by 1\n    const carry = (a & b) << 1;\n\n    // Sum without carry (XOR simulates addition without carrying)\n    a = a ^ b;\n\n    // Advance carry to next iteration\n    b = carry;\n  }\n\n  return a;\n}\n\n// Trace: a = 2 (010), b = 3 (011)\n// Iteration 1:\n// carry = (010 & 011) << 1 = 010 << 1 = 100 (4)\n// a = 010 ^ 011 = 001 (1)\n// b = 100 (4)\n// Iteration 2:\n// carry = (001 & 100) << 1 = 000 << 1 = 0\n// a = 001 ^ 100 = 101 (5)\n// b = 0\n// Loop ends, returns 5!\n```\n\n---\n\n## ⏱️ Complexity Analysis\n- **Time Complexity:** $O(1)$ — At most 32 iterations since integers are 32-bit.\n- **Space Complexity:** $O(1)$ constant space."
+    }
+  ]
+}

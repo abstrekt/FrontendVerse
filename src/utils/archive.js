@@ -9,11 +9,12 @@ export const EMPTY_ARCHIVED = {
   'advanced-react': [],
   hld: [],
   algorithm: [],
+  blind75: [],
   coding: [],
   output: [],
 };
 
-export const SECTIONS = ['interview-prep', 'test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'coding', 'output'];
+export const SECTIONS = ['interview-prep', 'test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'blind75', 'coding', 'output'];
 
 export const SECTION_LABELS = {
   'interview-prep': 'Interview Prep',
@@ -26,6 +27,7 @@ export const SECTION_LABELS = {
   'advanced-react': 'Advanced React',
   hld: 'HLD',
   algorithm: 'Algorithm',
+  blind75: 'Blind 75',
   coding: 'Coding',
   output: 'Output',
 };

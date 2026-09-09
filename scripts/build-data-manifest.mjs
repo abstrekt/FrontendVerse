@@ -35,6 +35,7 @@ const SECTIONS = {
   'advanced-react': ['data/advanced-react.json'],
   hld: ['data/hld-learnings.json'],
   algorithm: ['data/algorithm-learnings.json'],
+  blind75: ['data/blind75-learnings.json'],
 };
 
 export function computeCounts() {
