@@ -46,3 +46,10 @@ The polyfill batch (ids 2–18) shows the **paired** dual-section import pattern
 - `pnpm run build:output-questions` — regenerate output questions from external README
 - `pnpm run validate:learning-ids` — fail on duplicate ids across merged JS learnings files
 - `pnpm build` — production build
+
+## Cursor Cloud specific instructions
+
+Client-side React + Vite SPA; no backend, DB, or external services. `pnpm dev` (aka `pnpm start`) is the only process needed and serves on **port 3333** (pinned in `vite.config.js`), not Vite's default 5173.
+
+- Tests: `pnpm test` (Node's built-in `node --test` runner plus the learning-id validator; no separate test framework).
+- The `pnpm install` warning `Ignored build scripts: esbuild` is benign — Vite/esbuild run fine in dev without approving that build script.
