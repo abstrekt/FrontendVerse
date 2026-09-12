@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import MobileDrawer from './MobileDrawer';
 import Icon from './Icon';
+import ColumnResizer from './ColumnResizer';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { useColumnWidths, COLUMN_DEFAULTS } from '../hooks/useColumnWidths';
 
 const MOBILE_QUERY = '(max-width: 860px)';
 
@@ -14,11 +16,15 @@ const DRAWERS = {
  * The app shell.
  *
  * Desktop is a grid: a full-height nav rail, then a body split into the
- * top bar and a two-column row (contextual panel + content). Below the
- * mobile breakpoint both side columns become drawers — rendered *or*
- * drawered, never both, because the panel components own local state
- * (search text, status filter, expanded sections) and two mounted
- * copies would drift apart.
+ * top bar and a two-column row (contextual panel + content). Both side
+ * columns are draggable and collapsible; widths persist per-browser and are
+ * clamped to the viewport (see hooks/useColumnWidths.js).
+ *
+ * Below the mobile breakpoint both become drawers — rendered *or* drawered,
+ * never both, because the panel components own local state (search text,
+ * status filter, expanded sections) and two mounted copies would drift
+ * apart. Resizing is desktop-only: there is no pointer to drag with and no
+ * room to spare.
  */
 export default function Layout({
   sidebar,
@@ -33,6 +39,7 @@ export default function Layout({
 }) {
   const isMobile = useMediaQuery(MOBILE_QUERY);
   const [openDrawer, setOpenDrawer] = useState(null);
+  const { widths, bounds, setWidth } = useColumnWidths();
 
   // Growing past the breakpoint puts the columns back; a drawer left open
   // would otherwise trap focus over a layout that no longer needs it.
@@ -65,6 +72,18 @@ export default function Layout({
           >
             <Icon name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'} size={13} />
           </button>
+
+          {!sidebarCollapsed && (
+            <ColumnResizer
+              label="Resize the sections rail"
+              cssVar="--nav-width"
+              value={widths.nav}
+              min={bounds.nav.min}
+              max={bounds.nav.max}
+              defaultValue={COLUMN_DEFAULTS.nav}
+              onCommit={(next) => setWidth('nav', next)}
+            />
+          )}
         </aside>
       )}
 
@@ -117,6 +136,18 @@ export default function Layout({
               >
                 <Icon name={panelCollapsed ? 'chevron-right' : 'chevron-left'} size={13} />
               </button>
+
+              {!panelCollapsed && (
+                <ColumnResizer
+                  label="Resize the filters panel"
+                  cssVar="--panel-width"
+                  value={widths.panel}
+                  min={bounds.panel.min}
+                  max={bounds.panel.max}
+                  defaultValue={COLUMN_DEFAULTS.panel}
+                  onCommit={(next) => setWidth('panel', next)}
+                />
+              )}
             </aside>
           )}
 

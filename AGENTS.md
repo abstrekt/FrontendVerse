@@ -31,6 +31,7 @@ All sections load in [`src/App.jsx`](src/App.jsx).
 | --- | --- | --- |
 | Design tokens | `src/styles/index.css` (top) | Colour ramps, type, spacing, elevation. Light and `[data-theme="dark"]`. Component rules compose from these — never a raw hex. |
 | App shell | `src/components/Layout.jsx` | Grid: nav rail, top bar, panel + content. Drawers below 860px. |
+| Column widths | `src/hooks/useColumnWidths.js` + `components/ColumnResizer.jsx` | Draggable seams. A drag writes `--nav-width`/`--panel-width` straight to the DOM and only commits to React on pointerup. Bounds are viewport-relative, so a stored width is clamped for display without being overwritten. |
 | Nav rail | `src/components/Sidebar.jsx` | Rows are generated from `SECTIONS` in `src/sections/registry.js`; counts arrive as one `{ id: { done, total } }` map built in App. |
 | Top bar | `src/components/TopBar.jsx` | Section title, streak, search, shortcuts. Section-local controls go in `actions`. |
 | Contextual panel | `src/components/PanelList.jsx` | The shared item list behind `LearningsPanel` and `CodingPanel`. `FilterPanel` is the MCQ variant. |
@@ -38,6 +39,12 @@ All sections load in [`src/App.jsx`](src/App.jsx).
 
 Adding a section is one entry in `src/sections/registry.js` plus a row in
 the `navCounts` map in `App.jsx` — not a hand-written `<li>`.
+
+**Binding a key locally?** Call `preventDefault`. `useKeyboardShortcuts`
+skips any event that is already `defaultPrevented`, which is what stops a
+global binding (ArrowRight = next question) from also firing while the focus
+is in a widget that owns arrows — the column resizers and the step-through
+traces both rely on it.
 
 ## Blind 75 diagrams
 

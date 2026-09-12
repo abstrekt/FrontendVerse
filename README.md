@@ -74,7 +74,7 @@ Package manager: **pnpm**.
 
 ### Global
 
-- **Three-column shell** — nav rail, contextual panel (filters or item list), content; both side columns collapse
+- **Three-column shell** — nav rail, contextual panel (filters or item list), content. Both side columns are draggable and collapsible; drag the seam, or focus it and use ←/→ (Shift for a bigger step, Home to reset). Widths persist and are clamped to the window.
 - **Command palette** — `⌘K` / `Ctrl+K` to search and jump to any question or learning
 - **Light / dark theme** — persists in localStorage
 - **Mobile layout** — side columns become drawers, progress strip pinned to the bottom

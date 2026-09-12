@@ -394,6 +394,18 @@ body {
   transition: grid-template-columns var(--dur) var(--ease);
 }
 
+/* A drag writes --nav-width/--panel-width every frame; easing that would
+   make the column trail the pointer. */
+body.is-resizing-columns .layout,
+body.is-resizing-columns .layout-columns {
+  transition: none;
+}
+
+body.is-resizing-columns {
+  cursor: col-resize;
+  user-select: none;
+}
+
 .layout-sidebar {
   position: relative;
   grid-column: 1;
@@ -1128,17 +1140,20 @@ kbd.kbd {
    visible chevron on every seam is three pieces of chrome competing
    with the content. ── */
 
+/* Parked level with the top bar rather than at the seam's midpoint. It
+   used to sit at 50%, directly in the path of a drag — and because it is
+   invisible until the shell is hovered, an invisible button was eating
+   pointer events from the resizer underneath it. */
 .layout-collapse-btn {
   position: absolute;
   z-index: var(--z-nav);
-  top: 50%;
+  top: 9px;
   width: 20px;
-  height: 36px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transform: translateY(-50%);
   background: var(--surface);
   color: var(--fg-muted);
   border: 1px solid var(--line);
@@ -1171,6 +1186,12 @@ kbd.kbd {
 .layout.panel-collapsed .panel-collapse-btn {
   right: -18px;
   opacity: 1;
+}
+
+/* Nothing under the collapse button should be hit-testable while it is
+   invisible. */
+.layout-collapse-btn {
+  pointer-events: auto;
 }
 
 /* ── Collapsed nav rail ── */
@@ -6486,4 +6507,69 @@ kbd.kbd {
   overflow-x: auto;
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+}
+
+/* ── Column resizers ──────────────────────────────────────────────
+   The seam between two shell columns. The hit area is 9px so it is
+   catchable with a mouse, but only a 1px line ever paints — and only
+   on hover, focus or drag. A permanently visible divider on every
+   seam is three pieces of furniture competing with the content. ── */
+
+.col-resizer {
+  position: absolute;
+  /* Starts below the collapse button so the two never fight for the
+     same pixels. */
+  top: 52px;
+  bottom: 0;
+  right: -5px;
+  width: 9px;
+  z-index: var(--z-nav);
+  cursor: col-resize;
+  /* Sits over the column border but must not eat clicks meant for the
+     collapse handle, which is a sibling with a higher z-index. */
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+}
+
+.col-resizer-line {
+  width: 1px;
+  height: 100%;
+  background: var(--brand);
+  opacity: 0;
+  transition: opacity var(--dur-fast), width var(--dur-fast);
+}
+
+.col-resizer:hover .col-resizer-line,
+.col-resizer.is-dragging .col-resizer-line {
+  opacity: 1;
+  width: 2px;
+}
+
+.col-resizer:focus-visible {
+  outline: none;
+}
+
+.col-resizer:focus-visible .col-resizer-line {
+  opacity: 1;
+  width: 2px;
+  box-shadow: 0 0 0 1px var(--brand-ring);
+}
+
+/* The collapse chevron shares this seam; keep it clickable above the
+   resizer's hit area. */
+.layout-collapse-btn {
+  z-index: calc(var(--z-nav) + 1);
+}
+
+@media (max-width: 860px) {
+  .col-resizer {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .col-resizer {
+    display: none;
+  }
 }
