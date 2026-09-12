@@ -29,3 +29,29 @@ export function updateStreak(stats) {
   if (last === yesterdayKey()) return (stats.streakDays ?? 0) + 1;
   return 1;
 }
+
+/**
+ * The one streak to show in the UI, across the per-section trackers.
+ *
+ * Each section keeps its own `{ streakDays, lastPlayedDate }`, but a user
+ * who did MCQs yesterday and coding today has not broken anything — the
+ * streak they care about is "days I studied", not "days I studied this
+ * one section". Stale entries (last played before yesterday) are dropped,
+ * and the longest live streak wins.
+ */
+export function combinedStreak(statsList) {
+  const today = todayKey();
+  const yesterday = yesterdayKey();
+
+  let days = 0;
+  let playedToday = false;
+
+  for (const stats of statsList) {
+    const last = stats?.lastPlayedDate;
+    if (last !== today && last !== yesterday) continue;
+    if (last === today) playedToday = true;
+    days = Math.max(days, stats.streakDays ?? 0);
+  }
+
+  return { days, playedToday };
+}

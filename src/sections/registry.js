@@ -22,6 +22,16 @@ const LEARNINGS = counter('learning', 'learnings');
 const QUESTIONS = counter('question', 'questions');
 
 export const SECTIONS = {
+  // The landing view. Routable and titled, but it is the destination of
+  // the brand button rather than a row in the section list.
+  overview: {
+    label: 'Overview',
+    navIcon: 'OV',
+    category: null,
+    kind: 'overview',
+    subtitle: null,
+    inNav: false,
+  },
   mcq: { label: 'JavaScript MCQs', navIcon: 'JS', category: 'js', kind: 'mcq', subtitle: QUESTIONS },
   learnings: {
     label: 'Javascript learnings',

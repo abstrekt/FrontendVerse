@@ -1,18 +1,23 @@
-export default function StarredFilterToggle({ checked, count, onChange, hint }) {
+import Icon from './Icon';
+
+/**
+ * "Starred only" as a pressable chip rather than a checkbox plus a
+ * sentence of hint text. It sits in a panel toolbar next to the other
+ * filters, where a two-line explanation of what a star means would
+ * outweigh every control around it.
+ */
+export default function StarredFilterToggle({ checked, count = 0, onChange, hint }) {
   return (
-    <div className="starred-filter-block">
-      <label className="output-setting-toggle">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-        <span className="output-setting-toggle-label">
-          Starred only
-          {count > 0 ? ` (${count})` : ''}
-        </span>
-      </label>
-      {hint && <p className="output-setting-hint">{hint}</p>}
-    </div>
+    <button
+      type="button"
+      className={`toggle-chip${checked ? ' active' : ''}`}
+      onClick={() => onChange(!checked)}
+      aria-pressed={checked}
+      title={hint || 'Show starred items only'}
+    >
+      <Icon name="star" size={13} filled={checked} />
+      <span>Starred</span>
+      {count > 0 && <span className="toggle-chip-count">{count}</span>}
+    </button>
   );
 }

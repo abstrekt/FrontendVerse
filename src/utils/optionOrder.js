@@ -29,8 +29,8 @@ function seededShuffle(items, seed) {
 /**
  * Order a question's options for display and re-letter them A, B, C…
  *
- * The authored data has a severe position bias — across 246 MCQs option D is
- * correct only 26 times, and in one imported batch of 66 it is correct once.
+ * The authored data has a severe position bias — across 189 MCQs option D is
+ * correct only 23 times, and in one imported batch of 50 it is correct once.
  * A test-taker learns to guess B rather than to read the code. Shuffling at
  * render time fixes that without rewriting the content.
  *

@@ -1,5 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { DIFFICULTY_LEVELS, DIFFICULTY_LABELS, getDifficultyCompletion, getTopicCompletion } from '../utils/progress';
+import {
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_LABELS,
+  getDifficultyCompletion,
+  getTopicCompletion,
+} from '../utils/progress';
 import StarredFilterToggle from './StarredFilterToggle';
 import { useAnnounce } from '../hooks/useAnnouncer';
 
@@ -57,92 +62,104 @@ export default function FilterPanel({
 
   return (
     <div className="learnings-panel-body filters-panel-body">
-      <div className="panel-subheader learnings-panel-header">
-        <span>Javascript MCQs</span>
-        <span className="learnings-count">{questions.length}</span>
+      <div className="panel-header">
+        <span className="panel-header-title">Filters</span>
+        {hasActiveFilters ? (
+          <button type="button" className="clear-btn" onClick={onClear}>
+            Clear {activeFilters > 0 ? `(${activeFilters})` : ''}
+          </button>
+        ) : (
+          <span className="panel-count">{questions.length}</span>
+        )}
       </div>
 
-      <StarredFilterToggle
-        checked={starredOnly}
-        count={starredCount}
-        onChange={onStarredOnlyChange}
-        hint={starredOnly ? 'Only starred questions appear in quiz and list.' : 'All active questions are included.'}
-      />
+      <div className="panel-toolbar">
+        <StarredFilterToggle
+          checked={starredOnly}
+          count={starredCount}
+          onChange={onStarredOnlyChange}
+          hint={
+            starredOnly
+              ? 'Only starred questions appear in quiz and list.'
+              : 'Show starred questions only'
+          }
+        />
+      </div>
 
-      <div className="difficulty-panel">
-        <div className="panel-subheader">
-          <span>Difficulty</span>
-          {/* Conditionally rendered rather than hidden: aria-hidden on a
-              focusable button is a well-known antipattern. */}
-          {hasActiveFilters && (
-            <button type="button" className="clear-btn" onClick={onClear}>
-              Clear all
-            </button>
-          )}
+      <div className="panel-scroll">
+        <div className="difficulty-panel">
+          <div className="panel-subheader">
+            <span>Difficulty</span>
+          </div>
+
+          <ul className="filter-list difficulty-filter-list">
+            {difficultyRows.map(({ difficulty, label, attempted, total, pct }) => (
+              <li key={difficulty}>
+                <label
+                  className={`filter-item difficulty-${difficulty}${
+                    selectedDifficulties.includes(difficulty) ? ' selected' : ''
+                  }${pct === 100 ? ' complete' : ''}`}
+                  style={{ '--topic-progress': `${pct}%` }}
+                >
+                  <span className="filter-item-progress" aria-hidden="true" />
+                  <input
+                    type="checkbox"
+                    checked={selectedDifficulties.includes(difficulty)}
+                    onChange={() => onToggleDifficulty(difficulty)}
+                  />
+                  <span className="filter-topic-name">{label}</span>
+                  <span className="filter-count">
+                    <span aria-hidden="true">
+                      {attempted}/{total}
+                    </span>
+                    <span className="sr-only">
+                      {attempted} attempted of {total}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <ul className="filter-list difficulty-filter-list">
-          {difficultyRows.map(({ difficulty, label, attempted, total, pct }) => (
-            <li key={difficulty}>
-              <label
-                className={`filter-item difficulty-${difficulty}${selectedDifficulties.includes(difficulty) ? ' selected' : ''}${pct === 100 ? ' complete' : ''}`}
-                style={{ '--topic-progress': `${pct}%` }}
-              >
-                <span className="filter-item-progress" aria-hidden="true" />
-                <input
-                  type="checkbox"
-                  checked={selectedDifficulties.includes(difficulty)}
-                  onChange={() => onToggleDifficulty(difficulty)}
-                />
-                <span className="filter-topic-name">{label}</span>
-                <span className="filter-count">
-                  <span aria-hidden="true">
-                    {attempted}/{total}
-                  </span>
-                  <span className="sr-only">
-                    {attempted} attempted of {total}
-                  </span>
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div className="panel-subheader topics-subheader">
+          <span>Topics</span>
+          <span className="panel-subheader-count">{topicRows.length}</span>
+        </div>
 
-      <div className="panel-subheader topics-subheader">
-        <span>Topics</span>
+        {topicRows.length === 0 ? (
+          <div className="no-filters">No topics available</div>
+        ) : (
+          <ul className="filter-list">
+            {topicRows.map(({ topic, attempted, total, pct }) => (
+              <li key={topic}>
+                <label
+                  className={`filter-item${
+                    selectedTopics.includes(topic) ? ' selected' : ''
+                  }${pct === 100 ? ' complete' : ''}`}
+                  style={{ '--topic-progress': `${pct}%` }}
+                >
+                  <span className="filter-item-progress" aria-hidden="true" />
+                  <input
+                    type="checkbox"
+                    checked={selectedTopics.includes(topic)}
+                    onChange={() => onToggleTopic(topic)}
+                  />
+                  <span className="filter-topic-name">{topic}</span>
+                  <span className="filter-count">
+                    <span aria-hidden="true">
+                      {attempted}/{total}
+                    </span>
+                    <span className="sr-only">
+                      {attempted} attempted of {total}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-
-      {topicRows.length === 0 ? (
-        <div className="no-filters">No topics available</div>
-      ) : (
-        <ul className="filter-list">
-          {topicRows.map(({ topic, attempted, total, pct }) => (
-            <li key={topic}>
-              <label
-                className={`filter-item${selectedTopics.includes(topic) ? ' selected' : ''}${pct === 100 ? ' complete' : ''}`}
-                style={{ '--topic-progress': `${pct}%` }}
-              >
-                <span className="filter-item-progress" aria-hidden="true" />
-                <input
-                  type="checkbox"
-                  checked={selectedTopics.includes(topic)}
-                  onChange={() => onToggleTopic(topic)}
-                />
-                <span className="filter-topic-name">{topic}</span>
-                <span className="filter-count">
-                  <span aria-hidden="true">
-                    {attempted}/{total}
-                  </span>
-                  <span className="sr-only">
-                    {attempted} attempted of {total}
-                  </span>
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

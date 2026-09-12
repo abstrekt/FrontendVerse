@@ -251,7 +251,7 @@
       "expectedLines": [
         "[\"a\",\"p\",\"p\",\"l\",\"e\"]"
       ],
-      "explanation": "The `String.prototype.split()` method with an empty string `\"\"` as the separator divides the string between every UTF-16 code unit, returning an array of individual characters: `['a', 'p', 'p', 'l', 'e']`.\n\n**Note:** For strings containing surrogate pairs or complex emojis (e.g. `\"👨‍👩‍👧\"`), use `[...\"apple\"]` or `Array.from(\"apple\")` to split correctly by Unicode code points instead of code units.",
+      "explanation": "The `String.prototype.split()` method with an empty string `\"\"` as the separator divides the string between every UTF-16 code unit, returning an array of individual characters: `['a', 'p', 'p', 'l', 'e']`.\n\n**Note:** For strings containing surrogate pairs or multi-byte characters, use `[...\"apple\"]` or `Array.from(\"apple\")` to split correctly by Unicode code points instead of code units.",
       "readmeOutput": "[ 'a', 'p', 'p', 'l', 'e' ]",
       "async": false
     },

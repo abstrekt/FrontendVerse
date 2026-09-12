@@ -2401,6 +2401,165 @@
         }
       ],
       "explanation": "### Solution\n\n```javascript\nfunction moveZeroes(arr) {\n  let write = 0;   // next slot that should receive a non-zero value\n\n  for (let read = 0; read < arr.length; read++) {\n    if (arr[read] !== 0) {\n      [arr[write], arr[read]] = [arr[read], arr[write]];\n      write++;\n    }\n  }\n\n  return arr;\n}\n```\n\n### How it works\n\nTwo pointers moving in the **same direction**, at different speeds.\n\n`read` visits every element. `write` only advances when a non-zero is placed. That gives you an invariant worth stating out loud:\n\n> Everything before `write` is finished — non-zero and in original order. Everything between `write` and `read` is zeros.\n\nWhen `read` finds a non-zero, swapping it into `arr[write]` sends whatever was there — necessarily a zero, or the element itself if the pointers coincide — out to `read`'s position. The zeros accumulate at the back automatically. No second pass needed.\n\n**O(n) time, O(1) extra space.** The last test asserts the array was mutated in place rather than replaced.\n\n### Why swap instead of overwrite-then-fill\n\nThe alternative is: copy non-zeros forward, then fill the tail with zeros.\n\n```javascript\nlet write = 0;\nfor (const value of arr) if (value !== 0) arr[write++] = value;\nwhile (write < arr.length) arr[write++] = 0;\n```\n\nAlso correct and also O(n). The swap version does one pass instead of two, and generalizes to problems where the displaced value matters — like partitioning around a pivot. Either answer is fine; being able to compare them is the point.\n\n### The follow-ups\n\n**\"Minimize the number of writes.\"** — The swap version writes on every non-zero even when nothing needs to move. Guard with `if (read !== write)` to skip the no-op swaps.\n\n**\"Move zeroes to the front instead.\"** — Same pattern walking from the right, with `write` starting at `arr.length - 1`.\n\n**\"Remove all instances of a given value, returning the new length.\"** — Identical write-pointer pattern; return `write` instead of the array.\n\n### Key points\n\n- \"In place\", \"without extra space\", \"preserve order\" → same-direction two pointers\n- `write` marks the boundary between finished and unprocessed\n- State the invariant out loud — it is what proves the code correct\n- The whole family (dedupe sorted array, remove element, partition) is this one skeleton"
+    },
+    {
+      "id": 49,
+      "title": "Infinite Currying (sum)",
+      "difficulty": "medium",
+      "topics": [
+        "closures",
+        "functions",
+        "currying"
+      ],
+      "source": "user paste: JS interview drills - currying, chaining, once",
+      "runner": "expression",
+      "functionName": "sum",
+      "description": "Implement `sum(n)` so it can be called **any number of times**, one argument at a time, and returns the running total only when called with **no argument**.\n\n### Example\n\n```javascript\nsum(3)(2)();          // 5\nsum(1)(2)(3)(4)();    // 10\nsum(3)(2);            // a function — not a number\nsum();                // 0\n```\n\nRules:\n\n- Every call with a number returns another callable that remembers the total so far.\n- A call with **no argument** ends the chain and returns the total.\n- A partially applied chain must be reusable: `const a = sum(10);` then `a(1)()` and `a(2)()` must not interfere.\n\nUnlike the fixed-arity [`curry`](/coding/39) question, there is no `fn.length` to stop at — the empty call is the terminator.\n\nComplete the implementation in the editor.",
+      "template": "function sum(num) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "sum(3)(2)()",
+          "expected": 5
+        },
+        {
+          "setup": "",
+          "code": "sum(1)(2)(3)(4)()",
+          "expected": 10
+        },
+        {
+          "setup": "",
+          "code": "sum(5)()",
+          "expected": 5
+        },
+        {
+          "setup": "",
+          "code": "sum()",
+          "expected": 0
+        },
+        {
+          "setup": "",
+          "code": "typeof sum(3)(2)",
+          "expected": "function"
+        },
+        {
+          "setup": "const a = sum(10);",
+          "code": "[a(1)(), a(2)()]",
+          "expected": [
+            11,
+            12
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction sum(num) {\n  // Called with nothing at all — there is no total to build on.\n  if (num === undefined) return 0;\n\n  return function curried(nextNum) {\n    // The empty call ends the chain and hands back what we accumulated.\n    if (nextNum === undefined) return num;\n\n    // Otherwise fold the new number in and hand back another collector.\n    return sum(num + nextNum);\n  };\n}\n```\n\n### How it works\n\n`sum(3)` returns `curried`, a closure over `num === 3`. Calling it with `2` does **not** mutate anything — it calls `sum(5)`, which builds a *fresh* closure over `5`. That is why a partial chain is reusable: `const a = sum(10)` can be called with `1` and with `2` and each call produces its own independent continuation.\n\nThe terminator works because a call with no argument binds `nextNum` to `undefined`, which is the one value that means \"stop\". This is also the catch: `sum(3)(undefined)` ends the chain rather than adding — use `arguments.length === 0` if you need to tell the two apart.\n\n### Variant: the `toString` trick\n\nSome interviewers ask for `sum(1)(2)(3)` to produce `6` **without** a final `()`. That needs a different mechanism — attach `toString` / `valueOf` to the returned function so coercion reveals the total:\n\n```javascript\nfunction sum(num) {\n  const next = (nextNum) => sum(num + nextNum);\n  next.toString = () => num;   // called when the function is coerced\n  return next;\n}\n\nconsole.log(`${sum(1)(2)(3)}`); // \"6\"\nconsole.log(sum(1)(2)(3) + 0);  // 6\n```\n\nIt still returns a function — it only *looks* like a number when something coerces it, so `console.log(sum(1)(2)(3))` alone still prints a function."
+    },
+    {
+      "id": 50,
+      "title": "Chainable Calculator",
+      "difficulty": "easy",
+      "topics": [
+        "closures",
+        "functions",
+        "this"
+      ],
+      "source": "user paste: JS interview drills - currying, chaining, once",
+      "runner": "expression",
+      "functionName": "calculator",
+      "description": "Implement `calculator(initialValue)` that supports **method chaining**: `.add(n)` and `.sub(n)` keep the running total and return something chainable, while `.val()` ends the chain and returns the number.\n\n### Example\n\n```javascript\ncalculator(10).add(5).sub(3).add(2).val(); // 14\ncalculator().add(7).val();                 // 7 (initialValue defaults to 0)\n```\n\nRules:\n\n- `initialValue` defaults to `0`.\n- `.add()` and `.sub()` must return the calculator itself, so calls can be chained in any order and any length.\n- Two calculators must not share state.\n\nComplete the implementation in the editor.",
+      "template": "function calculator(initialValue = 0) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "",
+          "code": "calculator(10).add(5).sub(3).add(2).val()",
+          "expected": 14
+        },
+        {
+          "setup": "",
+          "code": "calculator().add(7).val()",
+          "expected": 7
+        },
+        {
+          "setup": "",
+          "code": "calculator(5).val()",
+          "expected": 5
+        },
+        {
+          "setup": "const c = calculator(0);",
+          "code": "c.add(1) === c",
+          "expected": true
+        },
+        {
+          "setup": "const a = calculator(1);\nconst b = calculator(100);\na.add(1);",
+          "code": "[a.val(), b.val()]",
+          "expected": [
+            2,
+            100
+          ]
+        },
+        {
+          "setup": "",
+          "code": "calculator(0).sub(5).sub(5).add(20).val()",
+          "expected": 10
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction calculator(initialValue = 0) {\n  let total = initialValue;\n\n  return {\n    add(num) {\n      total += num;\n      return this; // hand the same object back so the next call can chain\n    },\n    sub(num) {\n      total -= num;\n      return this;\n    },\n    val() {\n      return total;\n    },\n  };\n}\n```\n\n### How it works\n\n`total` lives in the closure, not on the returned object, so nothing outside can reach in and change it — `.val()` is the only way out. Each `calculator(...)` call creates a fresh `total`, which is why two instances never interfere.\n\nChaining works because `add` and `sub` `return this`. Inside a method called as `obj.add(5)`, `this` **is** that object, so the expression `calculator(10).add(5)` evaluates back to the calculator and `.sub(3)` can run on it. `val()` deliberately breaks the chain by returning a number.\n\n### Watch out\n\nUsing arrow functions for the methods breaks `this` — an arrow has no `this` of its own and would pick up the enclosing scope's. Either use shorthand methods as above, or capture the object explicitly:\n\n```javascript\nfunction calculator(initialValue = 0) {\n  let total = initialValue;\n  const api = {\n    add: (num) => (total += num, api),\n    sub: (num) => (total -= num, api),\n    val: () => total,\n  };\n  return api;\n}\n```"
+    },
+    {
+      "id": 51,
+      "title": "once",
+      "difficulty": "easy",
+      "topics": [
+        "closures",
+        "functions",
+        "caching"
+      ],
+      "source": "user paste: JS interview drills - currying, chaining, once",
+      "runner": "expression",
+      "functionName": "once",
+      "description": "Write a higher-order function `once(fn)` that returns a wrapped function which runs `fn` **at most one time**. Every later call skips `fn` entirely and returns the cached result of the first invocation.\n\n### Example\n\n```javascript\nconst initializeApp = once((status) => `App initialized: ${status}`);\n\ninitializeApp('Success'); // \"App initialized: Success\" — fn runs\ninitializeApp('Failure'); // \"App initialized: Success\" — cached, fn never runs again\n```\n\nRules:\n\n- Forward all arguments **and** `this` to `fn` on the first call.\n- Cache the first result, even when it is `undefined`.\n\nComplete the implementation in the editor.",
+      "template": "function once(fn) {\n  // Write your code here\n}\n",
+      "testCases": [
+        {
+          "setup": "let calls = 0;\nconst init = once((status) => { calls++; return 'App initialized: ' + status; });",
+          "code": "[init('Success'), init('Failure'), calls]",
+          "expected": [
+            "App initialized: Success",
+            "App initialized: Success",
+            1
+          ]
+        },
+        {
+          "setup": "const add = once((a, b) => a + b);",
+          "code": "add(2, 3)",
+          "expected": 5
+        },
+        {
+          "setup": "const obj = { n: 7, get: once(function () { return this.n; }) };",
+          "code": "obj.get()",
+          "expected": 7
+        },
+        {
+          "setup": "let calls = 0;\nconst noop = once(() => { calls++; });\nnoop();\nnoop();\nnoop();",
+          "code": "calls",
+          "expected": 1
+        },
+        {
+          "setup": "const f = once(() => undefined);\nf();",
+          "code": "f() === undefined",
+          "expected": true
+        },
+        {
+          "setup": "let calls = 0;\nconst make = () => once(() => ++calls);\nconst a = make();\nconst b = make();",
+          "code": "[a(), a(), b(), calls]",
+          "expected": [
+            1,
+            1,
+            2,
+            2
+          ]
+        }
+      ],
+      "explanation": "### Solution\n\n```javascript\nfunction once(fn) {\n  let called = false;\n  let result;\n\n  return function (...args) {\n    if (!called) {\n      called = true;\n      result = fn.apply(this, args); // forward receiver and arguments\n    }\n    return result;\n  };\n}\n```\n\n### How it works\n\n`called` and `result` live in the closure created by each `once(fn)` call, so every wrapped function gets its own one-shot latch — wrapping the same `fn` twice gives two independent wrappers.\n\nThe flag is set **before** `fn` runs, not after. That matters if `fn` re-enters the wrapper: without it, a recursive call would run `fn` a second time.\n\nUse a boolean flag rather than `if (result === undefined)` — a function that legitimately returns `undefined` would otherwise re-run on every call.\n\n`fn.apply(this, args)` (and a `function` expression, not an arrow) is what keeps `once` usable on methods: `obj.method()` still sees `obj` as its receiver.\n\n### Related\n\nSame closure shape as [memoize](/coding/27) — `once` is the degenerate case with a cache of exactly one entry and no key."
     }
   ]
 }

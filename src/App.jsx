@@ -6,6 +6,7 @@ import LearningsView from './components/LearningsView';
 import Skeleton from './components/Skeleton';
 import LearningsPanel from './components/LearningsPanel';
 import CodingPanel from './components/CodingPanel';
+import PanelList from './components/PanelList';
 import QuizQuestion from './components/QuizQuestion';
 import QuestionListView from './components/QuestionListView';
 import Results from './components/Results';
@@ -16,6 +17,8 @@ import CodingChallenge from './components/CodingChallenge';
 import CodingResults from './components/CodingResults';
 import ArchivedView from './components/ArchivedView';
 import CommandPalette from './components/CommandPalette';
+import TopBar from './components/TopBar';
+import Dashboard from './components/Dashboard';
 import ShortcutsDialog from './components/ShortcutsDialog';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -70,7 +73,6 @@ import outputQuestionsData from '../data/output-questions.json';
 import scopeOutputQuestionsData from '../data/scope-output-questions.json';
 import codingQuestionsData from '../data/coding-questions.json';
 import {
-  EMPTY_CODING_PROGRESS,
   loadCodingProgress,
   saveCodingProgress,
   recordCodingAnswer,
@@ -104,7 +106,6 @@ import {
   syncCompletedFromProgress,
   syncOutputCompletedFromProgress,
 } from './utils/completed';
-import StarredFilterToggle from './components/StarredFilterToggle';
 import { buildSearchIndex } from './utils/searchIndex';
 import { loadLearningSection, LEARNING_LOADERS } from './data/datasets';
 import datasetCounts from '../data/counts.json';
@@ -112,7 +113,9 @@ import { getPassScopeQuestions } from './utils/questionState';
 import { hasRunMigration, markMigrationRun } from './utils/migrations';
 import { useSystemTheme, getSystemTheme } from './hooks/useSystemTheme';
 import { useAnnounce } from './hooks/useAnnouncer';
-import { sectionLabel } from './sections/registry';
+import { sectionLabel, SECTIONS } from './sections/registry';
+import { combinedStreak } from './utils/streak';
+import { outputQuestionLabel } from './utils/outputLabel';
 
 const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
 
@@ -701,12 +704,6 @@ export default function App() {
     setThemeSource('system');
     setTheme(getSystemTheme());
   }, [themeSource, theme, setTheme, setThemeSource]);
-
-  useEffect(() => {
-    if (window.location.pathname === '/' || window.location.pathname === '') {
-      navigate('/mcq', { replace: true });
-    }
-  }, [navigate]);
 
   useEffect(() => {
     if (activeSection !== 'learnings' || !orderedStarredActiveLearnings.length) return;
@@ -2180,6 +2177,88 @@ export default function App() {
     return null;
   }
 
+  /* One row per nav entry, in the shape the rail wants: `{ done, total }`
+     keyed by section id. Previously this travelled as twenty-four separate
+     count props, which meant every new section touched App, Sidebar and the
+     prop list in between. */
+  const navCounts = useMemo(
+    () => ({
+      mcq: { done: mcqCompletedCount, total: activeQuestions.length },
+      learnings: {
+        done: learningsCompletedCount,
+        total: sectionCount('learnings', activeLearnings),
+      },
+      css: { done: cssCompletedCount, total: sectionCount('css', activeCssLearnings) },
+      'react-learnings': {
+        done: reactLearningsCompletedCount,
+        total: sectionCount('react-learnings', activeReactLearnings),
+      },
+      'react-guide': {
+        done: reactGuideCompletedCount,
+        total: sectionCount('react-guide', activeReactGuide),
+      },
+      'advanced-react': {
+        done: advancedReactCompletedCount,
+        total: sectionCount('advanced-react', activeAdvancedReact),
+      },
+      hld: { done: hldCompletedCount, total: sectionCount('hld', activeHldLearnings) },
+      algorithm: {
+        done: algorithmCompletedCount,
+        total: sectionCount('algorithm', activeAlgorithmLearnings),
+      },
+      blind75: {
+        done: blind75CompletedCount,
+        total: sectionCount('blind75', activeBlind75Learnings),
+      },
+      coding: { done: codingCompletedCount, total: activeCodingQuestions.length },
+      output: { done: outputCompletedCount, total: activeOutputQuestions.length },
+      archived: { done: 0, total: archivedCount },
+      'interview-prep': {
+        done: interviewPrepCompletedCount,
+        total: sectionCount('interview-prep', activeInterviewPrep),
+      },
+      'test-prep': {
+        done: testPrepCompletedCount,
+        total: sectionCount('test-prep', activeTestPrep),
+      },
+    }),
+    [
+      mcqCompletedCount, activeQuestions.length,
+      learningsCompletedCount, activeLearnings, cssCompletedCount, activeCssLearnings,
+      reactLearningsCompletedCount, activeReactLearnings,
+      reactGuideCompletedCount, activeReactGuide,
+      advancedReactCompletedCount, activeAdvancedReact,
+      hldCompletedCount, activeHldLearnings,
+      algorithmCompletedCount, activeAlgorithmLearnings,
+      blind75CompletedCount, activeBlind75Learnings,
+      codingCompletedCount, activeCodingQuestions.length,
+      outputCompletedCount, activeOutputQuestions.length,
+      archivedCount,
+      interviewPrepCompletedCount, activeInterviewPrep,
+      testPrepCompletedCount, activeTestPrep,
+      sectionCount,
+    ],
+  );
+
+  /* Streak is stored per section. What belongs in the top bar is the
+     union — studying anything today keeps the run alive. */
+  const streak = useMemo(
+    () => combinedStreak([progress.stats, outputProgress.stats, codingProgress.stats]),
+    [progress.stats, outputProgress.stats, codingProgress.stats],
+  );
+
+  const mcqPoolCount =
+    selectedTopics.length > 0 || selectedDifficulties.length > 0 || starredFilter.mcq
+      ? filteredQuestions.length
+      : activeQuestions.length;
+
+  const sectionMeta = SECTIONS[activeSection];
+  const topbarMeta = sectionMeta?.subtitle
+    ? sectionMeta.subtitle(
+        activeSection === 'mcq' ? mcqPoolCount : (navCounts[activeSection]?.total ?? 0),
+      )
+    : null;
+
   return (
     <>
       <CommandPalette
@@ -2206,80 +2285,16 @@ export default function App() {
           themeSource={themeSource}
         />
       }
-      sidebar={
-          <Sidebar
-            activeSection={activeSection}
-            onSectionChange={handleSectionChange}
-            sectionCategory={sectionCategory}
-            onSectionCategoryChange={setSectionCategory}
-            totalQuestions={activeQuestions.length}
-            learningsCount={sectionCount('learnings', activeLearnings)}
-            learningsCompletedCount={learningsCompletedCount}
-            reactLearningsCount={sectionCount('react-learnings', activeReactLearnings)}
-            reactLearningsCompletedCount={reactLearningsCompletedCount}
-            reactGuideCount={sectionCount('react-guide', activeReactGuide)}
-            reactGuideCompletedCount={reactGuideCompletedCount}
-            interviewPrepCount={sectionCount('interview-prep', activeInterviewPrep)}
-            interviewPrepCompletedCount={interviewPrepCompletedCount}
-            testPrepCount={sectionCount('test-prep', activeTestPrep)}
-            testPrepCompletedCount={testPrepCompletedCount}
-            cssCount={sectionCount('css', activeCssLearnings)}
-            cssCompletedCount={cssCompletedCount}
-            advancedReactCount={sectionCount('advanced-react', activeAdvancedReact)}
-            advancedReactCompletedCount={advancedReactCompletedCount}
-            hldLearningsCount={sectionCount('hld', activeHldLearnings)}
-            hldCompletedCount={hldCompletedCount}
-            algorithmLearningsCount={sectionCount('algorithm', activeAlgorithmLearnings)}
-            algorithmCompletedCount={algorithmCompletedCount}
-            blind75Count={sectionCount('blind75', activeBlind75Learnings)}
-            blind75CompletedCount={blind75CompletedCount}
-            outputQuestionsCount={activeOutputQuestions.length}
-            codingQuestionsCount={activeCodingQuestions.length}
-            archivedCount={archivedCount}
-            filteredCount={
-              selectedTopics.length > 0 || selectedDifficulties.length > 0 || starredFilter.mcq
-                ? filteredQuestions.length
-                : activeQuestions.length
-            }
-            lifetimeAccuracy={lifetimeAccuracy}
-            sessionCount={progress.sessions.length}
-            bestPct={bestPct}
-            weakTopics={weakTopics}
-            missedCount={missedCount}
-            mode={mode}
-            onPracticeWeak={handleStartWeak}
-            onReviewMistakes={handleStartReview}
-            onBackToAll={handleBackToAll}
-            onClearProgress={handleClearProgress}
-            mcqCompletedCount={mcqCompletedCount}
-            mcqIncludeCompleted={mcqIncludeCompleted}
-            onMcqIncludeCompletedChange={handleMcqIncludeCompletedChange}
-            codingSessionCount={codingProgress.sessions.length}
-            codingBestPct={codingStats.bestPct}
-            codingCompletedCount={codingCompletedCount}
-            codingIncludeCompleted={codingIncludeCompleted}
-            onCodingIncludeCompletedChange={handleCodingIncludeCompletedChange}
-            onCodingRestart={handleCodingRestart}
-            outputLifetimeAccuracy={outputLifetimeAccuracy}
-            outputSessionCount={outputProgress.sessions.length}
-            outputBestPct={outputBestPct}
-            outputMissedCount={outputMissedCount}
-            outputCompletedCount={outputCompletedCount}
-            outputIncludeCompleted={outputIncludeCompleted}
-            onOutputIncludeCompletedChange={handleOutputIncludeCompletedChange}
-            onOutputRestart={handleOutputRestart}
-            onOutputClearProgress={handleOutputClearProgress}
-            theme={theme}
-            onToggleTheme={cycleTheme}
-            themeSource={themeSource}
-            syntaxHighlight={syntaxHighlight}
-            onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
-            onOpenSearch={() => setSearchPaletteOpen(true)}
-          />
-        }
-        center={
-          <div className="center-with-toggle">
-            {activeSection === 'mcq' && (
+      topbar={
+        <TopBar
+          title={sectionLabel(activeSection)}
+          meta={topbarMeta}
+          streakDays={streak.days}
+          streakLive={streak.playedToday}
+          onOpenSearch={() => setSearchPaletteOpen(true)}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
+          actions={
+            activeSection === 'mcq' ? (
               <div className="view-toggle" role="group" aria-label="View mode">
                 <button
                   type="button"
@@ -2298,12 +2313,69 @@ export default function App() {
                   List
                 </button>
               </div>
-            )}
-
+            ) : null
+          }
+        />
+      }
+      sidebar={
+          <Sidebar
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
+            sectionCategory={sectionCategory}
+            onSectionCategoryChange={setSectionCategory}
+            counts={navCounts}
+            onHome={() => handleSectionChange('overview')}
+            lifetimeAccuracy={lifetimeAccuracy}
+            sessionCount={progress.sessions.length}
+            bestPct={bestPct}
+            weakTopics={weakTopics}
+            missedCount={missedCount}
+            mode={mode}
+            onPracticeWeak={handleStartWeak}
+            onReviewMistakes={handleStartReview}
+            onBackToAll={handleBackToAll}
+            onClearProgress={handleClearProgress}
+            mcqIncludeCompleted={mcqIncludeCompleted}
+            onMcqIncludeCompletedChange={handleMcqIncludeCompletedChange}
+            codingSessionCount={codingProgress.sessions.length}
+            codingBestPct={codingStats.bestPct}
+            codingIncludeCompleted={codingIncludeCompleted}
+            onCodingIncludeCompletedChange={handleCodingIncludeCompletedChange}
+            onCodingRestart={handleCodingRestart}
+            outputLifetimeAccuracy={outputLifetimeAccuracy}
+            outputSessionCount={outputProgress.sessions.length}
+            outputBestPct={outputBestPct}
+            outputMissedCount={outputMissedCount}
+            outputIncludeCompleted={outputIncludeCompleted}
+            onOutputIncludeCompletedChange={handleOutputIncludeCompletedChange}
+            onOutputRestart={handleOutputRestart}
+            onOutputClearProgress={handleOutputClearProgress}
+            theme={theme}
+            onToggleTheme={cycleTheme}
+            themeSource={themeSource}
+            syntaxHighlight={syntaxHighlight}
+            onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
+          />
+        }
+        center={
+          <div className="center-with-toggle">
             {/* A code-split dataset that has not arrived yet would otherwise
                 render as "No learnings available yet", which reads as an empty
                 section rather than a pending one. */}
-            {LEARNING_LOADERS[activeSection] && !loadedSections[activeSection] ? (
+            {activeSection === 'overview' ? (
+              <Dashboard
+                counts={navCounts}
+                streak={streak}
+                mcqAccuracy={lifetimeAccuracy}
+                mcqAnswered={progress.stats.totalAnswered}
+                outputAccuracy={outputLifetimeAccuracy}
+                weakTopics={weakTopics}
+                missedCount={missedCount}
+                onOpenSection={handleSectionChange}
+                onPracticeWeak={handleStartWeak}
+                onReviewMistakes={handleStartReview}
+              />
+            ) : LEARNING_LOADERS[activeSection] && !loadedSections[activeSection] ? (
               <Skeleton />
             ) : activeSection === 'learnings' ? (
               <LearningsView
@@ -2425,6 +2497,7 @@ export default function App() {
                 interviewPrep={interviewPrep}
                 testPrep={testPrep}
                 questions={questions}
+                learnings={learnings}
                 reactLearnings={reactLearnings}
                 reactGuide={reactGuide}
                 advancedReact={advancedReact}
@@ -2446,13 +2519,13 @@ export default function App() {
           </div>
         }
         panel={
-          activeSection === 'archived' ? (
+          activeSection === 'overview' ? null : activeSection === 'archived' ? (
             <div className="topics-panel archived-panel">
-              <div className="panel-subheader">
-                <span>Archived</span>
-                <span className="learnings-count">{archivedCount}</span>
+              <div className="panel-header">
+                <span className="panel-header-title">Archived</span>
+                <span className="panel-count">{archivedCount}</span>
               </div>
-              <p className="output-panel-copy">
+              <p className="panel-note">
                 Archived items are hidden from quizzes and lists until you unarchive them.
               </p>
             </div>
@@ -2632,20 +2705,24 @@ export default function App() {
             </div>
           ) : activeSection === 'output' ? (
             <div className="topics-panel output-panel">
-              <div className="panel-subheader output-panel-header">
-                <span>Javascript output</span>
-                <span className="learnings-count">
-                  {starredFilter.output ? starredActiveOutputQuestions.length : activeOutputQuestions.length}
-                </span>
-              </div>
-              <p className="output-panel-copy">
-                Predict console output for each snippet. Answers are validated by running the code in your browser.
-              </p>
-              <StarredFilterToggle
-                checked={starredFilter.output}
-                count={outputStarredCount}
-                onChange={handleOutputStarredFilterChange}
-                hint={starredFilter.output ? 'Only starred questions appear in the quiz.' : 'All active questions are included.'}
+              {/* The output panel used to be a paragraph and a checkbox in
+                  a 300px column, while every other section listed its
+                  items there. Same list, so the same component. */}
+              <PanelList
+                items={starredActiveOutputQuestions}
+                title="Javascript output"
+                selectedId={currentOutputQuestion?.id ?? null}
+                onSelect={handleOpenOutputQuestion}
+                starredIds={starred.output}
+                completedIds={completed.output}
+                starredOnly={starredFilter.output}
+                starredCount={outputStarredCount}
+                onStarredOnlyChange={handleOutputStarredFilterChange}
+                getLabel={outputQuestionLabel}
+                monoLabels
+                emptyLabel="No output questions yet"
+                emptyStarredLabel="No starred questions yet."
+                searchPlaceholder="Filter questions…"
               />
             </div>
           ) : (

@@ -69,8 +69,8 @@ test('an answer key not present in the options does not silently break', () => {
 });
 
 /**
- * The authored data is badly biased — D is correct in only 26 of 246 questions
- * (10.6%), and always guessing B scores far above chance. This asserts the
+ * The authored data is badly biased — D is correct in only 23 of 189 questions
+ * (12.2%), and always guessing B scores far above chance. This asserts the
  * presented positions are close to uniform, which is the whole point.
  */
 test('shuffling removes the answer-position bias across the real question set', () => {

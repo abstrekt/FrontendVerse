@@ -79,9 +79,12 @@ export function getCodingStats(progress) {
   const lifetimeAccuracy = progress.stats.totalAnswered
     ? Math.round((progress.stats.totalCorrect / progress.stats.totalAnswered) * 100)
     : null;
-  const bestPct = progress.sessions.length
-    ? Math.max(...progress.sessions.map((s) => s.pct))
-    : null;
+  // Filtered rather than a bare Math.max: a session stored before `pct`
+  // existed would make the whole thing NaN, and "NaN%" then renders.
+  const sessionPcts = progress.sessions
+    .map((s) => s.pct)
+    .filter((pct) => Number.isFinite(pct));
+  const bestPct = sessionPcts.length ? Math.max(...sessionPcts) : null;
   return { lifetimeAccuracy, sessionCount: progress.sessions.length, bestPct };
 }
 

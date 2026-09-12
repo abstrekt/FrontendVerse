@@ -1,10 +1,14 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import js from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import html from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import { getSyntaxStyle } from '../utils/syntaxTheme';
 import MermaidDiagram from './MermaidDiagram';
+import VisualTrace from './VisualTrace';
+import InlineSvg from './InlineSvg';
+import TexNotation from './TexNotation';
 
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('js', js);
@@ -29,7 +33,7 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
   return (
     <div className="code-body">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
         components={{
           h2({ children, ...props }) {
             const rawText = Array.isArray(children)
@@ -44,6 +48,41 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
               : String(children ?? '');
             const id = headingToSlug(rawText);
             return <h3 id={id} className="code-body-subheading" {...props}>{children}</h3>;
+          },
+          pre({ children }) {
+            // A fenced block arrives as <pre><code>. The `code` handler below
+            // returns the real element — a highlighter that emits its own
+            // <pre>, or a trace/diagram component — so this wrapper would
+            // either double-nest or trap the component in monospace,
+            // non-wrapping text. Pass through and let `code` decide.
+            return <>{children}</>;
+          },
+          p({ node, children, ...props }) {
+            // Markdown wraps standalone images in a paragraph, but the
+            // figure a diagram renders as is not legal inside <p> — the
+            // parser closes the paragraph early and the DOM ends up
+            // rearranged. Unwrap when the paragraph holds nothing but
+            // images (blueprint 8 stacks two), so each figure becomes a
+            // sibling instead.
+            const kids = node?.children ?? [];
+            const imageOnly =
+              kids.length > 0 &&
+              kids.every(
+                (child) =>
+                  child.tagName === 'img' ||
+                  (child.type === 'text' && child.value.trim() === '')
+              );
+            if (imageOnly) return <>{children}</>;
+            return <p {...props}>{children}</p>;
+          },
+          img({ src, alt, ...props }) {
+            // Diagrams colour themselves from the app's CSS custom
+            // properties, which only reach them when the SVG is part of this
+            // document rather than an <img>'s isolated one.
+            if (typeof src === 'string' && src.startsWith('/diagrams/') && src.endsWith('.svg')) {
+              return <InlineSvg src={src} alt={alt} />;
+            }
+            return <img src={src} alt={alt} {...props} />;
           },
           a({ href, children, ...props }) {
             const isInternal = typeof href === 'string' && href.startsWith('/');
@@ -81,11 +120,27 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
             const match = /language-(\w+)/.exec(className || '');
             const codeStr = String(children).replace(/\n$/, '');
 
+            // remark-math marks `$…$` as `language-math`. It only rewrites
+            // text nodes, so the template literals inside real code fences
+            // (`${this.name}`) never reach here — which is why this goes
+            // through the parser instead of a regex over the content.
+            const cls = className || '';
+            if (cls.includes('math-display')) {
+              return <TexNotation tex={codeStr} display />;
+            }
+            if (cls.includes('language-math') || cls.includes('math-inline')) {
+              return <TexNotation tex={codeStr} />;
+            }
+
             if (match) {
               const language = resolveLanguage(match[1]);
 
               if (language === 'mermaid') {
                 return <MermaidDiagram chart={codeStr} theme={theme} />;
+              }
+
+              if (language === 'trace') {
+                return <VisualTrace source={codeStr} />;
               }
 
               return highlight ? (
@@ -106,7 +161,9 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
                   {codeStr}
                 </SyntaxHighlighter>
               ) : (
-                <code className={className}>{children}</code>
+                <pre className="code-plain">
+                  <code className={className}>{children}</code>
+                </pre>
               );
             }
 

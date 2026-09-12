@@ -188,9 +188,17 @@ export function getQuestionStatus(questionId, progress, skippedIds = []) {
   return 'unanswered';
 }
 
+/**
+ * Best session score, ignoring records without one.
+ *
+ * `Math.max` over a list containing a single `undefined` returns NaN,
+ * which reached the sidebar as the literal string "NaN%". Sessions
+ * stored before `pct` existed are still in some users' localStorage.
+ */
 export function getBestPct(sessions) {
-  if (!sessions.length) return null;
-  return Math.max(...sessions.map((s) => s.pct));
+  const pcts = sessions.map((s) => s.pct).filter((pct) => Number.isFinite(pct));
+  if (!pcts.length) return null;
+  return Math.max(...pcts);
 }
 
 export function getLifetimeAccuracy(stats) {

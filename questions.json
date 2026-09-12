@@ -2117,37 +2117,6 @@
     },
     {
       "id": 71,
-      "question": "How can we log the values that are commented out after the console.log statement?",
-      "body": "```javascript\nfunction* startGame() {\n  const answer = yield \"Do you love JavaScript?\";\n  if (answer !== \"Yes\") {\n    return \"Oh wow... Guess we're done here\";\n  }\n  return \"JavaScript loves you back ❤️\";\n}\n\nconst game = startGame();\nconsole.log(/* 1 */); // Do you love JavaScript?\nconsole.log(/* 2 */); // JavaScript loves you back ❤️\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`game.next(\"Yes\").value` and `game.next().value`"
-        },
-        {
-          "key": "B",
-          "text": "`game.next.value(\"Yes\")` and `game.next.value()`"
-        },
-        {
-          "key": "C",
-          "text": "`game.next().value` and `game.next(\"Yes\").value`"
-        },
-        {
-          "key": "D",
-          "text": "`game.next.value()` and `game.next.value(\"Yes\")`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "A generator function \"pauses\" its execution when it sees the `yield` keyword. First, we have to let the function yield the string \"Do you love JavaScript?\", which can be done by calling `game.next().value`.\n\nEvery line is executed, until it finds the first `yield` keyword. There is a `yield` keyword on the first line within the function: the execution stops with the first yield! _This means that the variable `answer` is not defined yet!_\n\nWhen we call `game.next(\"Yes\").value`, the previous `yield` is replaced with the value of the parameters passed to the `next()` function, `\"Yes\"` in this case. The value of the variable `answer` is now equal to `\"Yes\"`. The condition of the if-statement returns `false`, and `JavaScript loves you back ❤️` gets logged.",
-      "topics": [
-        "generators",
-        "spread/rest",
-        "this"
-      ],
-      "difficulty": "advance"
-    },
-    {
-      "id": 72,
       "question": "What's the output?",
       "body": "```javascript\nconsole.log(String.raw`Hello\\nworld`);\n```",
       "options": [
@@ -2176,7 +2145,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 73,
+      "id": 72,
       "question": "What's the output?",
       "body": "```javascript\nasync function getData() {\n  return await Promise.resolve(\"I made it!\");\n}\n\nconst data = getData();\nconsole.log(data);\n```",
       "options": [
@@ -2209,7 +2178,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 74,
+      "id": 73,
       "question": "What's the output?",
       "body": "```javascript\nfunction addToList(item, list) {\n  return list.push(item);\n}\n\nconst result = addToList(\"apple\", [\"banana\"]);\nconsole.log(result);\n```",
       "options": [
@@ -2240,7 +2209,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 75,
+      "id": 74,
       "question": "What's the output?",
       "body": "```javascript\nconst box = { x: 10, y: 20 };\n\nObject.freeze(box);\n\nconst shape = box;\nshape.x = 100;\n\nconsole.log(shape);\n```",
       "options": [
@@ -2271,7 +2240,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 76,
+      "id": 75,
       "question": "What's the output?",
       "body": "```javascript\nconst { firstName: myName } = { firstName: \"Lydia\" };\n\nconsole.log(firstName);\n```",
       "options": [
@@ -2306,7 +2275,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 77,
+      "id": 76,
       "question": "Is this a pure function?",
       "body": "```javascript\nfunction sum(a, b) {\n  return a + b;\n}\n```",
       "options": [
@@ -2327,7 +2296,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 78,
+      "id": 77,
       "question": "What is the output?",
       "body": "```javascript\nconst add = () => {\n  const cache = {};\n  return (num) => {\n    if (num in cache) {\n      return `From cache! ${cache[num]}`;\n    } else {\n      const result = num + 10;\n      cache[num] = result;\n      return `Calculated! ${result}`;\n    }\n  };\n};\n\nconst addFunction = add();\nconsole.log(addFunction(10));\nconsole.log(addFunction(10));\nconsole.log(addFunction(5 * 2));\n```",
       "options": [
@@ -2358,36 +2327,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 79,
-      "question": "What is the output?",
-      "body": "```javascript\nconst myLifeSummedUp = [\"☕\", \"💻\", \"🍷\", \"🍫\"];\n\nfor (let item in myLifeSummedUp) {\n  console.log(item);\n}\n\nfor (let item of myLifeSummedUp) {\n  console.log(item);\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`0` `1` `2` `3` and `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"`"
-        },
-        {
-          "key": "B",
-          "text": "`\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` and `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"`"
-        },
-        {
-          "key": "C",
-          "text": "`\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` and `0` `1` `2` `3`"
-        },
-        {
-          "key": "D",
-          "text": "`0` `1` `2` `3` and `{0: \"☕\", 1: \"💻\", 2: \"🍷\", 3: \"🍫\"}`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "With a _for-in_ loop, we can iterate over **enumerable** properties. In an array, the enumerable properties are the \"keys\" of array elements, which are actually their indexes. You could see an array as:\n\n`{0: \"☕\", 1: \"💻\", 2: \"🍷\", 3: \"🍫\"}`\n\nWhere the keys are the enumerable properties. `0` `1` `2` `3` get logged.\n\nWith a _for-of_ loop, we can iterate over **iterables**. An array is an iterable. When we iterate over the array, the variable \"item\" is equal to the element it's currently iterating over, `\"☕\"` `\"💻\"` `\"🍷\"` `\"🍫\"` get logged.",
-      "topics": [
-        "generators"
-      ],
-      "difficulty": "medium"
-    },
-    {
-      "id": 80,
+      "id": 78,
       "question": "What is the output?",
       "body": "```javascript\nconst list = [1 + 2, 1 * 2, 1 / 2];\nconsole.log(list);\n```",
       "options": [
@@ -2417,7 +2357,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 81,
+      "id": 79,
       "question": "What is the output?",
       "body": "```javascript\nfunction sayHi(name) {\n  return `Hi there, ${name}`;\n}\n\nconsole.log(sayHi());\n```",
       "options": [
@@ -2447,40 +2387,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 82,
-      "question": "What is the output?",
-      "body": "```javascript\nvar status = \"😎\";\n\nsetTimeout(() => {\n  const status = \"😍\";\n\n  const data = {\n    status: \"🥑\",\n    getStatus() {\n      return this.status;\n    },\n  };\n\n  console.log(data.getStatus());\n  console.log(data.getStatus.call(this));\n}, 0);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`\"🥑\"` and `\"😍\"`"
-        },
-        {
-          "key": "B",
-          "text": "`\"🥑\"` and `\"😎\"`"
-        },
-        {
-          "key": "C",
-          "text": "`\"😍\"` and `\"😎\"`"
-        },
-        {
-          "key": "D",
-          "text": "`\"😎\"` and `\"😎\"`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "The value of the `this` keyword is dependent on where you use it. In a **method**, like the `getStatus` method, the `this` keyword refers to _the object that the method belongs to_. The method belongs to the `data` object, so `this` refers to the `data` object. When we log `this.status`, the `status` property on the `data` object gets logged, which is `\"🥑\"`.\n\nWith the `call` method, we can change the object to which the `this` keyword refers. In **functions**, the `this` keyword refers to the _the object that the function belongs to_. We declared the `setTimeout` function on the _global object_, so within the `setTimeout` function, the `this` keyword refers to the _global object_. On the global object, there is a variable called _status_ with the value of `\"😎\"`. When logging `this.status`, `\"😎\"` gets logged.",
-      "topics": [
-        "event loop",
-        "generators",
-        "object methods",
-        "scope",
-        "this"
-      ],
-      "difficulty": "advance"
-    },
-    {
-      "id": 83,
+      "id": 80,
       "question": "What is the output?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nlet city = person.city;\ncity = \"Amsterdam\";\n\nconsole.log(person);\n```",
       "options": [
@@ -2511,7 +2418,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 84,
+      "id": 81,
       "question": "What is the output?",
       "body": "```javascript\nfunction checkAge(age) {\n  if (age < 18) {\n    const message = \"Sorry, you're too young.\";\n  } else {\n    const message = \"Yay! You're old enough!\";\n  }\n\n  return message;\n}\n\nconsole.log(checkAge(21));\n```",
       "options": [
@@ -2542,7 +2449,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 85,
+      "id": 82,
       "question": "What kind of information would get logged?",
       "body": "```javascript\nfetch(\"https://www.website.com/api/user/1\")\n  .then((res) => res.json())\n  .then((res) => console.log(res));\n```",
       "options": [
@@ -2571,7 +2478,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 86,
+      "id": 83,
       "question": "Which option is a way to set `hasName` equal to `true`, provided you cannot pass `true` as an argument?",
       "body": "```javascript\nfunction getName(name) {\n  const hasName = //\n}\n```",
       "options": [
@@ -2602,7 +2509,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 87,
+      "id": 84,
       "question": "What's the output?",
       "body": "```javascript\nconsole.log(\"I want pizza\"[0]);\n```",
       "options": [
@@ -2632,7 +2539,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 88,
+      "id": 85,
       "question": "What's the output?",
       "body": "```javascript\nfunction sum(num1, num2 = num1) {\n  console.log(num1 + num2);\n}\n\nsum(10);\n```",
       "options": [
@@ -2663,7 +2570,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 89,
+      "id": 86,
       "question": "What's the output?",
       "body": "```javascript\n// module.js\nexport default () => \"Hello world\";\nexport const name = \"Lydia\";\n\n// index.js\nimport * as data from \"./module\";\n\nconsole.log(data);\n```",
       "options": [
@@ -2694,7 +2601,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 90,
+      "id": 87,
       "question": "What's the output?",
       "body": "```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nconst member = new Person(\"John\");\nconsole.log(typeof member);\n```",
       "options": [
@@ -2726,7 +2633,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 91,
+      "id": 88,
       "question": "What's the output?",
       "body": "```javascript\nlet newList = [1, 2, 3].push(4);\n\nconsole.log(newList.push(5));\n```",
       "options": [
@@ -2758,7 +2665,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 92,
+      "id": 89,
       "question": "What's the output?",
       "body": "```javascript\nfunction giveLydiaPizza() {\n  return \"Here is pizza!\";\n}\n\nconst giveLydiaChocolate = () =>\n  \"Here's chocolate... now go hit the gym already.\";\n\nconsole.log(giveLydiaPizza.prototype);\nconsole.log(giveLydiaChocolate.prototype);\n```",
       "options": [
@@ -2793,7 +2700,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 93,
+      "id": 90,
       "question": "What's the output?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nfor (const [x, y] of Object.entries(person)) {\n  console.log(x, y);\n}\n```",
       "options": [
@@ -2824,7 +2731,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 94,
+      "id": 91,
       "question": "What's the output?",
       "body": "```javascript\nfunction getItems(fruitList, ...args, favoriteFruit) {\n  return [...fruitList, ...args, favoriteFruit]\n}\n\ngetItems([\"banana\", \"apple\"], \"pear\", \"orange\")\n```",
       "options": [
@@ -2856,7 +2763,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 95,
+      "id": 92,
       "question": "What's the output?",
       "body": "```javascript\nfunction nums(a, b) {\n  if (a > b) console.log(\"a is bigger\");\n  else console.log(\"b is bigger\");\n  return;\n  a + b;\n}\n\nconsole.log(nums(4, 2));\nconsole.log(nums(1, 2));\n```",
       "options": [
@@ -2887,7 +2794,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 96,
+      "id": 93,
       "question": "What's the output?",
       "body": "```javascript\nclass Person {\n  constructor() {\n    this.name = \"Lydia\";\n  }\n}\n\nPerson = class AnotherPerson {\n  constructor() {\n    this.name = \"Sarah\";\n  }\n};\n\nconst member = new Person();\nconsole.log(member.name);\n```",
       "options": [
@@ -2919,7 +2826,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 97,
+      "id": 94,
       "question": "What's the output?",
       "body": "```javascript\nconst info = {\n  [Symbol(\"a\")]: \"b\",\n};\n\nconsole.log(info);\nconsole.log(Object.keys(info));\n```",
       "options": [
@@ -2950,7 +2857,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 98,
+      "id": 95,
       "question": "What's the output?",
       "body": "```javascript\nconst getList = ([x, ...y]) => [x, y]\nconst getUser = user => { name: user.name, age: user.age }\n\nconst list = [1, 2, 3, 4]\nconst user = { name: \"Lydia\", age: 21 }\n\nconsole.log(getList(list))\nconsole.log(getUser(user))\n```",
       "options": [
@@ -2984,7 +2891,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 99,
+      "id": 96,
       "question": "What's the output?",
       "body": "```javascript\nconst name = \"Lydia\";\n\nconsole.log(name());\n```",
       "options": [
@@ -3013,37 +2920,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 100,
-      "question": "What's the value of output?",
-      "body": "```javascript\n// 🎉✨ This is my 100th question! ✨🎉\n\nconst output = `${[] && \"Im\"}possible!\nYou should${\"\" && `n't`} see a therapist after so much JavaScript lol`;\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`possible! You should see a therapist after so much JavaScript lol`"
-        },
-        {
-          "key": "B",
-          "text": "`Impossible! You should see a therapist after so much JavaScript lol`"
-        },
-        {
-          "key": "C",
-          "text": "`possible! You shouldn't see a therapist after so much JavaScript lol`"
-        },
-        {
-          "key": "D",
-          "text": "`Impossible! You shouldn't see a therapist after so much JavaScript lol`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`[]` is a truthy value. With the `&&` operator, the right-hand value will be returned if the left-hand value is a truthy value. In this case, the left-hand value `[]` is a truthy value, so `\"Im'` gets returned.\n\n`\"\"` is a falsy value. If the left-hand value is falsy, nothing gets returned. `n't` doesn't get returned.",
-      "topics": [
-        "coercion",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 101,
+      "id": 97,
       "question": "What's the value of output?",
       "body": "```javascript\nconst one = false || {} || null;\nconst two = null || false || \"\";\nconst three = [] || 0 || true;\n\nconsole.log(one, two, three);\n```",
       "options": [
@@ -3074,7 +2951,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 102,
+      "id": 98,
       "question": "What's the value of output?",
       "body": "```javascript\nconst myPromise = () => Promise.resolve(\"I have resolved!\");\n\nfunction firstFunction() {\n  myPromise().then((res) => console.log(res));\n  console.log(\"second\");\n}\n\nasync function secondFunction() {\n  console.log(await myPromise());\n  console.log(\"second\");\n}\n\nfirstFunction();\nsecondFunction();\n```",
       "options": [
@@ -3106,7 +2983,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 103,
+      "id": 99,
       "question": "What's the value of output?",
       "body": "```javascript\nconst set = new Set();\n\nset.add(1);\nset.add(\"Lydia\");\nset.add({ name: \"Lydia\" });\n\nfor (let item of set) {\n  console.log(item + 2);\n}\n```",
       "options": [
@@ -3136,7 +3013,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 104,
+      "id": 100,
       "question": "What's its value?",
       "body": "```javascript\nPromise.resolve(5);\n```",
       "options": [
@@ -3167,7 +3044,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 105,
+      "id": 101,
       "question": "What's its value?",
       "body": "```javascript\nfunction compareMembers(person1, person2 = person) {\n  if (person1 !== person2) {\n    console.log(\"Not the same!\");\n  } else {\n    console.log(\"They are the same!\");\n  }\n}\n\nconst person = { name: \"Lydia\" };\n\ncompareMembers(person);\n```",
       "options": [
@@ -3198,7 +3075,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 106,
+      "id": 102,
       "question": "What's its value?",
       "body": "```javascript\nconst colorConfig = {\n  red: true,\n  blue: false,\n  green: true,\n  black: true,\n  yellow: false,\n};\n\nconst colors = [\"pink\", \"red\", \"blue\"];\n\nconsole.log(colorConfig.colors[1]);\n```",
       "options": [
@@ -3229,90 +3106,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 107,
-      "question": "What's its value?",
-      "body": "```javascript\nconsole.log(\"❤️\" === \"❤️\");\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`true`"
-        },
-        {
-          "key": "B",
-          "text": "`false`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Under the hood, emojis are unicodes. The unicodes for the heart emoji is `\"U+2764 U+FE0F\"`. These are always the same for the same emojis, so we're comparing two equal strings to each other, which returns true.",
-      "topics": [],
-      "difficulty": "easy"
-    },
-    {
-      "id": 108,
-      "question": "Which of these methods modifies the original array?",
-      "body": "```javascript\nconst emojis = [\"✨\", \"🥑\", \"😍\"];\n\nemojis.map((x) => x + \"✨\");\nemojis.filter((x) => x !== \"🥑\");\nemojis.find((x) => x !== \"🥑\");\nemojis.reduce((acc, cur) => acc + \"✨\");\nemojis.slice(1, 2, \"✨\");\nemojis.splice(1, 2, \"✨\");\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`All of them`"
-        },
-        {
-          "key": "B",
-          "text": "`map` `reduce` `slice` `splice`"
-        },
-        {
-          "key": "C",
-          "text": "`map` `slice` `splice`"
-        },
-        {
-          "key": "D",
-          "text": "`splice`"
-        }
-      ],
-      "answer": "D",
-      "explanation": "With `splice` method, we modify the original array by deleting, replacing or adding elements. In this case, we removed 2 items from index 1 (we removed `'🥑'` and `'😍'`) and added the ✨ emoji instead.\n\n`map`, `filter` and `slice` return a new array, `find` returns an element, and `reduce` returns a reduced value.",
-      "topics": [
-        "array methods",
-        "map/set",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 109,
-      "question": "What's the output?",
-      "body": "```javascript\nconst food = [\"🍕\", \"🍫\", \"🥑\", \"🍔\"];\nconst info = { favoriteFood: food[0] };\n\ninfo.favoriteFood = \"🍝\";\n\nconsole.log(food);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`['🍕', '🍫', '🥑', '🍔']`"
-        },
-        {
-          "key": "B",
-          "text": "`['🍝', '🍫', '🥑', '🍔']`"
-        },
-        {
-          "key": "C",
-          "text": "`['🍝', '🍕', '🍫', '🥑', '🍔']`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "We set the value of the `favoriteFood` property on the `info` object equal to the string with the pizza emoji, `'🍕'`. A string is a primitive data type. In JavaScript, primitive data types don't interact by reference.\n\nIn JavaScript, primitive data types (everything that's not an object) interact by _value_. In this case, we set the value of the `favoriteFood` property on the `info` object equal to the value of the first element in the `food` array, the string with the pizza emoji in this case (`'🍕'`). A string is a primitive data type, and interact by value (see my [blogpost](https://www.theavocoder.com/complete-javascript/2018/12/21/by-value-vs-by-reference) if you're interested in learning more)\n\nThen, we change the value of the `favoriteFood` property on the `info` object. The `food` array hasn't changed, since the value of `favoriteFood` was merely a _copy_ of the value of the first element in the array, and doesn't have a reference to the same spot in memory as the element on `food[0]`. When we log food, it's still the original array, `['🍕', '🍫', '🥑', '🍔']`.",
-      "topics": [
-        "data types",
-        "map/set",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 110,
+      "id": 103,
       "question": "What does this method do?",
       "body": "```javascript\nJSON.parse();\n```",
       "options": [
@@ -3342,7 +3136,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 111,
+      "id": 104,
       "question": "What's the output?",
       "body": "```javascript\nlet name = \"Lydia\";\n\nfunction getName() {\n  console.log(name);\n  let name = \"Sarah\";\n}\n\ngetName();\n```",
       "options": [
@@ -3374,7 +3168,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 112,
+      "id": 105,
       "question": "What's the output?",
       "body": "```javascript\nfunction* generatorOne() {\n  yield [\"a\", \"b\", \"c\"];\n}\n\nfunction* generatorTwo() {\n  yield* [\"a\", \"b\", \"c\"];\n}\n\nconst one = generatorOne();\nconst two = generatorTwo();\n\nconsole.log(one.next().value);\nconsole.log(two.next().value);\n```",
       "options": [
@@ -3405,7 +3199,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 113,
+      "id": 106,
       "question": "What's the output?",
       "body": "```javascript\nconsole.log(`${((x) => x)(\"I love\")} to program`);\n```",
       "options": [
@@ -3436,7 +3230,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 114,
+      "id": 107,
       "question": "What will happen?",
       "body": "```javascript\nlet config = {\n  alert: setInterval(() => {\n    console.log(\"Alert!\");\n  }, 1000),\n};\n\nconfig = null;\n```",
       "options": [
@@ -3469,7 +3263,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 115,
+      "id": 108,
       "question": "Which method(s) will return the value `'Hello world!'`?",
       "body": "```javascript\nconst myMap = new Map();\nconst myFunc = () => \"greeting\";\n\nmyMap.set(myFunc, \"Hello world!\");\n\n//1\nmyMap.get(\"greeting\");\n//2\nmyMap.get(myFunc);\n//3\nmyMap.get(() => \"greeting\");\n```",
       "options": [
@@ -3501,7 +3295,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 116,
+      "id": 109,
       "question": "What's the output?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia\",\n  age: 21,\n};\n\nconst changeAge = (x = { ...person }) => (x.age += 1);\nconst changeAgeAndName = (x = { ...person }) => {\n  x.age += 1;\n  x.name = \"Sarah\";\n};\n\nchangeAge(person);\nchangeAgeAndName();\n\nconsole.log(person);\n```",
       "options": [
@@ -3532,7 +3326,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 117,
+      "id": 110,
       "question": "Which of the following options will return `6`?",
       "body": "```javascript\nfunction sumValues(x, y, z) {\n  return x + y + z;\n}\n```",
       "options": [
@@ -3561,34 +3355,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 118,
-      "question": "What's the output?",
-      "body": "```javascript\nlet num = 1;\nconst list = [\"🥳\", \"🤠\", \"🥰\", \"🤪\"];\n\nconsole.log(list[(num += 1)]);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`🤠`"
-        },
-        {
-          "key": "B",
-          "text": "`🥰`"
-        },
-        {
-          "key": "C",
-          "text": "`SyntaxError`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "With the `+=` operator, we're incrementing the value of `num` by `1`. `num` had the initial value `1`, so `1 + 1` is `2`. The item on the second index in the `list` array is 🥰, `console.log(list[2])` prints 🥰.",
-      "topics": [],
-      "difficulty": "easy"
-    },
-    {
-      "id": 119,
+      "id": 111,
       "question": "What's the output?",
       "body": "```javascript\nconst person = {\n  firstName: \"Lydia\",\n  lastName: \"Hallie\",\n  pet: {\n    name: \"Mara\",\n    breed: \"Dutch Tulip Hound\",\n  },\n  getFullName() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n};\n\nconsole.log(person.pet?.name);\nconsole.log(person.pet?.family?.name);\nconsole.log(person.getFullName?.());\nconsole.log(member.getLastName?.());\n```",
       "options": [
@@ -3619,7 +3386,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 120,
+      "id": 112,
       "question": "What's the output?",
       "body": "```javascript\nconst groceries = [\"banana\", \"apple\", \"peanuts\"];\n\nif (groceries.indexOf(\"banana\")) {\n  console.log(\"We have to buy bananas!\");\n} else {\n  console.log(`We don't have to buy bananas!`);\n}\n```",
       "options": [
@@ -3648,7 +3415,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 121,
+      "id": 113,
       "question": "What's the output?",
       "body": "```javascript\nconst config = {\n  languages: [],\n  set language(lang) {\n    return this.languages.push(lang);\n  },\n};\n\nconsole.log(config.language);\n```",
       "options": [
@@ -3680,7 +3447,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 122,
+      "id": 114,
       "question": "What's the output?",
       "body": "```javascript\nconst name = \"Lydia Hallie\";\n\nconsole.log(!typeof name === \"object\");\nconsole.log(!typeof name === \"string\");\n```",
       "options": [
@@ -3711,7 +3478,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 123,
+      "id": 115,
       "question": "What's the output?",
       "body": "```javascript\nconst add = (x) => (y) => (z) => {\n  console.log(x, y, z);\n  return x + y + z;\n};\n\nadd(4)(5)(6);\n```",
       "options": [
@@ -3743,7 +3510,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 124,
+      "id": 116,
       "question": "What's the output?",
       "body": "```javascript\nasync function* range(start, end) {\n  for (let i = start; i <= end; i++) {\n    yield Promise.resolve(i);\n  }\n}\n\n(async () => {\n  const gen = range(1, 3);\n  for await (const item of gen) {\n    console.log(item);\n  }\n})();\n```",
       "options": [
@@ -3777,7 +3544,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 125,
+      "id": 117,
       "question": "What's the output?",
       "body": "```javascript\nconst myFunc = ({ x, y, z }) => {\n  console.log(x, y, z);\n};\n\nmyFunc(1, 2, 3);\n```",
       "options": [
@@ -3806,7 +3573,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 126,
+      "id": 118,
       "question": "What's the output?",
       "body": "```javascript\nfunction getFine(speed, amount) {\n  const formattedSpeed = new Intl.NumberFormat(\"en-US\", {\n    style: \"unit\",\n    unit: \"mile-per-hour\",\n  }).format(speed);\n\n  const formattedAmount = new Intl.NumberFormat(\"en-US\", {\n    style: \"currency\",\n    currency: \"USD\",\n  }).format(amount);\n\n  return `The driver drove ${formattedSpeed} and has to pay ${formattedAmount}`;\n}\n\nconsole.log(getFine(130, 300));\n```",
       "options": [
@@ -3835,38 +3602,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 127,
-      "question": "What's the output?",
-      "body": "```javascript\nconst spookyItems = [\"👻\", \"🎃\", \"🕸\"];\n({ item: spookyItems[3] } = { item: \"💀\" });\n\nconsole.log(spookyItems);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`[\"👻\", \"🎃\", \"🕸\"]`"
-        },
-        {
-          "key": "B",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", \"💀\"]`"
-        },
-        {
-          "key": "C",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", { item: \"💀\" }]`"
-        },
-        {
-          "key": "D",
-          "text": "`[\"👻\", \"🎃\", \"🕸\", \"[object Object]\"]`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "By destructuring objects, we can unpack values from the right-hand object, and assign the unpacked value to the value of the same property name on the left-hand object. In this case, we're assigning the value \"💀\" to `spookyItems[3]`. This means that we're modifying the `spookyItems` array, we're adding the \"💀\" to it. When logging `spookyItems`, `[\"👻\", \"🎃\", \"🕸\", \"💀\"]` gets logged.",
-      "topics": [
-        "destructuring",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "medium"
-    },
-    {
-      "id": 128,
+      "id": 119,
       "question": "What's the output?",
       "body": "```javascript\nconst name = \"Lydia Hallie\";\nconst age = 21;\n\nconsole.log(Number.isNaN(name));\nconsole.log(Number.isNaN(age));\n\nconsole.log(isNaN(name));\nconsole.log(isNaN(age));\n```",
       "options": [
@@ -3895,7 +3631,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 129,
+      "id": 120,
       "question": "What's the output?",
       "body": "```javascript\nconst randomValue = 21;\n\nfunction getInfo() {\n  console.log(typeof randomValue);\n  const randomValue = \"Lydia Hallie\";\n}\n\ngetInfo();\n```",
       "options": [
@@ -3927,7 +3663,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 130,
+      "id": 121,
       "question": "What's the output?",
       "body": "```javascript\nconst myPromise = Promise.resolve(\"Woah some cool data\");\n\n(async () => {\n  try {\n    console.log(await myPromise);\n  } catch {\n    throw new Error(`Oops didn't work`);\n  } finally {\n    console.log(\"Oh finally!\");\n  }\n})();\n```",
       "options": [
@@ -3958,37 +3694,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 131,
-      "question": "What's the output?",
-      "body": "```javascript\nconst emojis = [\"🥑\", [\"✨\", \"✨\", [\"🍕\", \"🍕\"]]];\n\nconsole.log(emojis.flat(1));\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`['🥑', ['✨', '✨', ['🍕', '🍕']]]`"
-        },
-        {
-          "key": "B",
-          "text": "`['🥑', '✨', '✨', ['🍕', '🍕']]`"
-        },
-        {
-          "key": "C",
-          "text": "`['🥑', ['✨', '✨', '🍕', '🍕']]`"
-        },
-        {
-          "key": "D",
-          "text": "`['🥑', '✨', '✨', '🍕', '🍕']`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "With the `flat` method, we can create a new, flattened array. The depth of the flattened array depends on the value that we pass. In this case, we passed the value `1` (which we didn't have to, that's the default value), meaning that only the arrays on the first depth will be concatenated. `['🥑']` and `['✨', '✨', ['🍕', '🍕']]` in this case. Concatenating these two arrays results in `['🥑', '✨', '✨', ['🍕', '🍕']]`.",
-      "topics": [
-        "object methods",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 132,
+      "id": 122,
       "question": "What's the output?",
       "body": "```javascript\nclass Counter {\n  constructor() {\n    this.count = 0;\n  }\n\n  increment() {\n    this.count++;\n  }\n}\n\nconst counterOne = new Counter();\ncounterOne.increment();\ncounterOne.increment();\n\nconst counterTwo = counterOne;\ncounterTwo.increment();\n\nconsole.log(counterOne.count);\n```",
       "options": [
@@ -4020,7 +3726,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 133,
+      "id": 123,
       "question": "What's the output?",
       "body": "```javascript\nconst myPromise = Promise.resolve(Promise.resolve(\"Promise\"));\n\nfunction funcOne() {\n  setTimeout(() => console.log(\"Timeout 1!\"), 0);\n  myPromise.then((res) => res).then((res) => console.log(`${res} 1!`));\n  console.log(\"Last line 1!\");\n}\n\nasync function funcTwo() {\n  const res = await myPromise;\n  console.log(`${res} 2!`);\n  setTimeout(() => console.log(\"Timeout 2!\"), 0);\n  console.log(\"Last line 2!\");\n}\n\nfuncOne();\nfuncTwo();\n```",
       "options": [
@@ -4052,7 +3758,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 134,
+      "id": 124,
       "question": "How can we invoke `sum` in `sum.js` from `index.js?`",
       "body": "```javascript\n// sum.js\nexport default function sum(x) {\n  return x + x;\n}\n\n// index.js\nimport * as sum from \"./sum\";\n```",
       "options": [
@@ -4083,7 +3789,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 135,
+      "id": 125,
       "question": "What's the output?",
       "body": "```javascript\nconst handler = {\n  set: () => console.log(\"Added a new property!\"),\n  get: () => console.log(\"Accessed a property!\"),\n};\n\nconst person = new Proxy({}, handler);\n\nperson.name = \"Lydia\";\nperson.name;\n```",
       "options": [
@@ -4115,7 +3821,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 136,
+      "id": 126,
       "question": "Which of the following will modify the `person` object?",
       "body": "```javascript\nconst person = { name: \"Lydia Hallie\" };\n\nObject.seal(person);\n```",
       "options": [
@@ -4144,7 +3850,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 137,
+      "id": 127,
       "question": "Which of the following will modify the `person` object?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia Hallie\",\n  address: {\n    street: \"100 Main St\",\n  },\n};\n\nObject.freeze(person);\n```",
       "options": [
@@ -4174,7 +3880,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 138,
+      "id": 128,
       "question": "What's the output?",
       "body": "```javascript\nconst add = (x) => x + x;\n\nfunction myFunc(num = 2, value = add(num)) {\n  console.log(num, value);\n}\n\nmyFunc();\nmyFunc(3);\n```",
       "options": [
@@ -4201,7 +3907,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 139,
+      "id": 129,
       "question": "What's the output?",
       "body": "```javascript\nclass Counter {\n  #number = 10;\n\n  increment() {\n    this.#number++;\n  }\n\n  getNum() {\n    return this.#number;\n  }\n}\n\nconst counter = new Counter();\ncounter.increment();\n\nconsole.log(counter.#number);\n```",
       "options": [
@@ -4232,38 +3938,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 140,
-      "question": "What's missing?",
-      "body": "```javascript\nconst teams = [\n  { name: \"Team 1\", members: [\"Paul\", \"Lisa\"] },\n  { name: \"Team 2\", members: [\"Laura\", \"Tim\"] },\n];\n\nfunction* getMembers(members) {\n  for (let i = 0; i < members.length; i++) {\n    yield members[i];\n  }\n}\n\nfunction* getTeams(teams) {\n  for (let i = 0; i < teams.length; i++) {\n    // ✨ SOMETHING IS MISSING HERE ✨\n  }\n}\n\nconst obj = getTeams(teams);\nobj.next(); // { value: \"Paul\", done: false }\nobj.next(); // { value: \"Lisa\", done: false }\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`yield getMembers(teams[i].members)`"
-        },
-        {
-          "key": "B",
-          "text": "`yield* getMembers(teams[i].members)`"
-        },
-        {
-          "key": "C",
-          "text": "`return getMembers(teams[i].members)`"
-        },
-        {
-          "key": "D",
-          "text": "`return yield getMembers(teams[i].members)`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "In order to iterate over the `members` in each element in the `teams` array, we need to pass `teams[i].members` to the `getMembers` generator function. The generator function returns a generator object. In order to iterate over each element in this generator object, we need to use `yield*`.\n\nIf we would've written `yield`, `return yield`, or `return`, the entire generator function would've gotten returned the first time we called the `next` method.",
-      "topics": [
-        "generators",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "advance"
-    },
-    {
-      "id": 141,
+      "id": 130,
       "question": "What's the output?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia Hallie\",\n  hobbies: [\"coding\"],\n};\n\nfunction addHobby(hobby, hobbies = person.hobbies) {\n  hobbies.push(hobby);\n  return hobbies;\n}\n\naddHobby(\"running\", []);\naddHobby(\"dancing\");\naddHobby(\"baking\", person.hobbies);\n\nconsole.log(person.hobbies);\n```",
       "options": [
@@ -4294,69 +3969,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 142,
-      "question": "What's the output?",
-      "body": "```javascript\nclass Bird {\n  constructor() {\n    console.log(\"I'm a bird. 🦢\");\n  }\n}\n\nclass Flamingo extends Bird {\n  constructor() {\n    console.log(\"I'm pink. 🌸\");\n    super();\n  }\n}\n\nconst pet = new Flamingo();\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`I'm pink. 🌸`"
-        },
-        {
-          "key": "B",
-          "text": "`I'm pink. 🌸` `I'm a bird. 🦢`"
-        },
-        {
-          "key": "C",
-          "text": "`I'm a bird. 🦢` `I'm pink. 🌸`"
-        },
-        {
-          "key": "D",
-          "text": "Nothing, we didn't call any method"
-        }
-      ],
-      "answer": "B",
-      "explanation": "We create the variable `pet` which is an instance of the `Flamingo` class. When we instantiate this instance, the `constructor` on `Flamingo` gets called. First, `\"I'm pink. 🌸\"` gets logged, after which we call `super()`. `super()` calls the constructor of the parent class, `Bird`. The constructor in `Bird` gets called, and logs `\"I'm a bird. 🦢\"`.",
-      "topics": [
-        "classes",
-        "this"
-      ],
-      "difficulty": "medium"
-    },
-    {
-      "id": 143,
-      "question": "Which of the options result(s) in an error?",
-      "body": "```javascript\nconst emojis = [\"🎄\", \"🎅🏼\", \"🎁\", \"⭐\"];\n\n/* 1 */ emojis.push(\"🦌\");\n/* 2 */ emojis.splice(0, 2);\n/* 3 */ emojis = [...emojis, \"🥂\"];\n/* 4 */ emojis.length = 0;\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "1"
-        },
-        {
-          "key": "B",
-          "text": "1 and 2"
-        },
-        {
-          "key": "C",
-          "text": "3 and 4"
-        },
-        {
-          "key": "D",
-          "text": "3"
-        }
-      ],
-      "answer": "D",
-      "explanation": "The `const` keyword simply means we cannot _redeclare_ the value of that variable, it's _read-only_. However, the value itself isn't immutable. The properties on the `emojis` array can be modified, for example by pushing new values, splicing them, or setting the length of the array to 0.",
-      "topics": [
-        "array methods",
-        "error handling",
-        "generators",
-        "spread/rest"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 144,
+      "id": 131,
       "question": "What do we need to add to the `person` object to get `[\"Lydia Hallie\", 21]` as the output of `[...person]`?",
       "body": "```javascript\nconst person = {\n  name: \"Lydia Hallie\",\n  age: 21\n}\n\n[...person] // [\"Lydia Hallie\", 21]\n```",
       "options": [
@@ -4389,7 +4002,7 @@
       "difficulty": "advance"
     },
     {
-      "id": 145,
+      "id": 132,
       "question": "What's the output?",
       "body": "```javascript\nlet count = 0;\nconst nums = [0, 1, 2, 3];\n\nnums.forEach((num) => {\n  if (num) count += 1;\n});\n\nconsole.log(count);\n```",
       "options": [
@@ -4419,38 +4032,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 146,
-      "question": "What's the output?",
-      "body": "```javascript\nfunction getFruit(fruits) {\n  console.log(fruits?.[1]?.[1]);\n}\n\ngetFruit([[\"🍊\", \"🍌\"], [\"🍍\"]]);\ngetFruit();\ngetFruit([[\"🍍\"], [\"🍊\", \"🍌\"]]);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`null`, `undefined`, 🍌"
-        },
-        {
-          "key": "B",
-          "text": "`[]`, `null`, 🍌"
-        },
-        {
-          "key": "C",
-          "text": "`[]`, `[]`, 🍌"
-        },
-        {
-          "key": "D",
-          "text": "`undefined`, `undefined`, 🍌"
-        }
-      ],
-      "answer": "D",
-      "explanation": "The `?` allows us to optionally access deeper nested properties within objects. We're trying to log the item on index `1` within the subarray that's on index `1` of the `fruits` array. If the subarray on index `1` in the `fruits` array doesn't exist, it'll simply return `undefined`. If the subarray on index `1` in the `fruits` array exists, but this subarray doesn't have an item on its `1` index, it'll also return `undefined`. \n\nFirst, we're trying to log the second item in the `['🍍']` subarray of `[['🍊', '🍌'], ['🍍']]`. This subarray only contains one item, which means there is no item on index `1`, and returns `undefined`.\n\nThen, we're invoking the `getFruits` function without passing a value as an argument, which means that `fruits` has a value of `undefined` by default. Since we're conditionally chaining the item on index `1` of`fruits`, it returns `undefined` since this item on index `1` does not exist. \n\nLastly, we're trying to log the second item in the `['🍊', '🍌']` subarray of `['🍍'], ['🍊', '🍌']`. The item on index `1` within this subarray is `🍌`, which gets logged.",
-      "topics": [
-        "error handling",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 147,
+      "id": 133,
       "question": "What's the output?",
       "body": "```javascript\nclass Calc {\n  constructor() {\n    this.count = 0;\n  }\n\n  increase() {\n    this.count++;\n  }\n}\n\nconst calc = new Calc();\nnew Calc().increase();\n\nconsole.log(calc.count);\n```",
       "options": [
@@ -4483,7 +4065,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 148,
+      "id": 134,
       "question": "What's the output?",
       "body": "```javascript\nconst user = {\n  email: \"e@mail.com\",\n  password: \"12345\",\n};\n\nconst updateUser = ({ email, password }) => {\n  if (email) {\n    Object.assign(user, { email });\n  }\n\n  if (password) {\n    user.password = password;\n  }\n\n  return user;\n};\n\nconst updatedUser = updateUser({ email: \"new@email.com\" });\n\nconsole.log(updatedUser === user);\n```",
       "options": [
@@ -4512,68 +4094,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 149,
-      "question": "What's the output?",
-      "body": "```javascript\nconst fruit = [\"🍌\", \"🍊\", \"🍎\"];\n\nfruit.slice(0, 1);\nfruit.splice(0, 1);\nfruit.unshift(\"🍇\");\n\nconsole.log(fruit);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`['🍌', '🍊', '🍎']`"
-        },
-        {
-          "key": "B",
-          "text": "`['🍊', '🍎']`"
-        },
-        {
-          "key": "C",
-          "text": "`['🍇', '🍊', '🍎']`"
-        },
-        {
-          "key": "D",
-          "text": "`['🍇', '🍌', '🍊', '🍎']`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "First, we invoke the `slice` method on the fruit array. The slice method does not modify the original array, but returns the value that it sliced off the array: the banana emoji.\nThen, we invoke the `splice` method on the fruit array. The splice method does modify the original array, which means that the fruit array now consists of `['🍊', '🍎']`.\nAt last, we invoke the `unshift` method on the `fruit` array, which modifies the original array by adding the provided value, ‘🍇’ in this case,  as the first element in the array.  The fruit array now consists of `['🍇', '🍊', '🍎']`.",
-      "topics": [
-        "array methods",
-        "object methods",
-        "this"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 150,
-      "question": "What's the output?",
-      "body": "```javascript\nconst animals = {};\nlet dog = { emoji: \"🐶\" };\nlet cat = { emoji: \"🐈\" };\n\nanimals[dog] = { ...dog, name: \"Mara\" };\nanimals[cat] = { ...cat, name: \"Sara\" };\n\nconsole.log(animals[dog]);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`{ emoji: \"🐶\", name: \"Mara\" }`"
-        },
-        {
-          "key": "B",
-          "text": "`{ emoji: \"🐈\", name: \"Sara\" }`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Object keys are converted to strings. \n\nSince the value of  `dog` is an object,  `animals[dog]` actually means that we’re creating a new property called `\"[object Object]\"` equal to the new object. `animals[\"[object Object]\"]` is now equal to `{ emoji: \"🐶\", name: \"Mara\"}`.\n\n`cat` is also an object, which means that `animals[cat]` actually means that we’re overwriting the value of  `animals[\"[object Object]\"]` with the new cat properties. \n\nLogging `animals[dog]`, or actually `animals[\"[object Object]\"]` since converting the `dog` object to a string results `\"[object Object]\"`, returns the `{ emoji: \"🐈\", name: \"Sara\" }`.",
-      "topics": [
-        "object methods",
-        "spread/rest"
-      ],
-      "difficulty": "easy"
-    },
-    {
-      "id": 151,
+      "id": 135,
       "question": "What's the output?",
       "body": "```javascript\nconst user = {\n  email: \"my@email.com\",\n  updateEmail: (email) => {\n    this.email = email;\n  },\n};\n\nuser.updateEmail(\"new@email.com\");\nconsole.log(user.email);\n```",
       "options": [
@@ -4605,7 +4126,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 152,
+      "id": 136,
       "question": "What's the output?",
       "body": "```javascript\nconst promise1 = Promise.resolve(\"First\");\nconst promise2 = Promise.resolve(\"Second\");\nconst promise3 = Promise.reject(\"Third\");\nconst promise4 = Promise.resolve(\"Fourth\");\n\nconst runPromises = async () => {\n  const res1 = await Promise.all([promise1, promise2]);\n  const res2 = await Promise.all([promise3, promise4]);\n  return [res1, res2];\n};\n\nrunPromises()\n  .then((res) => console.log(res))\n  .catch((err) => console.log(err));\n```",
       "options": [
@@ -4638,7 +4159,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 153,
+      "id": 137,
       "question": "What should the value of `method` be to log `{ name: \"Lydia\", age: 22 }`?",
       "body": "```javascript\nconst keys = [\"name\", \"age\"];\nconst values = [\"Lydia\", 22];\n\nconst method =\n  /* ?? */\n  Object[method](\n    keys.map((_, i) => {\n      return [keys[i], values[i]];\n    }),\n  ); // { name: \"Lydia\", age: 22 }\n```",
       "options": [
@@ -4671,7 +4192,7 @@
       "difficulty": "easy"
     },
     {
-      "id": 154,
+      "id": 138,
       "question": "What's the output?",
       "body": "```javascript\nconst createMember = ({ email, address = {} }) => {\n  const validEmail = /.+\\@.+\\..+/.test(email);\n  if (!validEmail) throw new Error(\"Valid email pls\");\n\n  return {\n    email,\n    address: address ? address : null,\n  };\n};\n\nconst member = createMember({ email: \"my@email.com\" });\nconsole.log(member);\n```",
       "options": [
@@ -4703,7 +4224,7 @@
       "difficulty": "medium"
     },
     {
-      "id": 155,
+      "id": 139,
       "question": "What's the output?",
       "body": "```javascript\nlet randomValue = { name: \"Lydia\" };\nrandomValue = 23;\n\nif (!typeof randomValue === \"string\") {\n  console.log(\"It's not a string!\");\n} else {\n  console.log(\"Yay it's a string!\");\n}\n```",
       "options": [
@@ -4758,40 +4279,10 @@
       "explanation": "JavaScript applies left-to-right evaluation with type coercion.\n\n1. `1 + \"1\"` — `+` with a string triggers concatenation → `\"11\"`.\n2. `\"11\" - 1` — subtraction coerces `\"11\"` to number `11` → `10`.\n\nThe `+` operator is special: if either operand is a string, it prefers concatenation over addition.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 156,
+      "id": 140,
       "topics": [
         "coercion",
         "data types"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\n(function () {\n  var a = (b = 5);\n})();\nconsole.log(b);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`ReferenceError`"
-        },
-        {
-          "key": "B",
-          "text": "`5`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`TypeError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Assignment chains evaluate right-to-left.\n\n`var a = (b = 5)` is parsed as `b = 5` then `var a = b`.\n\n- `b = 5` assigns to `b` without `var`/`let`/`const` inside the IIFE, so `b` becomes a **global** variable.\n- `var a` is function-scoped inside the IIFE and is not accessible outside.\n\n`console.log(b)` prints `5`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 157,
-      "topics": [
-        "scope"
       ]
     },
     {
@@ -4819,7 +4310,7 @@
       "explanation": "The `+` operator coerces operands to strings when one is an object/array.\n\n`[]` converts to `\"\"` via `toString()`. So `[] + []` → `\"\" + \"\"` → `\"\"` (empty string).\n\nSimilarly `[] + {}` → `\"[object Object]\"`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 158,
+      "id": 141,
       "topics": [
         "coercion",
         "array methods"
@@ -4850,7 +4341,7 @@
       "explanation": "`NaN` means \"Not-a-Number\" as a **value**, but its type is still `number`.\n\n`typeof NaN` returns `\"number\"` because `NaN` is a numeric value representing an invalid arithmetic result. Use `Number.isNaN()` to test for `NaN` specifically.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 159,
+      "id": 142,
       "topics": [
         "data types"
       ]
@@ -4872,7 +4363,7 @@
       "explanation": "Floating-point numbers use binary representation, so some decimal fractions cannot be stored exactly.\n\n`0.1 + 0.2` yields `0.30000000000000004`, not exactly `0.3`. The strict equality `===` comparison is therefore `false`.\n\nUse an epsilon check or `Number.EPSILON` for float comparisons.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 160,
+      "id": 143,
       "topics": [
         "data types"
       ]
@@ -4902,40 +4393,10 @@
       "explanation": "The assignment foo.x = foo = {n: 2} is evaluated from right to left. First, foo is assigned {n: 2}. However, the previous foo (which is referenced by bar) has its x property set to the new foo, which is {n: 2}. Since the new foo does not have an x property, foo.x is undefined.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 161,
+      "id": 144,
       "topics": [
         "map/set",
         "object methods"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction foo() {\n  return;\n  {\n    test: 1;\n  }\n}\nconsole.log(typeof foo());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`\"undefined\"`"
-        },
-        {
-          "key": "B",
-          "text": "`\"object\"`"
-        },
-        {
-          "key": "C",
-          "text": "`\"number\"`"
-        },
-        {
-          "key": "D",
-          "text": "`\"function\"`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Automatic semicolon insertion (ASI) terminates the `return` before the object literal.\n\nJavaScript parses `return` followed by a newline and `{` as `return;` — an empty return. The `{ test: 1 }` block is dead code. `foo()` returns `undefined`, so `typeof foo()` is `\"undefined\"`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 162,
-      "topics": [
-        "data types"
       ]
     },
     {
@@ -4963,7 +4424,7 @@
       "explanation": "In the function b, the declaration function a() {} is hoisted to the top of the function scope, so a inside b is a local variable. The assignment a = 10 updates this local a, not the global a. Therefore, the global a remains 1.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 163,
+      "id": 145,
       "topics": [
         "hoisting",
         "scope",
@@ -4995,7 +4456,7 @@
       "explanation": "The first console.log(a) inside the function outputs 6 because a is locally declared. After assigning 10 to the local a, the second console.log(a) outputs 10. The console.log(a) outside the function outputs the global a, which remains 5.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 164,
+      "id": 146,
       "topics": [
         "scope"
       ]
@@ -5025,44 +4486,14 @@
       "explanation": "`delete` only removes **properties from objects**. It does not delete variables declared with `var`, `let`, or `const`.\n\n`delete a` inside the IIFE has no effect on the outer `var a = 2`. Both `a` and the returned `b` are `2`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 165,
+      "id": 147,
       "topics": [
         "object methods"
       ]
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar x = [1, 2, 3];\nx[10] = 99;\nconsole.log(x.length);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`3`"
-        },
-        {
-          "key": "B",
-          "text": "`10`"
-        },
-        {
-          "key": "C",
-          "text": "`11`"
-        },
-        {
-          "key": "D",
-          "text": "`4`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "Setting a value at index 10 increases the length of the array to 11, because JavaScript arrays are sparse, and unassigned indexes between the highest index and the array's length are treated as undefined.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 166,
-      "topics": [
-        "array methods"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar arr = [10, 20, 30];\narr[&#8216;key'] = &#8216;value';\nconsole.log(arr.length);\n```",
+      "body": "```javascript\nvar arr = [10, 20, 30];\narr['key'] = 'value';\nconsole.log(arr.length);\n```",
       "options": [
         {
           "key": "A",
@@ -5085,7 +4516,7 @@
       "explanation": "Array `.length` counts only **numeric indices** from `0` to `length - 1`.\n\nSetting `arr['key'] = 'value'` adds a normal property, not a numeric index. It does not increase `.length`, which stays `3`.\n\nNon-index properties are stored separately from indexed elements.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 167,
+      "id": 148,
       "topics": [
         "object methods"
       ]
@@ -5115,7 +4546,7 @@
       "explanation": "Variables declared with var are hoisted to the top of the function scope but are not initialized. Thus, a is undefined when console.log(a) is called. Function declarations are also hoisted, so foo is available and returns 2.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 168,
+      "id": 149,
       "topics": [
         "hoisting",
         "scope"
@@ -5146,7 +4577,7 @@
       "explanation": "Every function has a `prototype` property used when the function is called as a constructor with `new`.\n\nFor a plain function `f`, `f.prototype` defaults to an object (`{}`) that becomes the prototype of instances created via `new f()`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 169,
+      "id": 150,
       "topics": [
         "object methods",
         "prototypes"
@@ -5177,7 +4608,7 @@
       "explanation": "The output is **`true`**.\n\n**`F.prototype` and `f.__proto__` point to the same object**, but they live on different things and serve different roles.\n\nIf `F` is a constructor function and `f` is an instance created with `new F()`:\n\n```javascript\nf.__proto__ === F.prototype; // true\n```\n\n## `F.prototype` — the blueprint\n\nThe `.prototype` property exists **only on functions**. When you define a function, the engine attaches a `.prototype` object to it. That object is the shared blueprint for every instance created with `new F()`.\n\n- **Lives on:** the constructor function (`F`)\n- **Purpose:** holds methods and properties shared by all instances of `F`\n- **Created when:** the function `F` is defined\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(this.name + \" makes a noise.\");\n};\n```\n\n## `f.__proto__` — the link\n\n`.__proto__` is an accessor on almost every object. It points to the prototype object that **this specific instance** inherits from — the spec's internal `[[Prototype]]` link.\n\nWhen you access `f.speak()`, JavaScript looks on `f` first. If the property isn't there, it follows `f.__proto__` (i.e. `F.prototype`) to find shared methods.\n\n- **Lives on:** the instance object (`f`)\n- **Purpose:** the actual inheritance link from instance → constructor blueprint\n- **Created when:** the object `f` is instantiated with `new`\n\n```javascript\nconst myDog = new Animal(\"Rex\");\n\nmyDog.speak(); // \"Rex makes a noise.\"\n\nconsole.log(myDog.__proto__ === Animal.prototype); // true\n```\n\n> `__proto__` is legacy. Prefer **`Object.getPrototypeOf(f)`** for reading the link.\n\n```javascript\nconsole.log(Object.getPrototypeOf(myDog) === Animal.prototype); // true\n```\n\n## Summary comparison\n\n| Feature | `F.prototype` | `f.__proto__` |\n| --- | --- | --- |\n| **Where does it live?** | On the constructor function | On the instance object |\n| **What is its job?** | Blueprint for new instances | Pointer to that blueprint |\n| **When is it created?** | When `F` is defined | When `f` is instantiated |\n| **Modern standard** | Standard and actively used | Legacy — use `Object.getPrototypeOf()` |\n\n## Mental model\n\n```\nF (constructor)          f (instance)\n    │                        │\n    └── .prototype ◄─────────┴── .__proto__  (same object)\n              │\n         shared methods\n```\n\nOne object, two views: the constructor **defines** the blueprint (`F.prototype`); each instance **references** it (`f.__proto__` / `[[Prototype]]`).",
       "difficulty": "advance",
       "source": "user paste: F.prototype vs f.__proto__",
-      "id": 170,
+      "id": 151,
       "topics": [
         "object methods",
         "prototypes"
@@ -5208,7 +4639,7 @@
       "explanation": "`var` is function-scoped and hoisted. Inside the IIFE, `var x` is hoisted to the top of the function body and initialized to `undefined`.\n\n`console.log(x)` runs before `x = 20`, so it reads the hoisted but uninitialized binding — `undefined`. This differs from `let`, which would throw a ReferenceError in the temporal dead zone.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 171,
+      "id": 152,
       "topics": [
         "hoisting",
         "scope"
@@ -5239,7 +4670,7 @@
       "explanation": "ASI inserts a semicolon after `return`, so the function returns before the object literal.\n\nParsed as `return;` followed by a standalone block `{ message: \"Hello\" }`. `foo()` returns `undefined`.\n\nASI is why many style guides put `{` on the same line as `return`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 172,
+      "id": 153,
       "topics": [
         "object methods"
       ]
@@ -5269,7 +4700,7 @@
       "explanation": "Named function expressions create an inner name (`g`) visible **only inside** the function's scope.\n\n`f` is the variable holding the function. `g` is not accessible in the outer scope, so `typeof g()` throws `ReferenceError: g is not defined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 173,
+      "id": 154,
       "topics": [
         "data types",
         "error handling",
@@ -5283,11 +4714,11 @@
       "options": [
         {
           "key": "A",
-          "text": "`10, 5`"
+          "text": "`10, 1`"
         },
         {
           "key": "B",
-          "text": "`5, 10`"
+          "text": "`10, 5`"
         },
         {
           "key": "C",
@@ -5295,50 +4726,18 @@
         },
         {
           "key": "D",
-          "text": "`5, 5`"
+          "text": "`5, 1`"
         }
       ],
-      "answer": "C",
-      "explanation": "When `fn` is called in `obj.method(fn)`, the `this` keyword inside `fn` refers to the global object, where `length` is `10`. The `arguments[0]()` call also sets `this` to the global object, resulting in `10`.",
+      "answer": "A",
+      "explanation": "1. `fn()` is invoked as a standalone function, so in non-strict mode `this` refers to the global object where `var length = 10`. Thus, `this.length` logs `10`.\n\n2. `arguments[0]()` invokes `fn` as a method of the `arguments` object (i.e. `arguments[0]`). Here, `this` is bound to the `arguments` object itself. Since one argument (`fn`) was passed to `obj.method(fn)`, `arguments.length` is `1`, so `this.length` logs `1`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 174,
+      "id": 155,
       "topics": [
         "object methods",
         "scope",
         "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction test() {\n  var a = (b = 3);\n}\ntest();\nconsole.log(typeof a);\nconsole.log(typeof b);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`\"undefined\", \"number\"`"
-        },
-        {
-          "key": "B",
-          "text": "`\"number\", \"number\"`"
-        },
-        {
-          "key": "C",
-          "text": "`\"undefined\", \"undefined\"`"
-        },
-        {
-          "key": "D",
-          "text": "`\"number\", \"undefined\"`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "`var a = b = 3` assigns `3` to `b` first (creating a global `b` since `b` has no declaration), then declares local `a`.\n\nOutside `test()`, `a` is out of scope (`undefined`), while global `b` is `3` (`\"number\"`).",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 175,
-      "topics": [
-        "coercion",
-        "data types",
-        "scope"
       ]
     },
     {
@@ -5366,7 +4765,7 @@
       "explanation": "In `var foo = function bar() { return 42; }`, the name `bar` is only bound **inside** the function body.\n\nOutside, only `foo` exists. `typeof bar` is `\"undefined\"` because `bar` was never declared in the outer scope.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 176,
+      "id": 156,
       "topics": [
         "data types",
         "scope",
@@ -5398,7 +4797,7 @@
       "explanation": "The IIFE closes over the variable `x`, not a snapshot of its value.\n\nExecution order matters: the IIFE runs **synchronously** before `x = 20`, so when `console.log(x)` runs, `x` is still `10`. If the IIFE were deferred (e.g. `setTimeout`), it would see `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 177,
+      "id": 157,
       "topics": [
         "closures",
         "scope"
@@ -5429,7 +4828,7 @@
       "explanation": "Regular functions get `this` from **how they are called**, not where they are defined.\n\n`var fn = obj.fn` extracts the function without `obj`. Calling `fn()` uses default binding — global object in sloppy mode, where global `a` is `1`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 178,
+      "id": 158,
       "topics": [
         "object methods",
         "scope",
@@ -5461,7 +4860,7 @@
       "explanation": "Regular nested functions do not inherit `this` from their outer function. The IIFE's `this` would be global.\n\nThe classic fix: `var self = this` inside `foo` captures `obj` as `self` before entering the IIFE. `self.a` is `2`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 179,
+      "id": 159,
       "topics": [
         "this"
       ]
@@ -5491,7 +4890,7 @@
       "explanation": "Passing `obj.foo` to `setTimeout` passes only the **function reference** — `this` is lost.\n\nWhen the timer fires, `foo` is called as a plain function, so `this` is the global object. Global `a` is `undefined` (no global `a` defined here).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 180,
+      "id": 160,
       "topics": [
         "event loop",
         "this"
@@ -5522,7 +4921,7 @@
       "explanation": "Wrapping the call in another function preserves access to `obj`.\n\n`setTimeout(function () { obj.foo(); }, 1000)` calls `obj.foo` as a method on `obj`, so `this` is `obj` and `this.a` is `1`.\n\nCalling `obj.foo()` as a method preserves the object receiver.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 181,
+      "id": 161,
       "topics": [
         "event loop",
         "this"
@@ -5553,7 +4952,7 @@
       "explanation": "In non-strict mode, `call(null)` and `call(undefined)` coerce `null`/`undefined` to the **global object**.\n\nSo `foo.call(null)` logs the global object (`window` in browsers).\n\nStrict mode changes this rule — `null` stays `null` there.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 182,
+      "id": 162,
       "topics": [
         "object methods",
         "scope",
@@ -5585,73 +4984,9 @@
       "explanation": "In **strict mode**, `call(null)` and `apply(null)` pass `null` as `this` without coercion.\n\n`foo.call(null)` logs `null` — unlike sloppy mode, which would substitute the global object.\n\nWithout `\"use strict\"`, `null`/`undefined` become the global object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 183,
+      "id": 163,
       "topics": [
         "strict mode",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    return function () {\n      console.log(this.a);\n    };\n  },\n};\nvar fn = obj.foo();\nfn();\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`1`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`0`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "The inner `function` has its own dynamic `this`. When `fn()` is called without a receiver, `this` is the global object.\n\nThe outer `foo` had `this === obj`, but that does not flow into the nested regular function. Global `a` is `undefined`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 184,
-      "topics": [
-        "object methods",
-        "scope",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  a: 1,\n  foo: function () {\n    return () => {\n      console.log(this.a);\n    };\n  },\n};\nvar fn = obj.foo();\nfn();\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`1`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`0`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Arrow functions do not have their own `this`. They inherit `this` **lexically** from the enclosing scope where the arrow is defined.\n\nThe arrow is created inside `foo` while `obj.foo()` sets `this` to `obj`. The arrow closes over that `this`, so `fn()` logs `obj.a` → `1`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 185,
-      "topics": [
-        "arrow functions",
-        "scope",
         "this"
       ]
     },
@@ -5680,7 +5015,7 @@
       "explanation": "The first `console.log(this.a)` runs with `this === obj`, so it logs `20`.\n\nThe `setTimeout` callback is a **regular function**, so when it runs, `this` is the global object. Global `a` is `10`. Output: `20` then `10` (after 1s).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 186,
+      "id": 164,
       "topics": [
         "event loop",
         "object methods",
@@ -5713,7 +5048,7 @@
       "explanation": "Same as the detached `setTimeout` problem: the callback's `this` would be global.\n\n`var self = this` inside `foo` stores `obj` before the timer. The callback uses `self.a` → `20`.\n\nWithout `self`, the timer callback would log global `a` (`10`).",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 187,
+      "id": 165,
       "topics": [
         "event loop",
         "this"
@@ -5744,7 +5079,7 @@
       "explanation": "Arrow functions inherit `this` lexically from `foo`'s scope during `obj.foo()`.\n\nBoth the immediate log and the `setTimeout` arrow use the same lexical `this` (`obj`), so both log `20`.\n\nArrows share one lexical `this` for both the sync log and the timer.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 188,
+      "id": 166,
       "topics": [
         "arrow functions",
         "event loop",
@@ -5777,7 +5112,7 @@
       "explanation": "Instances link to the constructor's **current** `prototype` object via an internal reference.\n\n`Foo.prototype.bar = 20` mutates the shared prototype object. `foo` still points to that object, so `foo.bar` becomes `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 189,
+      "id": 167,
       "topics": [
         "object methods",
         "prototypes"
@@ -5808,42 +5143,11 @@
       "explanation": "Property lookup: own properties shadow prototype properties.\n\n`new Foo()` sets `this.bar = 10` on the instance. `Foo.prototype.bar = 20` exists on the prototype, but `foo.bar` reads the own property first → `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 190,
+      "id": 168,
       "topics": [
         "object methods",
         "prototypes",
         "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype = { bar: 10 };\nvar foo = new Foo();\nFoo.prototype.bar = 20;\nconsole.log(foo.bar);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`Foo.prototype = { bar: 10 }` assigns a new prototype object. `foo` links to it.\n\n`Foo.prototype.bar = 20` mutates that same object. `foo.bar` → `20`.\n\nThe instance and constructor share the same prototype object reference.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 191,
-      "topics": [
-        "object methods",
-        "prototypes"
       ]
     },
     {
@@ -5871,7 +5175,7 @@
       "explanation": "Reassigning `Foo.prototype` replaces the constructor's prototype property — it does **not** change prototypes already linked to old instances.\n\n`foo` still links to `{ bar: 10 }`. New assignment `{ bar: 20 }` only affects future instances. `foo.bar` → `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 192,
+      "id": 169,
       "topics": [
         "object methods",
         "prototypes"
@@ -5902,67 +5206,7 @@
       "explanation": "Each `new Foo()` links to whatever `Foo.prototype` points to **at creation time**.\n\n- `foo1` created with `{ bar: 10 }` → `foo1.bar` is `10`.\n- Prototype reassigned to `{ bar: 20 }`.\n- `foo2` links to the new object → `foo2.bar` is `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 193,
-      "topics": [
-        "prototypes"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = { bar: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10, 10`"
-        },
-        {
-          "key": "B",
-          "text": "`20, 20`"
-        },
-        {
-          "key": "C",
-          "text": "`10, 20`"
-        },
-        {
-          "key": "D",
-          "text": "`undefined, undefined`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "Reassigning `Foo.prototype` does not retroactively change existing instances.\n\n- `foo1` retains its link to the original prototype → `foo1.bar` is `10`.\n- `foo2` is created after reassignment → `foo2.bar` is `20`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 194,
-      "topics": [
-        "prototypes"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo = new Foo();\nFoo.prototype.baz = 20;\nconsole.log(foo.baz);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "The prototype chain is live. Adding `baz` to `Foo.prototype` after `foo` was created still makes `foo.baz` accessible via the prototype link.\n\n`foo.baz` → `20`.\n\nPrototype lookups are live — changes are visible to existing instances.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 195,
+      "id": 170,
       "topics": [
         "prototypes"
       ]
@@ -5992,7 +5236,7 @@
       "explanation": "`delete foo.baz` tries to remove an **own** property `baz` on the instance. There is none — `baz` lives on the prototype.\n\n`delete` on a missing own property is a no-op. Lookup falls through to the prototype → `foo.baz` is `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 196,
+      "id": 171,
       "topics": [
         "object methods",
         "prototypes",
@@ -6024,39 +5268,7 @@
       "explanation": "`delete foo.bar` removes the **own** property `bar` from the instance.\n\n`foo.bar` no longer exists on the instance. There is no `bar` on the prototype either, so `foo.bar` is `undefined`.\n\nOnly own properties are removed; prototype chain is unchanged.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 197,
-      "topics": [
-        "object methods",
-        "prototypes",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = 20;\nvar foo = new Foo();\ndelete foo.bar;\nfoo.bar = 30;\nconsole.log(foo.bar);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`30`"
-        },
-        {
-          "key": "D",
-          "text": "`undefined`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "After `delete foo.bar`, the own property is gone. `foo.bar = 30` creates a new own property on the instance.\n\n`foo.bar` → `30`. The prototype's `baz` is unrelated to `bar`.\n\nAssigning after delete creates a new own property on the instance.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 198,
+      "id": 172,
       "topics": [
         "object methods",
         "prototypes",
@@ -6088,7 +5300,7 @@
       "explanation": "`var a = 30` is a **local** variable inside `foo`. `this.a` refers to the property on `obj` (the call receiver), not the local `a`.\n\n`obj.foo()` sets `this` to `obj`, so `this.a` is `20`.\n\nLocal `var a` is separate from `this.a` on the receiver object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 199,
+      "id": 173,
       "topics": [
         "this"
       ]
@@ -6118,7 +5330,7 @@
       "explanation": "The returned **regular function** gets `this` from its call. `obj.foo()()` invokes the inner function with no receiver, so `this` is global.\n\nGlobal `a` is `10`. Local `var a = 30` inside `foo` is unrelated to the inner function's `this.a`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 200,
+      "id": 174,
       "topics": [
         "map/set",
         "object methods",
@@ -6151,7 +5363,7 @@
       "explanation": "The returned **arrow** inherits `this` from `foo`'s execution context. `obj.foo()` calls `foo` with `this === obj`.\n\nThe arrow closes over that `this`, so `this.a` is `20` — not global `10` or local `30`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 201,
+      "id": 175,
       "topics": [
         "arrow functions",
         "scope",
@@ -6175,7 +5387,7 @@
       "explanation": "Arrow functions inherit `this` lexically. `obj.foo()` runs `foo` with `this === obj`, and the returned arrow keeps that binding.\n\n`obj.foo()()` returns `obj`, so `=== obj` is `true`.\n\nMethod call `obj.foo()` makes the arrow return the same object.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 202,
+      "id": 176,
       "topics": [
         "arrow functions",
         "this"
@@ -6198,7 +5410,7 @@
       "explanation": "The returned **regular function** loses `obj` as `this` when invoked as `obj.foo()()`.\n\nInner call has no receiver → `this` is global. The returned value is not `obj`, so `=== obj` is `false`.\n\nInner regular functions do not inherit the outer method receiver.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 203,
+      "id": 177,
       "topics": [
         "map/set",
         "object methods",
@@ -6223,7 +5435,7 @@
       "explanation": "Extracting `obj.foo` into `bar` detaches the method from `obj`.\n\n`bar()` uses default binding → global `this`. `bar() === obj` is `false`.\n\nExplicit `call`/`apply`/`bind` is how you restore `this` on detached methods.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 204,
+      "id": 178,
       "topics": [
         "object methods",
         "scope",
@@ -6247,7 +5459,7 @@
       "explanation": "Method call `obj.foo()` sets `this` to `obj` for the duration of `foo`.\n\n`foo` returns `this` (which is `obj`), so `obj.foo() === obj` is `true`.\n\nDirect method syntax `obj.foo()` is the implicit binding form.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 205,
+      "id": 179,
       "topics": [
         "this"
       ]
@@ -6269,54 +5481,9 @@
       "explanation": "`call(obj)` explicitly sets `this` for the detached function.\n\nEven though `bar` was extracted from `obj`, `bar.call(obj)` forces `this` to `obj` → returns `obj`.\n\n`call` passes arguments individually; `apply` uses an array.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 206,
+      "id": 180,
       "topics": [
         "map/set",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar.apply(obj) === obj);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`true`"
-        },
-        {
-          "key": "B",
-          "text": "`false`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "`apply(obj)` works like `call` for setting `this` — the only difference is how arguments are passed.\n\n`bar.apply(obj)` sets `this` to `obj` → returns `obj`.\n\nBoth override default binding for that single invocation.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 207,
-      "topics": [
-        "map/set",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return this;\n  },\n};\nvar bar = obj.foo;\nconsole.log(bar.bind(obj)() === obj);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`true`"
-        },
-        {
-          "key": "B",
-          "text": "`false`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "`bind(obj)` creates a new function with `this` permanently bound to `obj`.\n\n`bar.bind(obj)()` invokes that bound function → returns `obj`.\n\n`bind` returns a new function; it does not invoke the original.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 208,
-      "topics": [
         "this"
       ]
     },
@@ -6337,73 +5504,9 @@
       "explanation": "`bar = obj.foo` detaches `foo`. `bar()` calls `foo` with global `this`.\n\nThe arrow inside inherits lexical `this` from that global context, not from `obj`. Result is not `obj`.\n\nDetached `bar()` runs `foo` with global `this`, and the arrow follows that.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 209,
+      "id": 181,
       "topics": [
         "arrow functions",
-        "object methods",
-        "scope",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo()());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Arrow functions inherit `this` lexically from where they are **created**.\n\n`obj.foo()` sets `this` to `obj` inside `foo`. The arrow captures that, so `obj.foo()()` returns `obj.a` → `10`.\n\nContrast id 211: a regular inner function would log `undefined` here.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 210,
-      "topics": [
-        "arrow functions",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo()());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "The returned **regular function** gets `this` from how **it** is invoked, not from `foo`'s `this`.\n\n`obj.foo()()` calls the inner function with no receiver → `this` is the global object. There is no global `a`, so `this.a` is `undefined`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 211,
-      "topics": [
-        "map/set",
         "object methods",
         "scope",
         "this"
@@ -6434,69 +5537,7 @@
       "explanation": "Regular functions use **dynamic** `this` — set only when the inner function is called.\n\n1. `call({ a: 20 })` sets `this` to `{ a: 20 }` while `foo` runs, but `foo` only **returns** the inner function.\n2. The trailing `()` invokes that inner function with no receiver → `this` is the global object.\n3. There is no global `a` in this snippet, so `this.a` is `undefined` — not `20` from the `call` target.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 212,
-      "topics": [
-        "object methods",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.apply({ a: 30 })());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`30`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "Same pattern as `call`: `apply` sets `this` only for the **outer** `foo` invocation.\n\nThe returned regular function is invoked separately with `()`. Its `this` is global. With no global `a` in this snippet, `this.a` is `undefined` — not `30` from the `apply` argument.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 213,
-      "topics": [
-        "object methods",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return function () {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.bind({ a: 40 })()());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`40`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "C",
-      "explanation": "The returned regular function still loses `foo`'s `this` when invoked on its own.\n\n`bind({ a: 40 })` runs `foo` with `this = { a: 40 }`, but the **inner** function invoked by the final `()` uses global `this`. With no global `a`, `this.a` is `undefined` — not `40`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 214,
+      "id": 182,
       "topics": [
         "object methods",
         "this"
@@ -6527,69 +5568,7 @@
       "explanation": "Arrow functions have **no own `this`**. They inherit `this` from the enclosing function's execution context when the arrow is **created**.\n\n`call({ a: 50 })` sets `this` inside `foo` to `{ a: 50 }`. The arrow is created during that call and inherits that `this`, so `this.a` is `50` — `call` on the outer function does affect the arrow's `this`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 215,
-      "topics": [
-        "arrow functions",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.apply({ a: 60 })());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`60`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Arrow functions inherit `this` from the enclosing function when the arrow is created — not from a later invocation of the returned arrow.\n\n`apply({ a: 60 })` runs `foo` with `this = { a: 60 }`. The arrow is created in that context and keeps that `this`, so `this.a` is `60`. Unlike regular nested functions, the arrow does not lose `foo`'s `this` when the outer function was called via `apply`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 216,
-      "topics": [
-        "arrow functions",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar obj = {\n  foo: function () {\n    return () => {\n      return this.a;\n    };\n  },\n  a: 10,\n};\nconsole.log(obj.foo.bind({ a: 70 })()());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`70`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Same rule as `call`/`apply`: the arrow inherits `this` from `foo`'s execution when the arrow is created.\n\n`bind({ a: 70 })` runs `foo` with `this = { a: 70 }`. The returned arrow keeps that binding, so the final `()` returns `70`. Contrast id 211: a regular inner function would use global `this` and log `undefined`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 217,
+      "id": 183,
       "topics": [
         "arrow functions",
         "this"
@@ -6620,69 +5599,7 @@
       "explanation": "Detached methods lose their receiver. `var bar = obj.foo` stores the function without `obj`.\n\n`bar.call(obj)` explicitly sets `this` to `obj` for that invocation, so `this.a` logs `20` — not global `10`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 218,
-      "topics": [
-        "object methods",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar.apply(obj);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`apply` sets `this` the same way as `call` — only the argument list format differs.\n\n`bar.apply(obj)` forces `this` to `obj` during the call, so `this.a` is `20`.\n\nWorks the same as `call` — only argument passing differs.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 219,
-      "topics": [
-        "object methods",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar.bind(obj)();\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`bind(obj)` returns a new function with `this` permanently bound to `obj`.\n\n`bar.bind(obj)()` invokes that bound function, so `this.a` is `20`.\n\nThe bound function keeps `obj` as `this` on every future call.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 220,
+      "id": 184,
       "topics": [
         "object methods",
         "this"
@@ -6713,7 +5630,7 @@
       "explanation": "Detaching `foo` with `var bar = obj.foo` means `bar()` runs with global `this`.\n\nThe arrow inside inherits that global lexical `this`. Without a global `a`, `this.a` is `undefined`.\n\nWithout a global `a`, lexical global `this.a` is `undefined`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 221,
+      "id": 185,
       "topics": [
         "arrow functions",
         "object methods",
@@ -6746,43 +5663,10 @@
       "explanation": "Methods called on an instance use that instance as `this`.\n\n`foo.baz()` is a method call on `foo`, so inside `baz`, `this` is the instance. `this.bar` reads the instance property → `10`.\n\n`this` in a method call is the object before the dot.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 222,
+      "id": 186,
       "topics": [
         "object methods",
         "prototypes",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nvar baz = foo.baz;\nconsole.log(baz());\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Extracting a method loses the instance binding.\n\n`var baz = foo.baz` then `baz()` invokes the function without a receiver → global `this`. Global `bar` is `undefined`, so the result is `undefined`.\n\nDetached prototype methods behave like any other detached function.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 223,
-      "topics": [
-        "object methods",
-        "prototypes",
-        "scope",
         "this"
       ]
     },
@@ -6811,139 +5695,11 @@
       "explanation": "`bind(foo)` fixes the detached-method problem by permanently binding `this` to `foo`.\n\n`baz()` on the bound function still runs with `this === foo`, so `this.bar` is `10`.\n\nPrefer `bind` when passing methods to async callbacks or timers.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 224,
+      "id": 187,
       "topics": [
         "object methods",
         "prototypes",
         "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz, 1000);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`setTimeout(foo.baz, 1000)` passes only the function reference — `this` is lost.\n\nWhen the timer fires, `baz` runs as a plain function with global `this`, where `bar` is `undefined`.\n\nSame pattern as passing `obj.foo` directly to `setTimeout`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 225,
-      "topics": [
-        "event loop",
-        "object methods",
-        "prototypes",
-        "scope",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {\n  this.bar = 10;\n}\nFoo.prototype.baz = function () {\n  return this.bar;\n};\nvar foo = new Foo();\nsetTimeout(foo.baz.bind(foo), 1000);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`null`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Binding before passing to `setTimeout` preserves the instance.\n\n`foo.baz.bind(foo)` creates a function whose `this` is always `foo`, so when the timer fires, `this.bar` is `10`.\n\nBinding before scheduling preserves the instance as `this`.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 226,
-      "topics": [
-        "event loop",
-        "object methods",
-        "prototypes",
-        "this"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype = { baz: 20 };\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10, undefined`"
-        },
-        {
-          "key": "B",
-          "text": "`undefined, undefined`"
-        },
-        {
-          "key": "C",
-          "text": "`10, 10`"
-        },
-        {
-          "key": "D",
-          "text": "`10, 20`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Each instance stores an internal link to the prototype object **active at creation time**.\n\n`Foo.prototype = { baz: 20 }` replaces the constructor's prototype — it does not update instances already created. `foo1` still uses the old prototype (`bar` is `10`); `foo2` uses the new one (`bar` is `undefined`).",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 227,
-      "topics": [
-        "prototypes"
-      ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nfunction Foo() {}\nFoo.prototype.bar = 10;\nvar foo1 = new Foo();\nFoo.prototype.bar = 20;\nvar foo2 = new Foo();\nconsole.log(foo1.bar, foo2.bar);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10, 10`"
-        },
-        {
-          "key": "B",
-          "text": "`20, 20`"
-        },
-        {
-          "key": "C",
-          "text": "`10, 20`"
-        },
-        {
-          "key": "D",
-          "text": "`undefined, undefined`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "Mutating a property on the shared prototype object affects **all** instances linked to it.\n\n`Foo.prototype.bar = 20` changes the object both `foo1` and `foo2` point to, so both read `20`.\n\nAll instances share one prototype object until it is replaced.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 228,
-      "topics": [
-        "object methods",
-        "prototypes"
       ]
     },
     {
@@ -6971,7 +5727,7 @@
       "explanation": "Prototype **reassignment** vs **mutation**: replacing `Foo.prototype` does not retroactively relink existing instances.\n\n`foo1` keeps the old prototype (`baz` was never on it → `undefined`). `foo2` is created after reassignment and reads `baz` → `20`.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 229,
+      "id": 188,
       "topics": [
         "prototypes"
       ]
@@ -7001,511 +5757,11 @@
       "explanation": "Own properties shadow prototype properties.\n\n`foo1.bar = 30` sets an instance property that hides the prototype's `bar`. `foo2` has no own `bar`, so it reads the prototype value `20`.\n\nOwn properties always win over prototype properties in lookup.",
       "difficulty": "advance",
       "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 230,
+      "id": 189,
       "topics": [
         "object methods",
         "prototypes"
       ]
-    },
-    {
-      "question": "What's the output?",
-      "body": "```javascript\nvar a = 10;\nvar obj = {\n  a: 20,\n  foo: function () {\n    console.log(this.a);\n  },\n};\nvar bar = obj.foo;\nbar();\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`10`"
-        },
-        {
-          "key": "B",
-          "text": "`20`"
-        },
-        {
-          "key": "C",
-          "text": "`undefined`"
-        },
-        {
-          "key": "D",
-          "text": "`ReferenceError`"
-        }
-      ],
-      "answer": "A",
-      "explanation": "Same detached-method rule: `var bar = obj.foo` then `bar()` invokes with global `this`.\n\nGlobal `a` is `10` (from `var a = 10`), not `obj.a` which is `20`.\n\nWithout `call`/`bind`, detached calls use global `this` in sloppy scripts.",
-      "difficulty": "advance",
-      "source": "https://basescripts.com/100-advanced-javascript-multiple-choice-questions-with-answers-and-explanations",
-      "id": 231,
-      "topics": [
-        "object methods",
-        "scope",
-        "this"
-      ]
-    },
-    {
-      "id": 232,
-      "question": "After clicking the button, what is `count`?",
-      "body": "```jsx\nfunction Counter() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(count + 1);\n    setCount(count + 1);\n    setCount(count + 1);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "`3`"
-        },
-        {
-          "key": "B",
-          "text": "`1`"
-        },
-        {
-          "key": "C",
-          "text": "`0`"
-        },
-        {
-          "key": "D",
-          "text": "`2`"
-        }
-      ],
-      "answer": "B",
-      "explanation": "All three `setCount` calls read the same stale `count` (0) from the closure. Each sets count to `0 + 1 = 1`. React 18 batches them into one re-render with count = 1. Use functional updates `setCount(c => c + 1)` three times to get 3.",
-      "topics": [
-        "React",
-        "hooks",
-        "batching"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 233,
-      "question": "After clicking once (count 0→1), what logs?",
-      "body": "```jsx\nfunction Timer() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    console.log(\"effect\", count);\n    return () => console.log(\"cleanup\", count);\n  }, [count]);\n\n  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "\"effect 1\""
-        },
-        {
-          "key": "B",
-          "text": "\"cleanup 0\", \"effect 1\""
-        },
-        {
-          "key": "C",
-          "text": "\"effect 1\", \"cleanup 0\""
-        },
-        {
-          "key": "D",
-          "text": "\"cleanup 1\", \"effect 1\""
-        }
-      ],
-      "answer": "B",
-      "explanation": "When `count` updates from 0 to 1, React schedules a re-render. Before executing the effect for the new render, React first executes the cleanup function from the previous effect. Because effects and cleanups capture the values from the render in which they were created (via closure), the previous cleanup captures `count = 0`. Once cleanup finishes, the new effect executes with the updated state `count = 1`. Therefore, the output order is `\"cleanup 0\"` followed by `\"effect 1\"`. On final component unmount, the last cleanup will run.",
-      "topics": [
-        "React",
-        "hooks"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 234,
-      "question": "Which does NOT cause a component to re-render?",
-      "body": "",
-      "options": [
-        {
-          "key": "A",
-          "text": "Calling setState with the same value as current state"
-        },
-        {
-          "key": "B",
-          "text": "Parent component re-rendering"
-        },
-        {
-          "key": "C",
-          "text": "Changing a useRef value"
-        },
-        {
-          "key": "D",
-          "text": "Context value changing"
-        }
-      ],
-      "answer": "C",
-      "explanation": "Mutating a `ref.current` property is a plain object mutation that operates outside React's render lifecycle—React has no notification mechanism or listener on ref objects, so changing `ref.current` never schedules a re-render. In contrast:\n- A parent re-rendering always re-renders child components by default (unless wrapped in `React.memo`).\n- A consumed context value update always schedules a re-render for all consumers.\n- While calling `setState` with an identical primitive value can trigger React's `Object.is` bailout, React may still run the component function one additional time before bailing out.",
-      "topics": [
-        "React",
-        "rendering"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 235,
-      "question": "When does `fetchData` run?",
-      "body": "```jsx\nuseEffect(() => {\n  fetchData();\n}, []);\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "After every render"
-        },
-        {
-          "key": "B",
-          "text": "Only on mount"
-        },
-        {
-          "key": "C",
-          "text": "Only on unmount"
-        },
-        {
-          "key": "D",
-          "text": "Never"
-        }
-      ],
-      "answer": "B",
-      "explanation": "An empty dependency array `[]` tells React that the effect function has no dynamic dependencies and should only execute once after the component's initial mount (after the initial DOM paint). It will not re-run on subsequent re-renders because the dependency array never changes. Furthermore, if a cleanup function is returned, React will only run that cleanup once when the component unmounts from the DOM. (Note: in React 18 Strict Mode development, effects run mount -> unmount -> mount once to verify proper cleanup handling).",
-      "topics": [
-        "React",
-        "hooks"
-      ],
-      "difficulty": "easy",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 236,
-      "question": "Does Child re-render when the button is clicked?",
-      "body": "```jsx\nconst Child = React.memo(({ data }) => {\n  console.log(\"Child rendered\");\n  return <div>{data.name}</div>;\n});\n\nfunction Parent() {\n  const [count, setCount] = useState(0);\n  const data = { name: \"Alice\" };\n\n  return (\n    <>\n      <button onClick={() => setCount(c => c + 1)}>Click</button>\n      <Child data={data} />\n    </>\n  );\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "No, data has not changed"
-        },
-        {
-          "key": "B",
-          "text": "Yes, because `data` is a new object reference each render"
-        },
-        {
-          "key": "C",
-          "text": "Only on first click"
-        },
-        {
-          "key": "D",
-          "text": "No, memo prevents all re-renders"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`React.memo` performs a shallow comparison (`Object.is`) of incoming props against previous props to determine if a re-render can be skipped. In this code, the inline object `{ name: \"Alice\" }` is created as a brand new object in memory during every single render of `Parent`. Even though the internal values (`name: \"Alice\"`) are identical, the object reference differs (`newObj !== oldObj`), causing `React.memo`'s shallow comparison to return false and force `Child` to re-render. To prevent this re-render, either move the object outside the component or wrap it in `useMemo`.",
-      "topics": [
-        "React",
-        "performance"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 237,
-      "question": "This input is a:",
-      "body": "```jsx\nfunction Input() {\n  return <input defaultValue=\"hello\" />;\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "Controlled component"
-        },
-        {
-          "key": "B",
-          "text": "Uncontrolled component"
-        },
-        {
-          "key": "C",
-          "text": "Neither"
-        },
-        {
-          "key": "D",
-          "text": "Invalid React code"
-        }
-      ],
-      "answer": "B",
-      "explanation": "An uncontrolled component leaves the input's state in the DOM itself. Supplying `defaultValue` sets the initial value of the HTML `<input>` element on first mount, but subsequent keystrokes update the underlying DOM node without notifying or modifying any React state. React does not control the value over time. In contrast, a controlled component provides a `value` prop bound to React state and an `onChange` handler that updates state on every user keystroke, making React the single source of truth.",
-      "topics": [
-        "React",
-        "forms"
-      ],
-      "difficulty": "easy",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 238,
-      "question": "Error boundaries catch errors in:",
-      "body": "",
-      "options": [
-        {
-          "key": "A",
-          "text": "Event handlers"
-        },
-        {
-          "key": "B",
-          "text": "Async code (setTimeout, promises)"
-        },
-        {
-          "key": "C",
-          "text": "Rendering, lifecycle methods, and constructors of descendant components"
-        },
-        {
-          "key": "D",
-          "text": "All of the above"
-        }
-      ],
-      "answer": "C",
-      "explanation": "React Error Boundaries are class components implementing `static getDerivedStateFromError()` or `componentDidCatch()`. They are designed to catch JavaScript errors exclusively during rendering, in lifecycle methods, and in constructor functions of the component tree below them. They do NOT catch:\n1. Errors inside event handlers (e.g., `onClick`—must use standard `try/catch`).\n2. Asynchronous callbacks (e.g., `setTimeout`, `requestAnimationFrame`, or Promise rejections).\n3. Server-side rendering (SSR) errors.\n4. Errors thrown within the error boundary component itself.",
-      "topics": [
-        "React",
-        "error handling"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 239,
-      "question": "Which statement about this Portal is TRUE?",
-      "body": "```jsx\nfunction Modal({ children }) {\n  return createPortal(\n    <div className=\"modal\">{children}</div>,\n    document.getElementById('modal-root')\n  );\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "Events from Modal do not bubble to parent React components"
-        },
-        {
-          "key": "B",
-          "text": "Modal inherits styles from modal-root"
-        },
-        {
-          "key": "C",
-          "text": "Events bubble through React's component tree, not the DOM tree"
-        },
-        {
-          "key": "D",
-          "text": "Portal children cannot use context from their React parent"
-        }
-      ],
-      "answer": "C",
-      "explanation": "Portals (`ReactDOM.createPortal(child, container)`) allow you to render DOM nodes into a different DOM subtree (such as appending a modal directly to `document.body`), which is ideal for avoiding `overflow: hidden` or `z-index` stacking context issues. Crucially, even though the DOM hierarchy is disconnected, the portal maintains its full position in the React Virtual DOM hierarchy. Consequently, React synthetic events bubble upward according to the React component tree, not the actual DOM tree, and React Context from ancestor components continues to propagate seamlessly.",
-      "topics": [
-        "React",
-        "portals"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 240,
-      "question": "useLayoutEffect vs useEffect — which is correct?",
-      "body": "",
-      "options": [
-        {
-          "key": "A",
-          "text": "useLayoutEffect runs before DOM mutations; useEffect runs after"
-        },
-        {
-          "key": "B",
-          "text": "useLayoutEffect runs synchronously after DOM mutations, before paint; useEffect runs asynchronously after paint"
-        },
-        {
-          "key": "C",
-          "text": "They are identical"
-        },
-        {
-          "key": "D",
-          "text": "useLayoutEffect only works in class components"
-        }
-      ],
-      "answer": "B",
-      "explanation": "`useLayoutEffect` and `useEffect` have different execution phases in React's commit cycle:\n- `useLayoutEffect` runs synchronously immediately after React mutates the DOM, but *before* the browser paints the screen. It blocks browser painting, making it ideal for measuring DOM layout (e.g., node dimensions, scroll offsets) and making synchronous DOM mutations to prevent visual flickering.\n- `useEffect` is deferred and runs asynchronously *after* the browser has already painted the screen, preventing heavy side effects from blocking user interactions and rendering performance.",
-      "topics": [
-        "React",
-        "hooks"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 241,
-      "question": "If only `theme` changes in the context, does `UserName` re-render?",
-      "body": "```jsx\nconst MyContext = createContext({ user: null, theme: 'light' });\n\nfunction UserName() {\n  const { user } = useContext(MyContext);\n  return <span>{user?.name}</span>;\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "No, it only destructures `user`"
-        },
-        {
-          "key": "B",
-          "text": "Yes, ANY context value change re-renders ALL consumers"
-        },
-        {
-          "key": "C",
-          "text": "Only if user is not null"
-        },
-        {
-          "key": "D",
-          "text": "Only in development mode"
-        }
-      ],
-      "answer": "B",
-      "explanation": "In React Context, consumers subscribe to the Provider's `value` prop as a whole. React does not provide built-in granular or selective field-level subscriptions. Whenever the value passed to `Provider` changes by reference (`Object.is(oldVal, newVal) === false`), React marks *every* component calling `useContext` for that context as requiring a re-render, regardless of which properties within the context object that specific component destructures. To avoid unnecessary re-renders, you can split contexts by responsibility, wrap children in `React.memo`, or use third-party state managers like Zustand.",
-      "topics": [
-        "React",
-        "Context",
-        "performance"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 242,
-      "question": "What problem occurs when an item is removed from the beginning of the array?",
-      "body": "```jsx\nfunction List({ items }) {\n  return items.map((item, index) => (\n    <input key={index} defaultValue={item.name} />\n  ));\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "No problem"
-        },
-        {
-          "key": "B",
-          "text": "The last input loses its value"
-        },
-        {
-          "key": "C",
-          "text": "The first input shows the second item's original value"
-        },
-        {
-          "key": "D",
-          "text": "All inputs reset"
-        }
-      ],
-      "answer": "C",
-      "explanation": "When using array indices as keys (`key={index}`), removing the first item (index 0) causes every subsequent item's key to shift down by one. React identifies elements by their key: it sees that key `0` still exists in the list and reuses the existing DOM node for key `0`. Because uncontrolled inputs manage their own internal DOM state (`value`), the reused DOM input retains its existing typed text. The first item visually displays the value belonging to the previous first item, while the last input disappears from the bottom. Always use stable, unique IDs (e.g., `item.id`) as keys.",
-      "topics": [
-        "React",
-        "reconciliation"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 243,
-      "question": "What does `<Loading />` display in this Suspense setup?",
-      "body": "```jsx\nconst LazyComp = React.lazy(() => import('./Heavy'));\n\nfunction App() {\n  return (\n    <Suspense fallback={<Loading />}>\n      <LazyComp />\n    </Suspense>\n  );\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "While the `Heavy` module is being downloaded/loaded"
-        },
-        {
-          "key": "B",
-          "text": "While Heavy is rendering"
-        },
-        {
-          "key": "C",
-          "text": "Only on error"
-        },
-        {
-          "key": "D",
-          "text": "Always"
-        }
-      ],
-      "answer": "A",
-      "explanation": "`React.lazy` takes a dynamic `import()` function (e.g., `() => import(\"./Heavy\")`), which returns a Promise that resolves to an ES module with a default export. While this Promise is pending (i.e. the network request is downloading the JavaScript chunk containing the component), React suspends rendering of the lazy component and displays the nearest `<Suspense fallback={...}>` component (in this case `<Loading />`). Once the bundle chunk is fetched, parsed, and executed, React replaces the fallback with the loaded component.",
-      "topics": [
-        "React",
-        "Suspense",
-        "code splitting"
-      ],
-      "difficulty": "easy",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 244,
-      "question": "What does `startTransition` do?",
-      "body": "```jsx\nconst [isPending, startTransition] = useTransition();\n\nfunction handleSearch(query) {\n  setInputValue(query);\n  startTransition(() => {\n    setSearchResults(filter(query));\n  });\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "Delays the update by a fixed timeout"
-        },
-        {
-          "key": "B",
-          "text": "Marks the update as non-urgent so React can interrupt it to keep UI responsive"
-        },
-        {
-          "key": "C",
-          "text": "Moves the update to a Web Worker"
-        },
-        {
-          "key": "D",
-          "text": "Prevents the update until user stops typing"
-        }
-      ],
-      "answer": "B",
-      "explanation": "React 18's `startTransition` API allows you to differentiate between urgent and non-urgent state updates:\n- Urgent updates represent direct user interactions requiring immediate physical feedback (e.g., typing into an input field, clicking, hovering).\n- Non-urgent or transition updates represent UI transitions (e.g., filtering a large table, searching results, switching tabs).\nWrapping an update in `startTransition` tells React that the update can be interrupted by higher-priority events, preventing sluggish frame drops and keeping the UI responsive during CPU-heavy re-renders.",
-      "topics": [
-        "React",
-        "Concurrent React"
-      ],
-      "difficulty": "medium",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 245,
-      "question": "Which is a valid use of hooks?",
-      "body": "",
-      "options": [
-        {
-          "key": "A",
-          "text": "`if (condition) { const [state, setState] = useState(0); }`"
-        },
-        {
-          "key": "B",
-          "text": "`const [state, setState] = useState(0);` at the top level of a component"
-        },
-        {
-          "key": "C",
-          "text": "Calling `useState` inside a regular JavaScript function"
-        },
-        {
-          "key": "D",
-          "text": "Calling `useEffect` inside a forEach loop"
-        }
-      ],
-      "answer": "B",
-      "explanation": "The Rules of Hooks mandate that hooks must always be called unconditionally at the very top level of React function components or custom hooks. They must never be called inside conditional statements (`if`), loops (`for`, `forEach`), or nested vanilla JavaScript functions. This rule is essential because React does not rely on variable names to identify hooks; instead, it relies on the fixed call order of hooks across renders to maintain an internal singly-linked list of hook fibers associated with the component.",
-      "topics": [
-        "React",
-        "hooks"
-      ],
-      "difficulty": "easy",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
-    },
-    {
-      "id": 246,
-      "question": "Why use `.map()` with spread instead of mutating the array directly?",
-      "body": "```jsx\nconst [items, setItems] = useState([{ id: 1, done: false }]);\n\nfunction toggle(id) {\n  setItems(items.map(item =>\n    item.id === id ? { ...item, done: !item.done } : item\n  ));\n}\n```",
-      "options": [
-        {
-          "key": "A",
-          "text": "It is faster"
-        },
-        {
-          "key": "B",
-          "text": "React uses Object.is comparison; mutation does not create a new reference, so the update is ignored"
-        },
-        {
-          "key": "C",
-          "text": "JavaScript does not support mutation"
-        },
-        {
-          "key": "D",
-          "text": "It is just a style preference"
-        }
-      ],
-      "answer": "B",
-      "explanation": "React relies on reference equality (`Object.is`) to detect state changes and decide whether to schedule a re-render. If you mutate an existing array in place (e.g., with `array.push()` or `array[0].done = true`) and pass that same array reference to `setItems(array)`, React sees that `newArray === oldArray` and may bail out of the update, resulting in no re-render and stale UI. Using `.map()` along with the spread operator (`{ ...item }`) creates a new array reference and new object references for modified items, reliably triggering React's update lifecycle and preserving time-travel debugging/concurrency.",
-      "topics": [
-        "React",
-        "state"
-      ],
-      "difficulty": "easy",
-      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
     }
   ]
 }

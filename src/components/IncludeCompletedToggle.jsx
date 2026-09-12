@@ -1,15 +1,23 @@
+/**
+ * Whether questions already marked mastered stay in the shuffle.
+ *
+ * A switch rather than a checkbox: it changes what the app does from now
+ * on rather than selecting a value to submit, and it lives in a stats
+ * panel where a boxed checkbox row reads as another statistic.
+ */
 export default function IncludeCompletedToggle({ checked, onChange }) {
   return (
-    <>
-      <label className="output-setting-toggle">
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span className="output-setting-toggle-label">Include mastered questions</span>
-      </label>
-      <p className="output-setting-hint">
-        {checked
-          ? 'Mastered questions stay in the shuffle and keep their badge.'
-          : 'Only questions that are not mastered are shuffled.'}
-      </p>
-    </>
+    <label className="switch-row">
+      <span className="switch-row-label">Include mastered</span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="switch-track" aria-hidden="true">
+        <span className="switch-thumb" />
+      </span>
+    </label>
   );
 }

@@ -76,7 +76,7 @@ export default function ProgressPanel({
           <span className="progress-weak-label">Weak topics</span>
           <ul className="progress-weak-list">
             {weakTopics.slice(0, 3).map((t) => (
-              <li key={t.topic}>
+              <li key={t.topic} style={{ '--weak-pct': `${100 - t.pct}%` }}>
                 <span className="progress-weak-name">{t.topic}</span>
                 <span className="progress-weak-pct">{t.pct}%</span>
               </li>

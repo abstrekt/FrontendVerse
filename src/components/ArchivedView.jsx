@@ -43,26 +43,26 @@ const SECTION_ITEMS = {
 
 export default function ArchivedView({
   archived,
-  interviewPrep,
-  testPrep,
-  questions,
-  learnings,
-  cssLearnings,
-  reactLearnings,
-  reactGuide,
-  advancedReact,
-  hldLearnings,
-  algorithmLearnings,
-  blind75Learnings,
-  codingQuestions,
-  outputQuestions,
+  interviewPrep = [],
+  testPrep = [],
+  questions = [],
+  learnings = [],
+  cssLearnings = [],
+  reactLearnings = [],
+  reactGuide = [],
+  advancedReact = [],
+  hldLearnings = [],
+  algorithmLearnings = [],
+  blind75Learnings = [],
+  codingQuestions = [],
+  outputQuestions = [],
   onUnarchive,
 }) {
   const pools = { interviewPrep, testPrep, questions, learnings, cssLearnings, reactLearnings, reactGuide, advancedReact, hldLearnings, algorithmLearnings, blind75Learnings, codingQuestions, outputQuestions };
   const groups = SECTIONS.map((section) => ({
     section,
     label: SECTION_LABELS[section],
-    items: filterArchived(pools[SECTION_ITEMS[section]], section, archived),
+    items: filterArchived(pools[SECTION_ITEMS[section]] ?? [], section, archived),
   }));
   const total = groups.reduce((sum, g) => sum + g.items.length, 0);
 

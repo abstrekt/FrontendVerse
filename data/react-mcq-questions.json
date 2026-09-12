@@ -1,0 +1,472 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "After clicking the button, what is `count`?",
+      "body": "```jsx\nfunction Counter() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(count + 1);\n    setCount(count + 1);\n    setCount(count + 1);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "`3`"
+        },
+        {
+          "key": "B",
+          "text": "`1`"
+        },
+        {
+          "key": "C",
+          "text": "`0`"
+        },
+        {
+          "key": "D",
+          "text": "`2`"
+        }
+      ],
+      "answer": "B",
+      "explanation": "All three `setCount` calls read the same stale `count` (0) from the closure. Each sets count to `0 + 1 = 1`. React 18 batches them into one re-render with count = 1. Use functional updates `setCount(c => c + 1)` three times to get 3.",
+      "topics": [
+        "React",
+        "hooks",
+        "batching"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 2,
+      "question": "After clicking once (count 0→1), what logs?",
+      "body": "```jsx\nfunction Timer() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    console.log(\"effect\", count);\n    return () => console.log(\"cleanup\", count);\n  }, [count]);\n\n  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "\"effect 1\""
+        },
+        {
+          "key": "B",
+          "text": "\"cleanup 0\", \"effect 1\""
+        },
+        {
+          "key": "C",
+          "text": "\"effect 1\", \"cleanup 0\""
+        },
+        {
+          "key": "D",
+          "text": "\"cleanup 1\", \"effect 1\""
+        }
+      ],
+      "answer": "B",
+      "explanation": "When `count` updates from 0 to 1, React schedules a re-render. Before executing the effect for the new render, React first executes the cleanup function from the previous effect. Because effects and cleanups capture the values from the render in which they were created (via closure), the previous cleanup captures `count = 0`. Once cleanup finishes, the new effect executes with the updated state `count = 1`. Therefore, the output order is `\"cleanup 0\"` followed by `\"effect 1\"`. On final component unmount, the last cleanup will run.",
+      "topics": [
+        "React",
+        "hooks"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 3,
+      "question": "Which does NOT cause a component to re-render?",
+      "body": "",
+      "options": [
+        {
+          "key": "A",
+          "text": "Calling setState with the same value as current state"
+        },
+        {
+          "key": "B",
+          "text": "Parent component re-rendering"
+        },
+        {
+          "key": "C",
+          "text": "Changing a useRef value"
+        },
+        {
+          "key": "D",
+          "text": "Context value changing"
+        }
+      ],
+      "answer": "C",
+      "explanation": "Mutating a `ref.current` property is a plain object mutation that operates outside React's render lifecycle—React has no notification mechanism or listener on ref objects, so changing `ref.current` never schedules a re-render. In contrast:\n- A parent re-rendering always re-renders child components by default (unless wrapped in `React.memo`).\n- A consumed context value update always schedules a re-render for all consumers.\n- While calling `setState` with an identical primitive value can trigger React's `Object.is` bailout, React may still run the component function one additional time before bailing out.",
+      "topics": [
+        "React",
+        "rendering"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 4,
+      "question": "When does `fetchData` run?",
+      "body": "```jsx\nuseEffect(() => {\n  fetchData();\n}, []);\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "After every render"
+        },
+        {
+          "key": "B",
+          "text": "Only on mount"
+        },
+        {
+          "key": "C",
+          "text": "Only on unmount"
+        },
+        {
+          "key": "D",
+          "text": "Never"
+        }
+      ],
+      "answer": "B",
+      "explanation": "An empty dependency array `[]` tells React that the effect function has no dynamic dependencies and should only execute once after the component's initial mount (after the initial DOM paint). It will not re-run on subsequent re-renders because the dependency array never changes. Furthermore, if a cleanup function is returned, React will only run that cleanup once when the component unmounts from the DOM. (Note: in React 18 Strict Mode development, effects run mount -> unmount -> mount once to verify proper cleanup handling).",
+      "topics": [
+        "React",
+        "hooks"
+      ],
+      "difficulty": "easy",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 5,
+      "question": "Does Child re-render when the button is clicked?",
+      "body": "```jsx\nconst Child = React.memo(({ data }) => {\n  console.log(\"Child rendered\");\n  return <div>{data.name}</div>;\n});\n\nfunction Parent() {\n  const [count, setCount] = useState(0);\n  const data = { name: \"Alice\" };\n\n  return (\n    <>\n      <button onClick={() => setCount(c => c + 1)}>Click</button>\n      <Child data={data} />\n    </>\n  );\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "No, data has not changed"
+        },
+        {
+          "key": "B",
+          "text": "Yes, because `data` is a new object reference each render"
+        },
+        {
+          "key": "C",
+          "text": "Only on first click"
+        },
+        {
+          "key": "D",
+          "text": "No, memo prevents all re-renders"
+        }
+      ],
+      "answer": "B",
+      "explanation": "`React.memo` performs a shallow comparison (`Object.is`) of incoming props against previous props to determine if a re-render can be skipped. In this code, the inline object `{ name: \"Alice\" }` is created as a brand new object in memory during every single render of `Parent`. Even though the internal values (`name: \"Alice\"`) are identical, the object reference differs (`newObj !== oldObj`), causing `React.memo`'s shallow comparison to return false and force `Child` to re-render. To prevent this re-render, either move the object outside the component or wrap it in `useMemo`.",
+      "topics": [
+        "React",
+        "performance"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 6,
+      "question": "This input is a:",
+      "body": "```jsx\nfunction Input() {\n  return <input defaultValue=\"hello\" />;\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "Controlled component"
+        },
+        {
+          "key": "B",
+          "text": "Uncontrolled component"
+        },
+        {
+          "key": "C",
+          "text": "Neither"
+        },
+        {
+          "key": "D",
+          "text": "Invalid React code"
+        }
+      ],
+      "answer": "B",
+      "explanation": "An uncontrolled component leaves the input's state in the DOM itself. Supplying `defaultValue` sets the initial value of the HTML `<input>` element on first mount, but subsequent keystrokes update the underlying DOM node without notifying or modifying any React state. React does not control the value over time. In contrast, a controlled component provides a `value` prop bound to React state and an `onChange` handler that updates state on every user keystroke, making React the single source of truth.",
+      "topics": [
+        "React",
+        "forms"
+      ],
+      "difficulty": "easy",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 7,
+      "question": "Error boundaries catch errors in:",
+      "body": "",
+      "options": [
+        {
+          "key": "A",
+          "text": "Event handlers"
+        },
+        {
+          "key": "B",
+          "text": "Async code (setTimeout, promises)"
+        },
+        {
+          "key": "C",
+          "text": "Rendering, lifecycle methods, and constructors of descendant components"
+        },
+        {
+          "key": "D",
+          "text": "All of the above"
+        }
+      ],
+      "answer": "C",
+      "explanation": "React Error Boundaries are class components implementing `static getDerivedStateFromError()` or `componentDidCatch()`. They are designed to catch JavaScript errors exclusively during rendering, in lifecycle methods, and in constructor functions of the component tree below them. They do NOT catch:\n1. Errors inside event handlers (e.g., `onClick`—must use standard `try/catch`).\n2. Asynchronous callbacks (e.g., `setTimeout`, `requestAnimationFrame`, or Promise rejections).\n3. Server-side rendering (SSR) errors.\n4. Errors thrown within the error boundary component itself.",
+      "topics": [
+        "React",
+        "error handling"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 8,
+      "question": "Which statement about this Portal is TRUE?",
+      "body": "```jsx\nfunction Modal({ children }) {\n  return createPortal(\n    <div className=\"modal\">{children}</div>,\n    document.getElementById('modal-root')\n  );\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "Events from Modal do not bubble to parent React components"
+        },
+        {
+          "key": "B",
+          "text": "Modal inherits styles from modal-root"
+        },
+        {
+          "key": "C",
+          "text": "Events bubble through React's component tree, not the DOM tree"
+        },
+        {
+          "key": "D",
+          "text": "Portal children cannot use context from their React parent"
+        }
+      ],
+      "answer": "C",
+      "explanation": "Portals (`ReactDOM.createPortal(child, container)`) allow you to render DOM nodes into a different DOM subtree (such as appending a modal directly to `document.body`), which is ideal for avoiding `overflow: hidden` or `z-index` stacking context issues. Crucially, even though the DOM hierarchy is disconnected, the portal maintains its full position in the React Virtual DOM hierarchy. Consequently, React synthetic events bubble upward according to the React component tree, not the actual DOM tree, and React Context from ancestor components continues to propagate seamlessly.",
+      "topics": [
+        "React",
+        "portals"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 9,
+      "question": "useLayoutEffect vs useEffect — which is correct?",
+      "body": "",
+      "options": [
+        {
+          "key": "A",
+          "text": "useLayoutEffect runs before DOM mutations; useEffect runs after"
+        },
+        {
+          "key": "B",
+          "text": "useLayoutEffect runs synchronously after DOM mutations, before paint; useEffect runs asynchronously after paint"
+        },
+        {
+          "key": "C",
+          "text": "They are identical"
+        },
+        {
+          "key": "D",
+          "text": "useLayoutEffect only works in class components"
+        }
+      ],
+      "answer": "B",
+      "explanation": "`useLayoutEffect` and `useEffect` have different execution phases in React's commit cycle:\n- `useLayoutEffect` runs synchronously immediately after React mutates the DOM, but *before* the browser paints the screen. It blocks browser painting, making it ideal for measuring DOM layout (e.g., node dimensions, scroll offsets) and making synchronous DOM mutations to prevent visual flickering.\n- `useEffect` is deferred and runs asynchronously *after* the browser has already painted the screen, preventing heavy side effects from blocking user interactions and rendering performance.",
+      "topics": [
+        "React",
+        "hooks"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 10,
+      "question": "If only `theme` changes in the context, does `UserName` re-render?",
+      "body": "```jsx\nconst MyContext = createContext({ user: null, theme: 'light' });\n\nfunction UserName() {\n  const { user } = useContext(MyContext);\n  return <span>{user?.name}</span>;\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "No, it only destructures `user`"
+        },
+        {
+          "key": "B",
+          "text": "Yes, ANY context value change re-renders ALL consumers"
+        },
+        {
+          "key": "C",
+          "text": "Only if user is not null"
+        },
+        {
+          "key": "D",
+          "text": "Only in development mode"
+        }
+      ],
+      "answer": "B",
+      "explanation": "In React Context, consumers subscribe to the Provider's `value` prop as a whole. React does not provide built-in granular or selective field-level subscriptions. Whenever the value passed to `Provider` changes by reference (`Object.is(oldVal, newVal) === false`), React marks *every* component calling `useContext` for that context as requiring a re-render, regardless of which properties within the context object that specific component destructures. To avoid unnecessary re-renders, you can split contexts by responsibility, wrap children in `React.memo`, or use third-party state managers like Zustand.",
+      "topics": [
+        "React",
+        "Context",
+        "performance"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 11,
+      "question": "What problem occurs when an item is removed from the beginning of the array?",
+      "body": "```jsx\nfunction List({ items }) {\n  return items.map((item, index) => (\n    <input key={index} defaultValue={item.name} />\n  ));\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "No problem"
+        },
+        {
+          "key": "B",
+          "text": "The last input loses its value"
+        },
+        {
+          "key": "C",
+          "text": "The first input shows the second item's original value"
+        },
+        {
+          "key": "D",
+          "text": "All inputs reset"
+        }
+      ],
+      "answer": "C",
+      "explanation": "When using array indices as keys (`key={index}`), removing the first item (index 0) causes every subsequent item's key to shift down by one. React identifies elements by their key: it sees that key `0` still exists in the list and reuses the existing DOM node for key `0`. Because uncontrolled inputs manage their own internal DOM state (`value`), the reused DOM input retains its existing typed text. The first item visually displays the value belonging to the previous first item, while the last input disappears from the bottom. Always use stable, unique IDs (e.g., `item.id`) as keys.",
+      "topics": [
+        "React",
+        "reconciliation"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 12,
+      "question": "What does `<Loading />` display in this Suspense setup?",
+      "body": "```jsx\nconst LazyComp = React.lazy(() => import('./Heavy'));\n\nfunction App() {\n  return (\n    <Suspense fallback={<Loading />}>\n      <LazyComp />\n    </Suspense>\n  );\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "While the `Heavy` module is being downloaded/loaded"
+        },
+        {
+          "key": "B",
+          "text": "While Heavy is rendering"
+        },
+        {
+          "key": "C",
+          "text": "Only on error"
+        },
+        {
+          "key": "D",
+          "text": "Always"
+        }
+      ],
+      "answer": "A",
+      "explanation": "`React.lazy` takes a dynamic `import()` function (e.g., `() => import(\"./Heavy\")`), which returns a Promise that resolves to an ES module with a default export. While this Promise is pending (i.e. the network request is downloading the JavaScript chunk containing the component), React suspends rendering of the lazy component and displays the nearest `<Suspense fallback={...}>` component (in this case `<Loading />`). Once the bundle chunk is fetched, parsed, and executed, React replaces the fallback with the loaded component.",
+      "topics": [
+        "React",
+        "Suspense",
+        "code splitting"
+      ],
+      "difficulty": "easy",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 13,
+      "question": "What does `startTransition` do?",
+      "body": "```jsx\nconst [isPending, startTransition] = useTransition();\n\nfunction handleSearch(query) {\n  setInputValue(query);\n  startTransition(() => {\n    setSearchResults(filter(query));\n  });\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "Delays the update by a fixed timeout"
+        },
+        {
+          "key": "B",
+          "text": "Marks the update as non-urgent so React can interrupt it to keep UI responsive"
+        },
+        {
+          "key": "C",
+          "text": "Moves the update to a Web Worker"
+        },
+        {
+          "key": "D",
+          "text": "Prevents the update until user stops typing"
+        }
+      ],
+      "answer": "B",
+      "explanation": "React 18's `startTransition` API allows you to differentiate between urgent and non-urgent state updates:\n- Urgent updates represent direct user interactions requiring immediate physical feedback (e.g., typing into an input field, clicking, hovering).\n- Non-urgent or transition updates represent UI transitions (e.g., filtering a large table, searching results, switching tabs).\nWrapping an update in `startTransition` tells React that the update can be interrupted by higher-priority events, preventing sluggish frame drops and keeping the UI responsive during CPU-heavy re-renders.",
+      "topics": [
+        "React",
+        "Concurrent React"
+      ],
+      "difficulty": "medium",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 14,
+      "question": "Which is a valid use of hooks?",
+      "body": "",
+      "options": [
+        {
+          "key": "A",
+          "text": "`if (condition) { const [state, setState] = useState(0); }`"
+        },
+        {
+          "key": "B",
+          "text": "`const [state, setState] = useState(0);` at the top level of a component"
+        },
+        {
+          "key": "C",
+          "text": "Calling `useState` inside a regular JavaScript function"
+        },
+        {
+          "key": "D",
+          "text": "Calling `useEffect` inside a forEach loop"
+        }
+      ],
+      "answer": "B",
+      "explanation": "The Rules of Hooks mandate that hooks must always be called unconditionally at the very top level of React function components or custom hooks. They must never be called inside conditional statements (`if`), loops (`for`, `forEach`), or nested vanilla JavaScript functions. This rule is essential because React does not rely on variable names to identify hooks; instead, it relies on the fixed call order of hooks across renders to maintain an internal singly-linked list of hook fibers associated with the component.",
+      "topics": [
+        "React",
+        "hooks"
+      ],
+      "difficulty": "easy",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    },
+    {
+      "id": 15,
+      "question": "Why use `.map()` with spread instead of mutating the array directly?",
+      "body": "```jsx\nconst [items, setItems] = useState([{ id: 1, done: false }]);\n\nfunction toggle(id) {\n  setItems(items.map(item =>\n    item.id === id ? { ...item, done: !item.done } : item\n  ));\n}\n```",
+      "options": [
+        {
+          "key": "A",
+          "text": "It is faster"
+        },
+        {
+          "key": "B",
+          "text": "React uses Object.is comparison; mutation does not create a new reference, so the update is ignored"
+        },
+        {
+          "key": "C",
+          "text": "JavaScript does not support mutation"
+        },
+        {
+          "key": "D",
+          "text": "It is just a style preference"
+        }
+      ],
+      "answer": "B",
+      "explanation": "React relies on reference equality (`Object.is`) to detect state changes and decide whether to schedule a re-render. If you mutate an existing array in place (e.g., with `array.push()` or `array[0].done = true`) and pass that same array reference to `setItems(array)`, React sees that `newArray === oldArray` and may bail out of the update, resulting in no re-render and stale UI. Using `.map()` along with the spread operator (`{ ...item }`) creates a new array reference and new object references for modified items, reliably triggering React's update lifecycle and preserving time-travel debugging/concurrency.",
+      "topics": [
+        "React",
+        "state"
+      ],
+      "difficulty": "easy",
+      "source": "certa-assessment-prep/03-react/practice-mcqs.md"
+    }
+  ]
+}

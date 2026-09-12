@@ -7,6 +7,7 @@ import {
   tokenizeQuery,
 } from '../utils/searchIndex';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import Icon from './Icon';
 
 const LISTBOX_ID = 'command-palette-results';
 const optionId = (index) => `command-palette-option-${index}`;
@@ -44,10 +45,12 @@ function HighlightedText({ text, ranges, className }) {
 }
 
 function SearchResultCard({ result, id, isActive, onSelect, onHover }) {
-  const matchedTagSet = useMemo(
-    () => new Set(result.matchedTags.map((tag) => tag.toLowerCase())),
-    [result.matchedTags]
-  );
+  // The tags the query actually hit, in the order they appear on the item
+  // so the row reads the same way twice running.
+  const matchedTags = useMemo(() => {
+    const matched = new Set(result.matchedTags.map((tag) => tag.toLowerCase()));
+    return result.tags.filter((tag) => matched.has(tag.toLowerCase()));
+  }, [result.matchedTags, result.tags]);
 
   return (
     // A listbox option must not be independently focusable — focus stays in the
@@ -61,23 +64,22 @@ function SearchResultCard({ result, id, isActive, onSelect, onHover }) {
       onClick={() => onSelect(result)}
       onMouseEnter={onHover}
     >
-      <div className="search-result-header">
-        <span className={`search-section-badge section-${result.section}`}>
-          {result.sectionLabel}
-        </span>
-        <span className="search-result-id">#{result.id}</span>
-        <span className="search-result-header-meta">
-          {result.difficulty ? (
-            <span className="search-meta-pill search-difficulty-pill">{result.difficulty}</span>
-          ) : null}
-          {result.company ? (
-            <span className="search-meta-pill search-company-pill">{result.company}</span>
-          ) : null}
-        </span>
-      </div>
+      <span className={`search-section-badge section-${result.section}`}>
+        {result.sectionLabel}
+      </span>
 
       <div className="search-result-title">
         <HighlightedText text={result.title} ranges={result.titleHighlights} />
+      </div>
+
+      <div className="search-result-header-meta">
+        {result.difficulty ? (
+          <span className="search-meta-pill search-difficulty-pill">{result.difficulty}</span>
+        ) : null}
+        {result.company ? (
+          <span className="search-meta-pill search-company-pill">{result.company}</span>
+        ) : null}
+        <span className="search-result-id">#{result.id}</span>
       </div>
 
       {result.snippet ? (
@@ -89,19 +91,16 @@ function SearchResultCard({ result, id, isActive, onSelect, onHover }) {
         </div>
       ) : null}
 
-      {result.tags.length > 0 ? (
+      {/* Only the tags that caused the hit. Showing all four on every
+          row turned each result into a three-line card, and an unmatched
+          tag explains nothing about why the row is in the list. */}
+      {matchedTags.length > 0 ? (
         <div className="search-result-tags">
-          {result.tags.slice(0, 4).map((tag) => (
-            <span
-              key={tag}
-              className={`search-tag-chip${matchedTagSet.has(tag.toLowerCase()) ? ' matched' : ''}`}
-            >
+          {matchedTags.slice(0, 3).map((tag) => (
+            <span key={tag} className="search-tag-chip matched">
               {tag}
             </span>
           ))}
-          {result.tags.length > 4 ? (
-            <span className="search-tag-more">+{result.tags.length - 4}</span>
-          ) : null}
         </div>
       ) : null}
     </div>
@@ -218,7 +217,7 @@ export default function CommandPalette({ open, docs, onClose, onSelect }) {
       >
         <div className="command-palette-input-row">
           <span className="command-palette-search-icon" aria-hidden="true">
-            ⌕
+            <Icon name="search" size={16} />
           </span>
           <input
             ref={inputRef}

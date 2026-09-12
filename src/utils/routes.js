@@ -31,8 +31,15 @@ function emptyRoute(section, overrides = {}) {
 export function parseRoute(pathname) {
   const parts = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
 
+  // "/" is the overview, not a redirect into the MCQ shuffle. Opening
+  // straight into one random question answered "what next?" with a
+  // single option and no way to see the rest.
   if (parts.length === 0) {
-    return emptyRoute('mcq');
+    return emptyRoute('overview');
+  }
+
+  if (parts[0] === 'overview') {
+    return emptyRoute('overview');
   }
 
   if (LEARNING_SECTIONS.includes(parts[0])) {
@@ -70,6 +77,10 @@ export function buildRoute({
 
   if (section === 'archived') {
     return '/archived';
+  }
+
+  if (section === 'overview') {
+    return '/';
   }
 
   if (viewMode === 'list') {

@@ -8,12 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite",
+    "build:diagrams": "node scripts/generate-blind75-diagrams.mjs",
+    "build:traces": "node scripts/apply-blind75-traces.mjs",
     "build:output-questions": "node scripts/build-output-questions.mjs",
     "format:snippets": "node scripts/format-code-snippets.mjs",
     "scan:mcq-duplicates": "node scripts/scan-mcq-duplicates.mjs",
     "validate:learning-ids": "node scripts/validate-learning-ids.mjs",
     "audit:mcq-explanations": "node scripts/audit-mcq-explanations.mjs",
-    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs",
+    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs && node scripts/apply-blind75-traces.mjs --check",
     "build:data-manifest": "node scripts/build-data-manifest.mjs"
   },
   "dependencies": {
@@ -24,7 +26,8 @@
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.4.1",

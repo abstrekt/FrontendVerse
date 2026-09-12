@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import MobileProgressBar from './MobileProgressBar';
 import MobileDrawer from './MobileDrawer';
 import Icon from './Icon';
 import { useMediaQuery } from '../hooks/useMediaQuery';
@@ -8,11 +7,22 @@ const MOBILE_QUERY = '(max-width: 860px)';
 
 const DRAWERS = {
   panel: { id: 'mobile-drawer-panel', side: 'left', title: 'Filters and options' },
-  nav: { id: 'mobile-drawer-nav', side: 'right', title: 'Sections and progress' },
+  nav: { id: 'mobile-drawer-nav', side: 'left', title: 'Sections and progress' },
 };
 
+/**
+ * The app shell.
+ *
+ * Desktop is a grid: a full-height nav rail, then a body split into the
+ * top bar and a two-column row (contextual panel + content). Below the
+ * mobile breakpoint both side columns become drawers — rendered *or*
+ * drawered, never both, because the panel components own local state
+ * (search text, status filter, expanded sections) and two mounted
+ * copies would drift apart.
+ */
 export default function Layout({
   sidebar,
+  topbar,
   center,
   panel,
   mobileProgress,
@@ -33,33 +43,14 @@ export default function Layout({
   const drawer = openDrawer ? DRAWERS[openDrawer] : null;
 
   return (
-    <div className={`layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}${panelCollapsed ? ' panel-collapsed' : ''}`}>
-      <a className="skip-link" href="#main-content">Skip to content</a>
-
-      {/* The side columns are rendered *or* drawered, never both: the panel
-          components own local state (search text, status filter, expanded
-          sections) and two mounted copies would drift apart. */}
-      {!isMobile && (
-        <aside className="layout-panel" aria-label="Filters and options">
-          <button
-            type="button"
-            className="layout-collapse-btn panel-collapse-btn"
-            onClick={onTogglePanel}
-            title={panelCollapsed ? 'Expand panel' : 'Collapse panel'}
-            aria-label={panelCollapsed ? 'Expand panel' : 'Collapse panel'}
-            aria-expanded={!panelCollapsed}
-          >
-            <span className="chevron">
-              <Icon name={panelCollapsed ? 'chevron-right' : 'chevron-left'} size={14} />
-            </span>
-          </button>
-          <div className="panel-card">{panel}</div>
-        </aside>
-      )}
-
-      <main className="layout-center" id="main-content" tabIndex={-1}>
-        <div className="center-card">{center}</div>
-      </main>
+    <div
+      className={`layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}${
+        panelCollapsed ? ' panel-collapsed' : ''
+      }${isMobile ? ' is-mobile' : ''}${panel ? '' : ' no-panel'}`}
+    >
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
 
       {!isMobile && (
         <aside className="layout-sidebar" aria-label="Sections and progress">
@@ -72,46 +63,72 @@ export default function Layout({
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-expanded={!sidebarCollapsed}
           >
-            <span className="chevron">
-              <Icon name={sidebarCollapsed ? 'chevron-left' : 'chevron-right'} size={14} />
-            </span>
+            <Icon name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'} size={13} />
           </button>
         </aside>
       )}
 
-      {isMobile && mobileProgress && (
-        <div className="layout-mobile-progress">
-          <div className="mobile-drawer-triggers">
+      <div className="layout-body">
+        {isMobile ? (
+          <div className="mobile-topbar">
             <button
               type="button"
-              className="mobile-drawer-trigger"
+              className="icon-btn"
               onClick={() => setOpenDrawer('nav')}
               aria-haspopup="dialog"
               aria-expanded={openDrawer === 'nav'}
               aria-controls={DRAWERS.nav.id}
             >
-              <Icon name="menu" size={17} />
+              <Icon name="menu" size={18} />
               <span className="sr-only">Sections and progress</span>
             </button>
-          </div>
 
-          {mobileProgress}
+            <div className="mobile-topbar-slot">{topbar}</div>
 
-          <div className="mobile-drawer-triggers">
-            <button
-              type="button"
-              className="mobile-drawer-trigger"
-              onClick={() => setOpenDrawer('panel')}
-              aria-haspopup="dialog"
-              aria-expanded={openDrawer === 'panel'}
-              aria-controls={DRAWERS.panel.id}
-            >
-              <Icon name="sliders" size={17} />
-              <span className="sr-only">Filters and options</span>
-            </button>
+            {panel && (
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setOpenDrawer('panel')}
+                aria-haspopup="dialog"
+                aria-expanded={openDrawer === 'panel'}
+                aria-controls={DRAWERS.panel.id}
+              >
+                <Icon name="sliders" size={18} />
+                <span className="sr-only">Filters and options</span>
+              </button>
+            )}
           </div>
+        ) : (
+          topbar
+        )}
+
+        <div className="layout-columns">
+          {!isMobile && panel && (
+            <aside className="layout-panel" aria-label="Filters and options">
+              <div className="panel-card">{panel}</div>
+              <button
+                type="button"
+                className="layout-collapse-btn panel-collapse-btn"
+                onClick={onTogglePanel}
+                title={panelCollapsed ? 'Expand panel' : 'Collapse panel'}
+                aria-label={panelCollapsed ? 'Expand panel' : 'Collapse panel'}
+                aria-expanded={!panelCollapsed}
+              >
+                <Icon name={panelCollapsed ? 'chevron-right' : 'chevron-left'} size={13} />
+              </button>
+            </aside>
+          )}
+
+          <main className="layout-center" id="main-content" tabIndex={-1}>
+            <div className="center-card">{center}</div>
+          </main>
         </div>
-      )}
+
+        {isMobile && mobileProgress && (
+          <div className="layout-mobile-progress">{mobileProgress}</div>
+        )}
+      </div>
 
       {isMobile && drawer && (
         <MobileDrawer

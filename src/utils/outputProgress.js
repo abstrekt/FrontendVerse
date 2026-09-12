@@ -82,9 +82,12 @@ export function recordOutputSession(progress, sessionMeta) {
   return { ...progress, sessions };
 }
 
+// Sessions stored before `pct` existed would otherwise make Math.max
+// return NaN, which reached the sidebar as the string "NaN%".
 export function getOutputBestPct(sessions) {
-  if (!sessions.length) return null;
-  return Math.max(...sessions.map((s) => s.pct));
+  const pcts = sessions.map((s) => s.pct).filter((pct) => Number.isFinite(pct));
+  if (!pcts.length) return null;
+  return Math.max(...pcts);
 }
 
 export function getOutputLifetimeAccuracy(stats) {

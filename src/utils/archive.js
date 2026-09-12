@@ -37,14 +37,14 @@ export function getArchivedSet(archived, section) {
   return new Set(ids);
 }
 
-export function filterActive(items, section, archived) {
+export function filterActive(items = [], section, archived) {
   const archivedSet = getArchivedSet(archived, section);
-  return items.filter((item) => !archivedSet.has(item.id));
+  return (items ?? []).filter((item) => !archivedSet.has(item.id));
 }
 
-export function filterArchived(items, section, archived) {
+export function filterArchived(items = [], section, archived) {
   const archivedSet = getArchivedSet(archived, section);
-  return items.filter((item) => archivedSet.has(item.id));
+  return (items ?? []).filter((item) => archivedSet.has(item.id));
 }
 
 export function isArchived(id, section, archived) {
