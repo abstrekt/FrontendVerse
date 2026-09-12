@@ -85,9 +85,9 @@ export default function Sidebar({
     <div className="sidebar-inner">
       <button type="button" className="brand" onClick={onHome} title="Overview">
         <span className="brand-mark" aria-hidden="true">
-          JS
+          IK
         </span>
-        <span className="brand-text">Study</span>
+        <span className="brand-text">Interview Kit</span>
       </button>
 
       <div className="sidebar-content">

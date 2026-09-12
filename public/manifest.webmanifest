@@ -1,7 +1,7 @@
 {
-  "name": "JavaScript MCQ Quiz",
-  "short_name": "JS Quiz",
-  "description": "Practise JavaScript with multiple-choice questions, output prediction, coding challenges and written learnings.",
+  "name": "Interview Kit",
+  "short_name": "Interview Kit",
+  "description": "Interview prep in one place: MCQs, output prediction, coding challenges, Blind 75 patterns and written learnings.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

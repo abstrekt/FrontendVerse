@@ -127,7 +127,9 @@ function getPreferredTheme() {
 // tags in index.html only respond to the OS setting, so without this the
 // address bar stays light while the app is dark.
 function syncThemeColorMeta(theme) {
-  const color = theme === 'dark' ? '#0f1117' : '#f0f2f7';
+  // Mirrors --surface-app. Kept in step by hand because the meta tag is read
+  // by the browser chrome before any stylesheet is applied.
+  const color = theme === 'dark' ? '#0a0a0b' : '#f7f7f8';
   document
     .querySelectorAll('meta[name="theme-color"]')
     .forEach((tag) => tag.setAttribute('content', color));
