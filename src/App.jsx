@@ -111,17 +111,12 @@ import { loadLearningSection, LEARNING_LOADERS } from './data/datasets';
 import datasetCounts from '../data/counts.json';
 import { getPassScopeQuestions } from './utils/questionState';
 import { hasRunMigration, markMigrationRun } from './utils/migrations';
-import { useSystemTheme, getSystemTheme } from './hooks/useSystemTheme';
 import { useAnnounce } from './hooks/useAnnouncer';
 import { sectionLabel, SECTIONS } from './sections/registry';
 import { combinedStreak } from './utils/streak';
 import { outputQuestionLabel } from './utils/outputLabel';
 
 const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
-
-function getPreferredTheme() {
-  return getSystemTheme();
-}
 
 // Keeps the browser chrome in step with an explicit theme choice. The static
 // tags in index.html only respond to the OS setting, so without this the
@@ -208,13 +203,8 @@ export default function App() {
   const activeSection = route.section;
   const viewMode = route.viewMode;
 
-  // Default to the OS preference instead of always light, so a dark-mode user
-  // does not get a white flash and a manual toggle on every new device.
-  const [theme, setTheme] = useLocalStorage('quiz-theme', getPreferredTheme());
-  // Absent for anyone who used the app before the tri-state control existed.
-  // Defaulting them to 'system' is the intended behaviour, and it leaves the
-  // existing 'quiz-theme' value untouched.
-  const [themeSource, setThemeSource] = useLocalStorage('quiz-theme-source', 'system');
+  const [theme, setTheme] = useLocalStorage('quiz-theme', 'light');
+  const [editorTheme, setEditorTheme] = useLocalStorage('quiz-editor-theme', 'dark');
   const [syntaxHighlight, setSyntaxHighlight] = useLocalStorage('quiz-syntax', true);
   const [progress, setProgress] = useLocalStorage('quiz-progress', EMPTY_PROGRESS);
   const [mcqQueue, setMcqQueue] = usePracticeQueueStorage('mcq-queue', 'quiz-session');
@@ -683,29 +673,22 @@ export default function App() {
     [setSection, announce],
   );
 
-  useSystemTheme(themeSource, setTheme);
-
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     syncThemeColorMeta(theme);
   }, [theme]);
 
-  // System -> Light -> Dark -> System. Pinning light has to be reachable even
-  // when the OS is already light: otherwise a user who wants light gets
-  // switched to dark the moment the OS does.
-  const cycleTheme = useCallback(() => {
-    if (themeSource === 'system') {
-      setThemeSource('user');
-      setTheme('light');
-      return;
-    }
-    if (theme === 'light') {
-      setTheme('dark');
-      return;
-    }
-    setThemeSource('system');
-    setTheme(getSystemTheme());
-  }, [themeSource, theme, setTheme, setThemeSource]);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-editor-theme', editorTheme);
+  }, [editorTheme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, [setTheme]);
+
+  const toggleEditorTheme = useCallback(() => {
+    setEditorTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, [setEditorTheme]);
 
   useEffect(() => {
     if (activeSection !== 'learnings' || !orderedStarredActiveLearnings.length) return;
@@ -1969,7 +1952,7 @@ export default function App() {
           answered={outputAnswered}
           isCompleted={isCompleted(currentOutputQuestion.id, 'output', completed)}
           highlight={syntaxHighlight}
-          theme={theme}
+          theme={editorTheme}
           sourceUrl={outputSourceUrl}
           onCheck={handleOutputCheck}
           onNext={handleOutputNext}
@@ -2055,7 +2038,7 @@ export default function App() {
           score={codingScore}
           answered={codingAnswered}
           highlight={syntaxHighlight}
-          theme={theme}
+          theme={editorTheme}
           onCheck={handleCodingCheck}
           onNext={handleCodingNext}
           onArchive={handleArchiveCoding}
@@ -2143,10 +2126,8 @@ export default function App() {
             totalQuestions={passTotal}
             sessionCount={progress.sessions.length}
             bestPct={bestPct}
-            weakTopics={weakTopics}
             missedCount={missedCount}
             onRestart={handleRestart}
-            onPracticeWeak={handleStartWeak}
             onReviewMistakes={handleStartReview}
           />
         </div>
@@ -2163,7 +2144,7 @@ export default function App() {
           score={score}
           answered={answered}
           highlight={syntaxHighlight}
-          theme={theme}
+          theme={editorTheme}
           onPick={handlePick}
           onNext={handleNext}
           onSkip={handleSkip}
@@ -2276,15 +2257,14 @@ export default function App() {
           lifetimeAccuracy={lifetimeAccuracy}
           sessionCount={progress.sessions.length}
           bestPct={bestPct}
-          weakTopics={weakTopics}
           missedCount={missedCount}
           mode={mode}
-          onPracticeWeak={handleStartWeak}
           onReviewMistakes={handleStartReview}
           onBackToAll={handleBackToAll}
           theme={theme}
-          onToggleTheme={cycleTheme}
-          themeSource={themeSource}
+          onToggleTheme={toggleTheme}
+          editorTheme={editorTheme}
+          onToggleEditorTheme={toggleEditorTheme}
         />
       }
       topbar={
@@ -2330,10 +2310,8 @@ export default function App() {
             lifetimeAccuracy={lifetimeAccuracy}
             sessionCount={progress.sessions.length}
             bestPct={bestPct}
-            weakTopics={weakTopics}
             missedCount={missedCount}
             mode={mode}
-            onPracticeWeak={handleStartWeak}
             onReviewMistakes={handleStartReview}
             onBackToAll={handleBackToAll}
             onClearProgress={handleClearProgress}
@@ -2353,8 +2331,9 @@ export default function App() {
             onOutputRestart={handleOutputRestart}
             onOutputClearProgress={handleOutputClearProgress}
             theme={theme}
-            onToggleTheme={cycleTheme}
-            themeSource={themeSource}
+            onToggleTheme={toggleTheme}
+            editorTheme={editorTheme}
+            onToggleEditorTheme={toggleEditorTheme}
             syntaxHighlight={syntaxHighlight}
             onToggleHighlight={() => setSyntaxHighlight((v) => !v)}
           />
@@ -2371,10 +2350,8 @@ export default function App() {
                 mcqAccuracy={lifetimeAccuracy}
                 mcqAnswered={progress.stats.totalAnswered}
                 outputAccuracy={outputLifetimeAccuracy}
-                weakTopics={weakTopics}
                 missedCount={missedCount}
                 onOpenSection={handleSectionChange}
-                onPracticeWeak={handleStartWeak}
                 onReviewMistakes={handleStartReview}
               />
             ) : LEARNING_LOADERS[activeSection] && !loadedSections[activeSection] ? (
@@ -2388,7 +2365,7 @@ export default function App() {
                 isCompleted={selectedLearning ? isCompleted(selectedLearning.id, 'learnings', completed) : false}
                 onToggleCompleted={() => selectedLearning && handleToggleLearningCompleted(selectedLearning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'react-learnings' ? (
               <LearningsView
@@ -2399,7 +2376,7 @@ export default function App() {
                 isCompleted={selectedReactLearning ? isCompleted(selectedReactLearning.id, 'react-learnings', completed) : false}
                 onToggleCompleted={() => selectedReactLearning && handleToggleReactLearningCompleted(selectedReactLearning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'interview-prep' ? (
               <LearningsView
@@ -2410,7 +2387,7 @@ export default function App() {
                 isCompleted={selectedInterviewPrepEntry ? isCompleted(selectedInterviewPrepEntry.id, 'interview-prep', completed) : false}
                 onToggleCompleted={() => selectedInterviewPrepEntry && handleToggleInterviewPrepCompleted(selectedInterviewPrepEntry.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
             ) : activeSection === 'test-prep' ? (
@@ -2422,7 +2399,7 @@ export default function App() {
                 isCompleted={selectedTestPrepEntry ? isCompleted(selectedTestPrepEntry.id, 'test-prep', completed) : false}
                 onToggleCompleted={() => selectedTestPrepEntry && handleToggleTestPrepCompleted(selectedTestPrepEntry.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
             ) : activeSection === 'css' ? (
@@ -2434,7 +2411,7 @@ export default function App() {
                 isCompleted={selectedCssLearning ? isCompleted(selectedCssLearning.id, 'css', completed) : false}
                 onToggleCompleted={() => selectedCssLearning && handleToggleCssLearningCompleted(selectedCssLearning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
             ) : activeSection === 'advanced-react' ? (
@@ -2446,7 +2423,7 @@ export default function App() {
                 isCompleted={selectedAdvancedReactEntry ? isCompleted(selectedAdvancedReactEntry.id, 'advanced-react', completed) : false}
                 onToggleCompleted={() => selectedAdvancedReactEntry && handleToggleAdvancedReactCompleted(selectedAdvancedReactEntry.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
             ) : activeSection === 'react-guide' ? (
@@ -2458,7 +2435,7 @@ export default function App() {
                 isCompleted={selectedReactGuideEntry ? isCompleted(selectedReactGuideEntry.id, 'react-guide', completed) : false}
                 onToggleCompleted={() => selectedReactGuideEntry && handleToggleReactGuideCompleted(selectedReactGuideEntry.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'hld' ? (
               <LearningsView
@@ -2469,7 +2446,7 @@ export default function App() {
                 isCompleted={selectedHldLearning ? isCompleted(selectedHldLearning.id, 'hld', completed) : false}
                 onToggleCompleted={() => selectedHldLearning && handleToggleHldLearningCompleted(selectedHldLearning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'algorithm' ? (
               <LearningsView
@@ -2480,7 +2457,7 @@ export default function App() {
                 isCompleted={selectedAlgorithmLearning ? isCompleted(selectedAlgorithmLearning.id, 'algorithm', completed) : false}
                 onToggleCompleted={() => selectedAlgorithmLearning && handleToggleAlgorithmLearningCompleted(selectedAlgorithmLearning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'blind75' ? (
               <LearningsView
@@ -2491,7 +2468,7 @@ export default function App() {
                 isCompleted={selectedBlind75Learning ? isCompleted(selectedBlind75Learning.id, 'blind75', completed) : false}
                 onToggleCompleted={() => selectedBlind75Learning && handleToggleBlind75LearningCompleted(selectedBlind75Learning.id)}
                 highlight={syntaxHighlight}
-                theme={theme}
+                theme={editorTheme}
               />
             ) : activeSection === 'archived' ? (
               <ArchivedView

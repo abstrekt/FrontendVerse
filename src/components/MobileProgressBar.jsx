@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from './Icon';
-import { themeButtonState } from '../utils/themeButton';
+import { themeButtonState, editorThemeButtonState } from '../utils/themeButton';
 
 const MODE_LABELS = {
   weak: 'Weak topics',
@@ -11,19 +11,18 @@ export default function MobileProgressBar({
   lifetimeAccuracy,
   sessionCount,
   bestPct,
-  weakTopics,
   missedCount,
   mode = 'all',
-  onPracticeWeak,
   onReviewMistakes,
   onBackToAll,
   theme,
-  themeSource,
   onToggleTheme,
+  editorTheme = 'dark',
+  onToggleEditorTheme,
 }) {
   const [expanded, setExpanded] = useState(false);
-  const themeBtn = themeButtonState(theme, themeSource);
-  const hasWeakTopics = weakTopics.length > 0;
+  const themeBtn = themeButtonState(theme);
+  const editorThemeBtn = editorThemeButtonState(editorTheme);
   const hasData = sessionCount > 0 || lifetimeAccuracy !== null;
   const inSpecialMode = mode !== 'all';
 
@@ -39,6 +38,18 @@ export default function MobileProgressBar({
         >
           <Icon name={themeBtn.icon} size={17} />
         </button>
+
+        {onToggleEditorTheme && (
+          <button
+            type="button"
+            className="mobile-theme-btn"
+            onClick={onToggleEditorTheme}
+            title={editorThemeBtn.label}
+            aria-label={editorThemeBtn.label}
+          >
+            <Icon name={editorThemeBtn.icon} size={17} />
+          </button>
+        )}
 
         {hasData || missedCount > 0 || inSpecialMode ? (
           <button
@@ -92,17 +103,6 @@ export default function MobileProgressBar({
             )}
           </div>
 
-          {hasWeakTopics && (
-            <ul className="mobile-weak-list">
-              {weakTopics.slice(0, 3).map((t) => (
-                <li key={t.topic}>
-                  <span>{t.topic}</span>
-                  <span className="mobile-weak-pct">{t.pct}%</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
           <div className="mobile-progress-actions">
             {inSpecialMode ? (
               <button
@@ -113,24 +113,14 @@ export default function MobileProgressBar({
                 Back to all questions
               </button>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="mobile-progress-btn"
-                  onClick={onPracticeWeak}
-                  disabled={!hasWeakTopics}
-                >
-                  Practice weak topics
-                </button>
-                <button
-                  type="button"
-                  className="mobile-progress-btn secondary"
-                  onClick={onReviewMistakes}
-                  disabled={missedCount === 0}
-                >
-                  Review mistakes ({missedCount})
-                </button>
-              </>
+              <button
+                type="button"
+                className="mobile-progress-btn"
+                onClick={onReviewMistakes}
+                disabled={missedCount === 0}
+              >
+                Review mistakes ({missedCount})
+              </button>
             )}
           </div>
         </div>

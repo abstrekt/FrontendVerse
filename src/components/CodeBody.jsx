@@ -27,8 +27,9 @@ export function headingToSlug(text) {
     .replace(/(^-|-$)/g, '');
 }
 
-export default function CodeBody({ content, highlight, theme = 'light', onNavigate }) {
+export default function CodeBody({ content, highlight, theme = 'dark', onNavigate }) {
   const syntaxStyle = getSyntaxStyle(theme);
+  const isDark = theme === 'dark';
 
   return (
     <div className="code-body">
@@ -149,8 +150,9 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
                   language={language}
                   PreTag="pre"
                   customStyle={{
-                    background: 'var(--code-bg)',
-                    border: '1px solid var(--border)',
+                    background: isDark ? '#22232a' : '#f7f7f8',
+                    color: isDark ? '#f7f7f8' : '#0b0b0f',
+                    border: isDark ? '1px solid #2e303a' : '1px solid #e5e5eb',
                     borderRadius: 'var(--radius)',
                     padding: '16px',
                     margin: 0,
@@ -161,7 +163,14 @@ export default function CodeBody({ content, highlight, theme = 'light', onNaviga
                   {codeStr}
                 </SyntaxHighlighter>
               ) : (
-                <pre className="code-plain">
+                <pre
+                  className={`code-plain ${isDark ? 'code-plain-dark' : 'code-plain-light'}`}
+                  style={{
+                    background: isDark ? '#22232a' : '#f7f7f8',
+                    color: isDark ? '#f7f7f8' : '#0b0b0f',
+                    borderColor: isDark ? '#2e303a' : '#e5e5eb',
+                  }}
+                >
                   <code className={className}>{children}</code>
                 </pre>
               );

@@ -9,10 +9,8 @@ export default function ProgressPanel({
   lifetimeAccuracy,
   sessionCount,
   bestPct,
-  weakTopics,
   missedCount,
   mode = 'all',
-  onPracticeWeak,
   onReviewMistakes,
   onBackToAll,
   onClearProgress,
@@ -20,7 +18,6 @@ export default function ProgressPanel({
   includeCompleted = true,
   onIncludeCompletedChange,
 }) {
-  const hasWeakTopics = weakTopics.length > 0;
   const hasData = sessionCount > 0 || lifetimeAccuracy !== null || completedCount > 0;
   const inSpecialMode = mode !== 'all';
 
@@ -71,42 +68,19 @@ export default function ProgressPanel({
         />
       )}
 
-      {hasWeakTopics && (
-        <div className="progress-weak">
-          <span className="progress-weak-label">Weak topics</span>
-          <ul className="progress-weak-list">
-            {weakTopics.slice(0, 3).map((t) => (
-              <li key={t.topic} style={{ '--weak-pct': `${100 - t.pct}%` }}>
-                <span className="progress-weak-name">{t.topic}</span>
-                <span className="progress-weak-pct">{t.pct}%</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <div className="progress-actions">
         {inSpecialMode ? (
           <button className="progress-btn" onClick={onBackToAll}>
             Back to all questions
           </button>
         ) : (
-          <>
-            <button
-              className="progress-btn"
-              onClick={onPracticeWeak}
-              disabled={!hasWeakTopics}
-            >
-              Practice weak topics
-            </button>
-            <button
-              className="progress-btn secondary"
-              onClick={onReviewMistakes}
-              disabled={missedCount === 0}
-            >
-              Review mistakes ({missedCount})
-            </button>
-          </>
+          <button
+            className="progress-btn"
+            onClick={onReviewMistakes}
+            disabled={missedCount === 0}
+          >
+            Review mistakes ({missedCount})
+          </button>
         )}
         {hasData && (
           <button className="progress-clear" onClick={onClearProgress}>

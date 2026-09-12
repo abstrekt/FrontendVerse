@@ -3,15 +3,12 @@ export default function Results({
   totalQuestions,
   sessionCount,
   bestPct,
-  weakTopics,
   missedCount,
   onRestart,
-  onPracticeWeak,
   onReviewMistakes,
 }) {
   const missed = totalQuestions - score;
   const pct = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
-  const hasWeakTopics = weakTopics.length > 0;
 
   return (
     <div className="quiz-container results">
@@ -39,34 +36,12 @@ export default function Results({
                 <span className="insight-value">{bestPct}%</span>
               </div>
             )}
-            <div className="insight-section">
-              <span className="insight-label">Weak topics</span>
-              {hasWeakTopics ? (
-                <ul className="weak-topic-list">
-                  {weakTopics.map((t) => (
-                    <li key={t.topic}>
-                      <span>{t.topic}</span>
-                      <span className="weak-pct">{t.pct}%</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="insight-empty">Not enough data yet — keep practicing!</p>
-              )}
-            </div>
           </div>
 
           <div className="results-actions">
             <button className="restart-btn" onClick={onRestart}>Restart (reshuffle)</button>
             <button
               className="mode-btn"
-              onClick={onPracticeWeak}
-              disabled={!hasWeakTopics}
-            >
-              Practice weak topics
-            </button>
-            <button
-              className="mode-btn secondary"
               onClick={onReviewMistakes}
               disabled={missedCount === 0}
             >

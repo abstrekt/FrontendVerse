@@ -2,7 +2,7 @@ import ProgressPanel from './ProgressPanel';
 import OutputSidebarStats from './OutputSidebarStats';
 import CodingSidebarStats from './CodingSidebarStats';
 import Icon from './Icon';
-import { themeButtonState } from '../utils/themeButton';
+import { themeButtonState, editorThemeButtonState } from '../utils/themeButton';
 import { SECTIONS, NAV_SECTIONS } from '../sections/registry';
 
 const CATEGORY_FILTERS = [
@@ -37,10 +37,8 @@ export default function Sidebar({
   lifetimeAccuracy,
   sessionCount,
   bestPct,
-  weakTopics,
   missedCount,
   mode,
-  onPracticeWeak,
   onReviewMistakes,
   onBackToAll,
   onClearProgress,
@@ -65,12 +63,14 @@ export default function Sidebar({
   onOutputClearProgress,
 
   theme,
-  themeSource,
   onToggleTheme,
+  editorTheme = 'dark',
+  onToggleEditorTheme,
   syntaxHighlight,
   onToggleHighlight,
 }) {
-  const themeBtn = themeButtonState(theme, themeSource);
+  const themeBtn = themeButtonState(theme);
+  const editorThemeBtn = editorThemeButtonState(editorTheme);
 
   const countFor = (id) => counts[id] ?? EMPTY_COUNT;
 
@@ -155,10 +155,8 @@ export default function Sidebar({
               lifetimeAccuracy={lifetimeAccuracy}
               sessionCount={sessionCount}
               bestPct={bestPct}
-              weakTopics={weakTopics}
               missedCount={missedCount}
               mode={mode}
-              onPracticeWeak={onPracticeWeak}
               onReviewMistakes={onReviewMistakes}
               onBackToAll={onBackToAll}
               onClearProgress={onClearProgress}
@@ -213,6 +211,18 @@ export default function Sidebar({
           <Icon name="braces" size={15} />
           <span className="rail-footer-label">Syntax colour</span>
         </button>
+        {onToggleEditorTheme && (
+          <button
+            type="button"
+            className="rail-footer-btn"
+            onClick={onToggleEditorTheme}
+            title={editorThemeBtn.label}
+            aria-label={editorThemeBtn.label}
+          >
+            <Icon name={editorThemeBtn.icon} size={15} />
+            <span className="rail-footer-label">{editorThemeBtn.short}</span>
+          </button>
+        )}
         <button
           type="button"
           className="rail-footer-btn"

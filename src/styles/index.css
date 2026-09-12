@@ -76,16 +76,16 @@
   --brand-fg: #ffffff;
 
   /* Semantic */
-  --success: #15803d;
+  --success: #0f6b31;
   --success-soft: rgba(22, 163, 74, 0.11);
   --success-line: rgba(22, 163, 74, 0.3);
-  --warn: #b45309;
+  --warn: #94480a;
   --warn-soft: rgba(217, 119, 6, 0.12);
   --warn-line: rgba(217, 119, 6, 0.3);
-  --danger: #be123c;
+  --danger: #ad0f36;
   --danger-soft: rgba(225, 29, 72, 0.1);
   --danger-line: rgba(225, 29, 72, 0.28);
-  --info: #0369a1;
+  --info: #02628f;
   --info-soft: rgba(2, 132, 199, 0.11);
 
   /* Surfaces. `app` is the page ground, `raised` the card that sits on
@@ -104,11 +104,17 @@
   --line-soft: var(--n-150);
   --line-strong: var(--n-300);
 
-  /* Text */
-  --fg: var(--n-900);
-  --fg-secondary: var(--n-600);
-  --fg-muted: var(--n-500);
-  --fg-faint: var(--n-400);
+  /* Text.
+     Not taken straight off the neutral ramp: the ramp is tuned for
+     surfaces and borders, and reusing its mid steps for type left
+     --fg-faint at 2.5:1 on white — below WCAG AA, on the index numbers,
+     captions and counts that are already small. Every role here clears
+     AA on all three surfaces (white, sunken, nav), with the body role
+     (--fg-secondary) at 10.5:1 or better. */
+  --fg: #0d0d10;
+  --fg-secondary: #3a3a42;
+  --fg-muted: #54545e;
+  --fg-faint: #6b6b75;
   --fg-on-brand: #ffffff;
 
   /* ── Legacy aliases ── */
@@ -284,8 +290,8 @@
   --n-900: #f4f4f5;
   --n-950: #ffffff;
 
-  --brand: #7c7aff;
-  --brand-strong: #918fff;
+  --brand: #8a88ff;
+  --brand-strong: #a3a1ff;
   --brand-soft: rgba(124, 122, 255, 0.15);
   --brand-softer: rgba(124, 122, 255, 0.07);
   --brand-ring: rgba(124, 122, 255, 0.4);
@@ -297,8 +303,8 @@
   --warn: #fbab3a;
   --warn-soft: rgba(251, 171, 58, 0.14);
   --warn-line: rgba(251, 171, 58, 0.3);
-  --danger: #fb6a75;
-  --danger-soft: rgba(251, 106, 117, 0.14);
+  --danger: #ff8089;
+  --danger-soft: rgba(255, 128, 137, 0.14);
   --danger-line: rgba(251, 106, 117, 0.3);
   --info: #5bb0f8;
   --info-soft: rgba(91, 176, 248, 0.14);
@@ -315,17 +321,18 @@
   --line-soft: var(--n-150);
   --line-strong: var(--n-300);
 
-  --fg: var(--n-900);
-  --fg-secondary: var(--n-600);
-  --fg-muted: var(--n-500);
-  --fg-faint: var(--n-400);
+  /* Mirrors the light scale — see the note there. */
+  --fg: #fbfbfc;
+  --fg-secondary: #cacad2;
+  --fg-muted: #adadb6;
+  --fg-faint: #8e8e98;
   --fg-on-brand: #0b0b0f;
 
   --option-bg: var(--n-50);
   --option-hover: var(--n-150);
   --toggle-bg: var(--n-50);
   --toggle-hover: var(--n-150);
-  --code-bg: #0f0f11;
+  --code-bg: #22232a;
   --inline-code-bg: var(--n-150);
   --key-bg: var(--n-200);
   --disabled-bg: var(--n-100);
@@ -347,6 +354,45 @@
     0 4px 12px rgba(0, 0, 0, 0.5),
     0 28px 56px -16px rgba(0, 0, 0, 0.7);
   --ring-offset: var(--surface);
+}
+
+/* ── Editor Theme (independent of overall shell theme) ── */
+:root {
+  --snippet-bg: var(--code-bg);
+  --snippet-border: var(--line);
+  --snippet-fg: var(--fg);
+}
+
+[data-editor-theme='dark'] {
+  --snippet-bg: #22232a;
+  --snippet-border: #2e303a;
+  --snippet-fg: #f7f7f8;
+}
+
+[data-editor-theme='light'] {
+  --snippet-bg: #f7f7f8;
+  --snippet-border: #e5e5eb;
+  --snippet-fg: #0b0b0f;
+}
+
+[data-editor-theme='dark'] .coding-editor-panel {
+  background: #22232a;
+}
+
+[data-editor-theme='light'] .coding-editor-panel {
+  background: #f7f7f8;
+}
+
+[data-editor-theme='dark'] .coding-sample-pre {
+  background: #22232a;
+  color: #f7f7f8;
+  border-color: #2e303a;
+}
+
+[data-editor-theme='light'] .coding-sample-pre {
+  background: #f7f7f8;
+  color: #0b0b0f;
+  border-color: #e5e5eb;
 }
 
 html,
@@ -4357,23 +4403,6 @@ kbd.kbd {
 
 /* ── Output Quiz Section ── */
 
-.output-quiz {
-  justify-content: flex-start;
-  overflow-y: auto;
-}
-
-.output-quiz .quiz-header {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-raised);
-}
-
-.output-quiz .quiz-scroll {
-  flex: 0 0 auto;
-  overflow: visible;
-  padding-bottom: var(--space-2);
-}
-
 .output-quiz .quiz-header-top {
   flex-wrap: wrap;
   gap: 10px;
@@ -6077,61 +6106,61 @@ kbd.kbd {
 }
 
 :root {
-  --dg-accent: #5145e5;
+  --dg-accent: #4a3fd8;
   --dg-accent-bg: #eef0ff;
-  --dg-accent-fg: #2a2596;
+  --dg-accent-fg: #241f87;
 
-  --dg-ok: #16a34a;
+  --dg-ok: #0f6b31;
   --dg-ok-bg: #e9fbf0;
-  --dg-ok-fg: #0f6b33;
+  --dg-ok-fg: #0b5527;
 
-  --dg-bad: #dc2626;
+  --dg-bad: #c41f1f;
   --dg-bad-bg: #fdecec;
-  --dg-bad-fg: #a51b1b;
+  --dg-bad-fg: #8f1717;
 
-  --dg-warn: #c2690a;
+  --dg-warn: #a85a06;
   --dg-warn-bg: #fef6e7;
-  --dg-warn-fg: #8a4b06;
+  --dg-warn-fg: #713d04;
 
-  --dg-info: #0284c7;
+  --dg-info: #02628f;
   --dg-info-bg: #e8f6fe;
-  --dg-info-fg: #075e87;
+  --dg-info-fg: #054a6b;
 
-  --dg-line: var(--n-300);
+  --dg-line: #b4b4bd;
   --dg-surface: var(--n-0);
   --dg-sunken: var(--n-50);
-  --dg-fg: var(--n-900);
-  --dg-muted: var(--n-600);
+  --dg-fg: var(--fg);
+  --dg-muted: var(--fg-muted);
 }
 
 /* Dark: the tinted fills become translucent washes rather than pastel
    blocks, and every foreground lightens enough to clear the ground. */
 [data-theme='dark'] {
-  --dg-accent: #8f8dff;
-  --dg-accent-bg: rgba(124, 122, 255, 0.16);
-  --dg-accent-fg: #bbbaff;
+  --dg-accent: #a3a1ff;
+  --dg-accent-bg: rgba(124, 122, 255, 0.18);
+  --dg-accent-fg: #cfceff;
 
-  --dg-ok: #2fd693;
-  --dg-ok-bg: rgba(47, 214, 147, 0.15);
-  --dg-ok-fg: #74ebbc;
+  --dg-ok: #4fe0a6;
+  --dg-ok-bg: rgba(47, 214, 147, 0.17);
+  --dg-ok-fg: #8ff0ca;
 
-  --dg-bad: #fb6a75;
-  --dg-bad-bg: rgba(251, 106, 117, 0.15);
-  --dg-bad-fg: #ffa3aa;
+  --dg-bad: #ff8590;
+  --dg-bad-bg: rgba(251, 106, 117, 0.17);
+  --dg-bad-fg: #ffb7bd;
 
-  --dg-warn: #fbab3a;
-  --dg-warn-bg: rgba(251, 171, 58, 0.15);
-  --dg-warn-fg: #ffcd83;
+  --dg-warn: #fdbb5e;
+  --dg-warn-bg: rgba(251, 171, 58, 0.17);
+  --dg-warn-fg: #ffd79b;
 
-  --dg-info: #5bb0f8;
-  --dg-info-bg: rgba(91, 176, 248, 0.15);
-  --dg-info-fg: #9fd2fd;
+  --dg-info: #7cc0fa;
+  --dg-info-bg: rgba(91, 176, 248, 0.17);
+  --dg-info-fg: #b4dcfd;
 
-  --dg-line: var(--n-300);
+  --dg-line: #4a4a53;
   --dg-surface: var(--n-0);
   --dg-sunken: var(--n-100);
-  --dg-fg: var(--n-900);
-  --dg-muted: var(--n-600);
+  --dg-fg: var(--fg);
+  --dg-muted: var(--fg-muted);
 }
 
 /* ── Inline maths ─────────────────────────────────────────────────

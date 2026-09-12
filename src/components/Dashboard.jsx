@@ -33,10 +33,8 @@ export default function Dashboard({
   mcqAccuracy,
   mcqAnswered,
   outputAccuracy,
-  weakTopics = [],
   missedCount = 0,
   onOpenSection,
-  onPracticeWeak,
   onReviewMistakes,
 }) {
   const tracked = NAV_SECTIONS.filter(
@@ -103,32 +101,16 @@ export default function Dashboard({
           </div>
         </section>
 
-        {(weakTopics.length > 0 || missedCount > 0) && (
+        {missedCount > 0 && (
           <section className="dash-section dash-focus">
             <h3 className="dash-section-title">Worth a pass</h3>
             <div className="dash-focus-row">
-              {weakTopics.slice(0, 4).map((topic) => (
-                <button
-                  key={topic.topic}
-                  type="button"
-                  className="dash-focus-card"
-                  onClick={onPracticeWeak}
-                  style={{ '--focus-pct': `${topic.pct}%` }}
-                >
-                  <span className="dash-focus-bar" aria-hidden="true" />
-                  <span className="dash-focus-name">{topic.topic}</span>
-                  <span className="dash-focus-pct">{topic.pct}%</span>
-                </button>
-              ))}
-
-              {missedCount > 0 && (
-                <button type="button" className="dash-focus-card is-review" onClick={onReviewMistakes}>
-                  <span className="dash-focus-name">
-                    <Icon name="target" size={14} /> Review mistakes
-                  </span>
-                  <span className="dash-focus-pct">{missedCount}</span>
-                </button>
-              )}
+              <button type="button" className="dash-focus-card is-review" onClick={onReviewMistakes}>
+                <span className="dash-focus-name">
+                  <Icon name="target" size={14} /> Review mistakes
+                </span>
+                <span className="dash-focus-pct">{missedCount}</span>
+              </button>
             </div>
           </section>
         )}

@@ -55,6 +55,19 @@ function registerChallengeCompletions(monaco) {
 export default function CodeEditor({ id, value, onChange, theme = 'light' }) {
   const registeredRef = useRef(false);
 
+  function handleBeforeMount(monaco) {
+    monaco.editor.defineTheme('quiz-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#22232a',
+        'editorGutter.background': '#22232a',
+        'editor.lineHighlightBackground': '#2a2b34',
+      },
+    });
+  }
+
   function handleMount(_editor, monaco) {
     if (!registeredRef.current) {
       registerChallengeCompletions(monaco);
@@ -67,10 +80,11 @@ export default function CodeEditor({ id, value, onChange, theme = 'light' }) {
       <Editor
         height="100%"
         language="javascript"
-        theme={theme === 'dark' ? 'vs-dark' : 'vs'}
+        theme={theme === 'dark' ? 'quiz-dark' : 'vs'}
         value={value}
         onChange={(nextValue) => onChange(nextValue ?? '')}
         options={EDITOR_OPTIONS}
+        beforeMount={handleBeforeMount}
         onMount={handleMount}
       />
     </div>

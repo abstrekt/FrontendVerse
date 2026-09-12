@@ -49,20 +49,15 @@
     <script>
       (function () {
         try {
-          var system = window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
-          var source = JSON.parse(localStorage.getItem('quiz-theme-source'));
           var stored = JSON.parse(localStorage.getItem('quiz-theme'));
-          // Anyone who used the app before the tri-state control existed has
-          // no source key. Treating that as 'system' is the intended default.
-          var theme =
-            source === 'user' && (stored === 'dark' || stored === 'light')
-              ? stored
-              : system;
+          var theme = stored === 'dark' ? 'dark' : 'light';
           document.documentElement.setAttribute('data-theme', theme);
+          var storedEditor = JSON.parse(localStorage.getItem('quiz-editor-theme'));
+          var editorTheme = storedEditor === 'light' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-editor-theme', editorTheme);
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.setAttribute('data-editor-theme', 'dark');
         }
       })();
     </script>
