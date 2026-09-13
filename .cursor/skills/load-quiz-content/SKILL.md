@@ -17,7 +17,7 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 | MCQ             | `questions.json`                               | `App.jsx`   | `QuizQuestion`       |
 | Learnings (JS)  | `data/learnings.json` (+ merge files)          | `App.jsx`   | `LearningsView`      |
 | React Learnings | `data/react-learnings.json`                    | `App.jsx`   | `LearningsView`      |
-| HLD             | `data/hld-learnings.json`                      | `App.jsx`   | `LearningsView`      |
+| System Design   | `data/system-design-*.json` (6 files, merged)  | `App.jsx`   | `LearningsView`      |
 | Coding          | `data/coding-questions.json`                   | `App.jsx`   | `CodingChallenge`    |
 | Output          | `data/output-questions.json`                   | `App.jsx`   | `OutputQuizQuestion` |
 
@@ -113,6 +113,29 @@ Interview / company entry:
   `scripts/build-data-manifest.mjs`, `scripts/format-code-snippets.mjs`,
   `src/data/curriculum.test.js`).
 
+### System Design
+
+Six files merged into one section, split by curriculum module rather than by
+source, so a diff stays readable:
+
+| File | Module |
+| --- | --- |
+| `data/system-design-foundations.json` | Framework & rubrics, requirements & scoping |
+| `data/system-design-hld.json` | HLD building blocks |
+| `data/system-design-cases.json` | HLD case studies |
+| `data/system-design-lld.json` | LLD component design |
+| `data/system-design-deep-dives.json` | Cross-cutting deep dives |
+| `data/system-design-playbooks.json` | Interview playbooks |
+
+Ids are unique across all six (`pnpm run validate:learning-ids system-design
+--next-id`) and blocked by file — 1–99 foundations, 100s building blocks, 200s
+cases, 300s LLD, 400s deep dives, 500s playbooks. **Every new id must also be
+added to a module in `src/data/curriculum.js`** or `pnpm test` fails.
+
+Tag a code fence ```` ```typescript ```` rather than ```` ```javascript ````
+when it is a type signature or a shape sketch — `format-code-snippets.mjs`
+runs prettier over `javascript` and will warn on anything it cannot parse.
+
 ## Coding schema
 
 ```json
@@ -203,10 +226,10 @@ Rules:
 2. Dedupe against existing entries (title / code / `functionName`); **compare content** — skip only if equal/worse; otherwise update or merge into the existing `id`.
 3. Pick next globally unique id(s) for JS Learnings via `pnpm run validate:learning-ids --next-id` (or a reserved pair id when safe). For other sections, use next id in the target file.
 4. Write data with correct schema, tags, `source`, and test cases.
-5. If supplemental file: import + merge in `App.jsx`; set file-level `source` when the batch shares one origin.
+5. If supplemental file: add the loader to `LEARNING_LOADERS` in `src/data/datasets.js` (not `App.jsx` — the merge moved there), plus `scripts/validate-learning-ids.mjs`, `scripts/build-data-manifest.mjs`, `scripts/format-code-snippets.mjs` and `src/data/curriculum.test.js`. Set a file-level `source` when the batch shares one origin.
 6. If new runner needed: extend `codingRunner.js`; keep result shape `{ passed, input, expected, got }`.
 7. If UI assumes a specific shape: update `CodingChallenge.jsx` generically, not per question.
-8. Run `pnpm run validate:learning-ids` (must pass for JS Learnings); run `pnpm dev` and spot-check render + test execution.
+8. Run `pnpm run build:data-manifest` (required — `dataManifest.test.js` fails on a stale `counts.json`), then `pnpm test`; run `pnpm dev` and spot-check render + test execution.
 9. Do not commit unless asked.
 
 ## Reference example: the polyfill batch

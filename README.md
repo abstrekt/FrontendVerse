@@ -27,10 +27,16 @@ Package manager: **pnpm**.
 | --- | --- | --- | ---: |
 | **Overview** | `/` | Progress across every section, streak, weak topics | — |
 | **MCQ** | `/mcq`, `/mcq/list` | Multiple-choice questions (lydiahallie/javascript-questions + tagged extras) | 189 |
-| **Learnings** | `/learnings`, `/learnings/:id` | Markdown articles (polyfills, WTFJS, interview notes, etc.) | 127 |
-| **React Learnings** | `/react-learnings` | React-focused articles | 5 |
-| **HLD** | `/hld` | High-level design notes | 2 |
-| **Coding** | `/coding` | In-browser coding challenges with test runner | 23 |
+| **Learnings** | `/learnings`, `/learnings/:id` | Markdown articles, in curriculum order | 119 |
+| **Browser & Web Platform** | `/browser` | DOM, rendering, network, storage — in curriculum order | 16 |
+| **CSS** | `/css` | Layout, cascade and styling articles | 6 |
+| **React Learnings** | `/react-learnings` | React-focused articles | 28 |
+| **React Guide** | `/react-guide` | React interview mastery guide | 46 |
+| **Advanced React** | `/advanced-react` | Deeper React internals and patterns | 16 |
+| **System Design** | `/system-design` | Frontend system design — framework, HLD, LLD, deep dives, interview playbooks | 78 |
+| **Algorithm** | `/algorithm` | Algorithm notes | 11 |
+| **Blind 75** | `/blind75` | Pattern blueprints and per-problem traces | 85 |
+| **Coding** | `/coding` | In-browser coding challenges with test runner | 50 |
 | **Output** | `/output` | Predict what `console.log` prints | 71 |
 | **Archived** | `/archived` | Archived items across all sections | — |
 
@@ -52,7 +58,7 @@ Package manager: **pnpm**.
 - Sidebar navigation with article list and mobile chip picker
 - Markdown answers with syntax highlighting
 - Star, complete, and archive individual articles
-- Separate collections for general JS, React, and HLD
+- Separate collections for general JS, React, and system design
 
 ### Coding challenges
 
@@ -104,7 +110,12 @@ js-mcq-quiz/
 │   ├── senior-frontend-learnings.json
 │   ├── browser-platform-learnings.json  # Browser & Web Platform section
 │   ├── react-learnings.json
-│   ├── hld-learnings.json
+│   ├── system-design-foundations.json   # System Design (merged, 6 files)
+│   ├── system-design-hld.json
+│   ├── system-design-cases.json
+│   ├── system-design-lld.json
+│   ├── system-design-deep-dives.json
+│   ├── system-design-playbooks.json
 │   ├── coding-questions.json
 │   ├── output-questions.json
 │   └── scope-output-questions.json

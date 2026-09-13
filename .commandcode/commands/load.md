@@ -108,7 +108,7 @@ Classify by **shape of the source**, not by user wording alone. Do **not** auto-
 | Multiple choice with options A–D (or clear distractors) | **MCQ** |
 | “What is the output?” + a runnable snippet, no options | **Output** (prefer build script / existing Output pipeline for batch READMEs) |
 | React-specific concept (hooks, reconciliation, components) | **React Learnings** (`data/react-learnings.json`) |
-| System design / HLD | **HLD** (`data/hld-learnings.json`) |
+| System design / HLD / LLD | **System Design** (`data/system-design-*.json` — see the skill for which file) |
 | Company interview notes (named company, round, “asked at …”) | Learnings file that fits topic; set **`company`** |
 
 **Opt-in pair rule:** Add **both** Learnings + Coding only when the user explicitly requests it (e.g. “add learnings and coding”, “pair them”, “like polyfills”). Then use matching `id`, title, and `tags` ↔ `topics`. Respect opt-out phrases: `notes only`, `no coding`, `coding only`, `no learnings`.
@@ -120,7 +120,7 @@ Classify by **shape of the source**, not by user wording alone. Do **not** auto-
 | MCQ | `questions.json` |
 | JS Learnings | `data/learnings.json` or supplemental merge (large batch) |
 | React Learnings | `data/react-learnings.json` |
-| HLD | `data/hld-learnings.json` |
+| System Design | `data/system-design-*.json` (6 merged files) |
 | Coding | `data/coding-questions.json` |
 | Output | `data/output-questions.json` (or regenerate via `pnpm run build:output-questions`) |
 

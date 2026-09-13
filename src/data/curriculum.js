@@ -154,7 +154,7 @@ export const CURRICULUM = {
     {
       key: 'playbooks',
       label: 'Interview Playbooks',
-      ids: [500, 501, 502, 505],
+      ids: [500, 501, 502, 503, 504, 505, 506, 507],
     },
   ],
 

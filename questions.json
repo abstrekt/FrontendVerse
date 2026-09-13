@@ -4493,7 +4493,7 @@
     },
     {
       "question": "What's the output?",
-      "body": "```javascript\nvar arr = [10, 20, 30];\narr['key'] = 'value';\nconsole.log(arr.length);\n```",
+      "body": "```javascript\nvar arr = [10, 20, 30];\narr[\"key\"] = \"value\";\nconsole.log(arr.length);\n```",
       "options": [
         {
           "key": "A",

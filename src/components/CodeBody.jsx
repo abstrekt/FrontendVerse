@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import js from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import html from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import ts from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import { getSyntaxStyle } from '../utils/syntaxTheme';
 import MermaidDiagram from './MermaidDiagram';
 import VisualTrace from './VisualTrace';
@@ -13,6 +14,8 @@ import TexNotation from './TexNotation';
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('js', js);
 SyntaxHighlighter.registerLanguage('html', html);
+SyntaxHighlighter.registerLanguage('typescript', ts);
+SyntaxHighlighter.registerLanguage('ts', ts);
 
 function resolveLanguage(lang) {
   if (lang === 'js') return 'javascript';
