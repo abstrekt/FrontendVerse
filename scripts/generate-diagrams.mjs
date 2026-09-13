@@ -35,10 +35,11 @@ import { document, resetIds } from './lib/drawio-builder.mjs';
 import { DIAGRAMS as BLIND75 } from './lib/blind75-diagrams.mjs';
 import { DIAGRAMS as SYSDESIGN } from './lib/sysdesign-diagrams.mjs';
 import { DIAGRAMS as REACT } from './lib/react-diagrams.mjs';
+import { DIAGRAMS as BROWSER } from './lib/browser-diagrams.mjs';
 import { postprocess, findUnmappedColors } from './lib/svg-postprocess.mjs';
 import { lintDiagram } from './lib/diagram-lint.mjs';
 
-const SETS = { blind75: BLIND75, sysdesign: SYSDESIGN, react: REACT };
+const SETS = { blind75: BLIND75, sysdesign: SYSDESIGN, react: REACT, browser: BROWSER };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');

@@ -171,6 +171,26 @@ same `trace-validate.mjs` shape check.
 not runnable JavaScript is tagged ```` ```typescript ```` — prettier skips it
 and `CodeBody` still highlights it.
 
+## Browser & Web Platform diagrams
+
+Two draw.io blueprints, both belonging to learning 132 (`Cookies,
+localStorage, and sessionStorage`) — the section's two facts that a table
+keeps flattening.
+
+```bash
+pnpm run build:diagrams browser                  # both
+pnpm run build:diagrams browser storage-scope    # one
+```
+
+| File | Role |
+| --- | --- |
+| `scripts/lib/browser-diagrams.mjs` | **The diagrams.** `storage-scope` (origin vs `Domain` + `Path`) and `cookie-auth` (the round trip, the attributes, XSS vs CSRF). Same DSL and furniture as the other sets. |
+| `diagrams/browser/*.drawio` | Generated source; overwritten by the next build. |
+| `public/diagrams/browser/*.svg` | What ships, referenced as `![alt](/diagrams/browser/name.svg)`. |
+
+No traces here — the entry is theory, and the two diagrams carry the spatial
+part of it.
+
 ## Adding content
 
 **Read the project skill before adding or bulk-loading content:**
@@ -213,7 +233,7 @@ Moving an entry between sections needs a `relocateStoreIds` migration in
   shown before the lazy chunks land. **Required after any content change** —
   `src/utils/dataManifest.test.js` fails if it is stale.
 - `pnpm run build:diagrams [set] [name]` — build a diagram set (`blind75`,
-  `sysdesign`, `react`); no arguments builds every set
+  `sysdesign`, `react`, `browser`); no arguments builds every set
 - `pnpm run build:output-questions` — regenerate output questions from external README
 - `pnpm run format:snippets` — prettier over the fenced code in the content JSON
 - `pnpm run validate:learning-ids [group] [--next-id]` — fail on duplicate ids
