@@ -38,7 +38,7 @@ export const CURRICULUM = {
     {
       key: 'operators',
       label: 'Operators, Expressions & Control Flow',
-      ids: [88, 92, 94, 131, 59, 60, 68, 70],
+      ids: [88, 92, 94, 131, 59, 60, 68, 70, 154],
     },
     {
       key: 'syntax',
@@ -68,7 +68,7 @@ export const CURRICULUM = {
     {
       key: 'collections',
       label: 'Arrays, Sets & Maps',
-      ids: [124, 149, 73, 8, 117, 58],
+      ids: [124, 149, 155, 73, 8, 117, 58, 156],
     },
     {
       key: 'modern-syntax',
@@ -154,7 +154,7 @@ export const CURRICULUM = {
     {
       key: 'playbooks',
       label: 'Interview Playbooks',
-      ids: [],
+      ids: [500, 501, 502, 505],
     },
   ],
 };
