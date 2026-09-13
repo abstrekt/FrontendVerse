@@ -1,15 +1,18 @@
 import { SECTIONS } from './archive.js';
+import { GROUPED_SECTIONS } from '../data/curriculum.js';
 
 export const EMPTY_COMPLETED = {
+  'acceldata-prep': [],
   'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
+  browser: [],
   css: [],
   'react-learnings': [],
   'react-guide': [],
   'advanced-react': [],
-  hld: [],
+  'system-design': [],
   algorithm: [],
   blind75: [],
   coding: [],
@@ -61,8 +64,32 @@ export function filterExcludedCompleted(items, section, completed) {
   return items.filter((item) => !completedSet.has(item.id));
 }
 
+/**
+ * Sink mastered items so the next unread one is at the top.
+ *
+ * In a section with a teaching order (see `src/data/curriculum.js`) "the end"
+ * means the end of the item's own module, not the end of the section — sending
+ * a mastered item past eleven later modules would undo the ordering the reader
+ * came for. `GROUPED_SECTIONS` decides which behaviour applies.
+ */
 export function sortCompletedToEnd(items, section, completed) {
   const completedSet = getCompletedSet(completed, section);
+
+  if (GROUPED_SECTIONS.includes(section)) {
+    const order = [];
+    const buckets = new Map();
+    for (const item of items) {
+      const key = item.moduleKey ?? 'unsorted';
+      if (!buckets.has(key)) {
+        buckets.set(key, { pending: [], done: [] });
+        order.push(key);
+      }
+      const bucket = buckets.get(key);
+      (completedSet.has(item.id) ? bucket.done : bucket.pending).push(item);
+    }
+    return order.flatMap((key) => [...buckets.get(key).pending, ...buckets.get(key).done]);
+  }
+
   const pending = [];
   const done = [];
   for (const item of items) {

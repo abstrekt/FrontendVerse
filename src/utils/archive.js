@@ -1,31 +1,35 @@
 export const EMPTY_ARCHIVED = {
+  'acceldata-prep': [],
   'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
+  browser: [],
   css: [],
   'react-learnings': [],
   'react-guide': [],
   'advanced-react': [],
-  hld: [],
+  'system-design': [],
   algorithm: [],
   blind75: [],
   coding: [],
   output: [],
 };
 
-export const SECTIONS = ['interview-prep', 'test-prep', 'mcq', 'learnings', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'hld', 'algorithm', 'blind75', 'coding', 'output'];
+export const SECTIONS = ['acceldata-prep', 'interview-prep', 'test-prep', 'mcq', 'learnings', 'browser', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'system-design', 'algorithm', 'blind75', 'coding', 'output'];
 
 export const SECTION_LABELS = {
+  'acceldata-prep': 'Acceldata Prep',
   'interview-prep': 'Interview Prep',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  browser: 'Browser & Web Platform',
   css: 'CSS',
   'react-learnings': 'React Learnings',
   'react-guide': 'React Guide',
   'advanced-react': 'Advanced React',
-  hld: 'HLD',
+  'system-design': 'System Design',
   algorithm: 'Algorithm',
   blind75: 'Blind 75',
   coding: 'Coding',

@@ -97,11 +97,12 @@ Package manager: **pnpm**.
 js-mcq-quiz/
 ├── questions.json              # MCQ questions
 ├── data/
-│   ├── learnings.json          # Core learnings (merged with other learning files)
-│   ├── polyfill-learnings.json
+│   ├── learnings.json          # Core JS learnings (merged with other learning files)
 │   ├── wtfjs-learnings.json
 │   ├── devto-interview-learnings.json
 │   ├── tekion-interview-learnings.json
+│   ├── senior-frontend-learnings.json
+│   ├── browser-platform-learnings.json  # Browser & Web Platform section
 │   ├── react-learnings.json
 │   ├── hld-learnings.json
 │   ├── coding-questions.json
@@ -110,6 +111,7 @@ js-mcq-quiz/
 ├── src/
 │   ├── App.jsx                 # Main app state, routing, progress
 │   ├── components/             # UI components per section
+│   ├── data/curriculum.js      # Teaching order + module headers per section
 │   ├── hooks/                  # useLocalStorage, useAppRoute
 │   ├── styles/index.css        # Global styles and themes
 │   └── utils/                  # Progress, grading, search, runners
@@ -186,6 +188,25 @@ pnpm run build:traces
 
 `pnpm test` fails if the two have drifted. Currently written for the ten
 Arrays & Hashing problems.
+
+### React diagrams and traces
+
+Every React item — all 105 across the guide, the advanced course, the
+interview notes and the MCQs — carries a blueprint diagram of the mechanism it
+explains plus a steppable trace of that mechanism running on one concrete
+case. The blueprints are shared between the items that need them; the traces
+belong to their item.
+
+```bash
+pnpm run build:diagrams react   # ~35 blueprints
+pnpm run build:react-traces     # write the sections into the JSON
+```
+
+Traces here go beyond the row-of-cells board the algorithm traces use: a
+component tree that lights up as it re-renders, the hook slot list, the
+render → commit → paint pipeline, and a console lane for the "what actually
+logs?" questions. `pnpm test` fails if a trace has drifted from its source
+table **or if any React item is missing one**.
 
 ## Tech stack
 

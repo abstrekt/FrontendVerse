@@ -32,10 +32,27 @@ export const SECTIONS = {
     subtitle: null,
     inNav: false,
   },
+  // Temporary — prep for the Acceldata interview. Not tied to one technology,
+  // so it stays visible under every category chip. See ACCELDATA-PREP-REMOVAL.md
+  // for every touch point to delete once the interview is done.
+  'acceldata-prep': {
+    label: 'Acceldata Prep',
+    navIcon: 'AD',
+    category: null,
+    kind: 'learning',
+    subtitle: ENTRIES,
+  },
   mcq: { label: 'JavaScript MCQs', navIcon: 'JS', category: 'js', kind: 'mcq', subtitle: QUESTIONS },
   learnings: {
     label: 'Javascript learnings',
     navIcon: 'LR',
+    category: 'js',
+    kind: 'learning',
+    subtitle: LEARNINGS,
+  },
+  browser: {
+    label: 'Browser & Web Platform',
+    navIcon: 'BW',
     category: 'js',
     kind: 'learning',
     subtitle: LEARNINGS,
@@ -62,7 +79,15 @@ export const SECTIONS = {
     kind: 'learning',
     subtitle: ENTRIES,
   },
-  hld: { label: 'HLD', navIcon: 'HD', category: 'algo', kind: 'learning', subtitle: LEARNINGS },
+  'system-design': {
+    label: 'System Design',
+    navIcon: 'SD',
+    // Not a JS/CSS/React/algorithms topic — it spans all of them, so it stays
+    // visible under every category chip rather than hiding behind one.
+    category: null,
+    kind: 'learning',
+    subtitle: LEARNINGS,
+  },
   algorithm: {
     label: 'Algorithm',
     navIcon: 'AL',

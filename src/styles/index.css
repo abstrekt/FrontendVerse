@@ -377,10 +377,78 @@
 
 [data-editor-theme='dark'] .coding-editor-panel {
   background: #22232a;
+  color: #f7f7f8;
+  --line: #2e303a;
+  --line-soft: #282932;
+  --line-strong: #3f414e;
+  --border: #2e303a;
+  --fg: #f7f7f8;
+  --fg-secondary: #c4c5cf;
+  --fg-muted: #8e909d;
+  --text: #f7f7f8;
+  --text-secondary: #c4c5cf;
+  --text-muted: #8e909d;
+  --bg-secondary: #2a2b34;
+  --bg: #22232a;
+  --surface-hover: #2e303a;
 }
 
 [data-editor-theme='light'] .coding-editor-panel {
   background: #f7f7f8;
+  color: #0b0b0f;
+  --line: #e5e5eb;
+  --line-soft: #eeeeef;
+  --line-strong: #d0d2d8;
+  --border: #e5e5eb;
+  --fg: #0b0b0f;
+  --fg-secondary: #3a3a42;
+  --fg-muted: #54545e;
+  --text: #0b0b0f;
+  --text-secondary: #54545e;
+  --text-muted: #6b6b75;
+  --bg-secondary: #ededf0;
+  --bg: #f7f7f8;
+  --surface-hover: #e5e5eb;
+}
+
+[data-editor-theme='dark'] .coding-editor-label {
+  color: #c4c5cf;
+}
+
+[data-editor-theme='light'] .coding-editor-label {
+  color: #54545e;
+}
+
+[data-editor-theme='dark'] .coding-footer-actions {
+  border-top-color: #2e303a;
+}
+
+[data-editor-theme='light'] .coding-footer-actions {
+  border-top-color: #e5e5eb;
+}
+
+[data-editor-theme='dark'] .coding-footer-actions .archive-btn {
+  color: #c4c5cf;
+  border-color: #3a3b48;
+}
+
+[data-editor-theme='dark'] .coding-footer-actions .archive-btn:hover {
+  background: #2e303a;
+  border-color: #4e5160;
+  color: #ffffff;
+}
+
+[data-editor-theme='dark'] .coding-problem {
+  border-right-color: #2e303a;
+}
+
+[data-editor-theme='dark'] .coding-split {
+  border-top-color: #2e303a;
+}
+
+[data-editor-theme='dark'] .coding-editor-wrap {
+  border-color: #2e303a;
+  background: #22232a;
 }
 
 [data-editor-theme='dark'] .coding-sample-pre {
@@ -393,6 +461,16 @@
   background: #f7f7f8;
   color: #0b0b0f;
   border-color: #e5e5eb;
+}
+
+[data-editor-theme='dark'] .coding-submission-load-btn {
+  border-color: var(--snippet-border);
+  background: #2a2b34;
+  color: #f7f7f8;
+}
+
+[data-editor-theme='dark'] .coding-submission-load-btn:hover:not(:disabled) {
+  background: #343642;
 }
 
 html,
@@ -1091,6 +1169,48 @@ kbd.kbd {
 
 .learnings-nav-list li {
   padding: 0;
+}
+
+/* ── Curriculum module headers. The sections with a teaching order break
+   their list into modules; the header sticks so the reader always knows
+   which one they are scrolling through. First header loses its top rule
+   so the list does not open on a stray line. ── */
+
+.panel-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface-nav);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+.panel-group-header:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+
+.panel-group-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-group-count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
 }
 
 .learning-nav-item {
@@ -4763,7 +4883,7 @@ kbd.kbd {
   list-style: none;
   margin: 0 var(--space-4) var(--space-2);
   padding: 0;
-  border: 1px solid var(--border);
+  border: 1px solid var(--snippet-border);
   border-radius: 8px;
   max-height: 180px;
   overflow-y: auto;
@@ -4775,7 +4895,7 @@ kbd.kbd {
   justify-content: space-between;
   gap: 10px;
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--snippet-border);
   font-size: var(--text-sm);
 }
 
@@ -4818,10 +4938,10 @@ kbd.kbd {
   flex: 1;
   min-height: 280px;
   margin: 0 var(--space-4);
-  border: 1px solid var(--border);
+  border: 1px solid var(--snippet-border);
   border-radius: 6px;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--snippet-bg);
 }
 
 .coding-editor-wrap:focus-within {
@@ -6331,6 +6451,16 @@ kbd.kbd {
   color: var(--warn);
 }
 
+/* Bailed out — memoised, never re-rendered. Distinct from `hit` because a
+   React trace usually needs both on screen at once: the node that produced
+   the answer, and the subtree that was spared. */
+.trace-cell.is-skip {
+  background: var(--info-soft);
+  border-color: var(--info);
+  border-style: dashed;
+  color: var(--info);
+}
+
 .trace-cell.is-done {
   opacity: 0.5;
 }
@@ -6377,6 +6507,290 @@ kbd.kbd {
   }
 }
 
+/* ── React lane kinds ─────────────────────────────────────────────
+   tree · slots · phases · log. They share the cell tones above and the
+   step machinery in VisualTrace; only the board differs. ── */
+
+/* A tree or a log reads as a block, not a row, so its label sits above
+   rather than beside it once there is more than one line to align to. */
+.trace-lane-block {
+  align-items: flex-start;
+}
+
+.trace-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Indentation carries the parent link, so the depth is the only geometry
+   the renderer has to compute — and it survives a 400px column, which a
+   drawn node-and-edge tree does not. */
+.trace-tree-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: calc(var(--trace-depth, 0) * var(--space-5));
+}
+
+/* The guide rail for a nested row, drawn only where there is a parent
+   above to connect to. */
+.trace-tree-row.is-nested::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--trace-depth, 0) * var(--space-5) - var(--space-3));
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.trace-node {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--fg-secondary);
+  white-space: nowrap;
+  transition: background var(--dur), border-color var(--dur), color var(--dur),
+    transform var(--dur) var(--ease);
+}
+
+.trace-node.is-active {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: var(--weight-bold);
+  transform: translateX(3px);
+}
+
+.trace-node.is-hit {
+  background: var(--success-soft);
+  border-color: var(--success);
+  color: var(--success);
+  font-weight: var(--weight-bold);
+}
+
+.trace-node.is-bad {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: var(--weight-bold);
+}
+
+.trace-node.is-skip {
+  background: var(--info-soft);
+  border-color: var(--info);
+  border-style: dashed;
+  color: var(--info);
+}
+
+.trace-node.is-window {
+  background: var(--warn-soft);
+  border-color: var(--warn-line);
+  color: var(--warn);
+}
+
+.trace-node.is-done {
+  opacity: 0.5;
+}
+
+.trace-node-note,
+.trace-node-cursor {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  white-space: nowrap;
+}
+
+.trace-node-note {
+  color: var(--fg-faint);
+}
+
+.trace-node-cursor {
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+}
+
+/* ── Slots (the hook list) ── */
+
+.trace-slots {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+}
+
+.trace-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-bottom: 30px;
+}
+
+.trace-slot-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--fg-faint);
+}
+
+/* A hook slot holds a value, not a digit, so it is wider than an array
+   cell and left-aligned. */
+.trace-slot .trace-cell {
+  place-items: center start;
+  min-width: 72px;
+  height: 34px;
+  font-size: var(--text-sm);
+}
+
+/* ── Phases (the pipeline) ── */
+
+.trace-phases {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+}
+
+/* The arrow between phases is furniture, so it is drawn rather than
+   authored — a trace only ever names the phases themselves. */
+.trace-phase-slot + .trace-phase-slot::before {
+  content: '→';
+  margin-right: var(--space-1);
+  color: var(--fg-faint);
+  font-size: var(--text-xs);
+}
+
+.trace-phase-slot {
+  display: flex;
+  align-items: center;
+}
+
+.trace-phase {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-sunken);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  white-space: nowrap;
+  transition: background var(--dur), border-color var(--dur), color var(--dur),
+    transform var(--dur) var(--ease);
+}
+
+/* Position in the pipeline, not a tone: spent · now · not yet reached. */
+.trace-phase.is-spent {
+  color: var(--fg-muted);
+  opacity: 0.6;
+}
+
+.trace-phase.is-now {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: var(--weight-bold);
+  transform: translateY(-2px);
+}
+
+.trace-phase.is-ahead {
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+/* A tone still wins over position — a phase can be the one that was
+   skipped, or the one that paid the cost. */
+.trace-phase.is-bad {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  border-style: solid;
+  color: var(--danger);
+  opacity: 1;
+}
+
+.trace-phase.is-hit {
+  background: var(--success-soft);
+  border-color: var(--success);
+  border-style: solid;
+  color: var(--success);
+  opacity: 1;
+}
+
+.trace-phase.is-skip {
+  background: var(--info-soft);
+  border-color: var(--info);
+  border-style: dashed;
+  color: var(--info);
+  opacity: 1;
+}
+
+/* ── Log ── */
+
+.trace-log {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  min-width: 220px;
+  background: var(--code-bg, var(--surface-sunken));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-normal);
+}
+
+.trace-log-line {
+  color: var(--fg-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.trace-log-line.is-empty {
+  color: var(--fg-faint);
+  font-style: italic;
+}
+
+.trace-log-line.is-active {
+  color: var(--brand);
+  font-weight: var(--weight-bold);
+}
+
+.trace-log-line.is-hit {
+  color: var(--success);
+  font-weight: var(--weight-bold);
+}
+
+.trace-log-line.is-bad {
+  color: var(--danger);
+}
+
+.trace-log-line.is-skip {
+  color: var(--info);
+}
+
+.trace-log-line.is-done {
+  opacity: 0.55;
+}
+
 /* ── State readout ── */
 
 .trace-vars {
@@ -6416,6 +6830,31 @@ kbd.kbd {
   font-size: var(--text-md);
   line-height: var(--leading-snug);
   color: var(--fg-secondary);
+}
+
+/* A note names hooks and props constantly, so `code` and **bold** are
+   rendered from the note text (see RichText in VisualTrace). */
+.trace-note code,
+.trace-result code {
+  padding: 0 3px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: var(--fg);
+}
+
+.trace-note strong {
+  font-weight: var(--weight-bold);
+  color: var(--fg);
+}
+
+/* The input line is already a <code>; a nested one would stack the
+   background on itself. */
+.trace-input code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
 }
 
 .trace-result {

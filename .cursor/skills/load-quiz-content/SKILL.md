@@ -23,7 +23,8 @@ Use this skill when adding or bulk-loading content into the js-mcq-quiz app.
 
 ## ID conventions
 
-- **JS Learnings:** ids are **globally unique across all six merged files** (not per-file). Merged in `App.jsx` from `learnings.json`, `polyfill-learnings.json`, `tekion-interview-learnings.json`, `wtfjs-learnings.json`, `devto-interview-learnings.json`, and `senior-frontend-learnings.json`.
+- **JS Learnings:** ids are **globally unique across all five merged files** (not per-file). Merged in `src/data/datasets.js` from `learnings.json`, `tekion-interview-learnings.json`, `wtfjs-learnings.json`, `devto-interview-learnings.json`, and `senior-frontend-learnings.json`.
+- **JS Learnings and Browser & Web Platform are theory-only and curriculum-ordered.** A new entry must also be added to a module in `src/data/curriculum.js`, or `pnpm test` fails and it renders under "Unsorted". Anything whose point is an implementation goes to Coding instead.
 - Before assigning a new JS Learnings id, run `pnpm run validate:learning-ids --next-id` to get `max(id) + 1` across the merged set.
 - **Other sections** (React Learnings, HLD, Algorithm, Coding, MCQ, Output): ids are unique within each file/section.
 - **Paired Learnings + Coding (opt-in):** reuse the coding question's id only if that id is **not already taken** in the merged JS learnings set. If taken, pick a new id and report the mismatch.
@@ -107,12 +108,10 @@ Interview / company entry:
 ```
 
 - `answer` is markdown; code blocks render via `CodeBody`.
-- For large batches, use a supplemental file and merge in `App.jsx`:
-
-```js
-import polyfillLearningsData from '../data/polyfill-learnings.json';
-const allLearnings = [...learningsData.learnings, ...polyfillLearningsData.learnings];
-```
+- For large batches, use a supplemental file and add it to the merge list in
+  `src/data/datasets.js` (and to `scripts/validate-learning-ids.mjs`,
+  `scripts/build-data-manifest.mjs`, `scripts/format-code-snippets.mjs`,
+  `src/data/curriculum.test.js`).
 
 ## Coding schema
 
@@ -210,43 +209,35 @@ Rules:
 8. Run `pnpm run validate:learning-ids` (must pass for JS Learnings); run `pnpm dev` and spot-check render + test execution.
 9. Do not commit unless asked.
 
-## Reference example: polyfill batch
+## Reference example: the polyfill batch
 
-The canonical **paired** batch (opt-in — not the `/load` default). Use this pattern only when the user explicitly asks for Learnings + Coding together:
+The seventeen polyfills (`Array.map`, `Function.bind`, Debounce, Throttle, the
+Promise combinators) are the canonical **paired** batch — and the worked example
+of where each half belongs.
 
-| File | Content |
-| ---- | ------- |
-| `data/polyfill-learnings.json` | 17 read-only articles (ids 2–18), `tags: ["polyfill", ...]` |
-| `data/coding-questions.json` | 17 practice problems (ids 2–18), `topics: ["polyfill", ...]` |
+They exist **only** in [`data/coding-questions.json`](data/coding-questions.json)
+(ids 3–19), each with a `template`, `testCases`, and an `explanation` carrying
+the solution, a "Behind the scenes" walkthrough and interview follow-ups. They
+used to be duplicated as read-only articles in a `polyfill-learnings.json`; that
+file was folded into those `explanation` fields and deleted, because a section
+that is theory and a section that is practice should not both own the same
+topic.
 
-Tag mapping:
+So for a paired import, opt-in means: the **concept** goes to a learnings
+section and into a curriculum module; the **implementation** goes to Coding.
+Tags mirror topics (`tags` ↔ `topics`), primary category first — for these,
+`polyfill` then the concept (`Array`, `Promise`, `this`).
 
-| id | Title | Tags |
-| -- | ----- | ---- |
-| 2 | Array.map() | polyfill, Array, iteration |
-| 3 | Array.filter() | polyfill, Array, iteration |
-| 4 | Array.reduce() | polyfill, Array, iteration |
-| 5 | Function.call() | polyfill, Function, this |
-| 6 | Function.apply() | polyfill, Function, this |
-| 7 | Function.bind() | polyfill, Function, this |
-| 8 | Deep Copy | polyfill, objects, recursion |
-| 9 | Deep Merge | polyfill, objects, recursion |
-| 10 | Flatten Array (infinite) | polyfill, Array, recursion |
-| 11 | Flatten with Level | polyfill, Array, recursion |
-| 12 | Debounce | polyfill, timing, closures |
-| 13 | Throttle | polyfill, timing, closures |
-| 14 | Promise Polyfill | polyfill, Promise, async |
-| 15 | Promise.all() | polyfill, Promise, async |
-| 16 | Promise.race() | polyfill, Promise, async |
-| 17 | Promise.any() | polyfill, Promise, async |
-| 18 | Promise.allSettled() | polyfill, Promise, async |
+Reuse an id across the pair only if it is free in the merged JS learnings set;
+`pnpm run validate:learning-ids --next-id` reports the next free one.
 
 ## Verification
 
 ```bash
+pnpm test    # unit tests, duplicate-id check, curriculum coverage
 pnpm dev
 ```
 
-1. **Learnings** — 18 items; polyfill entries show `polyfill` + concept badges.
-2. **Coding** — 18 questions; run tests on `myMap`, debounce, `promiseAny`.
+1. **Learnings / Browser** — the new entry appears under the module you filed it in, not under "Unsorted".
+2. **Coding** — the challenge runs its tests.
 3. **Output / MCQ** — unchanged; spot-check one question each if you touched shared code.

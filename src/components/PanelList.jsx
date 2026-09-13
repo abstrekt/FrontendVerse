@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import StarredFilterToggle from './StarredFilterToggle';
 import DifficultyBadge from './DifficultyBadge';
 import Icon from './Icon';
@@ -11,11 +11,15 @@ function stripMarkdown(text) {
  * The item list that fills the contextual panel for every section whose
  * panel is a list: learnings, coding, and everything shaped like them.
  *
- * Rows are one line each. With 157 learnings in a column 300px wide, a
+ * Rows are one line each. With a hundred-odd learnings in a column 300px wide, a
  * three-line card per item means scrolling past nine of them at a time;
  * a single line means thirty, which is the difference between scanning
  * the list and hunting through it. Anything that does not fit on the
  * line (tags, the full title) is on the row's `title` instead.
+ *
+ * `groupBy` names a field to break the list on — `module` for the sections
+ * with a teaching order. Off by default, so the coding and MCQ panels are
+ * unaffected.
  *
  * Local filter text is deliberately not lifted to the URL — it is a way
  * to find one row right now, not a view worth restoring.
@@ -31,6 +35,7 @@ export default function PanelList({
   starredCount = 0,
   onStarredOnlyChange,
   getLabel = (item) => item.title,
+  groupBy = null,
   showDifficulty = false,
   monoLabels = false,
   emptyLabel = 'Nothing here yet',
@@ -60,6 +65,24 @@ export default function PanelList({
       activeItemRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [selectedId]);
+
+  // One group per curriculum module, in the order the items already arrive in
+  // — `applyCurriculum` sorted them, so grouping never has to re-sort. Modules
+  // whose every row was filtered out produce no header.
+  const groups = useMemo(() => {
+    if (!groupBy) return [{ key: null, label: null, items: visible }];
+    const out = [];
+    let current = null;
+    for (const item of visible) {
+      const label = item[groupBy];
+      if (!current || current.label !== label) {
+        current = { key: `${label}-${out.length}`, label, items: [] };
+        out.push(current);
+      }
+      current.items.push(item);
+    }
+    return out;
+  }, [visible, groupBy]);
 
   const showSearch = items.length > 12;
 
@@ -115,44 +138,54 @@ export default function PanelList({
         </div>
       ) : (
         <ul className="learnings-nav-list">
-          {visible.map((item) => {
-            const isSelected = item.id === selectedId;
-            const label = stripMarkdown(getLabel(item));
-            const isDone = completedSet.has(item.id);
+          {groups.map((group) => (
+            <Fragment key={group.key ?? '_all'}>
+              {group.label && (
+                <li className="panel-group-header">
+                  <span className="panel-group-label">{group.label}</span>
+                  <span className="panel-group-count">{group.items.length}</span>
+                </li>
+              )}
+              {group.items.map((item) => {
+                const isSelected = item.id === selectedId;
+                const label = stripMarkdown(getLabel(item));
+                const isDone = completedSet.has(item.id);
 
-            return (
-              <li key={item.id} ref={isSelected ? activeItemRef : null}>
-                <button
-                  type="button"
-                  className={`learning-nav-item${isSelected ? ' active' : ''}${
-                    isDone ? ' done' : ''
-                  }${monoLabels ? ' is-mono' : ''}`}
-                  onClick={() => onSelect(item.id)}
-                  title={label}
-                >
-                  <span className="learning-nav-id">{item.id}</span>
-                  <span className="learning-nav-title">{label}</span>
-                  <span className="learning-nav-marks">
-                    {showDifficulty && item.difficulty && (
-                      <DifficultyBadge difficulty={item.difficulty} compact />
-                    )}
-                    {starredSet.has(item.id) && (
-                      <span className="learning-nav-star">
-                        <Icon name="star" size={11} filled />
-                        <span className="sr-only">Starred</span>
+                return (
+                  <li key={item.id} ref={isSelected ? activeItemRef : null}>
+                    <button
+                      type="button"
+                      className={`learning-nav-item${isSelected ? ' active' : ''}${
+                        isDone ? ' done' : ''
+                      }${monoLabels ? ' is-mono' : ''}`}
+                      onClick={() => onSelect(item.id)}
+                      title={label}
+                    >
+                      <span className="learning-nav-id">{item.id}</span>
+                      <span className="learning-nav-title">{label}</span>
+                      <span className="learning-nav-marks">
+                        {showDifficulty && item.difficulty && (
+                          <DifficultyBadge difficulty={item.difficulty} compact />
+                        )}
+                        {starredSet.has(item.id) && (
+                          <span className="learning-nav-star">
+                            <Icon name="star" size={11} filled />
+                            <span className="sr-only">Starred</span>
+                          </span>
+                        )}
+                        {isDone && (
+                          <span className="learning-nav-completed">
+                            <Icon name="check" size={12} />
+                            <span className="sr-only">Mastered</span>
+                          </span>
+                        )}
                       </span>
-                    )}
-                    {isDone && (
-                      <span className="learning-nav-completed">
-                        <Icon name="check" size={12} />
-                        <span className="sr-only">Mastered</span>
-                      </span>
-                    )}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+                    </button>
+                  </li>
+                );
+              })}
+            </Fragment>
+          ))}
         </ul>
       )}
     </div>

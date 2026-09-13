@@ -17,6 +17,7 @@ const SECTION_CHIP_LABELS = {
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  browser: 'Browser',
   css: 'CSS',
   'react-learnings': 'React',
   'react-guide': 'React Guide',

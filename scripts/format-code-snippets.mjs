@@ -14,18 +14,23 @@ const CONTENT_FILES = [
   { file: 'data/learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/algorithm-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/react-learnings.json', key: 'learnings', fields: ['answer'] },
-  { file: 'data/hld-learnings.json', key: 'learnings', fields: ['answer'] },
-  { file: 'data/polyfill-learnings.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-foundations.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-hld.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-cases.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-lld.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-deep-dives.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/system-design-playbooks.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/tekion-interview-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/wtfjs-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/devto-interview-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/senior-frontend-learnings.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/browser-platform-learnings.json', key: 'learnings', fields: ['answer'] },
 ];
 
 const FENCE_RE = /```(\w*)\n([\s\S]*?)\n```/g;
 
 const JS_LANGS = new Set(['javascript', 'js']);
-const SKIP_LANGS = new Set(['', 'mermaid']);
+const SKIP_LANGS = new Set(['', 'mermaid', 'trace']);
 
 const PRETTIER_JS_OPTS = {
   parser: 'babel',

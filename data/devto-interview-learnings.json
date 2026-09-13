@@ -131,39 +131,6 @@
       "answer": "## Using Bitwise AND (`&`)\n\nThe `&` operator compares each bit of two numbers. Since odd numbers always have the last bit set to `1`, `num & 1` returns `1` for odd numbers and `0` for even numbers:\n\n```javascript\nfunction isEven(num) {\n  if (num & 1) {\n    return false;\n  } else {\n    return true;\n  }\n}\n```\n\n## How it works\n\n| Decimal | Binary | `& 1` result |\n|---------|--------|-------------|\n| 0 | 000 | 0 (even) |\n| 1 | 001 | 1 (odd) |\n| 2 | 010 | 0 (even) |\n| 3 | 011 | 1 (odd) |\n| 4 | 100 | 0 (even) |\n| 5 | 101 | 1 (odd) |\n\nFor `5 & 1`: `101` & `001` = `001` = `1` (odd).\nFor `4 & 1`: `100` & `001` = `000` = `0` (even).\n\n## Alternative: Recursive approach\n\n```javascript\nfunction isEven(num) {\n  if (num < 0 || num === 1) return false;\n  if (num === 0) return true;\n  return isEven(num - 2);\n}\n```"
     },
     {
-      "id": 95,
-      "title": "What is the DOM?",
-      "tags": [
-        "DOM",
-        "browser",
-        "API"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## Document Object Model\n\n**DOM** stands for **Document Object Model** — an interface (API) for HTML and XML documents.\n\nWhen the browser parses an HTML document, it creates a **tree-like structure** from it — this is the DOM. It's used for interacting with and modifying the document structure, elements, and nodes.\n\n## Example\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>Document Object Model</title>\n  </head>\n  <body>\n    <div>\n      <p>\n        <span></span>\n      </p>\n      <label></label>\n      <input />\n    </div>\n  </body>\n</html>\n```\n\nThe DOM equivalent is a tree:\n\n```\ndocument\n └── html\n      ├── head\n      │    ├── meta\n      │    └── title\n      └── body\n           └── div\n                ├── p\n                │    └── span\n                ├── label\n                └── input\n```\n\nThe `document` object in JavaScript represents the DOM. It provides methods to select elements, update content, and manage events."
-    },
-    {
-      "id": 97,
-      "title": "event.preventDefault() vs event.stopPropagation()",
-      "tags": [
-        "DOM",
-        "events",
-        "browser"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## `event.preventDefault()`\n\nPrevents the **default browser behavior** of an element:\n\n- On a `<form>` — prevents submission\n- On an `<a>` — prevents navigation\n- On `contextmenu` — prevents the context menu\n\n## `event.stopPropagation()`\n\nStops the event from propagating through the DOM — prevents it from firing in the **bubbling** or **capturing** phase on parent elements.\n\n## Checking if preventDefault was called\n\nUse `event.defaultPrevented` — returns `true` if `preventDefault()` was called on the element:\n\n```javascript\nelement.addEventListener(\"click\", (e) => {\n  e.preventDefault();\n  console.log(e.defaultPrevented); // true\n});\n```"
-    },
-    {
-      "id": 98,
-      "title": "event.target vs event.currentTarget",
-      "tags": [
-        "DOM",
-        "events",
-        "browser"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## `event.target`\n\nThe element that **triggered** the event — the innermost element that was clicked/interacted with.\n\n## `event.currentTarget`\n\nThe element on which the event handler is **explicitly attached** (`this` in the handler).\n\n## Example\n\n```html\n<div onclick=\"clickFunc(event)\">\n  <div>\n    <div>\n      <button>Button</button>\n    </div>\n  </div>\n</div>\n```\n\n```javascript\nfunction clickFunc(event) {\n  console.log(event.target); // <button> — the element clicked\n  console.log(event.currentTarget); // <div>   — where handler is attached\n}\n```\n\n- Click the button → `target` is the `<button>`, `currentTarget` is the outer `<div>`\n- **`target`** = the deepest element that received the click\n- **`currentTarget`** = the element that owns the handler"
-    },
-    {
       "id": 99,
       "title": "Hoisting",
       "tags": [
@@ -403,18 +370,6 @@
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
       "answer": "## What is async/await?\n\n`async/await` is syntactic sugar built on top of **Promises**. It makes asynchronous code look and behave like synchronous code.\n\n## Comparison\n\n```javascript\n// Using Promises\nfunction callApi() {\n  return fetch(\"url/to/api/endpoint\")\n    .then((resp) => resp.json())\n    .then((data) => {\n      // do something with data\n    })\n    .catch((err) => {\n      // handle error\n    });\n}\n\n// Using async/await\nasync function callApi() {\n  try {\n    const resp = await fetch(\"url/to/api/endpoint\");\n    const data = await resp.json();\n    // do something with data\n  } catch (e) {\n    // handle error\n  }\n}\n```\n\n## Key Rules\n\n### 1. `async` functions always return a Promise\n\n```javascript\nconst giveMeOne = async () => 1;\ngiveMeOne().then((num) => console.log(num)); // 1\n```\n\n### 2. `await` only works inside `async` functions\n\n```javascript\n// ❌ SyntaxError\nfunction getOne() {\n  const num = await giveMeOne();\n}\n\n// ✅\nasync function getTwo() {\n  const num1 = await giveMeOne();\n  const num2 = await giveMeOne();\n  return num1 + num2; // 2\n}\n```\n\n### 3. Sequential execution\n\nEach `await` pauses execution until the Promise resolves:\n\n```javascript\nasync function getTwo() {\n  const num1 = await giveMeOne(); // waits for this\n  const num2 = await giveMeOne(); // then runs this\n  return num1 + num2;\n}\n```\n\nFor parallel execution, use `Promise.all`:\n\n```javascript\nconst [num1, num2] = await Promise.all([giveMeOne(), giveMeOne()]);\n```"
-    },
-    {
-      "id": 122,
-      "title": "AJAX",
-      "tags": [
-        "AJAX",
-        "async",
-        "browser",
-        "HTTP"
-      ],
-      "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
-      "answer": "## What is AJAX?\n\n**AJAX** stands for **Asynchronous JavaScript and XML**. It's a set of technologies that enable sending/receiving data from a server **without reloading the page**.\n\n## Technologies involved\n\n| Technology | Role |\n|------------|------|\n| **HTML** | Web page structure |\n| **CSS** | Styling |\n| **JavaScript** | Behavior, DOM updates |\n| **XMLHttpRequest API** | Send and retrieve data |\n| **Server-side language** | PHP, Python, Node.js, etc. |\n\n## Modern AJAX\n\nToday, `XMLHttpRequest` is largely replaced by the `fetch` API:\n\n```javascript\n// Old way\nconst xhr = new XMLHttpRequest();\nxhr.open(\"GET\", \"/api/data\");\nxhr.onload = () => {\n  if (xhr.status === 200) {\n    console.log(JSON.parse(xhr.responseText));\n  }\n};\nxhr.send();\n\n// Modern way\nfetch(\"/api/data\")\n  .then((res) => res.json())\n  .then((data) => console.log(data));\n```"
     },
     {
       "id": 123,

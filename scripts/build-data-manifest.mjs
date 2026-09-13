@@ -18,22 +18,29 @@ const OUT_PATH = join(ROOT, 'data', 'counts.json');
 
 // Mirrors LEARNING_LOADERS in src/data/datasets.js.
 const SECTIONS = {
+  'acceldata-prep': ['data/acceldata-prep.json'],
   learnings: [
     'data/learnings.json',
-    'data/polyfill-learnings.json',
     'data/tekion-interview-learnings.json',
     'data/wtfjs-learnings.json',
     'data/devto-interview-learnings.json',
     'data/senior-frontend-learnings.json',
-    'data/browser-learnings.json',
   ],
+  browser: ['data/browser-platform-learnings.json'],
   css: ['data/css-learnings.json'],
   'react-learnings': ['data/react-learnings.json'],
   'react-guide': ['data/react-guide.json'],
   'interview-prep': ['data/interview-prep.json'],
   'test-prep': ['data/test-prep.json'],
   'advanced-react': ['data/advanced-react.json'],
-  hld: ['data/hld-learnings.json'],
+  'system-design': [
+    'data/system-design-foundations.json',
+    'data/system-design-hld.json',
+    'data/system-design-cases.json',
+    'data/system-design-lld.json',
+    'data/system-design-deep-dives.json',
+    'data/system-design-playbooks.json',
+  ],
   algorithm: ['data/algorithm-learnings.json'],
   blind75: ['data/blind75-learnings.json'],
 };

@@ -8,15 +8,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite",
-    "build:diagrams": "node scripts/generate-blind75-diagrams.mjs",
+    "build:diagrams": "node scripts/generate-diagrams.mjs",
     "build:traces": "node scripts/apply-blind75-traces.mjs",
     "build:output-questions": "node scripts/build-output-questions.mjs",
     "format:snippets": "node scripts/format-code-snippets.mjs",
     "scan:mcq-duplicates": "node scripts/scan-mcq-duplicates.mjs",
     "validate:learning-ids": "node scripts/validate-learning-ids.mjs",
     "audit:mcq-explanations": "node scripts/audit-mcq-explanations.mjs",
-    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs && node scripts/apply-blind75-traces.mjs --check",
-    "build:data-manifest": "node scripts/build-data-manifest.mjs"
+    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs && node scripts/apply-blind75-traces.mjs --check && node scripts/apply-react-traces.mjs --check",
+    "build:data-manifest": "node scripts/build-data-manifest.mjs",
+    "build:react-traces": "node scripts/apply-react-traces.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

@@ -1,15 +1,17 @@
 import { SECTIONS } from './archive';
 
 export const EMPTY_STARRED = {
+  'acceldata-prep': [],
   'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
+  browser: [],
   css: [],
   'react-learnings': [],
   'react-guide': [],
   'advanced-react': [],
-  hld: [],
+  'system-design': [],
   algorithm: [],
   blind75: [],
   coding: [],
@@ -17,15 +19,17 @@ export const EMPTY_STARRED = {
 };
 
 export const EMPTY_STARRED_FILTER = {
+  'acceldata-prep': false,
   'interview-prep': false,
   'test-prep': false,
   mcq: false,
   learnings: false,
+  browser: false,
   css: false,
   'react-learnings': false,
   'react-guide': false,
   'advanced-react': false,
-  hld: false,
+  'system-design': false,
   algorithm: false,
   blind75: false,
   coding: false,

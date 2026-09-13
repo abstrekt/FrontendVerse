@@ -110,13 +110,42 @@ import { buildSearchIndex } from './utils/searchIndex';
 import { loadLearningSection, LEARNING_LOADERS } from './data/datasets';
 import datasetCounts from '../data/counts.json';
 import { getPassScopeQuestions } from './utils/questionState';
-import { hasRunMigration, markMigrationRun } from './utils/migrations';
+import {
+  hasRunMigration,
+  markMigrationRun,
+  relocateStoreIds,
+  pruneStoreIds,
+} from './utils/migrations';
 import { useAnnounce } from './hooks/useAnnouncer';
 import { sectionLabel, SECTIONS } from './sections/registry';
 import { combinedStreak } from './utils/streak';
 import { outputQuestionLabel } from './utils/outputLabel';
 
 const COMPLETED_BACKFILL_MIGRATION = 'completed-backfill-v1';
+const LEARNINGS_SPLIT_MIGRATION = 'learnings-split-v1';
+
+/* Where each entry that left the JS learnings section went. The browser
+   topics kept their ids; the three strays landed in sections with their own
+   id spaces and were renumbered. See `src/data/curriculum.js`. */
+const LEARNINGS_SPLIT_MOVES = [
+  ...[95, 146, 28, 147, 97, 98, 152, 154, 155, 122, 159, 157, 156, 132, 133, 158].map((id) => ({
+    from: 'learnings',
+    to: 'browser',
+    id,
+  })),
+  { from: 'learnings', to: 'css', id: 27, newId: 6 },
+  { from: 'learnings', to: 'algorithm', id: 24, newId: 11 },
+  { from: 'learnings', to: 'react-learnings', id: 160, newId: 28 },
+];
+
+const HLD_RENAME_MIGRATION = 'hld-to-system-design-v1';
+
+/* The `hld` section was renamed `system-design` when it grew from two Tekion
+   write-ups into the full curriculum. Ids were not touched, so this is a pure
+   section move — but starred/mastered/archived are keyed by section, so
+   without it a reader's marks on the two original entries would be stranded
+   under a slug nothing reads any more. */
+const HLD_RENAME_MOVES = [1, 2].map((id) => ({ from: 'hld', to: 'system-design', id }));
 
 // Keeps the browser chrome in step with an explicit theme choice. The static
 // tags in index.html only respond to the OS setting, so without this the
@@ -167,6 +196,8 @@ function usePracticeQueueStorage(key, legacyKey) {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
+  // Temporary — see ACCELDATA-PREP-REMOVAL.md
+  const [acceldataPrep, setAcceldataPrep] = useState([]);
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [reactGuide, setReactGuide] = useState([]);
@@ -174,7 +205,8 @@ export default function App() {
   const [testPrep, setTestPrep] = useState([]);
   const [advancedReact, setAdvancedReact] = useState([]);
   const [cssLearnings, setCssLearnings] = useState([]);
-  const [hldLearnings, setHldLearnings] = useState([]);
+  const [browserLearnings, setBrowserLearnings] = useState([]);
+  const [systemDesignLearnings, setSystemDesignLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
   const [blind75Learnings, setBlind75Learnings] = useState([]);
   // Which lazily-loaded learning datasets have arrived. Views read this to
@@ -190,13 +222,15 @@ export default function App() {
   const { route, navigate, setSection, setViewMode, learningSetters } = useAppRoute();
   const {
     'learnings': setLearningId,
+    'acceldata-prep': setAcceldataPrepLearningId,
     'css': setCssLearningId,
     'react-learnings': setReactLearningId,
     'react-guide': setReactGuideLearningId,
     'interview-prep': setInterviewPrepLearningId,
     'test-prep': setTestPrepLearningId,
     'advanced-react': setAdvancedReactLearningId,
-    'hld': setHldLearningId,
+    'browser': setBrowserLearningId,
+    'system-design': setSystemDesignLearningId,
     'algorithm': setAlgorithmLearningId,
     'blind75': setBlind75LearningId,
   } = learningSetters;
@@ -262,13 +296,21 @@ export default function App() {
     () => filterActive(advancedReact, 'advanced-react', archived),
     [advancedReact, archived]
   );
+  const activeAcceldataPrep = useMemo(
+    () => filterActive(acceldataPrep, 'acceldata-prep', archived),
+    [acceldataPrep, archived]
+  );
   const activeCssLearnings = useMemo(
     () => filterActive(cssLearnings, 'css', archived),
     [cssLearnings, archived]
   );
-  const activeHldLearnings = useMemo(
-    () => filterActive(hldLearnings, 'hld', archived),
-    [hldLearnings, archived]
+  const activeBrowserLearnings = useMemo(
+    () => filterActive(browserLearnings, 'browser', archived),
+    [browserLearnings, archived]
+  );
+  const activeSystemDesignLearnings = useMemo(
+    () => filterActive(systemDesignLearnings, 'system-design', archived),
+    [systemDesignLearnings, archived]
   );
   const activeAlgorithmLearnings = useMemo(
     () => filterActive(algorithmLearnings, 'algorithm', archived),
@@ -313,6 +355,13 @@ export default function App() {
     () => (starredFilter['test-prep'] ? filterStarred(activeTestPrep, 'test-prep', starred) : activeTestPrep),
     [activeTestPrep, starredFilter, starred]
   );
+  const starredActiveAcceldataPrep = useMemo(
+    () =>
+      starredFilter['acceldata-prep']
+        ? filterStarred(activeAcceldataPrep, 'acceldata-prep', starred)
+        : activeAcceldataPrep,
+    [activeAcceldataPrep, starredFilter, starred]
+  );
   const starredActiveCssLearnings = useMemo(
     () => (starredFilter.css ? filterStarred(activeCssLearnings, 'css', starred) : activeCssLearnings),
     [activeCssLearnings, starredFilter, starred]
@@ -321,9 +370,13 @@ export default function App() {
     () => (starredFilter['advanced-react'] ? filterStarred(activeAdvancedReact, 'advanced-react', starred) : activeAdvancedReact),
     [activeAdvancedReact, starredFilter, starred]
   );
-  const starredActiveHldLearnings = useMemo(
-    () => (starredFilter.hld ? filterStarred(activeHldLearnings, 'hld', starred) : activeHldLearnings),
-    [activeHldLearnings, starredFilter.hld, starred]
+  const starredActiveBrowserLearnings = useMemo(
+    () => (starredFilter.browser ? filterStarred(activeBrowserLearnings, 'browser', starred) : activeBrowserLearnings),
+    [activeBrowserLearnings, starredFilter.browser, starred]
+  );
+  const starredActiveSystemDesignLearnings = useMemo(
+    () => (starredFilter['system-design'] ? filterStarred(activeSystemDesignLearnings, 'system-design', starred) : activeSystemDesignLearnings),
+    [activeSystemDesignLearnings, starredFilter['system-design'], starred]
   );
   const starredActiveAlgorithmLearnings = useMemo(
     () => (starredFilter.algorithm ? filterStarred(activeAlgorithmLearnings, 'algorithm', starred) : activeAlgorithmLearnings),
@@ -353,6 +406,10 @@ export default function App() {
     () => sortCompletedToEnd(starredActiveTestPrep, 'test-prep', completed),
     [starredActiveTestPrep, completed]
   );
+  const orderedStarredActiveAcceldataPrep = useMemo(
+    () => sortCompletedToEnd(starredActiveAcceldataPrep, 'acceldata-prep', completed),
+    [starredActiveAcceldataPrep, completed]
+  );
   const orderedStarredActiveCssLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveCssLearnings, 'css', completed),
     [starredActiveCssLearnings, completed]
@@ -361,9 +418,13 @@ export default function App() {
     () => sortCompletedToEnd(starredActiveAdvancedReact, 'advanced-react', completed),
     [starredActiveAdvancedReact, completed]
   );
-  const orderedStarredActiveHldLearnings = useMemo(
-    () => sortCompletedToEnd(starredActiveHldLearnings, 'hld', completed),
-    [starredActiveHldLearnings, completed]
+  const orderedStarredActiveBrowserLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveBrowserLearnings, 'browser', completed),
+    [starredActiveBrowserLearnings, completed]
+  );
+  const orderedStarredActiveSystemDesignLearnings = useMemo(
+    () => sortCompletedToEnd(starredActiveSystemDesignLearnings, 'system-design', completed),
+    [starredActiveSystemDesignLearnings, completed]
   );
   const orderedStarredActiveAlgorithmLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveAlgorithmLearnings, 'algorithm', completed),
@@ -414,6 +475,10 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'test-prep', activeTestPrep),
     [completed, activeTestPrep]
   );
+  const acceldataPrepCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'acceldata-prep', activeAcceldataPrep),
+    [completed, activeAcceldataPrep]
+  );
   const cssCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'css', activeCssLearnings),
     [completed, activeCssLearnings]
@@ -422,9 +487,13 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'advanced-react', activeAdvancedReact),
     [completed, activeAdvancedReact]
   );
-  const hldCompletedCount = useMemo(
-    () => getActiveCompletedCount(completed, 'hld', activeHldLearnings),
-    [completed, activeHldLearnings]
+  const browserCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'browser', activeBrowserLearnings),
+    [completed, activeBrowserLearnings]
+  );
+  const systemDesignCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'system-design', activeSystemDesignLearnings),
+    [completed, activeSystemDesignLearnings]
   );
   const algorithmCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'algorithm', activeAlgorithmLearnings),
@@ -439,9 +508,11 @@ export default function App() {
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
   const interviewPrepStarredCount = useMemo(() => getStarredCount(starred, 'interview-prep'), [starred]);
   const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
+  const acceldataPrepStarredCount = useMemo(() => getStarredCount(starred, 'acceldata-prep'), [starred]);
   const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
   const advancedReactStarredCount = useMemo(() => getStarredCount(starred, 'advanced-react'), [starred]);
-  const hldStarredCount = useMemo(() => getStarredCount(starred, 'hld'), [starred]);
+  const browserStarredCount = useMemo(() => getStarredCount(starred, 'browser'), [starred]);
+  const systemDesignStarredCount = useMemo(() => getStarredCount(starred, 'system-design'), [starred]);
   const algorithmStarredCount = useMemo(() => getStarredCount(starred, 'algorithm'), [starred]);
   const blind75StarredCount = useMemo(() => getStarredCount(starred, 'blind75'), [starred]);
   const codingStarredCount = useMemo(() => getStarredCount(starred, 'coding'), [starred]);
@@ -450,6 +521,7 @@ export default function App() {
   const searchDocs = useMemo(
     () =>
       buildSearchIndex({
+        acceldataPrep: activeAcceldataPrep,
         interviewPrep: activeInterviewPrep,
         testPrep: activeTestPrep,
         mcq: activeQuestions,
@@ -458,13 +530,15 @@ export default function App() {
         reactGuide: activeReactGuide,
         advancedReact: activeAdvancedReact,
         css: activeCssLearnings,
-        hld: activeHldLearnings,
+        browser: activeBrowserLearnings,
+        systemDesign: activeSystemDesignLearnings,
         algorithm: activeAlgorithmLearnings,
         blind75: activeBlind75Learnings,
         coding: activeCodingQuestions,
         output: activeOutputQuestions,
       }),
     [
+      activeAcceldataPrep,
       activeInterviewPrep,
       activeTestPrep,
       activeQuestions,
@@ -473,7 +547,8 @@ export default function App() {
       activeReactGuide,
       activeAdvancedReact,
       activeCssLearnings,
-      activeHldLearnings,
+      activeBrowserLearnings,
+      activeSystemDesignLearnings,
       activeAlgorithmLearnings,
       activeBlind75Learnings,
       activeCodingQuestions,
@@ -622,6 +697,14 @@ export default function App() {
     return orderedStarredActiveTestPrep[0] ?? null;
   }, [orderedStarredActiveTestPrep, route.learningId, activeSection]);
 
+  const selectedAcceldataPrep = useMemo(() => {
+    if (activeSection !== 'acceldata-prep') return null;
+    if (route.learningId) {
+      return orderedStarredActiveAcceldataPrep.find((item) => item.id === route.learningId) ?? orderedStarredActiveAcceldataPrep[0] ?? null;
+    }
+    return orderedStarredActiveAcceldataPrep[0] ?? null;
+  }, [orderedStarredActiveAcceldataPrep, route.learningId, activeSection]);
+
   const selectedCssLearning = useMemo(() => {
     if (activeSection !== 'css') return null;
     if (route.learningId) {
@@ -638,13 +721,21 @@ export default function App() {
     return orderedStarredActiveAdvancedReact[0] ?? null;
   }, [orderedStarredActiveAdvancedReact, route.learningId, activeSection]);
 
-  const selectedHldLearning = useMemo(() => {
-    if (activeSection !== 'hld') return null;
+  const selectedBrowserLearning = useMemo(() => {
+    if (activeSection !== 'browser') return null;
     if (route.learningId) {
-      return orderedStarredActiveHldLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveHldLearnings[0] ?? null;
+      return orderedStarredActiveBrowserLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveBrowserLearnings[0] ?? null;
     }
-    return orderedStarredActiveHldLearnings[0] ?? null;
-  }, [orderedStarredActiveHldLearnings, route.learningId, activeSection]);
+    return orderedStarredActiveBrowserLearnings[0] ?? null;
+  }, [orderedStarredActiveBrowserLearnings, route.learningId, activeSection]);
+
+  const selectedSystemDesignLearning = useMemo(() => {
+    if (activeSection !== 'system-design') return null;
+    if (route.learningId) {
+      return orderedStarredActiveSystemDesignLearnings.find((item) => item.id === route.learningId) ?? orderedStarredActiveSystemDesignLearnings[0] ?? null;
+    }
+    return orderedStarredActiveSystemDesignLearnings[0] ?? null;
+  }, [orderedStarredActiveSystemDesignLearnings, route.learningId, activeSection]);
 
   const selectedAlgorithmLearning = useMemo(() => {
     if (activeSection !== 'algorithm') return null;
@@ -726,6 +817,13 @@ export default function App() {
   }, [activeSection, route.learningId, orderedStarredActiveTestPrep, setTestPrepLearningId]);
 
   useEffect(() => {
+    if (activeSection !== 'acceldata-prep' || !orderedStarredActiveAcceldataPrep.length) return;
+    if (route.learningId && !orderedStarredActiveAcceldataPrep.some((item) => item.id === route.learningId)) {
+      setAcceldataPrepLearningId(orderedStarredActiveAcceldataPrep[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId]);
+
+  useEffect(() => {
     if (activeSection !== 'css' || !orderedStarredActiveCssLearnings.length) return;
     if (route.learningId && !orderedStarredActiveCssLearnings.some((item) => item.id === route.learningId)) {
       setCssLearningId(orderedStarredActiveCssLearnings[0].id, { replace: true });
@@ -740,11 +838,18 @@ export default function App() {
   }, [activeSection, route.learningId, orderedStarredActiveAdvancedReact, setAdvancedReactLearningId]);
 
   useEffect(() => {
-    if (activeSection !== 'hld' || !orderedStarredActiveHldLearnings.length) return;
-    if (route.learningId && !orderedStarredActiveHldLearnings.some((item) => item.id === route.learningId)) {
-      setHldLearningId(orderedStarredActiveHldLearnings[0].id, { replace: true });
+    if (activeSection !== 'browser' || !orderedStarredActiveBrowserLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveBrowserLearnings.some((item) => item.id === route.learningId)) {
+      setBrowserLearningId(orderedStarredActiveBrowserLearnings[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, orderedStarredActiveHldLearnings, setHldLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveBrowserLearnings, setBrowserLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'system-design' || !orderedStarredActiveSystemDesignLearnings.length) return;
+    if (route.learningId && !orderedStarredActiveSystemDesignLearnings.some((item) => item.id === route.learningId)) {
+      setSystemDesignLearningId(orderedStarredActiveSystemDesignLearnings[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveSystemDesignLearnings, setSystemDesignLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'algorithm' || !orderedStarredActiveAlgorithmLearnings.length) return;
@@ -934,6 +1039,7 @@ export default function App() {
   // section is usually instant.
   useEffect(() => {
     const setters = {
+      'acceldata-prep': setAcceldataPrep,
       learnings: setLearnings,
       css: setCssLearnings,
       'react-learnings': setReactLearnings,
@@ -941,7 +1047,8 @@ export default function App() {
       'interview-prep': setInterviewPrep,
       'test-prep': setTestPrep,
       'advanced-react': setAdvancedReact,
-      hld: setHldLearnings,
+      browser: setBrowserLearnings,
+      'system-design': setSystemDesignLearnings,
       algorithm: setAlgorithmLearnings,
       blind75: setBlind75Learnings,
     };
@@ -997,6 +1104,40 @@ export default function App() {
       return next;
     });
   }, [loading, outputProgress, progress, codingProgress, setCompleted]);
+
+  /* The JS learnings section was split: browser topics became their own
+     section, three entries moved to CSS / Algorithm / React, and the polyfill
+     write-ups now live only as coding challenges. Starred, mastered and
+     archived are all keyed by section + id, so each store has to follow the
+     content. Once ever — re-running after the reader re-stars something would
+     move it again. Waits for `learnings` so the prune has the real id set. */
+  useEffect(() => {
+    if (loading || !loadedSections.learnings) return;
+    if (hasRunMigration(LEARNINGS_SPLIT_MIGRATION)) return;
+    markMigrationRun(LEARNINGS_SPLIT_MIGRATION);
+
+    const liveIds = learnings.map((item) => item.id);
+    const move = (store) =>
+      pruneStoreIds(relocateStoreIds(store, LEARNINGS_SPLIT_MOVES), 'learnings', liveIds);
+
+    setStarred(move);
+    setCompleted(move);
+    setArchived(move);
+  }, [loading, loadedSections.learnings, learnings, setStarred, setCompleted, setArchived]);
+
+  /* Section rename only — see HLD_RENAME_MOVES. Does not wait on a loaded
+     section because nothing is pruned against a live id set. */
+  useEffect(() => {
+    if (loading) return;
+    if (hasRunMigration(HLD_RENAME_MIGRATION)) return;
+    markMigrationRun(HLD_RENAME_MIGRATION);
+
+    const move = (store) => relocateStoreIds(store, HLD_RENAME_MOVES);
+
+    setStarred(move);
+    setCompleted(move);
+    setArchived(move);
+  }, [loading, setStarred, setCompleted, setArchived]);
 
   useEffect(() => {
     if (!isPassComplete || passRecordedRef.current) return;
@@ -1181,12 +1322,20 @@ export default function App() {
         setSection('advanced-react', { learningId: id });
         return;
       }
+      if (section === 'acceldata-prep') {
+        setSection('acceldata-prep', { learningId: id });
+        return;
+      }
       if (section === 'css') {
         setSection('css', { learningId: id });
         return;
       }
-      if (section === 'hld') {
-        setSection('hld', { learningId: id });
+      if (section === 'browser') {
+        setSection('browser', { learningId: id });
+        return;
+      }
+      if (section === 'system-design') {
+        setSection('system-design', { learningId: id });
         return;
       }
       if (section === 'algorithm') {
@@ -1293,6 +1442,11 @@ export default function App() {
     [orderedStarredActiveTestPrep, setTestPrepLearningId, completed, setCompleted]
   );
 
+  const handleToggleAcceldataPrepCompleted = useMemo(
+    () => makeLearningToggleCompleted('acceldata-prep', orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId, completed, setCompleted),
+    [orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId, completed, setCompleted]
+  );
+
   const handleToggleCssLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('css', orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted),
     [orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted]
@@ -1302,9 +1456,13 @@ export default function App() {
     () => makeLearningToggleCompleted('advanced-react', orderedStarredActiveAdvancedReact, setAdvancedReactLearningId, completed, setCompleted),
     [orderedStarredActiveAdvancedReact, setAdvancedReactLearningId, completed, setCompleted]
   );
-  const handleToggleHldLearningCompleted = useMemo(
-    () => makeLearningToggleCompleted('hld', orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted),
-    [orderedStarredActiveHldLearnings, setHldLearningId, completed, setCompleted]
+  const handleToggleBrowserLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('browser', orderedStarredActiveBrowserLearnings, setBrowserLearningId, completed, setCompleted),
+    [orderedStarredActiveBrowserLearnings, setBrowserLearningId, completed, setCompleted]
+  );
+  const handleToggleSystemDesignLearningCompleted = useMemo(
+    () => makeLearningToggleCompleted('system-design', orderedStarredActiveSystemDesignLearnings, setSystemDesignLearningId, completed, setCompleted),
+    [orderedStarredActiveSystemDesignLearnings, setSystemDesignLearningId, completed, setCompleted]
   );
   const handleToggleAlgorithmLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('algorithm', orderedStarredActiveAlgorithmLearnings, setAlgorithmLearningId, completed, setCompleted),
@@ -1434,6 +1592,23 @@ export default function App() {
     [setStarredFilter, activeTestPrep, starred, route.learningId, setTestPrepLearningId]
   );
 
+  const handleAcceldataPrepStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'acceldata-prep': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeAcceldataPrep, 'acceldata-prep', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setAcceldataPrepLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeAcceldataPrep, starred, route.learningId, setAcceldataPrepLearningId]
+  );
+
   const handleCssStarredFilterChange = useCallback(
     (value) => {
       setStarredFilter((prev) => ({ ...prev, css: value }));
@@ -1468,21 +1643,38 @@ export default function App() {
     [setStarredFilter, activeAdvancedReact, starred, route.learningId, setAdvancedReactLearningId]
   );
 
-  const handleHldStarredFilterChange = useCallback(
+  const handleBrowserStarredFilterChange = useCallback(
     (value) => {
-      setStarredFilter((prev) => ({ ...prev, hld: value }));
+      setStarredFilter((prev) => ({ ...prev, browser: value }));
       if (value) {
-        const nextStarred = filterStarred(activeHldLearnings, 'hld', starred);
+        const nextStarred = filterStarred(activeBrowserLearnings, 'browser', starred);
         if (
           route.learningId &&
           !nextStarred.some((item) => item.id === route.learningId) &&
           nextStarred.length > 0
         ) {
-          setHldLearningId(nextStarred[0].id);
+          setBrowserLearningId(nextStarred[0].id);
         }
       }
     },
-    [setStarredFilter, activeHldLearnings, starred, route.learningId, setHldLearningId]
+    [setStarredFilter, activeBrowserLearnings, starred, route.learningId, setBrowserLearningId]
+  );
+
+  const handleSystemDesignStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'system-design': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeSystemDesignLearnings, 'system-design', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setSystemDesignLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeSystemDesignLearnings, starred, route.learningId, setSystemDesignLearningId]
   );
 
   const handleAlgorithmStarredFilterChange = useCallback(
@@ -1621,6 +1813,18 @@ export default function App() {
     [setArchived, archived, testPrep, route.learningId, setTestPrepLearningId]
   );
 
+  const handleArchiveAcceldataPrep = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'acceldata-prep', learning.id));
+      const nextArchived = archiveId(archived, 'acceldata-prep', learning.id);
+      const nextActive = filterActive(acceldataPrep, 'acceldata-prep', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setAcceldataPrepLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, acceldataPrep, route.learningId, setAcceldataPrepLearningId]
+  );
+
   const handleArchiveCssLearning = useCallback(
     (learning) => {
       setArchived((prev) => archiveId(prev, 'css', learning.id));
@@ -1645,16 +1849,28 @@ export default function App() {
     [setArchived, archived, advancedReact, route.learningId, setAdvancedReactLearningId]
   );
 
-  const handleArchiveHldLearning = useCallback(
+  const handleArchiveBrowserLearning = useCallback(
     (learning) => {
-      setArchived((prev) => archiveId(prev, 'hld', learning.id));
-      const nextArchived = archiveId(archived, 'hld', learning.id);
-      const nextActive = filterActive(hldLearnings, 'hld', nextArchived);
+      setArchived((prev) => archiveId(prev, 'browser', learning.id));
+      const nextArchived = archiveId(archived, 'browser', learning.id);
+      const nextActive = filterActive(browserLearnings, 'browser', nextArchived);
       if (learning.id === route.learningId && nextActive.length > 0) {
-        setHldLearningId(nextActive[0].id);
+        setBrowserLearningId(nextActive[0].id);
       }
     },
-    [setArchived, archived, hldLearnings, route.learningId, setHldLearningId]
+    [setArchived, archived, browserLearnings, route.learningId, setBrowserLearningId]
+  );
+
+  const handleArchiveSystemDesignLearning = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'system-design', learning.id));
+      const nextArchived = archiveId(archived, 'system-design', learning.id);
+      const nextActive = filterActive(systemDesignLearnings, 'system-design', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setSystemDesignLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, systemDesignLearnings, route.learningId, setSystemDesignLearningId]
   );
 
   const handleArchiveAlgorithmLearning = useCallback(
@@ -2166,6 +2382,10 @@ export default function App() {
      prop list in between. */
   const navCounts = useMemo(
     () => ({
+      'acceldata-prep': {
+        done: acceldataPrepCompletedCount,
+        total: sectionCount('acceldata-prep', activeAcceldataPrep),
+      },
       mcq: { done: mcqCompletedCount, total: activeQuestions.length },
       learnings: {
         done: learningsCompletedCount,
@@ -2184,7 +2404,14 @@ export default function App() {
         done: advancedReactCompletedCount,
         total: sectionCount('advanced-react', activeAdvancedReact),
       },
-      hld: { done: hldCompletedCount, total: sectionCount('hld', activeHldLearnings) },
+      browser: {
+        done: browserCompletedCount,
+        total: sectionCount('browser', activeBrowserLearnings),
+      },
+      'system-design': {
+        done: systemDesignCompletedCount,
+        total: sectionCount('system-design', activeSystemDesignLearnings),
+      },
       algorithm: {
         done: algorithmCompletedCount,
         total: sectionCount('algorithm', activeAlgorithmLearnings),
@@ -2206,12 +2433,14 @@ export default function App() {
       },
     }),
     [
+      acceldataPrepCompletedCount, activeAcceldataPrep,
       mcqCompletedCount, activeQuestions.length,
       learningsCompletedCount, activeLearnings, cssCompletedCount, activeCssLearnings,
       reactLearningsCompletedCount, activeReactLearnings,
       reactGuideCompletedCount, activeReactGuide,
       advancedReactCompletedCount, activeAdvancedReact,
-      hldCompletedCount, activeHldLearnings,
+      browserCompletedCount, activeBrowserLearnings,
+      systemDesignCompletedCount, activeSystemDesignLearnings,
       algorithmCompletedCount, activeAlgorithmLearnings,
       blind75CompletedCount, activeBlind75Learnings,
       codingCompletedCount, activeCodingQuestions.length,
@@ -2402,6 +2631,18 @@ export default function App() {
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
+            ) : activeSection === 'acceldata-prep' ? (
+              <LearningsView
+                learning={selectedAcceldataPrep}
+                onArchive={handleArchiveAcceldataPrep}
+                isStarred={selectedAcceldataPrep ? isStarred(selectedAcceldataPrep.id, 'acceldata-prep', starred) : false}
+                onToggleStar={() => selectedAcceldataPrep && handleToggleStar('acceldata-prep', selectedAcceldataPrep.id)}
+                isCompleted={selectedAcceldataPrep ? isCompleted(selectedAcceldataPrep.id, 'acceldata-prep', completed) : false}
+                onToggleCompleted={() => selectedAcceldataPrep && handleToggleAcceldataPrepCompleted(selectedAcceldataPrep.id)}
+                highlight={syntaxHighlight}
+                theme={editorTheme}
+                onNavigate={handleInternalLink}
+              />
             ) : activeSection === 'css' ? (
               <LearningsView
                 learning={selectedCssLearning}
@@ -2437,14 +2678,26 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
               />
-            ) : activeSection === 'hld' ? (
+            ) : activeSection === 'browser' ? (
               <LearningsView
-                learning={selectedHldLearning}
-                onArchive={handleArchiveHldLearning}
-                isStarred={selectedHldLearning ? isStarred(selectedHldLearning.id, 'hld', starred) : false}
-                onToggleStar={() => selectedHldLearning && handleToggleStar('hld', selectedHldLearning.id)}
-                isCompleted={selectedHldLearning ? isCompleted(selectedHldLearning.id, 'hld', completed) : false}
-                onToggleCompleted={() => selectedHldLearning && handleToggleHldLearningCompleted(selectedHldLearning.id)}
+                learning={selectedBrowserLearning}
+                onArchive={handleArchiveBrowserLearning}
+                isStarred={selectedBrowserLearning ? isStarred(selectedBrowserLearning.id, 'browser', starred) : false}
+                onToggleStar={() => selectedBrowserLearning && handleToggleStar('browser', selectedBrowserLearning.id)}
+                isCompleted={selectedBrowserLearning ? isCompleted(selectedBrowserLearning.id, 'browser', completed) : false}
+                onToggleCompleted={() => selectedBrowserLearning && handleToggleBrowserLearningCompleted(selectedBrowserLearning.id)}
+                highlight={syntaxHighlight}
+                theme={editorTheme}
+                onNavigate={handleInternalLink}
+              />
+            ) : activeSection === 'system-design' ? (
+              <LearningsView
+                learning={selectedSystemDesignLearning}
+                onArchive={handleArchiveSystemDesignLearning}
+                isStarred={selectedSystemDesignLearning ? isStarred(selectedSystemDesignLearning.id, 'system-design', starred) : false}
+                onToggleStar={() => selectedSystemDesignLearning && handleToggleStar('system-design', selectedSystemDesignLearning.id)}
+                isCompleted={selectedSystemDesignLearning ? isCompleted(selectedSystemDesignLearning.id, 'system-design', completed) : false}
+                onToggleCompleted={() => selectedSystemDesignLearning && handleToggleSystemDesignLearningCompleted(selectedSystemDesignLearning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
               />
@@ -2480,8 +2733,10 @@ export default function App() {
                 reactLearnings={reactLearnings}
                 reactGuide={reactGuide}
                 advancedReact={advancedReact}
+                acceldataPrep={acceldataPrep}
                 cssLearnings={cssLearnings}
-                hldLearnings={hldLearnings}
+                browserLearnings={browserLearnings}
+                systemDesignLearnings={systemDesignLearnings}
                 algorithmLearnings={algorithmLearnings}
                 blind75Learnings={blind75Learnings}
                 codingQuestions={codingQuestions}
@@ -2517,6 +2772,7 @@ export default function App() {
                 learnings={orderedStarredActiveLearnings}
                 selectedLearningId={selectedLearning?.id ?? null}
                 sectionKey="learnings"
+                groupBy="module"
                 starredOnly={starredFilter.learnings}
                 starredCount={learningsStarredCount}
                 onStarredOnlyChange={handleLearningsStarredFilterChange}
@@ -2572,6 +2828,22 @@ export default function App() {
                 title="HackerEarth Frontend Test Prep"
               />
             </div>
+          ) : activeSection === 'acceldata-prep' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred['acceldata-prep']}
+                completedIds={completed['acceldata-prep']}
+                activeItem={selectedAcceldataPrep}
+                learnings={orderedStarredActiveAcceldataPrep}
+                selectedLearningId={selectedAcceldataPrep?.id ?? null}
+                sectionKey="acceldata-prep"
+                starredOnly={starredFilter['acceldata-prep']}
+                starredCount={acceldataPrepStarredCount}
+                onStarredOnlyChange={handleAcceldataPrepStarredFilterChange}
+                onSelect={setAcceldataPrepLearningId}
+                title="Acceldata Prep"
+              />
+            </div>
           ) : activeSection === 'css' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
@@ -2620,20 +2892,38 @@ export default function App() {
                 title="React Interview Mastery Guide"
               />
             </div>
-          ) : activeSection === 'hld' ? (
+          ) : activeSection === 'browser' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                starredIds={starred.hld}
-                completedIds={completed.hld}
-                activeItem={selectedHldLearning}
-                learnings={orderedStarredActiveHldLearnings}
-                selectedLearningId={selectedHldLearning?.id ?? null}
-                sectionKey="hld"
-                starredOnly={starredFilter.hld}
-                starredCount={hldStarredCount}
-                onStarredOnlyChange={handleHldStarredFilterChange}
-                onSelect={setHldLearningId}
-                title="HLD"
+                starredIds={starred.browser}
+                completedIds={completed.browser}
+                activeItem={selectedBrowserLearning}
+                learnings={orderedStarredActiveBrowserLearnings}
+                selectedLearningId={selectedBrowserLearning?.id ?? null}
+                sectionKey="browser"
+                groupBy="module"
+                starredOnly={starredFilter.browser}
+                starredCount={browserStarredCount}
+                onStarredOnlyChange={handleBrowserStarredFilterChange}
+                onSelect={setBrowserLearningId}
+                title="Browser & Web Platform"
+              />
+            </div>
+          ) : activeSection === 'system-design' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred['system-design']}
+                completedIds={completed['system-design']}
+                activeItem={selectedSystemDesignLearning}
+                learnings={orderedStarredActiveSystemDesignLearnings}
+                selectedLearningId={selectedSystemDesignLearning?.id ?? null}
+                sectionKey="system-design"
+                groupBy="module"
+                starredOnly={starredFilter['system-design']}
+                starredCount={systemDesignStarredCount}
+                onStarredOnlyChange={handleSystemDesignStarredFilterChange}
+                onSelect={setSystemDesignLearningId}
+                title="System Design"
               />
             </div>
           ) : activeSection === 'algorithm' ? (

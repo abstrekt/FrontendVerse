@@ -1,11 +1,18 @@
 /**
- * Builds the Blind 75 pattern diagrams.
+ * Builds a diagram set.
  *
- *   node scripts/generate-blind75-diagrams.mjs          # build all
- *   node scripts/generate-blind75-diagrams.mjs graphs   # build one
+ *   node scripts/generate-diagrams.mjs blind75            # build a whole set
+ *   node scripts/generate-diagrams.mjs blind75 graphs     # build one
+ *   node scripts/generate-diagrams.mjs                    # build every set
  *
- * Writes an editable `.drawio` into diagrams/blind75/ and a themed, inlined
- * `.svg` into public/diagrams/blind75/.
+ * Writes an editable `.drawio` into diagrams/<set>/ and a themed, inlined
+ * `.svg` into public/diagrams/<set>/.
+ *
+ * Cell ids are reset before each diagram, so a file's ids depend only on its
+ * own `build()` — rebuilding one diagram, one set, or everything all produce
+ * byte-identical output. They used to come from a counter shared across the
+ * whole run, which meant the diff for "I moved one box" also renumbered every
+ * cell in every file built after it.
  *
  * The layout used to come from Mermaid text run through the draw.io CLI's
  * importer. Its auto-layout overlapped nodes, leaked Mermaid syntax into
@@ -24,14 +31,17 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-import { document } from './lib/drawio-builder.mjs';
-import { DIAGRAMS } from './lib/blind75-diagrams.mjs';
+import { document, resetIds } from './lib/drawio-builder.mjs';
+import { DIAGRAMS as BLIND75 } from './lib/blind75-diagrams.mjs';
+import { DIAGRAMS as SYSDESIGN } from './lib/sysdesign-diagrams.mjs';
+import { DIAGRAMS as REACT } from './lib/react-diagrams.mjs';
 import { postprocess, findUnmappedColors } from './lib/svg-postprocess.mjs';
+import { lintDiagram } from './lib/diagram-lint.mjs';
+
+const SETS = { blind75: BLIND75, sysdesign: SYSDESIGN, react: REACT };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const SRC_DIR = join(ROOT, 'diagrams', 'blind75');
-const OUT_DIR = join(ROOT, 'public', 'diagrams', 'blind75');
 
 const DRAWIO_CANDIDATES = [
   process.env.DRAWIO_BIN,
@@ -60,35 +70,50 @@ function exportSvg(bin, drawioPath, svgPath) {
   );
 }
 
-function main() {
-  const only = process.argv.slice(2).filter((a) => !a.startsWith('-'));
+function buildSet(setName, only, bin) {
+  const DIAGRAMS = SETS[setName];
+  const SRC_DIR = join(ROOT, 'diagrams', setName);
+  const OUT_DIR = join(ROOT, 'public', 'diagrams', setName);
   const names = only.length ? only : Object.keys(DIAGRAMS);
 
   for (const name of names) {
     if (!DIAGRAMS[name]) {
-      console.error(`✗ unknown diagram "${name}". Known: ${Object.keys(DIAGRAMS).join(', ')}`);
-      process.exitCode = 1;
-      return;
+      console.error(`✗ unknown diagram "${name}" in set ${setName}. Known: ${Object.keys(DIAGRAMS).join(', ')}`);
+      return 1;
     }
   }
 
   mkdirSync(SRC_DIR, { recursive: true });
   mkdirSync(OUT_DIR, { recursive: true });
 
-  const bin = findDrawio();
-  if (!bin) {
-    console.warn('! draw.io CLI not found — writing .drawio sources only.');
-    console.warn(`  Looked in: ${DRAWIO_CANDIDATES.join(', ')}`);
-  }
-
   let failed = 0;
 
   for (const name of names) {
     const { title, build } = DIAGRAMS[name];
+    resetIds();
     const { width, height, cells } = build();
 
     const drawioPath = join(SRC_DIR, `${name}.drawio`);
-    writeFileSync(drawioPath, document({ name: title, width, height, cells }));
+    const xml = document({ name: title, width, height, cells });
+    writeFileSync(drawioPath, xml);
+
+    // Both of these are invisible in the export: a cell past the edge is
+    // cropped away and an oversized label is clipped mid-sentence, and the
+    // build still reports success.
+    const { offCanvas, clipped, overlapping } = lintDiagram(xml, { width, height });
+    for (const c of offCanvas) {
+      console.error(`✗ ${name}: "${c.label}" is outside the ${width}×${height} canvas (${c.box})`);
+    }
+    for (const c of clipped) {
+      console.warn(`  ⚠ ${name}: "${c.label}" needs ~${c.needed}px, box is ${c.have}px`);
+    }
+    for (const c of overlapping) {
+      console.warn(`  ⚠ ${name}: "${c.a}" overlaps "${c.b}" by ${c.by}px`);
+    }
+    if (offCanvas.length) {
+      failed += 1;
+      continue;
+    }
 
     if (!bin) continue;
 
@@ -113,11 +138,37 @@ function main() {
       `✓ ${name.padEnd(28)} ${String(width).padStart(4)}×${String(height).padEnd(4)}  ${kb.padStart(6)} KB  (−${saved}%)` +
         (unmapped.length ? `  ⚠ unmapped: ${unmapped.join(' ')}` : '')
     );
+    // An unmapped colour is a bug, not a note: svg-postprocess could not turn
+    // it into a `--dg-*` custom property, so it will not follow the theme.
+    if (unmapped.length) failed += 1;
   }
 
   // The set used to include a stray `test.drawio` from an early experiment.
   const stray = join(SRC_DIR, 'test.drawio');
   if (existsSync(stray)) rmSync(stray);
+
+  return failed;
+}
+
+function main() {
+  const args = process.argv.slice(2).filter((a) => !a.startsWith('-'));
+  const [setName, ...only] = args;
+
+  if (setName && !SETS[setName]) {
+    console.error(`✗ unknown set "${setName}". Known: ${Object.keys(SETS).join(', ')}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const bin = findDrawio();
+  if (!bin) {
+    console.warn('! draw.io CLI not found — writing .drawio sources only.');
+    console.warn(`  Looked in: ${DRAWIO_CANDIDATES.join(', ')}`);
+  }
+
+  const sets = setName ? [setName] : Object.keys(SETS);
+  let failed = 0;
+  for (const s of sets) failed += buildSet(s, setName ? only : [], bin);
 
   if (failed) process.exitCode = 1;
 }

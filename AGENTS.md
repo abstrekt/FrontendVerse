@@ -17,6 +17,7 @@ Package manager: **pnpm** (`pnpm start` runs the dev server).
 | --------- | ---------------------------------- | ------------------- |
 | MCQ       | `questions.json`                   | `QuizQuestion`      |
 | Learnings | `data/learnings.json` (+ merges)   | `LearningsView`     |
+| Browser & Web Platform | `data/browser-platform-learnings.json` | `LearningsView` |
 | React Learnings | `data/react-learnings.json`  | `LearningsView`     |
 | HLD       | `data/hld-learnings.json`          | `LearningsView`     |
 | Algorithm | `data/algorithm-learnings.json`    | `LearningsView`     |
@@ -97,6 +98,44 @@ code in a learning changes, update its trace.
 
 Coverage so far: ids 10–19 (Arrays & Hashing). The rest are still to write.
 
+## React diagrams and traces
+
+Every item in the four React files carries a generated section — a themed
+draw.io blueprint for the mechanism, then a steppable trace of it running on
+one concrete case.
+
+```bash
+pnpm run build:diagrams react     # the blueprint set (needs the draw.io CLI)
+pnpm run build:react-traces       # write the sections into the JSON
+node scripts/apply-react-traces.mjs --check   # CI guard; part of `pnpm test`
+node scripts/apply-react-traces.mjs --section=react-guide   # one section, while authoring
+```
+
+| File | Role |
+| --- | --- |
+| `scripts/lib/react-diagrams.mjs` | **The blueprints** — ~35 `build()` functions, explicit coordinates, same DSL as Blind 75. |
+| `scripts/lib/react-traces.mjs` | **The table**, keyed by section then item id: `{ diagram, alt, after, trace }`. Edit here. |
+| `scripts/apply-react-traces.mjs` | Writes a `## 📊 How It Works` section into `react-guide`, `advanced-react`, `react-learnings` and `react-mcq-questions`. Idempotent. |
+| `scripts/lib/trace-validate.mjs` | The shared shape check, used by both appliers. |
+| `scripts/lib/diagram-lint.mjs` | Geometry check run during the diagram build — a cell outside the canvas fails it; a clipped label or a partial overlap warns. |
+
+A blueprint is **shared**: a dozen items are about the reference trap and all
+of them point at `memo_reference_trap`. The trace is per-item and must follow
+the code that item publishes.
+
+**Coverage is enforced.** `--check` fails if any item in those four files has
+no entry. The only exemptions are listed in `DIAGRAM_ONLY` — `react-guide` 1
+and 39, which are index pages with no single mechanism to step through.
+
+Placement defaults to the end of the item's opening section; set `after` to an
+exact `## Heading` to put it somewhere else. MCQ entries write into
+`explanation`, which has no headings, so the section is appended.
+
+**Lane kinds** beyond the Blind 75 `cells` row — `tree`, `slots`, `phases`
+and `log` — are documented in `src/components/VisualTrace.jsx` and enforced by
+`trace-validate.mjs`. Tones are `active · hit · bad · skip · window · done`.
+Notes, the input line and the result render `` `code` `` and `**bold**`.
+
 ## Adding content
 
 **Read the project skill before adding or bulk-loading content:**
@@ -105,13 +144,32 @@ Coverage so far: ids 10–19 (Arrays & Hashing). The rest are still to write.
 
 It documents schemas, tagging conventions, coding test runners, merge patterns, and a step-by-step checklist.
 
-## Reference example
+## Reading order
 
-The polyfill batch (ids 2–18) shows the **paired** dual-section import pattern (opt-in when using `/load` — the command defaults to a single section unless you ask for both):
+`JavaScript learnings` and `Browser & Web Platform` are ordered by a curriculum
+rather than by the order their source files happen to merge.
 
-- Learnings: [`data/polyfill-learnings.json`](data/polyfill-learnings.json) — merged in `App.jsx`
-- Coding: entries in [`data/coding-questions.json`](data/coding-questions.json)
-- Tags: `polyfill` first, then concept tags (`Array`, `Promise`, `this`, etc.)
+| File | Role |
+| --- | --- |
+| `src/data/curriculum.js` | **The order.** One module table per section: `{ key, label, ids }` in teaching order. Edit here. |
+| `src/data/datasets.js` | Applies it after the merge (`applyCurriculum`) and stamps `module` / `moduleKey` on every entry. |
+| `src/components/PanelList.jsx` | `groupBy="module"` renders the sticky module headers. |
+| `src/data/curriculum.test.js` | CI guard; part of `pnpm test`. |
+
+**Adding a learning to one of these sections means adding its id to a module**,
+otherwise it lands at the end under "Unsorted" and the test fails. Ids are the
+URL and the localStorage key for starred/completed/archived — never renumber one
+to move an entry, move it in the table.
+
+These two sections are **theory only**. Anything whose point is an
+implementation (a polyfill, debounce, a scheduler) belongs in
+[`data/coding-questions.json`](data/coding-questions.json), where it gets a
+template and runnable tests. `data/polyfill-learnings.json` used to duplicate
+those seventeen challenges as prose and was folded into their `explanation`
+fields.
+
+Moving an entry between sections needs a `relocateStoreIds` migration in
+`App.jsx` — starred, completed and archived are all keyed by section + id.
 
 ## Build scripts
 

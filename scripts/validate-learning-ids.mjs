@@ -5,29 +5,39 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-/** Must stay in sync with learnings merge in src/App.jsx */
-const LEARNING_SOURCES = [
-  { file: 'data/learnings.json', key: 'learnings' },
-  { file: 'data/polyfill-learnings.json', key: 'learnings' },
-  { file: 'data/tekion-interview-learnings.json', key: 'learnings' },
-  { file: 'data/wtfjs-learnings.json', key: 'learnings' },
-  { file: 'data/devto-interview-learnings.json', key: 'learnings' },
-  { file: 'data/senior-frontend-learnings.json', key: 'learnings' },
-  { file: 'data/browser-learnings.json', key: 'learnings' },
-];
+/**
+ * Sections whose content is merged from several files, so ids have to be
+ * unique across the whole group rather than per file.
+ *
+ * Must stay in sync with the merges in `src/data/datasets.js`. A section with
+ * a single data file is not listed: its ids are unique by construction.
+ */
+const GROUPS = {
+  learnings: [
+    'data/learnings.json',
+    'data/tekion-interview-learnings.json',
+    'data/wtfjs-learnings.json',
+    'data/devto-interview-learnings.json',
+    'data/senior-frontend-learnings.json',
+  ],
+  'system-design': [
+    'data/system-design-foundations.json',
+    'data/system-design-hld.json',
+    'data/system-design-cases.json',
+    'data/system-design-lld.json',
+    'data/system-design-deep-dives.json',
+    'data/system-design-playbooks.json',
+  ],
+};
 
-function loadAllLearnings() {
+const DEFAULT_GROUP = 'learnings';
+
+function loadGroup(files) {
   const entries = [];
-  for (const { file, key } of LEARNING_SOURCES) {
-    const path = join(ROOT, file);
-    const data = JSON.parse(readFileSync(path, 'utf-8'));
-    const items = data[key] ?? [];
-    for (const item of items) {
-      entries.push({
-        id: item.id,
-        title: item.title ?? '(no title)',
-        file,
-      });
+  for (const file of files) {
+    const data = JSON.parse(readFileSync(join(ROOT, file), 'utf-8'));
+    for (const item of data.learnings ?? []) {
+      entries.push({ id: item.id, title: item.title ?? '(no title)', file });
     }
   }
   return entries;
@@ -54,51 +64,59 @@ function validate(entries) {
 
   const ids = entries.map((e) => e.id);
   const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-  const nextId = maxId + 1;
 
-  return {
-    total: entries.length,
-    maxId,
-    nextId,
-    errors,
-    ok: errors.length === 0,
-  };
+  return { total: entries.length, maxId, nextId: maxId + 1, errors, ok: errors.length === 0 };
 }
 
-function printReport(result) {
-  console.log(`Learning ID validation — ${result.total} entries across ${LEARNING_SOURCES.length} files`);
-  console.log('');
+function printReport(group, files, result) {
+  console.log(
+    `${group} ID validation — ${result.total} entries across ${files.length} files`,
+  );
 
   if (result.errors.length > 0) {
+    console.log('');
     console.log(`ERRORS (${result.errors.length}):`);
-    for (const e of result.errors) {
-      console.log(`  [${e.type}] ${e.message}`);
-    }
+    for (const e of result.errors) console.log(`  [${e.type}] ${e.message}`);
     console.log('');
     console.log('Validation failed — fix errors above.');
   } else {
-    console.log('No duplicate IDs found.');
+    console.log('  No duplicate IDs found.');
   }
 }
 
-const jsonMode = process.argv.includes('--json');
-const nextIdMode = process.argv.includes('--next-id');
-const entries = loadAllLearnings();
-const result = validate(entries);
+const argv = process.argv.slice(2);
+const jsonMode = argv.includes('--json');
+const nextIdMode = argv.includes('--next-id');
+
+// A bare argument names the group. Defaults to `learnings` so existing callers
+// (`--next-id` in the /load command) keep working unchanged.
+const named = argv.find((a) => !a.startsWith('-'));
+if (named && !GROUPS[named]) {
+  console.error(`Unknown group "${named}". Known: ${Object.keys(GROUPS).join(', ')}`);
+  process.exit(1);
+}
+
+const results = Object.fromEntries(
+  Object.entries(GROUPS).map(([group, files]) => [group, validate(loadGroup(files))]),
+);
 
 if (nextIdMode) {
-  if (!result.ok) {
-    console.error('Cannot compute next id — duplicate IDs exist. Fix errors first.');
+  const group = named ?? DEFAULT_GROUP;
+  if (!results[group].ok) {
+    console.error(`Cannot compute next id for ${group} — duplicate IDs exist. Fix errors first.`);
     process.exit(1);
   }
-  console.log(result.nextId);
+  console.log(results[group].nextId);
   process.exit(0);
 }
 
+// Without a named group, every group is checked — that is what `npm test` runs.
+const checked = named ? [named] : Object.keys(GROUPS);
+
 if (jsonMode) {
-  console.log(JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(named ? results[named] : results, null, 2));
 } else {
-  printReport(result);
+  for (const group of checked) printReport(group, GROUPS[group], results[group]);
 }
 
-process.exit(result.ok ? 0 : 1);
+process.exit(checked.every((g) => results[g].ok) ? 0 : 1);

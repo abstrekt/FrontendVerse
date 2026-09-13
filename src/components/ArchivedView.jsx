@@ -14,7 +14,7 @@ function getItemLabel(section, item) {
     section === 'react-learnings' ||
     section === 'react-guide' ||
     section === 'advanced-react' ||
-    section === 'hld' ||
+    section === 'system-design' ||
     section === 'algorithm' ||
     section === 'blind75'
   ) {
@@ -26,6 +26,7 @@ function getItemLabel(section, item) {
 }
 
 const SECTION_ITEMS = {
+  'acceldata-prep': 'acceldataPrep',
   'interview-prep': 'interviewPrep',
   'test-prep': 'testPrep',
   mcq: 'questions',
@@ -34,7 +35,8 @@ const SECTION_ITEMS = {
   'react-learnings': 'reactLearnings',
   'react-guide': 'reactGuide',
   'advanced-react': 'advancedReact',
-  hld: 'hldLearnings',
+  browser: 'browserLearnings',
+  'system-design': 'systemDesignLearnings',
   algorithm: 'algorithmLearnings',
   blind75: 'blind75Learnings',
   coding: 'codingQuestions',
@@ -43,6 +45,7 @@ const SECTION_ITEMS = {
 
 export default function ArchivedView({
   archived,
+  acceldataPrep = [],
   interviewPrep = [],
   testPrep = [],
   questions = [],
@@ -51,14 +54,15 @@ export default function ArchivedView({
   reactLearnings = [],
   reactGuide = [],
   advancedReact = [],
-  hldLearnings = [],
+  browserLearnings = [],
+  systemDesignLearnings = [],
   algorithmLearnings = [],
   blind75Learnings = [],
   codingQuestions = [],
   outputQuestions = [],
   onUnarchive,
 }) {
-  const pools = { interviewPrep, testPrep, questions, learnings, cssLearnings, reactLearnings, reactGuide, advancedReact, hldLearnings, algorithmLearnings, blind75Learnings, codingQuestions, outputQuestions };
+  const pools = { acceldataPrep, interviewPrep, testPrep, questions, learnings, cssLearnings, reactLearnings, reactGuide, advancedReact, browserLearnings, systemDesignLearnings, algorithmLearnings, blind75Learnings, codingQuestions, outputQuestions };
   const groups = SECTIONS.map((section) => ({
     section,
     label: SECTION_LABELS[section],

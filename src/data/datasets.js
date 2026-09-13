@@ -12,16 +12,29 @@
  * async would require gating that effect on readiness, and getting it wrong
  * corrupts saved progress rather than failing loudly.
  */
+import { applyCurriculum } from './curriculum';
 
-// The "learnings" section is a merge of seven files.
+// The "learnings" section is a merge of five files. The order they are listed
+// in no longer decides the reading order — `applyCurriculum` does, see
+// `src/data/curriculum.js`.
 const JS_LEARNINGS = [
   () => import('../../data/learnings.json'),
-  () => import('../../data/polyfill-learnings.json'),
   () => import('../../data/tekion-interview-learnings.json'),
   () => import('../../data/wtfjs-learnings.json'),
   () => import('../../data/devto-interview-learnings.json'),
   () => import('../../data/senior-frontend-learnings.json'),
-  () => import('../../data/browser-learnings.json'),
+];
+
+// System design is split by module rather than kept in one file: the section
+// is ~80 long-form articles, and a single JSON would make every later content
+// diff unreadable. Order is `applyCurriculum`, not this list.
+const SYSTEM_DESIGN = [
+  () => import('../../data/system-design-foundations.json'),
+  () => import('../../data/system-design-hld.json'),
+  () => import('../../data/system-design-cases.json'),
+  () => import('../../data/system-design-lld.json'),
+  () => import('../../data/system-design-deep-dives.json'),
+  () => import('../../data/system-design-playbooks.json'),
 ];
 
 function merge(loaders) {
@@ -36,14 +49,17 @@ function single(load) {
 }
 
 export const LEARNING_LOADERS = {
+  // Temporary — see ACCELDATA-PREP-REMOVAL.md
+  'acceldata-prep': single(() => import('../../data/acceldata-prep.json')),
   learnings: merge(JS_LEARNINGS),
+  browser: single(() => import('../../data/browser-platform-learnings.json')),
   css: single(() => import('../../data/css-learnings.json')),
   'react-learnings': single(() => import('../../data/react-learnings.json')),
   'react-guide': single(() => import('../../data/react-guide.json')),
   'interview-prep': single(() => import('../../data/interview-prep.json')),
   'test-prep': single(() => import('../../data/test-prep.json')),
   'advanced-react': single(() => import('../../data/advanced-react.json')),
-  hld: single(() => import('../../data/hld-learnings.json')),
+  'system-design': merge(SYSTEM_DESIGN),
   algorithm: single(() => import('../../data/algorithm-learnings.json')),
   blind75: single(() => import('../../data/blind75-learnings.json')),
 };
@@ -60,11 +76,13 @@ export function loadLearningSection(section) {
     // section must not trigger two downloads.
     cache.set(
       section,
-      loader().catch((err) => {
-        // A failed chunk must not be cached as permanently broken.
-        cache.delete(section);
-        throw err;
-      }),
+      loader()
+        .then((items) => applyCurriculum(section, items))
+        .catch((err) => {
+          // A failed chunk must not be cached as permanently broken.
+          cache.delete(section);
+          throw err;
+        }),
     );
   }
   return cache.get(section);

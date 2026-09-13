@@ -1,12 +1,14 @@
 export const LEARNING_SECTIONS = [
+  'acceldata-prep',
   'interview-prep',
   'test-prep',
   'learnings',
+  'browser',
   'css',
   'react-learnings',
   'react-guide',
   'advanced-react',
-  'hld',
+  'system-design',
   'algorithm',
   'blind75',
 ];

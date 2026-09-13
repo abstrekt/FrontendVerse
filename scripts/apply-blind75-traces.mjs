@@ -15,6 +15,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { TRACES } from './lib/blind75-traces.mjs';
+import { validateTrace } from './lib/trace-validate.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA = join(__dirname, '..', 'data', 'blind75-learnings.json');
@@ -78,23 +79,7 @@ function main() {
 
     // A trace whose steps disagree with its own lanes is a bug worth
     // catching here rather than in the browser.
-    for (const step of trace.steps) {
-      for (const laneId of Object.keys(step.marks ?? {})) {
-        if (!trace.lanes.some((l) => l.id === laneId)) {
-          throw new Error(`#${id}: step marks unknown lane "${laneId}"`);
-        }
-      }
-      for (const laneId of Object.keys(step.cursors ?? {})) {
-        if (!trace.lanes.some((l) => l.id === laneId)) {
-          throw new Error(`#${id}: step cursor on unknown lane "${laneId}"`);
-        }
-      }
-      for (const name of Object.keys(step.vars ?? {})) {
-        if (!(trace.vars ?? []).includes(name)) {
-          throw new Error(`#${id}: step sets undeclared var "${name}"`);
-        }
-      }
-    }
+    validateTrace(trace, `#${id}`);
 
     const next = insert(item.answer, trace);
     if (next !== item.answer) {

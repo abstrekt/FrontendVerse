@@ -200,4 +200,4 @@ Never leave placeholder text like `"TODO"` or `"Write explanation here"` in comm
 
 ## Paired batches (opt-in only)
 
-When the user explicitly asks for Learnings + Coding together, match `id`, title, and tag values across both (`tags` ↔ `topics`). Primary category tag first. Reference: `data/polyfill-learnings.json` + `data/coding-questions.json`.
+When the user explicitly asks for Learnings + Coding together, match `id`, title, and tag values across both (`tags` ↔ `topics`). Primary category tag first. Reference: the polyfill batch in `data/coding-questions.json` (ids 3-19) — the concept belongs in a learnings section and a `src/data/curriculum.js` module, the implementation in Coding.

@@ -1,13 +1,15 @@
 const SECTION_LABELS = {
+  'acceldata-prep': 'Acceldata Prep',
   'interview-prep': 'Interview Prep',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
+  browser: 'Browser',
   css: 'CSS',
   'react-learnings': 'React',
   'react-guide': 'React Guide',
   'advanced-react': 'Advanced React',
-  hld: 'HLD',
+  'system-design': 'System Design',
   algorithm: 'Algorithm',
   blind75: 'Blind 75',
   coding: 'Coding',
@@ -46,15 +48,17 @@ const SNIPPET_FIELDS = new Set(['body', 'explanation', 'description', 'code', 'o
 
 export const SEARCH_SECTIONS = [
   'all',
+  'acceldata-prep',
   'interview-prep',
   'test-prep',
   'mcq',
   'learnings',
+  'browser',
   'css',
   'react-learnings',
   'react-guide',
   'advanced-react',
-  'hld',
+  'system-design',
   'algorithm',
   'blind75',
   'coding',
@@ -176,6 +180,7 @@ function buildOutputDoc(item) {
 }
 
 export function buildSearchIndex({
+  acceldataPrep = [],
   interviewPrep = [],
   testPrep = [],
   mcq = [],
@@ -184,13 +189,14 @@ export function buildSearchIndex({
   reactLearnings = [],
   reactGuide = [],
   advancedReact = [],
-  hld = [],
+  systemDesign = [],
   algorithm = [],
   blind75 = [],
   coding = [],
   output = [],
 } = {}) {
   return [
+    ...acceldataPrep.map((item) => buildLearningDoc(item, 'acceldata-prep')),
     ...interviewPrep.map((item) => buildLearningDoc(item, 'interview-prep')),
     ...testPrep.map((item) => buildLearningDoc(item, 'test-prep')),
     ...mcq.map(buildMcqDoc),
@@ -199,7 +205,7 @@ export function buildSearchIndex({
     ...reactLearnings.map((item) => buildLearningDoc(item, 'react-learnings')),
     ...reactGuide.map((item) => buildLearningDoc(item, 'react-guide')),
     ...advancedReact.map((item) => buildLearningDoc(item, 'advanced-react')),
-    ...hld.map((item) => buildLearningDoc(item, 'hld')),
+    ...systemDesign.map((item) => buildLearningDoc(item, 'system-design')),
     ...algorithm.map((item) => buildLearningDoc(item, 'algorithm')),
     ...blind75.map((item) => buildLearningDoc(item, 'blind75')),
     ...coding.map(buildCodingDoc),

@@ -78,6 +78,24 @@ function esc(text) {
 }
 
 /**
+ * Escapes the author's own text for a label.
+ *
+ * Twice over, deliberately. The label is HTML inside an XML attribute, so
+ * it is unescaped twice on the way back in — and a component name like
+ * `<Page>` that is only escaped once arrives at draw.io's HTML parser as an
+ * unknown element and renders as *nothing at all*. Pre-escaping the
+ * ampersand here means `<` survives both passes as a literal character,
+ * while the `<b>` and `<br/>` this module generates below stay real tags.
+ */
+function escLabel(text) {
+  return String(text)
+    .replace(/&/g, '&amp;amp;')
+    .replace(/</g, '&amp;lt;')
+    .replace(/>/g, '&amp;gt;')
+    .replace(/"/g, '&amp;quot;');
+}
+
+/**
  * draw.io labels are HTML held inside an XML attribute, so they are escaped
  * twice: once so the author's text is safe as HTML, and again so the
  * resulting markup is safe as an attribute value. Emitting a raw `<br/>`
@@ -89,7 +107,7 @@ function esc(text) {
  */
 function label(text) {
   if (text == null || text === '') return '';
-  let html = esc(text);
+  let html = escLabel(text);
   html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
   html = html.replace(/(^|[^*])\*([^*]+)\*/g, '$1<i>$2</i>');
   html = html.replace(/`([^`]+)`/g, `<span style="font-family: ${MONO}">$1</span>`);
