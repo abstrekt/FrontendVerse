@@ -19,6 +19,8 @@ const SOURCES = {
     'data/senior-frontend-learnings.json',
   ],
   browser: ['data/browser-platform-learnings.json'],
+  'web-fundamentals': ['data/web-fundamentals.json'],
+  'ai-dev': ['data/ai-assisted-development.json'],
   blind75: ['data/blind75-learnings.json'],
   'system-design': [
     'data/system-design-foundations.json',

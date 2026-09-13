@@ -1733,6 +1733,722 @@ function authFlows() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ── Containers and orchestration ─────────────────────────────────── */
+
+function containerAnatomy() {
+  const o = [];
+  const H = 690;
+
+  o.push(
+    title(
+      'Multi-stage build — the toolchain does not ship',
+      'One Dockerfile, two stages: what builds the app and what runs it are different machines'
+    )
+  );
+
+  /* 1 · The two stages */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · Two stages, and only one of them is pushed', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(panel(24, 94, 340, 186, 'Stage 1 · builder — `node:20-alpine`', 'warn').xml);
+  [
+    'the whole source tree, tests and configs',
+    '`node_modules` — dev *and* prod, ≈480 MB',
+    'vite / tsc / eslint, the toolchain',
+    '`dist/` — the only useful output',
+  ].forEach((t, i) => {
+    o.push(box(38, 128 + i * 30, 312, 26, t, i === 3 ? 'ok' : 'sunken', { size: 9, rx: 6 }).xml);
+  });
+  o.push(
+    text(38, 250, 312, 26, '≈1.2 GB, discarded when the build ends. Never pushed, never run.', {
+      size: 8.5,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(
+    text(366, 122, 88, 40, 'COPY\n--from=builder\n/app/dist', {
+      size: 8,
+      align: 'center',
+      mono: true,
+      color: C.muted,
+    }).xml
+  );
+  o.push(arrow(368, 176, 452, 176, { color: C.ok, width: 1.6 }).xml);
+
+  o.push(panel(456, 94, 340, 186, 'Stage 2 · runtime — `nginx:alpine`', 'ok').xml);
+  [
+    'nginx and its config',
+    '`dist/` — the hashed assets',
+    'nothing else: no node, no npm, no source',
+  ].forEach((t, i) => {
+    o.push(box(470, 128 + i * 30, 312, 26, t, i === 2 ? 'ok' : 'sunken', { size: 9, rx: 6 }).xml);
+  });
+  o.push(
+    text(470, 220, 312, 44, '≈25 MB. This is what goes to the registry and runs in the cluster — a smaller image is a faster pull, a faster scale-up and a smaller attack surface.', {
+      size: 8.5,
+      color: C.ok,
+    }).xml
+  );
+
+  /* 2 · Layer order */
+
+  o.push(rule(24, 292, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 302, W - 48, 16, '2 · Layer order decides your rebuild time — one source edit, twice', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const LANES = [
+    {
+      y: 344,
+      label: '`COPY . .` before `npm ci`',
+      tone: C.bad,
+      steps: [
+        ['FROM node:20-alpine', 'cached', 'ok'],
+        ['COPY . .', 'invalidated', 'bad'],
+        ['RUN npm ci', 're-runs — 90 s', 'bad'],
+        ['RUN npm run build', 're-runs — 14 s', 'bad'],
+        ['total ≈ 110 s', 'every commit', 'bad'],
+      ],
+    },
+    {
+      y: 424,
+      label: '`COPY package*.json` first',
+      tone: C.ok,
+      steps: [
+        ['FROM node:20-alpine', 'cached', 'ok'],
+        ['COPY package*.json\n+ RUN npm ci', 'cached — 0 s', 'ok'],
+        ['COPY . .', 'invalidated', 'warn'],
+        ['RUN npm run build', 're-runs — 14 s', 'warn'],
+        ['total ≈ 16 s', 'every commit', 'ok'],
+      ],
+    },
+  ];
+
+  for (const lane of LANES) {
+    o.push(text(24, lane.y - 18, 400, 14, lane.label, { size: 9.5, bold: true, color: lane.tone }).xml);
+    lane.steps.forEach(([name, state, t], i) => {
+      const x = 24 + i * 158;
+      o.push(box(x, lane.y, 150, 44, `${name}\n${state}`, t, { size: 8, rx: 6 }).xml);
+      if (i < 4) o.push(arrow(x + 151, lane.y + 22, x + 157, lane.y + 22, { color: C.line, width: 1 }).xml);
+    });
+  }
+
+  /* 3 · Config */
+
+  o.push(rule(24, 488, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 498, W - 48, 16, '3 · The frontend-specific trap: config baked into the bundle', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(panel(24, 522, 372, 110, 'Baked at build time', 'bad').xml);
+  o.push(box(38, 556, 344, 26, 'ENV VITE_API_URL=https://api.prod.example.com', 'sunken', {
+    size: 8.5,
+    mono: true,
+    rx: 6,
+  }).xml);
+  o.push(
+    text(38, 586, 344, 34, 'A different image per environment, so staging never tested the artefact production runs. Any config change is a rebuild.', { size: 8.5 }).xml
+  );
+
+  o.push(panel(424, 522, 372, 110, 'Fetched at runtime', 'ok').xml);
+  o.push(box(438, 556, 344, 26, 'fetch("/config.json") on boot  ·  ConfigMap', 'sunken', {
+    size: 8.5,
+    mono: true,
+    rx: 6,
+  }).xml);
+  o.push(
+    text(438, 586, 344, 34, 'One image, promoted unchanged from staging to production. Only the mounted config differs.', { size: 8.5 }).xml
+  );
+
+  o.push(
+    takeaway(
+      646,
+      'Build once, run anywhere is not a slogan here — it is the reason the image must contain no environment. Say "the builder stage is thrown away and config is mounted, so the bytes that passed staging are the bytes in production."'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+function k8sRequestPath() {
+  const o = [];
+  const H = 608;
+
+  o.push(
+    title(
+      'Kubernetes for a frontend — the objects on the request path',
+      'Most of your traffic should never reach a pod at all'
+    )
+  );
+
+  /* 1 · The two request paths */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · Where each kind of request actually stops', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(
+    text(24, 88, 500, 14, 'A hashed asset — `GET /assets/app.8f3a2b.js`', {
+      size: 9.5,
+      bold: true,
+      color: C.ok,
+    }).xml
+  );
+  o.push(box(24, 106, 120, 44, 'Browser', 'accent', { size: 10 }).xml);
+  o.push(arrow(146, 128, 184, 128, { color: C.ok, width: 1.4 }).xml);
+  o.push(box(186, 106, 140, 44, 'CDN / edge', 'ok', { size: 10 }).xml);
+  o.push(box(368, 106, 428, 44, 'Stops here. Immutable, hashed, cached at the edge — the cluster never sees it.', 'ok', {
+    size: 9,
+    align: 'left',
+    padLeft: 12,
+  }).xml);
+
+  o.push(
+    text(24, 168, 500, 14, 'The document and the API — `GET /` and `/api/*`', {
+      size: 9.5,
+      bold: true,
+      color: C.accent,
+    }).xml
+  );
+
+  const CHAIN = [
+    { x: 24, w: 120, name: 'Browser', tone: 'accent', note: '' },
+    { x: 186, w: 140, name: 'CDN / edge', tone: 'sunken', note: 'passes through, or caches the HTML briefly' },
+    { x: 368, w: 140, name: '**Ingress**', tone: 'info', note: 'TLS, host and path routing, weights' },
+    { x: 550, w: 120, name: '**Service**', tone: 'info', note: 'one stable name, load-balances the pods' },
+    { x: 712, w: 84, name: '**Pods**\n×3', tone: 'accent', note: 'your container, replicated' },
+  ];
+
+  CHAIN.forEach((c, i) => {
+    o.push(box(c.x, 186, c.w, 44, c.name, c.tone, { size: 10 }).xml);
+    if (c.note) o.push(text(c.x - 8, 232, c.w + 16, 34, c.note, { size: 8, align: 'center' }).xml);
+    if (i < CHAIN.length - 1) {
+      const next = CHAIN[i + 1];
+      o.push(arrow(c.x + c.w + 2, 208, next.x - 2, 208, { color: C.line, width: 1.4 }).xml);
+    }
+  });
+
+  /* 2 · The objects */
+
+  o.push(rule(24, 276, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 286, W - 48, 16, '2 · The five objects you must be able to name and draw', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const OBJECTS = [
+    ['Deployment', 'accent', 'The desired state: this image, this many replicas. Owns the rollout.'],
+    ['ReplicaSet → Pod', 'accent', 'What the Deployment creates. A pod is one running container set.'],
+    ['Service', 'info', 'A stable DNS name and virtual IP in front of pods that come and go.'],
+    ['Ingress', 'info', 'The HTTP door in: TLS termination, host/path rules, traffic splits.'],
+    ['ConfigMap / Secret', 'warn', 'Environment, mounted at runtime. The same image, configured per cluster.'],
+  ];
+
+  OBJECTS.forEach(([name, t, why], i) => {
+    const x = 24 + i * 158;
+    o.push(box(x, 310, 150, 28, name, t, { size: 9.5, rx: 8 }).xml);
+    o.push(text(x, 342, 150, 46, why, { size: 8, align: 'center' }).xml);
+  });
+
+  /* 3 · Probes */
+
+  o.push(rule(24, 396, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 406, W - 48, 16, '3 · The three probes — and the one that makes a rollout safe', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const PROBES = [
+    ['`startupProbe`', 'info', 'Gives a slow boot time to finish before the other two start judging it.'],
+    ['`readinessProbe`', 'ok', 'Fails → the Service stops sending traffic. The pod keeps running.'],
+    ['`livenessProbe`', 'warn', 'Fails → the container is killed and restarted. Wrong tool for a slow boot.'],
+  ];
+
+  PROBES.forEach(([name, t, why], i) => {
+    const x = 24 + i * 260;
+    o.push(box(x, 430, 252, 28, name, t, { size: 9.5, mono: true, rx: 8 }).xml);
+    o.push(text(x, 462, 252, 34, why, { size: 8.5, align: 'center' }).xml);
+  });
+
+  o.push(
+    box(24, 500, W - 48, 30, 'No readiness probe → the rollout marks a pod ready the moment it starts, and sends real traffic to a process still building its first render.', 'bad', {
+      size: 9,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      542,
+      'What a frontend owes this platform is small and concrete: an image that starts fast, a readiness endpoint that tells the truth, config read at runtime, and assets served from the CDN rather than from a pod.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+function rolloutStrategies() {
+  const o = [];
+  const H = 620;
+
+  o.push(
+    title(
+      'Rolling, blue-green, canary — what the browser experiences',
+      'Every one of them puts two versions of your app in front of users at the same time'
+    )
+  );
+
+  /* 1 · The three strategies */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · The same deploy, three ways', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const STRATS = [
+    {
+      x: 24,
+      tone: 'accent',
+      name: 'Rolling update',
+      steps: [
+        ['v1  v1  v1', 'sunken'],
+        ['v1  v1  **v2**', 'warn'],
+        ['**v2  v2  v2**', 'ok'],
+      ],
+      cost: 'Cheapest. Both versions serve for a minute or two, and rollback means rolling forward again.',
+    },
+    {
+      x: 284,
+      tone: 'info',
+      name: 'Blue / green',
+      steps: [
+        ['blue v1 live · green v2 warm', 'sunken'],
+        ['switch the Service selector', 'warn'],
+        ['green v2 live · blue v1 idle', 'ok'],
+      ],
+      cost: 'Double the pods for a while. Rollback is one selector flip — seconds, not a redeploy.',
+    },
+    {
+      x: 544,
+      tone: 'ok',
+      name: 'Canary',
+      steps: [
+        ['v1 95%  ·  v2 5%', 'sunken'],
+        ['watch vitals + errors', 'warn'],
+        ['ramp 25% → 50% → 100%', 'ok'],
+      ],
+      cost: 'Ingress weights split the traffic. The only one that catches a regression before everyone has it.',
+    },
+  ];
+
+  for (const s of STRATS) {
+    o.push(panel(s.x, 94, 252, 194, s.name, s.tone).xml);
+    s.steps.forEach(([t, tn], i) => {
+      o.push(box(s.x + 14, 130 + i * 36, 224, 28, t, tn, { size: 9, rx: 6 }).xml);
+      if (i < 2) {
+        o.push(arrow(s.x + 126, 158 + i * 36, s.x + 126, 164 + i * 36, { color: C.line, width: 1 }).xml);
+      }
+    });
+    o.push(text(s.x + 14, 240, 224, 42, s.cost, { size: 8.5 }).xml);
+  }
+
+  /* 2 · The stale-chunk failure */
+
+  o.push(rule(24, 300, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 310, W - 48, 16, '2 · What breaks for a tab that was already open', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const SEQ = [
+    ['Tab opened on **v1**', 'sunken'],
+    ['User clicks a lazy route', 'sunken'],
+    ['`GET /assets/feed.a1b2.js`', 'warn'],
+    ['Pods are **v2** — that hash is gone → **404**', 'bad'],
+  ];
+  SEQ.forEach(([t, tn], i) => {
+    const x = 24 + i * 198;
+    o.push(box(x, 334, 178, 42, t, tn, { size: 8.5, rx: 6 }).xml);
+    if (i < 3) o.push(arrow(x + 180, 355, x + 196, 355, { color: C.line, width: 1.2 }).xml);
+  });
+  o.push(
+    text(24, 382, W - 48, 14, 'A blank screen and a lost form, caused by a deploy that every dashboard called successful.', {
+      size: 9,
+      align: 'center',
+      color: C.bad,
+    }).xml
+  );
+
+  o.push(
+    text(24, 406, W - 48, 16, 'The two fixes, and you want both', {
+      size: 11.5,
+      bold: true,
+      color: C.warn,
+    }).xml
+  );
+  const FIXES = [
+    ['Assets on the CDN, not in the pod', 'A chunk is not a pod resource. Upload to object storage before the rollout, keep the last few builds, and a retired pod takes nothing with it.'],
+    ['Detect the new build, offer a reload', 'Poll a tiny `/version.json`; when the SHA changes show a toast. Never force a reload on someone mid-form.'],
+  ];
+  FIXES.forEach(([name, why], i) => {
+    const x = 24 + i * 392;
+    o.push(box(x, 430, 380, 28, name, 'ok', { size: 9.5, rx: 8 }).xml);
+    o.push(text(x, 462, 380, 44, why, { size: 8.5 }).xml);
+  });
+
+  o.push(
+    takeaway(
+      520,
+      'Pick the strategy from what a bad version costs, not from what is fashionable: rolling for a low-stakes internal app, blue-green when rollback speed is the requirement, canary when a regression must be found on 1% of users instead of all of them.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ── CDN, edge, and AI features ───────────────────────────────────── */
+
+function cdnEdge() {
+  const o = [];
+  const H = 622;
+
+  o.push(
+    title(
+      'CDN and the edge — hit, miss, and the key that decides which',
+      'The largest performance lever a frontend has, and the one most often configured once and never read again'
+    )
+  );
+
+  /* 1 · Hit and miss */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · Two requests, one cached and one not', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(box(24, 96, 120, 46, 'Browser\nin Mumbai', 'accent', { size: 9.5 }).xml);
+  o.push(arrow(146, 119, 178, 119, { color: C.line, width: 1.4 }).xml);
+  o.push(box(182, 96, 150, 46, '**PoP** — Mumbai\nedge cache', 'ok', { size: 9.5 }).xml);
+
+  o.push(arrow(334, 108, 372, 108, { color: C.ok, width: 1.6 }).xml);
+  o.push(box(376, 92, 200, 26, '**HIT** — 8 ms, done', 'ok', { size: 9, rx: 6 }).xml);
+
+  o.push(arrow(334, 132, 372, 132, { color: C.bad, width: 1.4, dashed: true }).xml);
+  o.push(box(376, 120, 200, 26, '**MISS** — go upstream', 'bad', { size: 9, rx: 6 }).xml);
+  o.push(arrow(578, 133, 606, 133, { color: C.line, width: 1.4 }).xml);
+  o.push(box(610, 110, 92, 46, '**Shield**\nPoP', 'info', { size: 9 }).xml);
+  o.push(arrow(704, 133, 722, 133, { color: C.line, width: 1.4 }).xml);
+  o.push(box(726, 110, 70, 46, 'Origin', 'warn', { size: 9.5 }).xml);
+
+  o.push(
+    text(24, 158, W - 48, 26, 'Without an origin shield, a cold cache in 200 PoPs is 200 requests to your origin for the same file. With it — plus request coalescing — the origin sees one.', {
+      size: 9,
+      align: 'center',
+      italic: true,
+    }).xml
+  );
+
+  /* 2 · The cache key */
+
+  o.push(rule(24, 192, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 202, W - 48, 16, '2 · The cache key decides your hit rate', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(panel(24, 226, 380, 178, 'A key that destroys the hit rate', 'bad').xml);
+  [
+    ['`?utm_source=twitter` in the key', 'every campaign link is a new object'],
+    ['all cookies in the key', 'an analytics cookie makes every user unique'],
+    ['`Vary: User-Agent`', 'thousands of variants of one file'],
+  ].forEach(([k, why], i) => {
+    o.push(box(38, 262 + i * 44, 352, 24, k, 'bad', { size: 8.5, rx: 5 }).xml);
+    o.push(text(38, 286 + i * 44, 352, 16, why, { size: 8 }).xml);
+  });
+
+  o.push(panel(416, 226, 380, 178, 'A key that works', 'ok').xml);
+  [
+    ['strip marketing params before the key', 'one object per real URL'],
+    ['ignore every cookie except the ones that change the body', 'anonymous HTML stays cacheable'],
+    ['`Vary: Accept-Encoding` only', 'two variants: brotli and gzip'],
+  ].forEach(([k, why], i) => {
+    o.push(box(430, 262 + i * 44, 352, 24, k, 'ok', { size: 8.5, rx: 5 }).xml);
+    o.push(text(430, 286 + i * 44, 352, 16, why, { size: 8 }).xml);
+  });
+
+  /* 3 · Headers and invalidation */
+
+  o.push(rule(24, 416, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 426, W - 48, 16, '3 · Two audiences, two headers — and four ways to invalidate', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(box(24, 450, 380, 26, 'max-age → the browser   ·   s-maxage → the CDN', 'accent', {
+    size: 9,
+    mono: true,
+    rx: 6,
+  }).xml);
+  o.push(
+    text(24, 478, 380, 30, 'Hashed asset: `max-age=31536000, immutable`. HTML: `max-age=0, s-maxage=60, stale-while-revalidate=600`.', { size: 8.5 }).xml
+  );
+
+  const LADDER = [
+    ['1 · Versioned URL', 'ok', 'nothing to invalidate'],
+    ['2 · Surrogate key', 'ok', 'purge by tag'],
+    ['3 · Short TTL + SWR', 'warn', 'stale for a minute'],
+    ['4 · Purge', 'bad', 'the emergency lever'],
+  ];
+  LADDER.forEach(([name, t, why], i) => {
+    const x = 416 + i * 96;
+    o.push(box(x, 450, 88, 26, name, t, { size: 8, rx: 6 }).xml);
+    o.push(text(x, 478, 88, 30, why, { size: 7.5, align: 'center' }).xml);
+  });
+
+  o.push(
+    takeaway(
+      518,
+      'The two sentences that score: "static assets never reach a pod, they are immutable at the edge", and "I invalidate by changing the URL, not by purging" — because a global purge is both slow to propagate and a thundering herd against the origin.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+function aiStreamingUi() {
+  const o = [];
+  const H = 604;
+
+  o.push(
+    title(
+      'Streaming UI for a model call',
+      'Total time is roughly fixed; time to *first token* is the entire perceived difference'
+    )
+  );
+
+  /* 1 · Waiting vs streaming */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · The same 8-second answer, two ways', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const X0 = 150;
+  const X1 = 796;
+  const sc = (v) => X0 + (v / 8) * (X1 - X0);
+
+  o.push(text(24, 100, 120, 20, 'Await the whole\nresponse', { size: 9, align: 'right', color: C.bad }).xml);
+  o.push(box(sc(0), 96, sc(7.6) - sc(0), 28, 'spinner — nothing to read', 'bad', { size: 9, rx: 5 }).xml);
+  o.push(box(sc(7.6), 96, sc(8) - sc(7.6), 28, '', 'ok', { size: 9, rx: 5 }).xml);
+  o.push(text(150, 126, 646, 14, 'Eight seconds of a spinner, then a wall of text. Users reload, or leave.', { size: 8.5 }).xml);
+
+  o.push(text(24, 158, 120, 20, 'Stream the\ntokens', { size: 9, align: 'right', color: C.ok }).xml);
+  o.push(box(sc(0), 154, sc(0.4) - sc(0), 28, 'queued', 'warn', { size: 8, rx: 5 }).xml);
+  o.push(box(sc(0.4), 154, sc(8) - sc(0.4), 28, 'text arriving, readable from the first word', 'ok', { size: 9, rx: 5 }).xml);
+  o.push(arrow(sc(0.4), 200, sc(0.4), 184, { color: C.accent, width: 1.4 }).xml);
+  o.push(text(sc(0.4) - 70, 200, 140, 14, 'first token — 400 ms', { size: 8, align: 'center', color: C.accent }).xml);
+
+  /* 2 · The states */
+
+  o.push(rule(24, 226, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 236, W - 48, 16, '2 · The seven states — "loading" and "done" are not enough', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const STATES = [
+    ['Queued', 'warn', 'thinking indicator'],
+    ['Streaming', 'ok', 'partial text + Stop'],
+    ['Tool running', 'info', '"Searching…"'],
+    ['Complete', 'ok', 'copy · retry · feedback'],
+    ['Stopped', 'accent', 'keep the partial text'],
+    ['Failed mid-stream', 'bad', 'retry without losing it'],
+    ['Refused / empty', 'bad', 'a real message'],
+  ];
+  STATES.forEach(([name, t, ui], i) => {
+    const x = 24 + (i % 4) * 194;
+    const y = 262 + Math.floor(i / 4) * 62;
+    o.push(box(x, y, 178, 26, name, t, { size: 9, rx: 8 }).xml);
+    o.push(text(x, y + 28, 178, 26, ui, { size: 8, align: 'center' }).xml);
+  });
+
+  /* 3 · Render cost */
+
+  o.push(rule(24, 392, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 402, W - 48, 16, '3 · The rendering trap', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  o.push(panel(24, 426, 380, 104, 'Re-parse markdown on every token', 'bad').xml);
+  o.push(box(38, 458, 352, 24, 'O(n²) — token 900 re-parses 900 tokens', 'bad', { size: 8.5, rx: 5 }).xml);
+  o.push(text(38, 486, 352, 34, 'The tab janks by the third paragraph, and the whole transcript re-renders with every chunk.', { size: 8.5 }).xml);
+
+  o.push(panel(416, 426, 380, 104, 'Append text, parse on a throttle', 'ok').xml);
+  o.push(box(430, 458, 352, 24, 'plain text while streaming · parse every ~100 ms', 'ok', { size: 8.5, rx: 5 }).xml);
+  o.push(text(430, 486, 352, 34, 'Memoise completed messages, virtualise long conversations, and never flash a half-streamed code fence.', { size: 8.5 }).xml);
+
+  o.push(
+    takeaway(
+      544,
+      'Cancellation is a feature, not an edge case: abort the fetch *and* tell the server, or you keep paying for tokens nobody will read. And the API key never leaves your server — a key in the bundle is a public key.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+function ragPipeline() {
+  const o = [];
+  const H = 602;
+
+  o.push(
+    title(
+      'RAG — retrieve, rerank, ground, cite',
+      'Almost all of the quality is in the retrieval; almost none of it is in the prompt'
+    )
+  );
+
+  /* 1 · Offline indexing */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · Offline, once per document change', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const INDEX = [
+    ['Source docs', 'sunken', 'markdown, pages, PDFs'],
+    ['Chunk', 'accent', 'on **headings**, not on a character count'],
+    ['Embed', 'info', 'vector + metadata: url, section, updated, scope'],
+    ['Index', 'ok', 'vector store **and** a keyword index'],
+  ];
+  INDEX.forEach(([name, t, why], i) => {
+    const x = 24 + i * 198;
+    o.push(box(x, 96, 178, 34, name, t, { size: 9.5, rx: 6 }).xml);
+    o.push(text(x, 132, 178, 32, why, { size: 8, align: 'center' }).xml);
+    if (i < 3) o.push(arrow(x + 180, 113, x + 196, 113, { color: C.line, width: 1.3 }).xml);
+  });
+
+  /* 2 · Per query */
+
+  o.push(rule(24, 174, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 184, W - 48, 16, '2 · Per query — and the two steps everyone skips', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const QUERY = [
+    ['Question', 'accent', '"why is my build 400 kB?"'],
+    ['Retrieve\nhybrid', 'warn', 'vector **+** keyword — top 50'],
+    ['Rerank', 'warn', 'cross-encoder → best 5'],
+    ['Ground', 'info', 'chunks + ids in the prompt'],
+    ['Stream + cite', 'ok', 'answer, with sources'],
+  ];
+  QUERY.forEach(([name, t, why], i) => {
+    const x = 24 + i * 158;
+    o.push(box(x, 208, 140, 40, name, t, { size: 9, rx: 6 }).xml);
+    o.push(text(x - 6, 250, 152, 32, why, { size: 8, align: 'center' }).xml);
+    if (i < 4) o.push(arrow(x + 142, 228, x + 156, 228, { color: C.line, width: 1.3 }).xml);
+  });
+
+  o.push(
+    box(24, 288, W - 48, 30, 'The permission filter belongs **inside the retrieval query**, scoped to the current user. "Only answer about documents they can see" is an instruction, not an access control.', 'bad', {
+      size: 9,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  /* 3 · Failure table */
+
+  o.push(rule(24, 332, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 342, W - 48, 16, '3 · Which half is broken', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  const FAILS = [
+    ['Confident but wrong', 'Retrieval missed — the model answered from its weights'],
+    ['Right doc, wrong part', 'Chunks too large, or no reranking'],
+    ['Cannot find an error code', 'Pure vector search — add keyword'],
+    ['Answers from a deleted page', 'Stale index: deletions must propagate too'],
+  ];
+  FAILS.forEach(([symptom, cause], i) => {
+    const y = 366 + i * 34;
+    o.push(box(24, y, 250, 28, symptom, 'bad', { size: 8.5, rx: 6 }).xml);
+    o.push(arrow(278, y + 14, 294, y + 14, { color: C.line, width: 1.1 }).xml);
+    o.push(text(300, y, 496, 28, cause, { size: 8.5 }).xml);
+  });
+
+  o.push(
+    box(24, 508, W - 48, 30, 'Measure the halves separately: **recall@k** for retrieval (was the right chunk in the top *k*?), then groundedness and citation accuracy for generation.', 'ok', {
+      size: 9,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      548,
+      'The frontend owes the user three things a demo skips: the sources, visible and clickable; citations that hydrate rather than jump as tokens stream; and a designed "I could not find this" state — because a refusal is a success, and without a place to put it the model invents instead.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 /* ── Registry ─────────────────────────────────────────────────────── */
 
 export const DIAGRAMS = {
@@ -1791,5 +2507,29 @@ export const DIAGRAMS = {
   'realtime-transports': {
     title: 'Real-time transports — polling, long polling, SSE, WebSocket',
     build: realtimeTransports,
+  },
+  'container-anatomy': {
+    title: 'Multi-stage build — the toolchain does not ship',
+    build: containerAnatomy,
+  },
+  'k8s-request-path': {
+    title: 'Kubernetes for a frontend — the objects on the request path',
+    build: k8sRequestPath,
+  },
+  'rollout-strategies': {
+    title: 'Rolling, blue-green, canary — what the browser experiences',
+    build: rolloutStrategies,
+  },
+  'cdn-edge': {
+    title: 'CDN and the edge — hit, miss, and the cache key',
+    build: cdnEdge,
+  },
+  'ai-streaming-ui': {
+    title: 'Streaming UI for a model call',
+    build: aiStreamingUi,
+  },
+  'rag-pipeline': {
+    title: 'RAG — retrieve, rerank, ground, cite',
+    build: ragPipeline,
   },
 };

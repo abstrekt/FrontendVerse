@@ -28,6 +28,8 @@ const SECTIONS = {
   ],
   browser: ['data/browser-platform-learnings.json'],
   css: ['data/css-learnings.json'],
+  'ai-dev': ['data/ai-assisted-development.json'],
+  'web-fundamentals': ['data/web-fundamentals.json'],
   'react-learnings': ['data/react-learnings.json'],
   'react-guide': ['data/react-guide.json'],
   'interview-prep': ['data/interview-prep.json'],

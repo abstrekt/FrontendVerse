@@ -25,6 +25,8 @@ const CONTENT_FILES = [
   { file: 'data/devto-interview-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/senior-frontend-learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/browser-platform-learnings.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/web-fundamentals.json', key: 'learnings', fields: ['answer'] },
+  { file: 'data/ai-assisted-development.json', key: 'learnings', fields: ['answer'] },
 ];
 
 const FENCE_RE = /```(\w*)\n([\s\S]*?)\n```/g;

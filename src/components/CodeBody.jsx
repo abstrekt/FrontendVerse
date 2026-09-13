@@ -5,6 +5,10 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import js from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import html from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import ts from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import docker from 'react-syntax-highlighter/dist/esm/languages/prism/docker';
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import { getSyntaxStyle } from '../utils/syntaxTheme';
 import MermaidDiagram from './MermaidDiagram';
 import VisualTrace from './VisualTrace';
@@ -16,10 +20,23 @@ SyntaxHighlighter.registerLanguage('js', js);
 SyntaxHighlighter.registerLanguage('html', html);
 SyntaxHighlighter.registerLanguage('typescript', ts);
 SyntaxHighlighter.registerLanguage('ts', ts);
+// Infrastructure content (Dockerfiles, manifests, kubectl) ships in the
+// system-design entries; without these it renders as unstyled monospace.
+SyntaxHighlighter.registerLanguage('yaml', yaml);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('docker', docker);
+SyntaxHighlighter.registerLanguage('json', json);
+
+const LANGUAGE_ALIASES = {
+  js: 'javascript',
+  yml: 'yaml',
+  dockerfile: 'docker',
+  sh: 'bash',
+  shell: 'bash',
+};
 
 function resolveLanguage(lang) {
-  if (lang === 'js') return 'javascript';
-  return lang;
+  return LANGUAGE_ALIASES[lang] ?? lang;
 }
 
 export function headingToSlug(text) {

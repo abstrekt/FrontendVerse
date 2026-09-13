@@ -18,6 +18,8 @@ Package manager: **pnpm** (`pnpm start` runs the dev server).
 | MCQ       | `questions.json`                   | `QuizQuestion`      |
 | Learnings | `data/learnings.json` (+ merges)   | `LearningsView`     |
 | Browser & Web Platform | `data/browser-platform-learnings.json` | `LearningsView` |
+| Web Fundamentals | `data/web-fundamentals.json`       | `LearningsView`     |
+| AI-Assisted Development | `data/ai-assisted-development.json` | `LearningsView` |
 | React Learnings | `data/react-learnings.json`  | `LearningsView`     |
 | HLD       | `data/hld-learnings.json`          | `LearningsView`     |
 | Algorithm | `data/algorithm-learnings.json`    | `LearningsView`     |
@@ -39,7 +41,13 @@ All sections load in [`src/App.jsx`](src/App.jsx).
 | Overview | `src/components/Dashboard.jsx` | Route `/`. Derived entirely from state App already holds. |
 
 Adding a section is one entry in `src/sections/registry.js` plus a row in
-the `navCounts` map in `App.jsx` — not a hand-written `<li>`.
+the `navCounts` map in `App.jsx` — not a hand-written `<li>`. The full set of
+touch points for a *learning* section (registry, routes, datasets, archive,
+starred, completed, search index, ArchivedView, the data manifest, the snippet
+formatter, the curriculum table and its test, and ~20 blocks in `App.jsx`) is
+enumerated in [`ACCELDATA-PREP-REMOVAL.md`](ACCELDATA-PREP-REMOVAL.md) — build a
+new one by mirroring the `css` blocks, which is what `web-fundamentals` and
+`ai-dev` did.
 
 **Binding a key locally?** Call `preventDefault`. `useKeyboardShortcuts`
 skips any event that is already `defaultPrevented`, which is what stops a
@@ -139,7 +147,7 @@ Notes, the input line and the result render `` `code` `` and `**bold**`.
 ## System design diagrams and traces
 
 The `System Design` section is ~80 long-form entries with a tiered visual
-budget: fourteen hand-built draw.io diagrams for the ideas that need spatial
+budget: twenty hand-built draw.io diagrams for the ideas that need spatial
 layout, mermaid for simple flows, and five steppable traces.
 
 ```bash
@@ -188,8 +196,53 @@ pnpm run build:diagrams browser storage-scope    # one
 | `diagrams/browser/*.drawio` | Generated source; overwritten by the next build. |
 | `public/diagrams/browser/*.svg` | What ships, referenced as `![alt](/diagrams/browser/name.svg)`. |
 
-No traces here — the entry is theory, and the two diagrams carry the spatial
-part of it.
+`request-life` and `http-versions` belong to the *Networking & Protocols*
+module (ids 160–162); `request-life` also carries an inline ```` ```trace ````
+stepping DNS → TCP → TLS → TTFB.
+
+## Web Fundamentals diagrams
+
+```bash
+pnpm run build:diagrams webfund
+```
+
+| File | Role |
+| --- | --- |
+| `scripts/lib/webfund-diagrams.mjs` | **The diagrams.** `render-pipeline`, `script-loading`, `font-loading`, `bundler-pipeline`, `a11y-tree`, `layout-systems`, `service-worker`. |
+| `diagrams/webfund/*.drawio` | Generated source; overwritten by the next build. |
+| `public/diagrams/webfund/*.svg` | What ships, referenced as `![alt](/diagrams/webfund/name.svg)`. |
+
+Traces in Web Fundamentals and Browser are **authored inline** in the entry's
+`answer`, like the system-design ones — no applier, no `--check`, validated by
+`trace-validate.mjs` at render.
+
+## Cross-links between entries
+
+Every entry links the first prose mention of a topic that has its own entry —
+"tree shaking", "event delegation", "CORS" — to the entry that owns it.
+
+```bash
+pnpm run build:cross-links                       # apply
+node scripts/apply-cross-links.mjs --dry         # report only
+node scripts/apply-cross-links.mjs --check       # CI guard; part of `pnpm test`
+```
+
+| File | Role |
+| --- | --- |
+| `scripts/lib/cross-link-map.mjs` | **The dictionary** — one row per topic: `{ section, id, terms }`. Edit here. One canonical owner per topic; terms must be unambiguous in prose, which is why `state`, `cache` and `props` are not in it. |
+| `scripts/apply-cross-links.mjs` | The pass. Links the first *prose* mention per topic, skipping fenced code, inline code, headings, image alt, existing links, math and HTML — and never an entry to itself. |
+
+Two rules keep it from turning articles blue: **at most six internal links per
+entry, hand-written ones counted**, and only the first mention of each topic.
+Counting existing links is also what makes the pass idempotent, which is what
+`--check` relies on.
+
+The same pass rewrites a link whose text is its own URL —
+`[/coding/41](/coding/41)` — to the target's title. `--check` additionally
+fails if a term in the map points at an id that no longer exists.
+
+**A term that links the wrong sense should be deleted from the map**, not
+worked around in the applier.
 
 ## Adding content
 
@@ -233,7 +286,7 @@ Moving an entry between sections needs a `relocateStoreIds` migration in
   shown before the lazy chunks land. **Required after any content change** —
   `src/utils/dataManifest.test.js` fails if it is stale.
 - `pnpm run build:diagrams [set] [name]` — build a diagram set (`blind75`,
-  `sysdesign`, `react`, `browser`); no arguments builds every set
+  `sysdesign`, `react`, `browser`, `webfund`); no arguments builds every set
 - `pnpm run build:output-questions` — regenerate output questions from external README
 - `pnpm run format:snippets` — prettier over the fenced code in the content JSON
 - `pnpm run validate:learning-ids [group] [--next-id]` — fail on duplicate ids

@@ -205,6 +205,8 @@ export default function App() {
   const [testPrep, setTestPrep] = useState([]);
   const [advancedReact, setAdvancedReact] = useState([]);
   const [cssLearnings, setCssLearnings] = useState([]);
+  const [aiDev, setAiDev] = useState([]);
+  const [webFundamentals, setWebFundamentals] = useState([]);
   const [browserLearnings, setBrowserLearnings] = useState([]);
   const [systemDesignLearnings, setSystemDesignLearnings] = useState([]);
   const [algorithmLearnings, setAlgorithmLearnings] = useState([]);
@@ -224,6 +226,8 @@ export default function App() {
     'learnings': setLearningId,
     'acceldata-prep': setAcceldataPrepLearningId,
     'css': setCssLearningId,
+    'ai-dev': setAiDevLearningId,
+    'web-fundamentals': setWebFundamentalsLearningId,
     'react-learnings': setReactLearningId,
     'react-guide': setReactGuideLearningId,
     'interview-prep': setInterviewPrepLearningId,
@@ -304,6 +308,14 @@ export default function App() {
     () => filterActive(cssLearnings, 'css', archived),
     [cssLearnings, archived]
   );
+  const activeAiDev = useMemo(
+    () => filterActive(aiDev, 'ai-dev', archived),
+    [aiDev, archived]
+  );
+  const activeWebFundamentals = useMemo(
+    () => filterActive(webFundamentals, 'web-fundamentals', archived),
+    [webFundamentals, archived]
+  );
   const activeBrowserLearnings = useMemo(
     () => filterActive(browserLearnings, 'browser', archived),
     [browserLearnings, archived]
@@ -366,6 +378,14 @@ export default function App() {
     () => (starredFilter.css ? filterStarred(activeCssLearnings, 'css', starred) : activeCssLearnings),
     [activeCssLearnings, starredFilter, starred]
   );
+  const starredActiveAiDev = useMemo(
+    () => (starredFilter['ai-dev'] ? filterStarred(activeAiDev, 'ai-dev', starred) : activeAiDev),
+    [activeAiDev, starredFilter, starred]
+  );
+  const starredActiveWebFundamentals = useMemo(
+    () => (starredFilter['web-fundamentals'] ? filterStarred(activeWebFundamentals, 'web-fundamentals', starred) : activeWebFundamentals),
+    [activeWebFundamentals, starredFilter, starred]
+  );
   const starredActiveAdvancedReact = useMemo(
     () => (starredFilter['advanced-react'] ? filterStarred(activeAdvancedReact, 'advanced-react', starred) : activeAdvancedReact),
     [activeAdvancedReact, starredFilter, starred]
@@ -413,6 +433,14 @@ export default function App() {
   const orderedStarredActiveCssLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveCssLearnings, 'css', completed),
     [starredActiveCssLearnings, completed]
+  );
+  const orderedStarredActiveAiDev = useMemo(
+    () => sortCompletedToEnd(starredActiveAiDev, 'ai-dev', completed),
+    [starredActiveAiDev, completed]
+  );
+  const orderedStarredActiveWebFundamentals = useMemo(
+    () => sortCompletedToEnd(starredActiveWebFundamentals, 'web-fundamentals', completed),
+    [starredActiveWebFundamentals, completed]
   );
   const orderedStarredActiveAdvancedReact = useMemo(
     () => sortCompletedToEnd(starredActiveAdvancedReact, 'advanced-react', completed),
@@ -483,6 +511,14 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'css', activeCssLearnings),
     [completed, activeCssLearnings]
   );
+  const aiDevCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'ai-dev', activeAiDev),
+    [completed, activeAiDev]
+  );
+  const webFundamentalsCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'web-fundamentals', activeWebFundamentals),
+    [completed, activeWebFundamentals]
+  );
   const advancedReactCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'advanced-react', activeAdvancedReact),
     [completed, activeAdvancedReact]
@@ -510,6 +546,8 @@ export default function App() {
   const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
   const acceldataPrepStarredCount = useMemo(() => getStarredCount(starred, 'acceldata-prep'), [starred]);
   const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
+  const aiDevStarredCount = useMemo(() => getStarredCount(starred, 'ai-dev'), [starred]);
+  const webFundamentalsStarredCount = useMemo(() => getStarredCount(starred, 'web-fundamentals'), [starred]);
   const advancedReactStarredCount = useMemo(() => getStarredCount(starred, 'advanced-react'), [starred]);
   const browserStarredCount = useMemo(() => getStarredCount(starred, 'browser'), [starred]);
   const systemDesignStarredCount = useMemo(() => getStarredCount(starred, 'system-design'), [starred]);
@@ -530,6 +568,8 @@ export default function App() {
         reactGuide: activeReactGuide,
         advancedReact: activeAdvancedReact,
         css: activeCssLearnings,
+        aiDev: activeAiDev,
+        webFundamentals: activeWebFundamentals,
         browser: activeBrowserLearnings,
         systemDesign: activeSystemDesignLearnings,
         algorithm: activeAlgorithmLearnings,
@@ -547,6 +587,8 @@ export default function App() {
       activeReactGuide,
       activeAdvancedReact,
       activeCssLearnings,
+      activeAiDev,
+      activeWebFundamentals,
       activeBrowserLearnings,
       activeSystemDesignLearnings,
       activeAlgorithmLearnings,
@@ -713,6 +755,22 @@ export default function App() {
     return orderedStarredActiveCssLearnings[0] ?? null;
   }, [orderedStarredActiveCssLearnings, route.learningId, activeSection]);
 
+  const selectedWebFundamentalsEntry = useMemo(() => {
+    if (activeSection !== 'web-fundamentals') return null;
+    if (route.learningId) {
+      return orderedStarredActiveWebFundamentals.find((item) => item.id === route.learningId) ?? orderedStarredActiveWebFundamentals[0] ?? null;
+    }
+    return orderedStarredActiveWebFundamentals[0] ?? null;
+  }, [orderedStarredActiveWebFundamentals, route.learningId, activeSection]);
+
+  const selectedAiDevEntry = useMemo(() => {
+    if (activeSection !== 'ai-dev') return null;
+    if (route.learningId) {
+      return orderedStarredActiveAiDev.find((item) => item.id === route.learningId) ?? orderedStarredActiveAiDev[0] ?? null;
+    }
+    return orderedStarredActiveAiDev[0] ?? null;
+  }, [orderedStarredActiveAiDev, route.learningId, activeSection]);
+
   const selectedAdvancedReactEntry = useMemo(() => {
     if (activeSection !== 'advanced-react') return null;
     if (route.learningId) {
@@ -829,6 +887,20 @@ export default function App() {
       setCssLearningId(orderedStarredActiveCssLearnings[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveCssLearnings, setCssLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'web-fundamentals' || !orderedStarredActiveWebFundamentals.length) return;
+    if (route.learningId && !orderedStarredActiveWebFundamentals.some((item) => item.id === route.learningId)) {
+      setWebFundamentalsLearningId(orderedStarredActiveWebFundamentals[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveWebFundamentals, setWebFundamentalsLearningId]);
+
+  useEffect(() => {
+    if (activeSection !== 'ai-dev' || !orderedStarredActiveAiDev.length) return;
+    if (route.learningId && !orderedStarredActiveAiDev.some((item) => item.id === route.learningId)) {
+      setAiDevLearningId(orderedStarredActiveAiDev[0].id, { replace: true });
+    }
+  }, [activeSection, route.learningId, orderedStarredActiveAiDev, setAiDevLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'advanced-react' || !orderedStarredActiveAdvancedReact.length) return;
@@ -1042,6 +1114,8 @@ export default function App() {
       'acceldata-prep': setAcceldataPrep,
       learnings: setLearnings,
       css: setCssLearnings,
+      'ai-dev': setAiDev,
+      'web-fundamentals': setWebFundamentals,
       'react-learnings': setReactLearnings,
       'react-guide': setReactGuide,
       'interview-prep': setInterviewPrep,
@@ -1330,6 +1404,14 @@ export default function App() {
         setSection('css', { learningId: id });
         return;
       }
+      if (section === 'ai-dev') {
+        setSection('ai-dev', { learningId: id });
+        return;
+      }
+      if (section === 'web-fundamentals') {
+        setSection('web-fundamentals', { learningId: id });
+        return;
+      }
       if (section === 'browser') {
         setSection('browser', { learningId: id });
         return;
@@ -1450,6 +1532,16 @@ export default function App() {
   const handleToggleCssLearningCompleted = useMemo(
     () => makeLearningToggleCompleted('css', orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted),
     [orderedStarredActiveCssLearnings, setCssLearningId, completed, setCompleted]
+  );
+
+  const handleToggleAiDevCompleted = useMemo(
+    () => makeLearningToggleCompleted('ai-dev', orderedStarredActiveAiDev, setAiDevLearningId, completed, setCompleted),
+    [orderedStarredActiveAiDev, setAiDevLearningId, completed, setCompleted]
+  );
+
+  const handleToggleWebFundamentalsCompleted = useMemo(
+    () => makeLearningToggleCompleted('web-fundamentals', orderedStarredActiveWebFundamentals, setWebFundamentalsLearningId, completed, setCompleted),
+    [orderedStarredActiveWebFundamentals, setWebFundamentalsLearningId, completed, setCompleted]
   );
 
   const handleToggleAdvancedReactCompleted = useMemo(
@@ -1624,6 +1716,40 @@ export default function App() {
       }
     },
     [setStarredFilter, activeCssLearnings, starred, route.learningId, setCssLearningId]
+  );
+
+  const handleWebFundamentalsStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'web-fundamentals': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeWebFundamentals, 'web-fundamentals', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setWebFundamentalsLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeWebFundamentals, starred, route.learningId, setWebFundamentalsLearningId]
+  );
+
+  const handleAiDevStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'ai-dev': value }));
+      if (value) {
+        const nextStarred = filterStarred(activeAiDev, 'ai-dev', starred);
+        if (
+          route.learningId &&
+          !nextStarred.some((item) => item.id === route.learningId) &&
+          nextStarred.length > 0
+        ) {
+          setAiDevLearningId(nextStarred[0].id);
+        }
+      }
+    },
+    [setStarredFilter, activeAiDev, starred, route.learningId, setAiDevLearningId]
   );
 
   const handleAdvancedReactStarredFilterChange = useCallback(
@@ -1835,6 +1961,30 @@ export default function App() {
       }
     },
     [setArchived, archived, cssLearnings, route.learningId, setCssLearningId]
+  );
+
+  const handleArchiveWebFundamentals = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'web-fundamentals', learning.id));
+      const nextArchived = archiveId(archived, 'web-fundamentals', learning.id);
+      const nextActive = filterActive(webFundamentals, 'web-fundamentals', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setWebFundamentalsLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, webFundamentals, route.learningId, setWebFundamentalsLearningId]
+  );
+
+  const handleArchiveAiDev = useCallback(
+    (learning) => {
+      setArchived((prev) => archiveId(prev, 'ai-dev', learning.id));
+      const nextArchived = archiveId(archived, 'ai-dev', learning.id);
+      const nextActive = filterActive(aiDev, 'ai-dev', nextArchived);
+      if (learning.id === route.learningId && nextActive.length > 0) {
+        setAiDevLearningId(nextActive[0].id);
+      }
+    },
+    [setArchived, archived, aiDev, route.learningId, setAiDevLearningId]
   );
 
   const handleArchiveAdvancedReact = useCallback(
@@ -2392,6 +2542,14 @@ export default function App() {
         total: sectionCount('learnings', activeLearnings),
       },
       css: { done: cssCompletedCount, total: sectionCount('css', activeCssLearnings) },
+      'ai-dev': {
+        done: aiDevCompletedCount,
+        total: sectionCount('ai-dev', activeAiDev),
+      },
+      'web-fundamentals': {
+        done: webFundamentalsCompletedCount,
+        total: sectionCount('web-fundamentals', activeWebFundamentals),
+      },
       'react-learnings': {
         done: reactLearningsCompletedCount,
         total: sectionCount('react-learnings', activeReactLearnings),
@@ -2436,6 +2594,8 @@ export default function App() {
       acceldataPrepCompletedCount, activeAcceldataPrep,
       mcqCompletedCount, activeQuestions.length,
       learningsCompletedCount, activeLearnings, cssCompletedCount, activeCssLearnings,
+      aiDevCompletedCount, activeAiDev,
+      webFundamentalsCompletedCount, activeWebFundamentals,
       reactLearningsCompletedCount, activeReactLearnings,
       reactGuideCompletedCount, activeReactGuide,
       advancedReactCompletedCount, activeAdvancedReact,
@@ -2595,6 +2755,7 @@ export default function App() {
                 onToggleCompleted={() => selectedLearning && handleToggleLearningCompleted(selectedLearning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'react-learnings' ? (
               <LearningsView
@@ -2606,6 +2767,7 @@ export default function App() {
                 onToggleCompleted={() => selectedReactLearning && handleToggleReactLearningCompleted(selectedReactLearning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'interview-prep' ? (
               <LearningsView
@@ -2655,6 +2817,30 @@ export default function App() {
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
+            ) : activeSection === 'web-fundamentals' ? (
+              <LearningsView
+                learning={selectedWebFundamentalsEntry}
+                onArchive={handleArchiveWebFundamentals}
+                isStarred={selectedWebFundamentalsEntry ? isStarred(selectedWebFundamentalsEntry.id, 'web-fundamentals', starred) : false}
+                onToggleStar={() => selectedWebFundamentalsEntry && handleToggleStar('web-fundamentals', selectedWebFundamentalsEntry.id)}
+                isCompleted={selectedWebFundamentalsEntry ? isCompleted(selectedWebFundamentalsEntry.id, 'web-fundamentals', completed) : false}
+                onToggleCompleted={() => selectedWebFundamentalsEntry && handleToggleWebFundamentalsCompleted(selectedWebFundamentalsEntry.id)}
+                highlight={syntaxHighlight}
+                theme={editorTheme}
+                onNavigate={handleInternalLink}
+              />
+            ) : activeSection === 'ai-dev' ? (
+              <LearningsView
+                learning={selectedAiDevEntry}
+                onArchive={handleArchiveAiDev}
+                isStarred={selectedAiDevEntry ? isStarred(selectedAiDevEntry.id, 'ai-dev', starred) : false}
+                onToggleStar={() => selectedAiDevEntry && handleToggleStar('ai-dev', selectedAiDevEntry.id)}
+                isCompleted={selectedAiDevEntry ? isCompleted(selectedAiDevEntry.id, 'ai-dev', completed) : false}
+                onToggleCompleted={() => selectedAiDevEntry && handleToggleAiDevCompleted(selectedAiDevEntry.id)}
+                highlight={syntaxHighlight}
+                theme={editorTheme}
+                onNavigate={handleInternalLink}
+              />
             ) : activeSection === 'advanced-react' ? (
               <LearningsView
                 learning={selectedAdvancedReactEntry}
@@ -2677,6 +2863,7 @@ export default function App() {
                 onToggleCompleted={() => selectedReactGuideEntry && handleToggleReactGuideCompleted(selectedReactGuideEntry.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'browser' ? (
               <LearningsView
@@ -2700,6 +2887,7 @@ export default function App() {
                 onToggleCompleted={() => selectedSystemDesignLearning && handleToggleSystemDesignLearningCompleted(selectedSystemDesignLearning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'algorithm' ? (
               <LearningsView
@@ -2711,6 +2899,7 @@ export default function App() {
                 onToggleCompleted={() => selectedAlgorithmLearning && handleToggleAlgorithmLearningCompleted(selectedAlgorithmLearning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'blind75' ? (
               <LearningsView
@@ -2722,6 +2911,7 @@ export default function App() {
                 onToggleCompleted={() => selectedBlind75Learning && handleToggleBlind75LearningCompleted(selectedBlind75Learning.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
+                onNavigate={handleInternalLink}
               />
             ) : activeSection === 'archived' ? (
               <ArchivedView
@@ -2735,6 +2925,8 @@ export default function App() {
                 advancedReact={advancedReact}
                 acceldataPrep={acceldataPrep}
                 cssLearnings={cssLearnings}
+                aiDev={aiDev}
+                webFundamentals={webFundamentals}
                 browserLearnings={browserLearnings}
                 systemDesignLearnings={systemDesignLearnings}
                 algorithmLearnings={algorithmLearnings}
@@ -2858,6 +3050,40 @@ export default function App() {
                 onStarredOnlyChange={handleCssStarredFilterChange}
                 onSelect={setCssLearningId}
                 title="CSS"
+              />
+            </div>
+          ) : activeSection === 'web-fundamentals' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred['web-fundamentals']}
+                completedIds={completed['web-fundamentals']}
+                activeItem={selectedWebFundamentalsEntry}
+                learnings={orderedStarredActiveWebFundamentals}
+                selectedLearningId={selectedWebFundamentalsEntry?.id ?? null}
+                sectionKey="web-fundamentals"
+                starredOnly={starredFilter['web-fundamentals']}
+                starredCount={webFundamentalsStarredCount}
+                onStarredOnlyChange={handleWebFundamentalsStarredFilterChange}
+                onSelect={setWebFundamentalsLearningId}
+                groupBy="module"
+                title="Web Fundamentals"
+              />
+            </div>
+          ) : activeSection === 'ai-dev' ? (
+            <div className="topics-panel learnings-panel">
+              <LearningsPanel
+                starredIds={starred['ai-dev']}
+                completedIds={completed['ai-dev']}
+                activeItem={selectedAiDevEntry}
+                learnings={orderedStarredActiveAiDev}
+                selectedLearningId={selectedAiDevEntry?.id ?? null}
+                sectionKey="ai-dev"
+                starredOnly={starredFilter['ai-dev']}
+                starredCount={aiDevStarredCount}
+                onStarredOnlyChange={handleAiDevStarredFilterChange}
+                onSelect={setAiDevLearningId}
+                groupBy="module"
+                title="AI-Assisted Development"
               />
             </div>
           ) : activeSection === 'advanced-react' ? (

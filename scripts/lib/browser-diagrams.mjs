@@ -331,6 +331,239 @@ function cookieAuth() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ── Networking ───────────────────────────────────────────────────── */
+
+function requestLife() {
+  const o = [];
+  const H = 560;
+
+  o.push(
+    title(
+      'The life of a request',
+      'Three round trips of setup before your request is even sent — on mobile, that is most of the wait'
+    )
+  );
+
+  /* 1 · The stacked timeline */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · A cold request, 180 ms round trip', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const TOTAL = 900;
+  const X0 = 24;
+  const SPAN = W - 48;
+  const px = (v) => (v / TOTAL) * SPAN;
+
+  const PHASES = [
+    ['DNS', 120, 'warn', 'resolve the hostname'],
+    ['TCP', 180, 'warn', 'SYN · SYN-ACK · ACK'],
+    ['TLS', 180, 'warn', 'certificate and keys'],
+    ['request', 90, 'info', 'your bytes leave'],
+    ['TTFB', 130, 'accent', 'server thinks'],
+    ['download', 200, 'ok', 'the body streams in'],
+  ];
+
+  let x = X0;
+  let acc = 0;
+  for (const [name, ms, t, why] of PHASES) {
+    const w = px(ms);
+    o.push(box(x, 96, w - 2, 40, `**${name}**\n${ms} ms`, t, { size: 8.5, rx: 6 }).xml);
+    o.push(text(x - 20, 140, w + 38, 26, why, { size: 7.5, align: 'center' }).xml);
+    acc += ms;
+    o.push(text(Math.min(x + w - 40, W - 80), 172, 76, 12, `${acc} ms`, { size: 7.5, align: 'center', color: C.muted }).xml);
+    x += w;
+  }
+
+  o.push(
+    box(24, 192, px(480) - 2, 26, 'setup — nothing useful transferred', 'bad', { size: 9, rx: 5 }).xml
+  );
+  o.push(
+    box(24 + px(480), 192, px(420) - 2, 26, 'actually moving your page', 'ok', { size: 9, rx: 5 }).xml
+  );
+
+  /* 2 · Reused connection */
+
+  o.push(rule(24, 236, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 246, W - 48, 16, '2 · The second request to the same origin', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  let rx = X0;
+  for (const [name, ms, , ] of PHASES) {
+    const w = px(ms);
+    const skipped = ['DNS', 'TCP', 'TLS'].includes(name);
+    o.push(
+      box(rx, 272, w - 2, 34, skipped ? `${name}\nskipped` : `**${name}**\n${ms} ms`, skipped ? 'sunken' : 'ok', {
+        size: 8,
+        rx: 6,
+        dashed: skipped,
+      }).xml
+    );
+    rx += w;
+  }
+  o.push(
+    text(24, 312, W - 48, 14, 'Connection reuse removes 480 ms. This is why origin count is a performance decision, and why one `preconnect` can beat a week of code splitting.', {
+      size: 9,
+      align: 'center',
+      italic: true,
+    }).xml
+  );
+
+  /* 3 · What each phase responds to */
+
+  o.push(rule(24, 336, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 346, W - 48, 16, '3 · What each phase actually responds to', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const FIXES = [
+    ['DNS', 'accent', 'Fewer origins · `preconnect` · sane record TTLs'],
+    ['TCP + TLS', 'info', 'Connection reuse · TLS 1.3 · terminate at a nearby CDN PoP'],
+    ['TTFB', 'warn', 'Server work, cache hits, and physical distance to the user'],
+    ['Download', 'ok', 'Brotli · smaller payloads · the first 14 kB matter most'],
+  ];
+  FIXES.forEach(([name, t, why], i) => {
+    const fx = 24 + i * 194;
+    o.push(box(fx, 370, 178, 26, name, t, { size: 9.5, rx: 8 }).xml);
+    o.push(text(fx, 400, 178, 46, why, { size: 8, align: 'center' }).xml);
+  });
+
+  o.push(
+    box(24, 452, W - 48, 32, 'Every extra origin pays DNS + TCP + TLS again — and cache partitioning means a "shared" CDN copy of a library is no longer shared between sites. Self-host, and `preconnect` to what is left.', 'info', {
+      size: 9,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      494,
+      'Split a slow TTFB before you theorise about it: DNS, connect, TLS and server time are four different problems with four different fixes, and the waterfall already tells you which one you have.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+function httpVersions() {
+  const o = [];
+  const H = 616;
+
+  o.push(
+    title(
+      'HTTP/1.1, HTTP/2, HTTP/3 — one problem, pushed one layer down each time',
+      'Head-of-line blocking: the request queue, then TCP, then nothing'
+    )
+  );
+
+  const LANES = [
+    {
+      y: 88,
+      name: 'HTTP/1.1',
+      tone: 'bad',
+      sub: 'One request at a time per connection. Browsers opened ~6 connections to compensate.',
+      bars: [
+        [0, 200, '`app.js`', 'accent'],
+        [200, 340, '`style.css`', 'info'],
+        [340, 420, '`logo.svg`', 'ok'],
+      ],
+      marker: '`style.css` queued behind it',
+      markerAt: 200,
+      hol: 'Blocking is in the **HTTP queue** — a slow response holds up everything behind it.',
+    },
+    {
+      y: 232,
+      name: 'HTTP/2',
+      tone: 'warn',
+      sub: 'One connection, many interleaved streams, compressed headers.',
+      bars: [
+        [0, 60, '`app.js`', 'accent'],
+        [60, 110, '`style`', 'info'],
+        [110, 150, '`logo`', 'ok'],
+        [150, 290, 'all three streams stalled — TCP will not deliver out of order', 'bad'],
+      ],
+      marker: 'packet lost here',
+      markerAt: 150,
+      hol: 'Blocking moved down to **TCP** — one lost packet stalls *every* stream until it is retransmitted.',
+    },
+    {
+      y: 376,
+      name: 'HTTP/3',
+      tone: 'ok',
+      sub: 'QUIC over UDP: independent streams, 1-RTT handshake, survives a network change.',
+      bars: [
+        [0, 60, '`app.js`', 'accent'],
+        [60, 110, '`style`', 'info'],
+        [110, 150, '`logo`', 'ok'],
+        [150, 200, '`app.js` stalled', 'bad'],
+        [200, 245, '`style`', 'info'],
+        [245, 290, '`logo`', 'ok'],
+      ],
+      marker: 'packet lost here',
+      markerAt: 150,
+      hol: 'A lost packet stalls **only its own stream**. The other downloads keep going.',
+    },
+  ];
+
+  const T0 = 150;
+  const T1 = 796;
+  const scale = (v) => T0 + (v / 440) * (T1 - T0);
+
+  for (const lane of LANES) {
+    o.push(text(24, lane.y + 8, 120, 20, lane.name, { size: 11, bold: true, color: C[lane.tone] }).xml);
+    o.push(text(150, lane.y - 4, 646, 14, lane.sub, { size: 8.5 }).xml);
+    for (const [a, b, label, t] of lane.bars) {
+      o.push(box(scale(a), lane.y + 16, scale(b) - scale(a) - 2, 30, label, t, { size: 8, rx: 5 }).xml);
+    }
+    o.push(text(24, lane.y + 52, 120, 26, 'one connection', { size: 8, align: 'right' }).xml);
+
+    /* The lost packet, and what it costs. */
+    o.push(arrow(scale(lane.markerAt), lane.y + 76, scale(lane.markerAt), lane.y + 50, { color: C.bad, width: 1.4 }).xml);
+    o.push(text(scale(lane.markerAt) - 90, lane.y + 76, 180, 14, lane.marker, { size: 8, align: 'center', color: C.bad }).xml);
+    o.push(box(150, lane.y + 92, 646, 26, lane.hol, lane.tone, { size: 8.5, align: 'left', padLeft: 10, rx: 5 }).xml);
+  }
+
+  /* What changes in your build */
+
+  o.push(rule(24, 512, W - 48, { dashed: true }).xml);
+  const PRACTICE = [
+    ['Concatenate everything', 'bad', 'One byte changed invalidates the whole file'],
+    ['Domain sharding', 'bad', 'Extra handshakes, no parallelism to win'],
+    ['Many small chunks', 'warn', 'Fine — until per-request overhead eats the win'],
+    ['Fewer origins', 'ok', 'Still right: connection reuse'],
+  ];
+  PRACTICE.forEach(([name, t, why], i) => {
+    const x = 24 + i * 194;
+    o.push(box(x, 522, 178, 24, name, t, { size: 9, rx: 8 }).xml);
+    o.push(text(x, 548, 178, 30, why, { size: 8, align: 'center' }).xml);
+  });
+
+  o.push(
+    text(24, 584, W - 48, 20, 'Concatenation and sharding were HTTP/1.1 workarounds. Keeping them today costs you cache hits and handshakes.', {
+      size: 9,
+      align: 'center',
+      italic: true,
+      color: C.warn,
+    }).xml
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'storage-scope': {
     title: 'Scope — localStorage is origin-locked, a cookie is not',
@@ -339,5 +572,13 @@ export const DIAGRAMS = {
   'cookie-auth': {
     title: 'Cookie auth — the round trip, the attributes, the two attacks',
     build: cookieAuth,
+  },
+  'request-life': {
+    title: 'The life of a request — DNS, TCP, TLS, TTFB',
+    build: requestLife,
+  },
+  'http-versions': {
+    title: 'HTTP/1.1, HTTP/2, HTTP/3 — where head-of-line blocking lives',
+    build: httpVersions,
   },
 };

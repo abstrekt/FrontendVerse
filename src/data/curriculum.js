@@ -104,6 +104,11 @@ export const CURRICULUM = {
       ids: [122, 159, 157, 156],
     },
     {
+      key: 'protocols',
+      label: 'Networking & Protocols',
+      ids: [160, 161, 162],
+    },
+    {
       key: 'storage-security',
       label: 'Storage, Workers & Security',
       ids: [132, 133, 158],
@@ -129,7 +134,7 @@ export const CURRICULUM = {
     {
       key: 'building-blocks',
       label: 'HLD: Building Blocks',
-      ids: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111],
+      ids: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 112, 113, 114, 115, 116, 110, 111],
     },
     {
       key: 'case-studies',
@@ -155,6 +160,39 @@ export const CURRICULUM = {
       key: 'playbooks',
       label: 'Interview Playbooks',
       ids: [500, 501, 502, 503, 504, 505, 506, 507],
+    },
+  ],
+
+  // Web Fundamentals is a course: the document and the render pipeline have to
+  // land before the build tooling that ships into them.
+  'web-fundamentals': [
+    {
+      key: 'document',
+      label: 'From Document to Pixels',
+      ids: [1, 11, 12, 2, 3, 4, 5, 13, 6, 7],
+    },
+    {
+      key: 'build',
+      label: 'Modules & the Build',
+      ids: [8, 9, 10],
+    },
+    {
+      key: 'data-offline',
+      label: 'Data, Storage & Offline',
+      ids: [14, 15, 16],
+    },
+  ],
+
+  'ai-dev': [
+    {
+      key: 'working-with-ai',
+      label: 'Working with AI',
+      ids: [1, 2, 3, 10, 4, 5],
+    },
+    {
+      key: 'shipping-ai',
+      label: 'Shipping AI Features',
+      ids: [6, 9, 7, 8],
     },
   ],
 

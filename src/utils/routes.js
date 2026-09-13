@@ -5,6 +5,8 @@ export const LEARNING_SECTIONS = [
   'learnings',
   'browser',
   'css',
+  'ai-dev',
+  'web-fundamentals',
   'react-learnings',
   'react-guide',
   'advanced-react',

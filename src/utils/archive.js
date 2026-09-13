@@ -6,6 +6,8 @@ export const EMPTY_ARCHIVED = {
   learnings: [],
   browser: [],
   css: [],
+  'ai-dev': [],
+  'web-fundamentals': [],
   'react-learnings': [],
   'react-guide': [],
   'advanced-react': [],
@@ -16,7 +18,7 @@ export const EMPTY_ARCHIVED = {
   output: [],
 };
 
-export const SECTIONS = ['acceldata-prep', 'interview-prep', 'test-prep', 'mcq', 'learnings', 'browser', 'css', 'react-learnings', 'react-guide', 'advanced-react', 'system-design', 'algorithm', 'blind75', 'coding', 'output'];
+export const SECTIONS = ['acceldata-prep', 'interview-prep', 'test-prep', 'mcq', 'learnings', 'browser', 'css', 'ai-dev', 'web-fundamentals', 'react-learnings', 'react-guide', 'advanced-react', 'system-design', 'algorithm', 'blind75', 'coding', 'output'];
 
 export const SECTION_LABELS = {
   'acceldata-prep': 'Acceldata Prep',
@@ -26,6 +28,8 @@ export const SECTION_LABELS = {
   learnings: 'Learnings',
   browser: 'Browser & Web Platform',
   css: 'CSS',
+  'ai-dev': 'AI-Assisted Development',
+  'web-fundamentals': 'Web Fundamentals',
   'react-learnings': 'React Learnings',
   'react-guide': 'React Guide',
   'advanced-react': 'Advanced React',

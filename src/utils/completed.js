@@ -9,6 +9,8 @@ export const EMPTY_COMPLETED = {
   learnings: [],
   browser: [],
   css: [],
+  'ai-dev': [],
+  'web-fundamentals': [],
   'react-learnings': [],
   'react-guide': [],
   'advanced-react': [],

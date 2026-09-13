@@ -54,6 +54,8 @@ export const LEARNING_LOADERS = {
   learnings: merge(JS_LEARNINGS),
   browser: single(() => import('../../data/browser-platform-learnings.json')),
   css: single(() => import('../../data/css-learnings.json')),
+  'ai-dev': single(() => import('../../data/ai-assisted-development.json')),
+  'web-fundamentals': single(() => import('../../data/web-fundamentals.json')),
   'react-learnings': single(() => import('../../data/react-learnings.json')),
   'react-guide': single(() => import('../../data/react-guide.json')),
   'interview-prep': single(() => import('../../data/interview-prep.json')),

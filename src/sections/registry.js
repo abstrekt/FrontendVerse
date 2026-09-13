@@ -58,6 +58,24 @@ export const SECTIONS = {
     subtitle: LEARNINGS,
   },
   css: { label: 'CSS', navIcon: 'CS', category: 'css', kind: 'learning', subtitle: ENTRIES },
+  'ai-dev': {
+    label: 'AI-Assisted Development',
+    navIcon: 'AI',
+    // Spans HTML, CSS, JS and the build, so it stays visible under every
+    // category chip rather than hiding behind one.
+    category: null,
+    kind: 'learning',
+    subtitle: QUESTIONS,
+  },
+  'web-fundamentals': {
+    label: 'Web Fundamentals',
+    navIcon: 'WF',
+    // Spans HTML, CSS, JS and the build, so it stays visible under every
+    // category chip rather than hiding behind one.
+    category: null,
+    kind: 'learning',
+    subtitle: LEARNINGS,
+  },
   'react-learnings': {
     label: 'React Learnings',
     navIcon: 'RL',
