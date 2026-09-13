@@ -157,6 +157,94 @@ export const CURRICULUM = {
       ids: [500, 501, 502, 505],
     },
   ],
+
+  blind75: [
+    {
+      key: 'pattern-blueprints',
+      label: 'Pattern Blueprints',
+      ids: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    {
+      key: 'arrays-hashing',
+      label: 'Arrays & Hashing',
+      ids: [11, 12, 10, 13, 14, 17, 15, 16],
+    },
+    {
+      key: 'two-pointers',
+      label: 'Two Pointers',
+      ids: [20, 21, 22, 23],
+    },
+    {
+      key: 'sliding-window',
+      label: 'Sliding Window',
+      ids: [18, 24, 25, 26],
+    },
+    {
+      key: 'linked-list',
+      label: 'Linked List',
+      ids: [28, 29, 30, 31, 32, 33],
+    },
+    {
+      key: 'trees',
+      label: 'Trees',
+      ids: [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44],
+    },
+    {
+      key: 'tries',
+      label: 'Tries',
+      ids: [45, 46, 47],
+    },
+    {
+      key: 'heap',
+      label: 'Heap / Priority Queue',
+      ids: [49, 50, 48],
+    },
+    {
+      key: 'backtracking',
+      label: 'Backtracking',
+      ids: [56, 78],
+    },
+    {
+      key: 'graphs',
+      label: 'Graphs',
+      ids: [68, 69, 70, 71, 72, 73],
+    },
+    {
+      key: 'advanced-graphs',
+      label: 'Advanced Graphs',
+      ids: [74],
+    },
+    {
+      key: '1d-dp',
+      label: '1-D Dynamic Programming',
+      ids: [51, 57, 58, 79, 62, 59, 52, 27, 55, 53],
+    },
+    {
+      key: '2d-dp',
+      label: '2-D Dynamic Programming',
+      ids: [60, 54],
+    },
+    {
+      key: 'greedy',
+      label: 'Greedy',
+      ids: [19, 61],
+    },
+    {
+      key: 'intervals',
+      label: 'Intervals',
+      ids: [63, 64, 65, 66, 67],
+    },
+    {
+      key: 'math-geometry',
+      label: 'Math & Geometry',
+      ids: [77, 76, 75],
+    },
+    {
+      key: 'bit-manipulation',
+      label: 'Bit Manipulation',
+      ids: [80, 81, 82, 83, 84, 85],
+    },
+  ],
 };
 
 /** Sections whose panel renders module headers. */

@@ -11,6 +11,7 @@ export default function LearningsPanel({
   onStarredOnlyChange,
   onSelect,
   groupBy = null,
+  showDifficulty = false,
   title = 'Javascript learnings',
 }) {
   return (
@@ -20,6 +21,7 @@ export default function LearningsPanel({
       selectedId={selectedLearningId}
       onSelect={onSelect}
       groupBy={groupBy}
+      showDifficulty={showDifficulty}
       starredIds={starredIds}
       completedIds={completedIds}
       starredOnly={starredOnly}

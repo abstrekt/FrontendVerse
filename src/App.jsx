@@ -2955,6 +2955,8 @@ export default function App() {
                 starredCount={blind75StarredCount}
                 onStarredOnlyChange={handleBlind75StarredFilterChange}
                 onSelect={setBlind75LearningId}
+                groupBy="module"
+                showDifficulty
                 title="Blind 75"
               />
             </div>

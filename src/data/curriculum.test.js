@@ -19,6 +19,7 @@ const SOURCES = {
     'data/senior-frontend-learnings.json',
   ],
   browser: ['data/browser-platform-learnings.json'],
+  blind75: ['data/blind75-learnings.json'],
   'system-design': [
     'data/system-design-foundations.json',
     'data/system-design-hld.json',
@@ -87,5 +88,5 @@ test('applyCurriculum parks unlisted entries at the end rather than dropping the
 
 test('applyCurriculum leaves sections without a table untouched', () => {
   const items = [{ id: 3 }, { id: 1 }];
-  assert.deepEqual(applyCurriculum('blind75', items), items);
+  assert.deepEqual(applyCurriculum('css', items), items);
 });
