@@ -55,6 +55,35 @@ global binding (ArrowRight = next question) from also firing while the focus
 is in a widget that owns arrows — the column resizers and the step-through
 traces both rely on it.
 
+## Visuals are mandatory for new content
+
+**Every new or substantially rewritten entry ships two things: a draw.io
+diagram and a steppable `` ```trace `` animation.** A diagram shows the shape,
+a trace shows it running. Prose alone is what this rule exists to stop.
+
+Read [`.claude/skills/content-visuals/SKILL.md`](.claude/skills/content-visuals/SKILL.md)
+before adding content — it carries the palette rules, the trace contract, the
+per-section table of generated vs inline, and the checklist.
+
+The diagrams are **generated**: `scripts/lib/<set>-diagrams.mjs` is the source,
+`diagrams/**.drawio` and `public/diagrams/**.svg` are build outputs overwritten
+by the next `pnpm run build:diagrams`. So the **draw.io MCP** is used either
+side of the build, never as the deliverable:
+
+- **before** — sketch the layout on the draw.io canvas, drag until it reads,
+  then port the resulting geometry into the `build()` function
+- **after** — open the generated `.drawio` and look at it, to catch overlaps,
+  clipped labels and a canvas past 820px before it ships
+
+List the MCP's tools (`mcp__drawio__*`) at the start of a visual task rather
+than guessing names. If it is not connected, say so and fall back to writing
+the `build()` and reading the exported SVG.
+
+The only exemptions are an index entry with no single mechanism (the React set
+tracks these in `DIAGRAM_ONLY`) and the trace half of a Coding challenge whose
+runnable tests already are the animation. Everything else without both is
+unfinished.
+
 ## Blind 75 diagrams
 
 ```bash
@@ -246,11 +275,13 @@ worked around in the applier.
 
 ## Adding content
 
-**Read the project skill before adding or bulk-loading content:**
+**Read both project skills before adding or bulk-loading content:**
 
-[`.cursor/skills/load-quiz-content/SKILL.md`](.cursor/skills/load-quiz-content/SKILL.md)
+- [`.cursor/skills/load-quiz-content/SKILL.md`](.cursor/skills/load-quiz-content/SKILL.md) — schemas, tagging conventions, coding test runners, merge patterns, and a step-by-step checklist.
+- [`.claude/skills/content-visuals/SKILL.md`](.claude/skills/content-visuals/SKILL.md) — the mandatory diagram + trace that ships with every entry.
 
-It documents schemas, tagging conventions, coding test runners, merge patterns, and a step-by-step checklist.
+Content without a diagram and an animation is not done. See
+[Visuals are mandatory for new content](#visuals-are-mandatory-for-new-content).
 
 ## Reading order
 

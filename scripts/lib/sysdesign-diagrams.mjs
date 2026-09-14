@@ -2449,6 +2449,176 @@ function ragPipeline() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   21 — Normalized state: byId and allIds
+   ══════════════════════════════════════════════════════════════════ */
+
+function normalizedState() {
+  const o = [];
+  const H = 664;
+
+  o.push(
+    title(
+      'Normalized state — one collection, two shapes',
+      'A dictionary answers "give me this one". An array answers "in what order".'
+    )
+  );
+
+  /* ── 1 · The lookup, both ways ──────────────────────────────────── */
+
+  o.push(
+    text(24, 68, W - 48, 16, '1 · Update one record', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  /* Left: the array. The scan is drawn as three equal cells so "walk until
+     the id matches" is a distance on the page rather than a word. */
+  o.push(panel(24, 90, 380, 212, 'An array of objects', 'bad').xml);
+  o.push(
+    box(38, 122, 352, 38, 'users: [ { id: "u2", name: "Bob" }, … ]', 'sunken', {
+      mono: true,
+      size: 10,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+
+  const arr = cells(
+    44,
+    176,
+    [{ text: 'u1\nAlice' }, { text: 'u2\nBob', tone: 'bad', bold: true }, { text: 'u3\nCharlie' }],
+    { cw: 108, gap: 10, ch: 44, size: 10, indices: true }
+  );
+  o.push(arr.xml);
+  o.push(
+    text(44, 240, 344, 16, 'compare every id until one matches', {
+      size: 10,
+      align: 'center',
+      color: C.bad,
+    }).xml
+  );
+  o.push(pill(44, 262, 92, 22, 'O(n)', 'bad', { size: 12 }).xml);
+  o.push(text(146, 262, 242, 22, 'and O(n) again to delete', { size: 10 }).xml);
+
+  /* Right: the same three records, addressed by key. */
+  o.push(panel(416, 90, 380, 212, '`byId` + `allIds`', 'ok').xml);
+  o.push(
+    box(430, 122, 352, 38, 'byId:   { u1: {…}, u2: {…}, u3: {…} }\nallIds: ["u1", "u2", "u3"]', 'sunken', {
+      mono: true,
+      size: 10,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+
+  const dict = cells(
+    436,
+    176,
+    [{ text: 'u1\nAlice' }, { text: 'u2\nBob', tone: 'ok', bold: true }, { text: 'u3\nCharlie' }],
+    { cw: 108, gap: 10, ch: 44, size: 10 }
+  );
+  o.push(dict.xml);
+  /* Keys, not indices — the whole difference between the two halves. */
+  ['"u1"', '"u2"', '"u3"'].forEach((k, i) => {
+    o.push(
+      text(dict.left(i), 221, 108, 14, k, {
+        align: 'center',
+        size: 10,
+        mono: true,
+        color: C.muted,
+      }).xml
+    );
+  });
+  o.push(
+    text(436, 240, 344, 16, 'byId["u2"] — one hop, nothing compared', {
+      size: 10,
+      align: 'center',
+      color: C.ok,
+    }).xml
+  );
+  o.push(pill(436, 262, 92, 22, 'O(1)', 'ok', { size: 12 }).xml);
+  o.push(text(538, 262, 242, 22, 'and O(1) to delete', { size: 10 }).xml);
+
+  /* ── 2 · Why it is two halves and not one ───────────────────────── */
+
+  o.push(
+    text(24, 312, W - 48, 16, '2 · Why both halves', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+  o.push(
+    box(24, 332, 380, 62, '`byId` — the lookup\nAn update is a spread of one entry, so nothing else in the store changes identity. Object key order is not something to render from.', 'info', {
+      size: 10,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+  o.push(
+    box(416, 332, 380, 62, '`allIds` — the order\nThe list renders by mapping this array, so order is explicit. A sorted or filtered view is a second id array, never a re-sorted `byId`.', 'accent', {
+      size: 10,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  /* ── 3 · The payoff that decides the architecture ───────────────── */
+
+  o.push(
+    text(24, 404, W - 48, 16, '3 · One copy, many readers', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+  o.push(panel(24, 424, W - 48, 100, 'Entities reference each other by id, never by copy', 'accent').xml);
+
+  o.push(
+    box(40, 456, 212, 46, 'posts.byId["p9"]\n{ id: "p9", authorId: "u2" }', 'sunken', {
+      mono: true,
+      size: 9.5,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+  o.push(arrow(256, 479, 336, 479, { color: C.accent, label: 'authorId' }).xml);
+  o.push(
+    box(340, 456, 180, 46, 'users.byId["u2"]\n{ name: "Bob" }', 'ok', {
+      mono: true,
+      size: 9.5,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+  o.push(arrow(524, 479, 590, 479, { color: C.accent }).xml);
+
+  ['post header', 'comment list', '@mention chip'].forEach((r, i) => {
+    o.push(box(594, 444 + i * 24, 182, 20, r, 'info', { size: 9.5, rx: 6 }).xml);
+  });
+
+  /* ── 4 · Same shape under another name ──────────────────────────── */
+
+  o.push(
+    text(24, 534, W - 48, 16, '4 · The same pattern, renamed', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+  o.push(
+    box(24, 554, W - 48, 38, "Redux Toolkit's `createEntityAdapter` calls the two halves **`entities`** and **`ids`** — the identical shape, plus `upsertOne` / `removeMany` / `getSelectors` and a `sortComparer`.", 'info', {
+      size: 10.5,
+      align: 'left',
+      padLeft: 12,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      606,
+      'The dictionary answers "give me this one"; the array answers "in what order" — neither does the other job. And deleting an entity leaves its id behind in every array that referenced it, so decide on a cascade before you need one.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 /* ── Registry ─────────────────────────────────────────────────────── */
 
 export const DIAGRAMS = {
@@ -2531,5 +2701,9 @@ export const DIAGRAMS = {
   'rag-pipeline': {
     title: 'RAG — retrieve, rerank, ground, cite',
     build: ragPipeline,
+  },
+  'normalized-state': {
+    title: 'Normalized state — byId and allIds',
+    build: normalizedState,
   },
 };
