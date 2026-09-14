@@ -5338,8 +5338,7 @@ kbd.kbd {
   --badge-hue: #6366f1;
 }
 
-.search-section-badge.section-test-prep,
-.search-section-badge.section-interview-prep {
+.search-section-badge.section-test-prep {
   --badge-hue: #ec4899;
 }
 

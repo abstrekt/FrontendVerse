@@ -32,7 +32,6 @@ const SECTIONS = {
   'web-fundamentals': ['data/web-fundamentals.json'],
   'react-learnings': ['data/react-learnings.json'],
   'react-guide': ['data/react-guide.json'],
-  'interview-prep': ['data/interview-prep.json'],
   'test-prep': ['data/test-prep.json'],
   'advanced-react': ['data/advanced-react.json'],
   'system-design': [

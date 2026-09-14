@@ -3,7 +3,6 @@ import { GROUPED_SECTIONS } from '../data/curriculum.js';
 
 export const EMPTY_COMPLETED = {
   'acceldata-prep': [],
-  'interview-prep': [],
   'test-prep': [],
   mcq: [],
   learnings: [],

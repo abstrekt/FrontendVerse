@@ -1,6 +1,5 @@
 export const LEARNING_SECTIONS = [
   'acceldata-prep',
-  'interview-prep',
   'test-prep',
   'learnings',
   'browser',

@@ -58,7 +58,6 @@ export const LEARNING_LOADERS = {
   'web-fundamentals': single(() => import('../../data/web-fundamentals.json')),
   'react-learnings': single(() => import('../../data/react-learnings.json')),
   'react-guide': single(() => import('../../data/react-guide.json')),
-  'interview-prep': single(() => import('../../data/interview-prep.json')),
   'test-prep': single(() => import('../../data/test-prep.json')),
   'advanced-react': single(() => import('../../data/advanced-react.json')),
   'system-design': merge(SYSTEM_DESIGN),

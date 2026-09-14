@@ -8,8 +8,8 @@
  * genuinely just data — label, badge, category, and how to count its contents.
  *
  * `inNav: false` marks a section that is routable and searchable but has no
- * sidebar entry. That was the existing behaviour for interview-prep and
- * test-prep and is preserved deliberately, not inherited by accident.
+ * sidebar entry. That was the existing behaviour for test-prep and is
+ * preserved deliberately, not inherited by accident.
  */
 
 // "entry/entries", "learning/learnings" etc. — the noun each section counts.
@@ -36,8 +36,8 @@ export const SECTIONS = {
   // so it stays visible under every category chip. See ACCELDATA-PREP-REMOVAL.md
   // for every touch point to delete once the interview is done.
   'acceldata-prep': {
-    label: 'Acceldata Prep',
-    navIcon: 'AD',
+    label: 'Work Experience Deep Dive',
+    navIcon: 'WE',
     category: null,
     kind: 'learning',
     subtitle: ENTRIES,
@@ -144,14 +144,6 @@ export const SECTIONS = {
   },
 
   // Routable and searchable, but deliberately absent from the sidebar nav.
-  'interview-prep': {
-    label: 'Interview Prep',
-    navIcon: 'IP',
-    category: null,
-    kind: 'learning',
-    subtitle: ENTRIES,
-    inNav: false,
-  },
   'test-prep': {
     label: 'Test Prep',
     navIcon: 'TP',

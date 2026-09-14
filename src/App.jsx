@@ -201,7 +201,6 @@ export default function App() {
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [reactGuide, setReactGuide] = useState([]);
-  const [interviewPrep, setInterviewPrep] = useState([]);
   const [testPrep, setTestPrep] = useState([]);
   const [advancedReact, setAdvancedReact] = useState([]);
   const [cssLearnings, setCssLearnings] = useState([]);
@@ -230,7 +229,6 @@ export default function App() {
     'web-fundamentals': setWebFundamentalsLearningId,
     'react-learnings': setReactLearningId,
     'react-guide': setReactGuideLearningId,
-    'interview-prep': setInterviewPrepLearningId,
     'test-prep': setTestPrepLearningId,
     'advanced-react': setAdvancedReactLearningId,
     'browser': setBrowserLearningId,
@@ -287,10 +285,6 @@ export default function App() {
   const activeReactGuide = useMemo(
     () => filterActive(reactGuide, 'react-guide', archived),
     [reactGuide, archived]
-  );
-  const activeInterviewPrep = useMemo(
-    () => filterActive(interviewPrep, 'interview-prep', archived),
-    [interviewPrep, archived]
   );
   const activeTestPrep = useMemo(
     () => filterActive(testPrep, 'test-prep', archived),
@@ -359,10 +353,6 @@ export default function App() {
     () => (starredFilter['react-guide'] ? filterStarred(activeReactGuide, 'react-guide', starred) : activeReactGuide),
     [activeReactGuide, starredFilter, starred]
   );
-  const starredActiveInterviewPrep = useMemo(
-    () => (starredFilter['interview-prep'] ? filterStarred(activeInterviewPrep, 'interview-prep', starred) : activeInterviewPrep),
-    [activeInterviewPrep, starredFilter, starred]
-  );
   const starredActiveTestPrep = useMemo(
     () => (starredFilter['test-prep'] ? filterStarred(activeTestPrep, 'test-prep', starred) : activeTestPrep),
     [activeTestPrep, starredFilter, starred]
@@ -417,10 +407,6 @@ export default function App() {
   const orderedStarredActiveReactGuide = useMemo(
     () => sortCompletedToEnd(starredActiveReactGuide, 'react-guide', completed),
     [starredActiveReactGuide, completed]
-  );
-  const orderedStarredActiveInterviewPrep = useMemo(
-    () => sortCompletedToEnd(starredActiveInterviewPrep, 'interview-prep', completed),
-    [starredActiveInterviewPrep, completed]
   );
   const orderedStarredActiveTestPrep = useMemo(
     () => sortCompletedToEnd(starredActiveTestPrep, 'test-prep', completed),
@@ -495,10 +481,6 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'react-guide', activeReactGuide),
     [completed, activeReactGuide]
   );
-  const interviewPrepCompletedCount = useMemo(
-    () => getActiveCompletedCount(completed, 'interview-prep', activeInterviewPrep),
-    [completed, activeInterviewPrep]
-  );
   const testPrepCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'test-prep', activeTestPrep),
     [completed, activeTestPrep]
@@ -542,7 +524,6 @@ export default function App() {
   const learningsStarredCount = useMemo(() => getStarredCount(starred, 'learnings'), [starred]);
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
-  const interviewPrepStarredCount = useMemo(() => getStarredCount(starred, 'interview-prep'), [starred]);
   const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
   const acceldataPrepStarredCount = useMemo(() => getStarredCount(starred, 'acceldata-prep'), [starred]);
   const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
@@ -560,7 +541,6 @@ export default function App() {
     () =>
       buildSearchIndex({
         acceldataPrep: activeAcceldataPrep,
-        interviewPrep: activeInterviewPrep,
         testPrep: activeTestPrep,
         mcq: activeQuestions,
         learnings: activeLearnings,
@@ -579,7 +559,6 @@ export default function App() {
       }),
     [
       activeAcceldataPrep,
-      activeInterviewPrep,
       activeTestPrep,
       activeQuestions,
       activeLearnings,
@@ -723,14 +702,6 @@ export default function App() {
     return orderedStarredActiveReactGuide[0] ?? null;
   }, [orderedStarredActiveReactGuide, route.learningId, activeSection]);
 
-  const selectedInterviewPrepEntry = useMemo(() => {
-    if (activeSection !== 'interview-prep') return null;
-    if (route.learningId) {
-      return orderedStarredActiveInterviewPrep.find((item) => item.id === route.learningId) ?? orderedStarredActiveInterviewPrep[0] ?? null;
-    }
-    return orderedStarredActiveInterviewPrep[0] ?? null;
-  }, [orderedStarredActiveInterviewPrep, route.learningId, activeSection]);
-
   const selectedTestPrepEntry = useMemo(() => {
     if (activeSection !== 'test-prep') return null;
     if (route.learningId) {
@@ -859,13 +830,6 @@ export default function App() {
       setReactGuideLearningId(orderedStarredActiveReactGuide[0].id, { replace: true });
     }
   }, [activeSection, route.learningId, orderedStarredActiveReactGuide, setReactGuideLearningId]);
-
-  useEffect(() => {
-    if (activeSection !== 'interview-prep' || !orderedStarredActiveInterviewPrep.length) return;
-    if (route.learningId && !orderedStarredActiveInterviewPrep.some((item) => item.id === route.learningId)) {
-      setInterviewPrepLearningId(orderedStarredActiveInterviewPrep[0].id, { replace: true });
-    }
-  }, [activeSection, route.learningId, orderedStarredActiveInterviewPrep, setInterviewPrepLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'test-prep' || !orderedStarredActiveTestPrep.length) return;
@@ -1118,7 +1082,6 @@ export default function App() {
       'web-fundamentals': setWebFundamentals,
       'react-learnings': setReactLearnings,
       'react-guide': setReactGuide,
-      'interview-prep': setInterviewPrep,
       'test-prep': setTestPrep,
       'advanced-react': setAdvancedReact,
       browser: setBrowserLearnings,
@@ -1384,10 +1347,6 @@ export default function App() {
         setSection('react-guide', { learningId: id });
         return;
       }
-      if (section === 'interview-prep') {
-        setSection('interview-prep', { learningId: id });
-        return;
-      }
       if (section === 'test-prep') {
         setSection('test-prep', { learningId: id });
         return;
@@ -1512,11 +1471,6 @@ export default function App() {
   const handleToggleReactGuideCompleted = useMemo(
     () => makeLearningToggleCompleted('react-guide', orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted),
     [orderedStarredActiveReactGuide, setReactGuideLearningId, completed, setCompleted]
-  );
-
-  const handleToggleInterviewPrepCompleted = useMemo(
-    () => makeLearningToggleCompleted('interview-prep', orderedStarredActiveInterviewPrep, setInterviewPrepLearningId, completed, setCompleted),
-    [orderedStarredActiveInterviewPrep, setInterviewPrepLearningId, completed, setCompleted]
   );
 
   const handleToggleTestPrepCompleted = useMemo(
@@ -1648,23 +1602,6 @@ export default function App() {
       }
     },
     [setStarredFilter, activeReactGuide, starred, route.learningId, setReactGuideLearningId]
-  );
-
-  const handleInterviewPrepStarredFilterChange = useCallback(
-    (value) => {
-      setStarredFilter((prev) => ({ ...prev, 'interview-prep': value }));
-      if (value) {
-        const nextStarred = filterStarred(activeInterviewPrep, 'interview-prep', starred);
-        if (
-          route.learningId &&
-          !nextStarred.some((item) => item.id === route.learningId) &&
-          nextStarred.length > 0
-        ) {
-          setInterviewPrepLearningId(nextStarred[0].id);
-        }
-      }
-    },
-    [setStarredFilter, activeInterviewPrep, starred, route.learningId, setInterviewPrepLearningId]
   );
 
   const handleTestPrepStarredFilterChange = useCallback(
@@ -1913,18 +1850,6 @@ export default function App() {
       }
     },
     [setArchived, archived, reactGuide, route.learningId, setReactGuideLearningId]
-  );
-
-  const handleArchiveInterviewPrep = useCallback(
-    (learning) => {
-      setArchived((prev) => archiveId(prev, 'interview-prep', learning.id));
-      const nextArchived = archiveId(archived, 'interview-prep', learning.id);
-      const nextActive = filterActive(interviewPrep, 'interview-prep', nextArchived);
-      if (learning.id === route.learningId && nextActive.length > 0) {
-        setInterviewPrepLearningId(nextActive[0].id);
-      }
-    },
-    [setArchived, archived, interviewPrep, route.learningId, setInterviewPrepLearningId]
   );
 
   const handleArchiveTestPrep = useCallback(
@@ -2581,10 +2506,6 @@ export default function App() {
       coding: { done: codingCompletedCount, total: activeCodingQuestions.length },
       output: { done: outputCompletedCount, total: activeOutputQuestions.length },
       archived: { done: 0, total: archivedCount },
-      'interview-prep': {
-        done: interviewPrepCompletedCount,
-        total: sectionCount('interview-prep', activeInterviewPrep),
-      },
       'test-prep': {
         done: testPrepCompletedCount,
         total: sectionCount('test-prep', activeTestPrep),
@@ -2606,7 +2527,6 @@ export default function App() {
       codingCompletedCount, activeCodingQuestions.length,
       outputCompletedCount, activeOutputQuestions.length,
       archivedCount,
-      interviewPrepCompletedCount, activeInterviewPrep,
       testPrepCompletedCount, activeTestPrep,
       sectionCount,
     ],
@@ -2769,18 +2689,6 @@ export default function App() {
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
-            ) : activeSection === 'interview-prep' ? (
-              <LearningsView
-                learning={selectedInterviewPrepEntry}
-                onArchive={handleArchiveInterviewPrep}
-                isStarred={selectedInterviewPrepEntry ? isStarred(selectedInterviewPrepEntry.id, 'interview-prep', starred) : false}
-                onToggleStar={() => selectedInterviewPrepEntry && handleToggleStar('interview-prep', selectedInterviewPrepEntry.id)}
-                isCompleted={selectedInterviewPrepEntry ? isCompleted(selectedInterviewPrepEntry.id, 'interview-prep', completed) : false}
-                onToggleCompleted={() => selectedInterviewPrepEntry && handleToggleInterviewPrepCompleted(selectedInterviewPrepEntry.id)}
-                highlight={syntaxHighlight}
-                theme={editorTheme}
-                onNavigate={handleInternalLink}
-              />
             ) : activeSection === 'test-prep' ? (
               <LearningsView
                 learning={selectedTestPrepEntry}
@@ -2916,7 +2824,6 @@ export default function App() {
             ) : activeSection === 'archived' ? (
               <ArchivedView
                 archived={archived}
-                interviewPrep={interviewPrep}
                 testPrep={testPrep}
                 questions={questions}
                 learnings={learnings}
@@ -2988,22 +2895,6 @@ export default function App() {
                 title="React learnings"
               />
             </div>
-          ) : activeSection === 'interview-prep' ? (
-            <div className="topics-panel learnings-panel">
-              <LearningsPanel
-                starredIds={starred['interview-prep']}
-                completedIds={completed['interview-prep']}
-                activeItem={selectedInterviewPrepEntry}
-                learnings={orderedStarredActiveInterviewPrep}
-                selectedLearningId={selectedInterviewPrepEntry?.id ?? null}
-                sectionKey="interview-prep"
-                starredOnly={starredFilter['interview-prep']}
-                starredCount={interviewPrepStarredCount}
-                onStarredOnlyChange={handleInterviewPrepStarredFilterChange}
-                onSelect={setInterviewPrepLearningId}
-                title="1-Day Interview Prep"
-              />
-            </div>
           ) : activeSection === 'test-prep' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
@@ -3033,7 +2924,7 @@ export default function App() {
                 starredCount={acceldataPrepStarredCount}
                 onStarredOnlyChange={handleAcceldataPrepStarredFilterChange}
                 onSelect={setAcceldataPrepLearningId}
-                title="Acceldata Prep"
+                title="Work Experience Deep Dive"
               />
             </div>
           ) : activeSection === 'css' ? (
