@@ -70,9 +70,12 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
         temperature: 0.2,
-        max_tokens: 220,
+        // Generous, because the gpt-oss models spend tokens on reasoning
+        // before they emit anything; 220 truncated answers mid-sentence. The
+        // prompts cap the actual length, not this.
+        max_tokens: 700,
         messages: [
           { role: 'system', content: prompt.system },
           { role: 'user', content: prompt.user({ subject, context, title }) },
