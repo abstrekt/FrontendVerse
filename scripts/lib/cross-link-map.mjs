@@ -165,6 +165,7 @@ export const TOPICS = [
   { section: 'react-guide', id: 20, terms: ['render props'] },
   { section: 'react-guide', id: 21, terms: ['compound components'] },
   { section: 'react-guide', id: 2, terms: ['fiber tree'] },
+  { section: 'advanced-react', id: 2, terms: ['children as props'] },
   { section: 'advanced-react', id: 14, terms: ['request waterfall', 'request waterfalls'] },
   { section: 'advanced-react', id: 15, terms: ['out-of-order response'] },
 

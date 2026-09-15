@@ -1731,6 +1731,9 @@ export const TRACES = {
   28: {
     diagram: 'context_propagation',
     alt: 'Every consumer re-renders when the value changes',
+    // The body opens with the parent-vs-context distinction, which is a
+    // different question; the figure belongs with the value-identity prose.
+    after: '## When the value itself changes',
     trace: {
       input: 'createContext({ user, theme, cart }) — one context, three concerns',
       lanes: [
