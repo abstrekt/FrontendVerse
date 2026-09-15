@@ -20,7 +20,7 @@
  * A stray hex shows up as `⚠ unmapped` at build time and fails the build.
  */
 
-import { C, box, text, panel, arrow, cells, pill, rule } from './drawio-builder.mjs';
+import { C, box, text, panel, arrow, cells, circle, pill, rule } from './drawio-builder.mjs';
 import { W, title, takeaway, legend } from './diagram-furniture.mjs';
 
 /* ── Shared furniture ─────────────────────────────────────────────── */
@@ -3473,6 +3473,391 @@ function a11yTree() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   RADIO — five stages, five artefacts, one worked example
+   ══════════════════════════════════════════════════════════════════ */
+
+function radioFramework() {
+  const o = [];
+  const H = 588;
+
+  o.push(
+    title(
+      'RADIO — five stages, and the artefact each one owes you',
+      'Each stage is unanswerable until the one above it is settled'
+    )
+  );
+
+  /* ── Column headings ───────────────────────────────────────────── */
+
+  o.push(text(24, 70, 150, 14, 'Stage', { size: 9, bold: true, color: C.fg }).xml);
+  o.push(text(180, 70, 320, 14, 'What you produce', { size: 9, bold: true, color: C.fg }).xml);
+  o.push(
+    text(520, 70, 276, 14, 'Worked example — "design a news feed"', {
+      size: 9,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const STAGES = [
+    {
+      letter: 'R',
+      name: 'Requirements',
+      clock: '5–8 min',
+      tone: 'info',
+      produces: 'Two lists and a cut line',
+      note: 'functional · non-functional · what you are explicitly NOT doing',
+      example: 'Read path only. Posting, moderation and notifications are out.',
+    },
+    {
+      letter: 'A',
+      name: 'Architecture',
+      clock: '8–12 min',
+      tone: 'accent',
+      produces: 'Named boxes, and what each one owns',
+      note: 'a box with no stated responsibility is decoration',
+      example: 'App shell · feed view · data layer · BFF. Shell always loaded.',
+    },
+    {
+      letter: 'D',
+      name: 'Data model',
+      clock: '5–8 min',
+      tone: 'ok',
+      produces: 'The shapes the CLIENT holds',
+      note: 'not database tables — the store',
+      example: 'Normalised by id: posts{}, users{}, feed{ ids, cursor }.',
+    },
+    {
+      letter: 'I',
+      name: 'Interface',
+      clock: '5–8 min',
+      tone: 'warn',
+      produces: 'Two contracts, not one',
+      note: 'the network API, and the props between your own components',
+      example: 'GET /feed?cursor → { items, nextCursor }  ·  <Feed onLoadMore />',
+    },
+    {
+      letter: 'O',
+      name: 'Optimisations',
+      clock: '10–15 min',
+      tone: 'bad',
+      produces: 'The senior signal',
+      note: 'performance · a11y · errors · offline · i18n · security',
+      example: 'Virtualise the list, optimistic likes, skeletons that match.',
+    },
+  ];
+
+  STAGES.forEach((st, i) => {
+    const y = 94 + i * 74;
+    o.push(circle(24, y, 40, st.letter, st.tone, { size: 16 }).xml);
+    o.push(text(74, y + 2, 100, 18, st.name, { size: 10.5, bold: true, color: C.fg }).xml);
+    o.push(text(74, y + 20, 100, 14, st.clock, { size: 8.5, mono: true }).xml);
+
+    o.push(box(180, y, 320, 40, st.produces, st.tone, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(180, y + 42, 320, 14, st.note, { size: 8, italic: true }).xml);
+
+    o.push(box(520, y, 276, 40, st.example, 'sunken', { size: 8.5, rx: 8 }).xml);
+
+    // The dependency arrow — each stage feeds the next.
+    if (i < STAGES.length - 1) {
+      o.push(arrow(44, y + 42, 44, y + 72, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+
+  /* ── The clock, drawn to scale ─────────────────────────────────── */
+
+  o.push(rule(24, 458, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 468, 400, 14, 'The 45-minute clock, drawn to scale', {
+      size: 10,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const BUDGET = [
+    ['R', 6.5, 'info'],
+    ['A', 10, 'accent'],
+    ['D', 6.5, 'ok'],
+    ['I', 6.5, 'warn'],
+    ['O', 12.5, 'bad'],
+  ];
+  const total = BUDGET.reduce((sum, [, m]) => sum + m, 0);
+  let bx = 24;
+  for (const [letter, mins, tone] of BUDGET) {
+    const w = Math.round(((W - 48) * mins) / total);
+    o.push(box(bx, 486, w - 2, 22, `${letter} · ${mins}m`, tone, { size: 9, bold: true, rx: 4 }).xml);
+    bx += w;
+  }
+  o.push(
+    text(24, 510, W - 48, 14, 'O is the widest block and the one people run out of clock for — that is the whole reason to draw this.', {
+      size: 8.5,
+      italic: true,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      532,
+      'RADIO is a coverage checklist, not a script. Its value is that the interviewer can see what you covered — so name each stage once as you enter it, then talk normally.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RADIO · R — what a requirements answer looks like on paper
+   ══════════════════════════════════════════════════════════════════ */
+
+function radioRequirements() {
+  const o = [];
+  const H = 516;
+
+  o.push(
+    title(
+      'R — two lists and a cut line',
+      'The stage is graded on the split and on the cut, not on the length of the lists'
+    )
+  );
+
+  const COLS = [
+    {
+      x: 24,
+      tone: 'ok',
+      heading: 'Functional — what a user can DO',
+      rows: [
+        'Read the feed, newest first',
+        'Scroll for more, forever',
+        'Like a post, see the count move',
+        'Open a post and read replies',
+      ],
+      foot: 'Verbs. If it has no verb it is not a functional requirement.',
+    },
+    {
+      x: 282,
+      tone: 'accent',
+      heading: 'Non-functional — what it must BE',
+      rows: [
+        'p75 LCP < 2.5s on 4G / mid Android',
+        'INP < 200ms · CLS < 0.1',
+        'WCAG 2.1 AA, keyboard + SR tested',
+        'Reads work offline from cache',
+        '12 locales, Arabic and Hebrew RTL',
+      ],
+      foot: 'Numbers. "Fast" is not a requirement; a p75 target is.',
+    },
+    {
+      x: 540,
+      tone: 'sunken',
+      heading: 'Out of scope — say it out loud',
+      rows: [
+        'Posting and editing',
+        'Moderation and reporting',
+        'Notifications',
+        'Direct messages',
+      ],
+      foot: 'One sentence here buys you the rest of the interview.',
+    },
+  ];
+
+  for (const col of COLS) {
+    o.push(panel(col.x, 76, 256, 250, col.heading, col.tone === 'sunken' ? 'warn' : col.tone).xml);
+    col.rows.forEach((r, i) => {
+      o.push(
+        box(col.x + 14, 108 + i * 34, 228, 28, r, col.tone, {
+          size: 8.5,
+          rx: 6,
+          dashed: col.tone === 'sunken',
+        }).xml
+      );
+    });
+    o.push(text(col.x + 14, 284, 228, 34, col.foot, { size: 8.5, italic: true }).xml);
+  }
+
+  o.push(rule(24, 344, W - 48, { dashed: true }).xml);
+  o.push(
+    box(24, 358, W - 48, 44, '"I’ll design the feed read path and leave posting, moderation and notifications out — say if you’d rather I covered those instead."', 'accent', {
+      size: 11,
+      align: 'left',
+      padLeft: 14,
+    }).xml
+  );
+  o.push(
+    text(24, 406, W - 48, 14, 'That sentence is the cut line. Without it, every later stage is a guess about a product nobody agreed on.', {
+      size: 9,
+      italic: true,
+      align: 'center',
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      430,
+      'Interviewers grade the split and the cut, not the length. Functional gets verbs, non-functional gets numbers, and out-of-scope gets said out loud rather than assumed.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RADIO · I — the two contracts, and the one juniors forget
+   ══════════════════════════════════════════════════════════════════ */
+
+function radioInterface() {
+  const o = [];
+  const H = 556;
+
+  o.push(
+    title(
+      'I — two contracts, and only one of them is the API',
+      'The component contract is the half that makes it a frontend interview'
+    )
+  );
+
+  /* ── 1 · the network contract ──────────────────────────────────── */
+
+  o.push(panel(24, 76, 380, 226, '1 · Network — client ↔ server', 'accent').xml);
+  o.push(box(44, 110, 340, 26, 'GET /feed?cursor=eyJ…&limit=20', 'accent', {
+    size: 9,
+    mono: true,
+    rx: 6,
+  }).xml);
+  o.push(arrow(214, 138, 214, 154, { color: C.line, width: 1.3 }).xml);
+  o.push(
+    box(44, 158, 340, 40, '{ items: Post[],\n  nextCursor: string | null }', 'ok', {
+      size: 9,
+      mono: true,
+      rx: 6,
+    }).xml
+  );
+  const NET = [
+    'Cursor, not offset — an insert shifts every offset page',
+    'One error shape, every endpoint',
+    'Never a mutation behind a GET',
+  ];
+  NET.forEach((n, i) => {
+    o.push(pill(44, 208 + i * 26, 340, 20, n, 'plain', { size: 8.5 }).xml);
+  });
+
+  /* ── 2 · the component contract ────────────────────────────────── */
+
+  o.push(panel(416, 76, 380, 226, '2 · Component — your code ↔ your code', 'warn').xml);
+  o.push(
+    box(436, 110, 340, 88, '<Feed\n  items={posts}\n  state="loading" | "ready" | "error" | "empty"\n  onLoadMore={() => void}\n  onLike={(id: string) => void}\n/>', 'warn', {
+      size: 8.5,
+      mono: true,
+      rx: 6,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+  const CMP = [
+    'Data down as props, intent up as callbacks',
+    'One `state` union, not three booleans',
+    'The component fetches nothing — the caller owns it',
+  ];
+  CMP.forEach((n, i) => {
+    o.push(pill(436, 208 + i * 26, 340, 20, n, 'plain', { size: 8.5 }).xml);
+  });
+
+  /* ── Where each one comes from ─────────────────────────────────── */
+
+  o.push(rule(24, 320, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 332, W - 48, 16, 'Neither contract is invented here — both fall out of the two stages above', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+      align: 'center',
+    }).xml
+  );
+
+  const FROM = [
+    ['D — the data model', 'decides the response shape', 'ok', 214],
+    ['A — the architecture', 'decides the component props', 'accent', 606],
+  ];
+  for (const [name, why, tone, cx] of FROM) {
+    o.push(box(cx - 130, 360, 260, 28, name, tone, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(cx - 130, 390, 260, 14, why, { size: 8.5, align: 'center' }).xml);
+    o.push(arrow(cx, 356, cx, 306, { color: C.line, width: 1.3, dashed: true }).xml);
+  }
+
+  o.push(
+    text(24, 412, W - 48, 28, 'Which is the point of the order: by the time you reach I, both contracts are mostly transcription. Designing an API before you know what data crosses the boundary is where the guessing happens.', {
+      size: 9,
+      align: 'center',
+      italic: true,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      470,
+      'Name both. A candidate who only specifies the network contract has described a backend feature with a UI attached; the props and callbacks between your own components are the frontend design.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RADIO · O — every optimisation points back at a number from R
+   ══════════════════════════════════════════════════════════════════ */
+
+function radioOptimisations() {
+  const o = [];
+  const H = 566;
+
+  o.push(
+    title(
+      'O — the stage that decides your level',
+      'Every lever here answers a number you already promised in R'
+    )
+  );
+
+  const LEVERS = [
+    ['Performance', 'virtualise the list', 'LCP < 2.5s', 'ok'],
+    ['Responsiveness', 'optimistic likes', 'INP < 200ms', 'ok'],
+    ['Stability', 'skeletons the same size\nas the real thing', 'CLS < 0.1', 'ok'],
+    ['Network', 'cursor pagination,\ncache-first reads', 'offline reads', 'accent'],
+    ['Accessibility', 'focus the heading\non route change', 'WCAG 2.1 AA', 'accent'],
+    ['Errors', 'retry per item,\nnever a blank page', 'degrades, not dies', 'accent'],
+    ['i18n', 'logical CSS properties', '12 locales, RTL', 'warn'],
+    ['Security', 'sanitise UGC, strict CSP', 'no injected markup', 'warn'],
+    ['Observability', 'RUM on the p75 you named', 'the number is real', 'warn'],
+  ];
+
+  LEVERS.forEach(([name, lever, target, tone], i) => {
+    const x = 24 + (i % 3) * 262;
+    const y = 80 + Math.floor(i / 3) * 118;
+    o.push(box(x, y, 246, 26, name, tone, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(x, y + 30, 246, 30, lever.replace('\n', ' '), { size: 9, align: 'center' }).xml);
+    o.push(pill(x + 33, y + 62, 180, 20, target, tone, { size: 8.5 }).xml);
+  });
+
+  o.push(rule(24, 436, W - 48, { dashed: true }).xml);
+  o.push(
+    box(24, 450, W - 48, 34, 'Read the badges: every one is a non-functional requirement from R. That round trip is the answer to "why is this the senior stage?"', 'accent', {
+      size: 10.5,
+      align: 'left',
+      padLeft: 14,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      500,
+      'Budget for O deliberately — it is the highest-signal stage and the one people run out of clock for. Two optimisations traced back to a stated number beat eight listed as nouns.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'loading-waterfall': {
     title: 'The critical path — serialised vs parallelised',
@@ -3513,6 +3898,22 @@ export const DIAGRAMS = {
   'architecture-layers': {
     title: 'The layered frontend architecture',
     build: architectureLayers,
+  },
+  'radio-framework': {
+    title: 'RADIO — five stages, and the artefact each one owes you',
+    build: radioFramework,
+  },
+  'radio-requirements': {
+    title: 'R — two lists and a cut line',
+    build: radioRequirements,
+  },
+  'radio-interface': {
+    title: 'I — two contracts, and only one of them is the API',
+    build: radioInterface,
+  },
+  'radio-optimisations': {
+    title: 'O — the stage that decides your level',
+    build: radioOptimisations,
   },
   'rendering-strategies': {
     title: 'Rendering strategies — where each one moves the paint',
