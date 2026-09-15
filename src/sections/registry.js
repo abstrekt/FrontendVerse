@@ -32,15 +32,15 @@ export const SECTIONS = {
     subtitle: null,
     inNav: false,
   },
-  // Temporary — prep for the Acceldata interview. Not tied to one technology,
-  // so it stays visible under every category chip. See ACCELDATA-PREP-REMOVAL.md
-  // for every touch point to delete once the interview is done.
+  // Temporary — prep for the Acceldata interview. Routable via direct link
+  // (/acceldata-prep), but hidden from the sidebar navigation.
   'acceldata-prep': {
     label: 'Work Experience Deep Dive',
     navIcon: 'WE',
     category: null,
     kind: 'learning',
     subtitle: ENTRIES,
+    inNav: false,
   },
   mcq: { label: 'JavaScript MCQs', navIcon: 'JS', category: 'js', kind: 'mcq', subtitle: QUESTIONS },
   learnings: {
