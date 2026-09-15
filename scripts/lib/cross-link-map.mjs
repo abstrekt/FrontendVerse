@@ -115,6 +115,11 @@ export const TOPICS = [
   { section: 'system-design', id: 115, terms: ['origin shield', 'CDN'] },
   { section: 'system-design', id: 116, terms: ['edge functions', 'edge function'] },
   { section: 'system-design', id: 117, terms: ['webhooks', 'webhook'] },
+  {
+    section: 'system-design',
+    id: 118,
+    terms: ['cursor pagination', 'offset pagination', 'keyset pagination', 'pagination'],
+  },
   { section: 'system-design', id: 8, terms: ['non-functional requirements', 'functional requirements'] },
   { section: 'system-design', id: 104, terms: ['state topology', 'server state'] },
   { section: 'system-design', id: 110, terms: ['white-labelling', 'multi-tenancy'] },

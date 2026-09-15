@@ -3858,6 +3858,153 @@ function radioOptimisations() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Pagination — where offset breaks, and what a cursor anchors to
+   ══════════════════════════════════════════════════════════════════ */
+
+function paginationStyles() {
+  const o = [];
+  const H = 604;
+
+  o.push(
+    title(
+      'Pagination — offset counts positions, a cursor points at a record',
+      'Which is why one of them duplicates rows the moment the list changes underneath it'
+    )
+  );
+
+  const X = 150; // where the item strip starts
+  const CW = 34; // item width
+  const GAP = 4;
+  const at = (i) => X + i * (CW + GAP);
+
+  function strip(y, label, sub, items, tone) {
+    const out = [
+      text(24, y + 2, 120, 16, label, { size: 9.5, bold: true, color: C.fg }).xml,
+      text(24, y + 17, 120, 14, sub, { size: 8, mono: true }).xml,
+    ];
+    items.forEach((it, i) => {
+      out.push(box(at(i), y, CW, 26, it.label, it.tone ?? 'plain', { size: 9, mono: true, rx: 4 }).xml);
+    });
+    if (tone) out.push(tone);
+    return out.join('');
+  }
+
+  /* ── 1 · offset drifts ─────────────────────────────────────────── */
+
+  o.push(text(24, 70, 400, 14, '1 · Offset — the page boundary moves', { size: 11, bold: true, color: C.fg }).xml);
+
+  const base = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  o.push(
+    strip(90, 'Page 1', 'offset=0 limit=4', base.map((l, i) => ({ label: l, tone: i < 4 ? 'ok' : 'sunken' })))
+  );
+  o.push(text(510, 92, 286, 26, 'The reader receives A B C D and starts reading.', { size: 8.5 }).xml);
+
+  o.push(
+    strip(140, 'Meanwhile', 'someone posts', [{ label: 'X', tone: 'warn' }, ...base.map((l) => ({ label: l, tone: 'sunken' }))])
+  );
+  o.push(
+    text(510, 142, 286, 26, 'One insert at the head shifts every position by one.', { size: 8.5, color: C.warn }).xml
+  );
+
+  const after = [
+    { label: 'X', tone: 'sunken' },
+    { label: 'A', tone: 'sunken' },
+    { label: 'B', tone: 'sunken' },
+    { label: 'C', tone: 'sunken' },
+    { label: 'D', tone: 'bad' },
+    { label: 'E', tone: 'ok' },
+    { label: 'F', tone: 'ok' },
+    { label: 'G', tone: 'ok' },
+    { label: 'H', tone: 'sunken' },
+  ];
+  o.push(strip(190, 'Page 2', 'offset=4 limit=4', after));
+  o.push(
+    text(510, 186, 286, 34, 'Positions 5–8 are now D E F G — so D arrives a second time, and H is still unread.', {
+      size: 8.5,
+      color: C.bad,
+    }).xml
+  );
+  o.push(
+    pill(at(4) - 3, 220, 40, 16, 'twice', 'bad', { size: 7.5 }).xml
+  );
+  o.push(
+    text(24, 240, W - 48, 14, 'A delete does the mirror image: page 2 starts one late and an item is skipped entirely, with nothing on screen to say so.', {
+      size: 8.5,
+      italic: true,
+      color: C.bad,
+    }).xml
+  );
+
+  /* ── 2 · a cursor anchors ──────────────────────────────────────── */
+
+  o.push(rule(24, 264, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 276, 400, 14, '2 · Cursor — anchored to a record, not a count', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(
+    strip(298, 'Page 2', 'after=D limit=4', [
+      { label: 'X', tone: 'sunken' },
+      { label: 'A', tone: 'sunken' },
+      { label: 'B', tone: 'sunken' },
+      { label: 'C', tone: 'sunken' },
+      { label: 'D', tone: 'accent' },
+      { label: 'E', tone: 'ok' },
+      { label: 'F', tone: 'ok' },
+      { label: 'G', tone: 'ok' },
+      { label: 'H', tone: 'ok' },
+    ])
+  );
+  o.push(pill(at(4) - 8, 328, 50, 16, 'anchor', 'accent', { size: 7.5 }).xml);
+  o.push(
+    text(510, 292, 286, 40, '"Give me what follows D." X can be inserted, or C deleted, and the answer does not move.', {
+      size: 8.5,
+      color: C.ok,
+    }).xml
+  );
+
+  /* ── 3 · the three styles ──────────────────────────────────────── */
+
+  o.push(rule(24, 356, W - 48, { dashed: true }).xml);
+
+  const STYLES = [
+    ['Offset', 'page=3&limit=20', 'jump to any page', 'drifts; O(N) deep scan', 'bad'],
+    ['Cursor', 'cursor=eyJpZCI6NDJ9', 'infinite scroll', 'opaque; no jump to page N', 'ok'],
+    ['Keyset / seek', 'before=<ts>&last_id=42', 'chat, logs, timelines', 'needs a tie-breaker', 'accent'],
+  ];
+  STYLES.forEach(([name, param, best, cost, tone], i) => {
+    const x = 24 + i * 262;
+    o.push(box(x, 372, 246, 26, name, tone, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(box(x, 402, 246, 22, param, 'sunken', { size: 8, mono: true, rx: 4 }).xml);
+    o.push(text(x, 428, 246, 14, `best: ${best}`, { size: 8.5, align: 'center' }).xml);
+    o.push(text(x, 444, 246, 14, `cost: ${cost}`, { size: 8.5, align: 'center', color: C.warn }).xml);
+  });
+
+  /* ── 4 · the fake-cursor test ──────────────────────────────────── */
+
+  o.push(
+    box(24, 472, W - 48, 44, 'The test for a fake cursor: can the client compute the next one? `cursor = last + pageSize` is an offset wearing a cursor’s name — same drift, same O(N) scan.', 'warn', {
+      size: 10.5,
+      align: 'left',
+      padLeft: 14,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      528,
+      'A real cursor is opaque and minted by the server, because it encodes the sort key it is anchored to. If you can do arithmetic on it, nothing was fixed — the parameter was just renamed.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'loading-waterfall': {
     title: 'The critical path — serialised vs parallelised',
@@ -3898,6 +4045,10 @@ export const DIAGRAMS = {
   'architecture-layers': {
     title: 'The layered frontend architecture',
     build: architectureLayers,
+  },
+  'pagination-styles': {
+    title: 'Pagination — offset counts positions, a cursor points at a record',
+    build: paginationStyles,
   },
   'radio-framework': {
     title: 'RADIO — five stages, and the artefact each one owes you',
