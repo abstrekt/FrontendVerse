@@ -1,7 +1,7 @@
 {
-  "acceldata-prep": 16,
+  "acceldata-prep": 18,
   "learnings": 119,
-  "browser": 19,
+  "browser": 20,
   "css": 6,
   "ai-dev": 10,
   "web-fundamentals": 16,
@@ -9,7 +9,7 @@
   "react-guide": 46,
   "test-prep": 23,
   "advanced-react": 16,
-  "system-design": 84,
+  "system-design": 89,
   "algorithm": 11,
   "blind75": 85
 }

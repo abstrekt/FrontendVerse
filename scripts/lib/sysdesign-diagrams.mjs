@@ -478,11 +478,11 @@ function stateTopology() {
 
 function realtimeTransports() {
   const o = [];
-  const H = 568;
+  const H = 672;
 
   o.push(
     title(
-      'Real-time transports — four ways to hear about a change',
+      'Real-time transports — five ways to hear about a change',
       'Pick by direction and frequency, not by which one sounds most impressive'
     )
   );
@@ -592,6 +592,35 @@ function realtimeTransports() {
       cost: 'you own reconnect, backoff, auth, ordering',
       when: 'Chat, collaborative editing, multiplayer cursors, games — anywhere the client talks back.',
     },
+    {
+      name: 'WebTransport',
+      sub: 'Many independent streams over HTTP/3',
+      y: 504,
+      tone: 'warn',
+      // The point of the row: one lost packet stalls its own stream only.
+      draw(y) {
+        const out = [
+          box(X, y, TW, 13, 'HTTP/3 over QUIC — streams and datagrams, both ways', 'accent', {
+            size: 8,
+            rx: 5,
+          }).xml,
+        ];
+        const lanes = [
+          { dx: 0, w: 128, label: 'stream A', tone: 'ok' },
+          { dx: 148, w: 128, label: 'stream B — packet lost', tone: 'bad' },
+          { dx: 296, w: 110, label: 'stream C', tone: 'ok' },
+        ];
+        for (const l of lanes) {
+          out.push(box(X + l.dx, y + 15, l.w, 12, l.label, l.tone, { size: 8, rx: 5 }).xml);
+        }
+        out.push(
+          text(X, y + 29, 320, 13, 'B stalls alone — A and C keep delivering', { size: 8.5 }).xml
+        );
+        return out.join('');
+      },
+      cost: 'UDP/443 is blocked on plenty of networks',
+      when: 'Media, telemetry, multiplayer — where one stream stalling all the others is the actual pain. Still early.',
+    },
   ];
 
   for (const row of rows) {
@@ -601,9 +630,9 @@ function realtimeTransports() {
     o.push(text(R, row.y + 24, 208, 52, row.when, { size: 9, italic: true }).xml);
   }
 
-  o.push(rule(24, 474, W - 48).xml);
+  o.push(rule(24, 578, W - 48).xml);
   o.push(
-    text(24, 482, W - 48, 16, 'Whatever you pick, the follow-up is the same: what happens when it drops?', {
+    text(24, 586, W - 48, 16, 'Whatever you pick, the follow-up is the same: what happens when it drops?', {
       size: 11.5,
       bold: true,
       color: C.warn,
@@ -612,7 +641,7 @@ function realtimeTransports() {
   o.push(
     text(
       24,
-      500,
+      604,
       W - 48,
       16,
       'Exponential backoff with jitter  ·  resume from a cursor, never from "now"  ·  fall back to polling  ·  tell the reader they are disconnected',
@@ -622,7 +651,7 @@ function realtimeTransports() {
 
   o.push(
     takeaway(
-      518,
+      622,
       'Direction decides the transport: server→client only is SSE, both ways is WebSocket, and "every 30 seconds is fine" is polling. Reaching for WebSocket when nothing is ever sent upward buys you a reconnect problem for free.'
     )
   );
@@ -2621,6 +2650,725 @@ function normalizedState() {
 
 /* ── Registry ─────────────────────────────────────────────────────── */
 
+/* ══════════════════════════════════════════════════════════════════
+   Speed test — parallel streams, sampling, trimmed mean
+   ══════════════════════════════════════════════════════════════════ */
+
+function speedTest() {
+  const o = [];
+  const H = 646;
+
+  o.push(
+    title(
+      'A speed test — why it is eight connections and a trimmed mean',
+      'One stream under-reports, one sample is noise: the design exists to defeat both'
+    )
+  );
+
+  /* ── Stage 1 · the pipeline ────────────────────────────────────── */
+
+  const STAGES = [
+    ['Pick the edge', 'probe a few POPs,\ntake the lowest RTT', 'info'],
+    ['Open 4–8 streams', 'one TCP stream\nnever fills the pipe', 'accent'],
+    ['Pull chunks', 'binary payloads,\nsize adapts upward', 'accent'],
+    ['Sample Δbytes', 'every 100–200ms,\nsummed across streams', 'ok'],
+    ['Trim + report', 'drop warm-up\nand outliers', 'ok'],
+  ];
+  STAGES.forEach(([name, sub, t], i) => {
+    const x = 24 + i * 156;
+    o.push(box(x, 76, 140, 30, name, t, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(x, 108, 140, 26, sub.replace('\n', ' '), { size: 8.5, align: 'center' }).xml);
+    if (i < STAGES.length - 1) {
+      o.push(arrow(x + 142, 91, x + 154, 91, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+
+  /* ── Stage 2 · the throughput chart ────────────────────────────── */
+
+  const CX = 96; // plot origin x
+  const CY = 300; // plot baseline y
+  const CW = 500; // plot width  = 0 … 10s
+  const CH = 120; // plot height = 0 … 1000 Mbps
+
+  o.push(text(24, 150, 300, 16, 'Throughput measured per 200ms slice', { size: 11, bold: true, color: C.fg }).xml);
+
+  // Axes.
+  o.push(arrow(CX, CY, CX + CW + 16, CY, { color: C.line, width: 1.3 }).xml);
+  o.push(arrow(CX, CY, CX, CY - CH - 14, { color: C.line, width: 1.3 }).xml);
+  o.push(text(CX - 72, CY - CH - 8, 64, 14, '900 Mbps', { align: 'right', size: 8.5, mono: true }).xml);
+  o.push(text(CX - 72, CY - 8, 64, 14, '0', { align: 'right', size: 8.5, mono: true }).xml);
+  for (const sec of [0, 2, 4, 6, 8, 10]) {
+    const tx = CX + (sec / 10) * CW;
+    o.push(arrow(tx, CY, tx, CY + 5, { color: C.line, width: 1, endArrow: 'none' }).xml);
+    o.push(text(tx - 20, CY + 6, 40, 13, `${sec}s`, { align: 'center', size: 8.5, mono: true }).xml);
+  }
+
+  // The samples. Slow start ramps for ~1.5s, then plateaus with two dips.
+  const SAMPLES = [
+    0.09, 0.21, 0.37, 0.55, 0.7, 0.82, 0.9, 0.95, 0.93, 0.97, 0.94, 0.62, 0.95, 0.98, 0.93,
+    0.96, 0.99, 0.94, 0.55, 0.96, 0.97, 0.95, 0.98, 0.94, 0.96,
+  ];
+  const bw = CW / SAMPLES.length;
+  SAMPLES.forEach((v, i) => {
+    const h = Math.max(3, Math.round(v * CH));
+    const warm = i < 4;
+    const outlier = v < 0.7 && !warm;
+    const t = warm ? 'bad' : outlier ? 'warn' : 'ok';
+    o.push(box(CX + i * bw + 1, CY - h, bw - 2, h, '', t, { rx: 2 }).xml);
+  });
+
+  // The warm-up band that gets thrown away.
+  o.push(
+    box(CX, CY - CH - 12, 4 * bw, CH + 12, '', 'bad', {
+      rx: 4,
+      dashed: true,
+      fill: 'none',
+    }).xml
+  );
+  o.push(
+    text(348, 150, 240, 16, 'discarded — TCP slow start', {
+      size: 9,
+      bold: true,
+      color: C.bad,
+    }).xml
+  );
+  o.push(arrow(344, 158, CX + 4 * bw + 8, 158, { color: C.bad, width: 1.3 }).xml);
+
+  // The two dips, annotated from clear space to the right of the plot.
+  o.push(arrow(616, 240, CX + 19 * bw + 2, 240, { color: C.warn, width: 1.3 }).xml);
+  o.push(
+    text(620, 224, 176, 16, 'dips = transient loss,', { size: 9, color: C.warn, bold: true }).xml
+  );
+  o.push(
+    text(620, 238, 176, 16, 'trimmed out of the average', { size: 9, color: C.warn }).xml
+  );
+
+  /* ── Stage 3 · the arithmetic ──────────────────────────────────── */
+
+  o.push(rule(24, 338, W - 48, { dashed: true }).xml);
+
+  const calc = panel(24, 352, 468, 152, 'From bytes to a number', 'accent');
+  o.push(calc.xml);
+  o.push(
+    box(44, 384, 428, 34, 'Mbps  =  (Δbytes summed over every stream × 8) ÷ (Δt × 1,000,000)', 'sunken', {
+      size: 10,
+      mono: true,
+    }).xml
+  );
+  const STEPS = [
+    ['1', 'One slice is ~200ms of bytes across all sockets — an instantaneous reading, not the answer.'],
+    ['2', 'Throw away the first 1–2s: slow start has not opened the congestion window yet.'],
+    ['3', 'Trim the tails — report the middle 60–80%, or an 80–90th percentile slice.'],
+  ];
+  STEPS.forEach(([n, why], i) => {
+    const y = 426 + i * 24;
+    o.push(box(44, y, 18, 18, n, 'accent', { size: 9, rx: 30 }).xml);
+    o.push(text(70, y, 400, 18, why, { size: 8.5 }).xml);
+  });
+
+  const why = panel(508, 352, 288, 152, 'Why parallel streams', 'warn');
+  o.push(why.xml);
+  o.push(
+    text(524, 382, 256, 44, 'A single TCP stream grows its congestion window exponentially from a tiny initial size, and any loss halves it.', { size: 9 }).xml
+  );
+  o.push(pill(524, 428, 256, 22, 'one stream → under-reports a fast link', 'bad', { size: 9 }).xml);
+  o.push(pill(524, 456, 256, 22, 'eight streams → saturate it in ~1s', 'ok', { size: 9 }).xml);
+  o.push(
+    text(524, 480, 256, 18, 'The same reason browsers once sharded domains.', { size: 8.5, italic: true }).xml
+  );
+
+  o.push(
+    legend(24, 518, [
+      ['bad', 'warm-up, discarded'],
+      ['warn', 'outlier, trimmed'],
+      ['ok', 'counted toward the reported number'],
+    ])
+  );
+
+  o.push(
+    takeaway(
+      546,
+      'The measurement is easy; the statistics are the product. Anyone can divide bytes by seconds — the design work is opening enough streams to reach line rate, ignoring the ramp, and trimming the tails so the number means sustained capacity rather than one lucky 200ms.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Webhooks — the reverse API call, and where it differs from a stream
+   ══════════════════════════════════════════════════════════════════ */
+
+function webhookDelivery() {
+  const o = [];
+  const H = 600;
+
+  o.push(
+    title(
+      'Webhooks — a reverse API call, server to server',
+      'The browser cannot receive one: it has no public URL for anybody to POST to'
+    )
+  );
+
+  /* ── The two directions, side by side ──────────────────────────── */
+
+  const left = panel(24, 76, 380, 186, 'Webhook — the sender initiates', 'accent');
+  o.push(left.xml);
+  o.push(box(44, 112, 128, 40, 'Stripe\n(Server A)', 'accent', { size: 10, bold: true }).xml);
+  o.push(box(256, 112, 128, 40, 'Your API\n(Server B)', 'ok', { size: 10, bold: true }).xml);
+  o.push(
+    arrow(174, 126, 254, 126, {
+      color: C.accent,
+      width: 1.6,
+      label: 'POST /hooks',
+      size: 8.5,
+    }).xml
+  );
+  o.push(arrow(254, 142, 174, 142, { color: C.ok, width: 1.3, label: '200 OK', size: 8.5 }).xml);
+  o.push(
+    text(44, 162, 340, 30, 'One short-lived HTTPS request per event. Nothing is held open in between — zero idle cost on either side.', {
+      size: 9,
+    }).xml
+  );
+  o.push(pill(44, 196, 340, 22, 'Server B must be publicly reachable', 'warn', { size: 9 }).xml);
+  o.push(
+    text(44, 222, 340, 30, 'Which is exactly why a browser cannot be Server B: it sits behind NAT with no inbound address.', {
+      size: 9,
+      italic: true,
+    }).xml
+  );
+
+  const right = panel(416, 76, 380, 186, 'Streaming — the receiver initiates', 'info');
+  o.push(right.xml);
+  o.push(box(436, 112, 128, 40, 'Browser\n(client)', 'info', { size: 10, bold: true }).xml);
+  o.push(box(648, 112, 128, 40, 'Your API\n(server)', 'ok', { size: 10, bold: true }).xml);
+  o.push(
+    arrow(566, 120, 646, 120, { color: C.info, width: 1.6, label: 'opens outward', size: 8.5 }).xml
+  );
+  o.push(box(566, 132, 80, 10, '', 'ok', { rx: 4 }).xml);
+  o.push(
+    arrow(646, 150, 566, 150, { color: C.ok, width: 1.3, label: 'events pushed', size: 8.5 }).xml
+  );
+  o.push(
+    text(436, 162, 340, 30, 'One long-lived connection, opened by the client. It works from anywhere an outbound request works — so, everywhere.', {
+      size: 9,
+    }).xml
+  );
+  o.push(pill(436, 196, 340, 22, 'Nothing needs a public address', 'ok', { size: 9 }).xml);
+  o.push(
+    text(436, 222, 340, 30, 'The cost is the connection itself: heartbeats, reconnects, and state parked per client.', {
+      size: 9,
+      italic: true,
+    }).xml
+  );
+
+  /* ── The delivery pipeline ─────────────────────────────────────── */
+
+  o.push(rule(24, 280, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 292, 500, 16, 'What a production receiver actually does', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const PIPE = [
+    ['Verify signature', 'ok', 'HMAC over the raw body\n+ timestamp, or anyone can POST'],
+    ['Dedupe on event id', 'ok', 'At-least-once delivery means\nyou will see repeats'],
+    ['Enqueue', 'accent', 'Hand to a queue and return\nimmediately — never process inline'],
+    ['200 fast', 'accent', 'Slow ACK = the sender retries\nan event you already have'],
+  ];
+  PIPE.forEach(([name, t, why], i) => {
+    const x = 24 + i * 196;
+    o.push(box(x, 318, 180, 28, name, t, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(x, 348, 180, 30, why.replace('\n', ' '), { size: 8.5, align: 'center' }).xml);
+    if (i < PIPE.length - 1) {
+      o.push(arrow(x + 182, 332, x + 194, 332, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+
+  /* ── Retry ladder ──────────────────────────────────────────────── */
+
+  o.push(
+    text(24, 392, 500, 16, 'And what the sender does when you are down', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const TRIES = [
+    ['try 1', 'now', 'bad'],
+    ['try 2', '+10s', 'bad'],
+    ['try 3', '+2m', 'warn'],
+    ['try 4', '+15m', 'warn'],
+    ['try 5', '+2h', 'warn'],
+    ['try 6', '+12h', 'ok'],
+    ['dead letter', 'give up', 'sunken'],
+  ];
+  TRIES.forEach(([n, when, t], i) => {
+    const x = 24 + i * 112;
+    o.push(box(x, 418, 100, 24, n, t, { size: 9, rx: 6 }).xml);
+    o.push(text(x, 444, 100, 14, when, { size: 8.5, align: 'center', mono: true }).xml);
+    if (i < TRIES.length - 1) {
+      o.push(arrow(x + 102, 430, x + 110, 430, { color: C.line, width: 1.2 }).xml);
+    }
+  });
+  o.push(
+    text(24, 464, W - 48, 16, 'Exponential backoff, because the receiver being down is the common case — and because a burst of events must not become a burst of retries on top of it.', {
+      size: 9,
+      italic: true,
+    }).xml
+  );
+
+  o.push(
+    legend(24, 492, [
+      ['accent', 'sender'],
+      ['ok', 'receiver'],
+      ['warn', 'the part people skip'],
+    ])
+  );
+
+  o.push(
+    takeaway(
+      520,
+      'A webhook is push where the receiver has an address; a stream is push where it does not. That single difference decides everything else — who reconnects, who retries, and whether idle costs anything.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Game chat — the send path, the message state machine, the backfill
+   ══════════════════════════════════════════════════════════════════ */
+
+function gameChat() {
+  const o = [];
+  const H = 574;
+
+  o.push(
+    title(
+      'A multiplayer chat — one id, four states, one cursor',
+      'The client invents the id, the server invents the order, and neither trusts the clock'
+    )
+  );
+
+  /* ── 1 · The send path ─────────────────────────────────────────── */
+
+  o.push(text(24, 70, 400, 16, '1 · The send path', { size: 11, bold: true, color: C.fg }).xml);
+
+  const SEND = [
+    ['Compose', 'player hits Enter', 'plain'],
+    ['Append locally', 'id = uuid()\nstate = pending', 'warn'],
+    ['ws.send', 'one frame, no\nrequest/response', 'accent'],
+    ['Server assigns', 'seq + serverTs\nper channel', 'info'],
+    ['Ack → reconcile', 'match on the id\nthe client made', 'ok'],
+  ];
+  SEND.forEach(([name, sub, t], i) => {
+    const x = 24 + i * 156;
+    o.push(box(x, 92, 148, 32, name, t, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(x, 126, 148, 26, sub.replace('\n', ' '), { size: 8.5, align: 'center' }).xml);
+    if (i < SEND.length - 1) {
+      o.push(arrow(x + 150, 108, x + 154, 108, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+  o.push(
+    text(24, 154, W - 48, 14, 'The message is on screen before the socket is touched — the ack only ever confirms or corrects it.', {
+      size: 9,
+      italic: true,
+    }).xml
+  );
+
+  /* ── 2 · The state machine ─────────────────────────────────────── */
+
+  o.push(
+    text(24, 182, 400, 16, '2 · What a message can be', { size: 11, bold: true, color: C.fg }).xml
+  );
+
+  o.push(box(80, 208, 120, 34, 'pending', 'warn', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(box(264, 208, 120, 34, 'sent', 'accent', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(box(448, 208, 120, 34, 'acked', 'ok', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(box(264, 288, 120, 34, 'failed', 'bad', { size: 10, bold: true, rx: 8 }).xml);
+
+  o.push(
+    arrow(202, 225, 262, 225, { color: C.accent, width: 1.4, label: 'ws.send', size: 8.5 }).xml
+  );
+  o.push(
+    arrow(386, 225, 446, 225, { color: C.ok, width: 1.4, label: 'ack {id, seq}', size: 8.5 }).xml
+  );
+  o.push(
+    arrow(324, 244, 324, 286, { color: C.bad, width: 1.4, label: 'timeout / close', size: 8.5 }).xml
+  );
+  // Retry re-enters as the SAME id — that is the whole trick.
+  o.push(
+    arrow(262, 305, 140, 244, {
+      color: C.warn,
+      width: 1.4,
+      points: [[140, 305]],
+      label: 'retry — same id',
+      size: 8.5,
+    }).xml
+  );
+
+  o.push(pill(596, 205, 200, 22, 'Server dedupes on that id', 'ok', { size: 9 }).xml);
+  o.push(
+    text(596, 230, 200, 56, 'So a retry after a lost ack is free: the second copy is recognised and answered, not posted twice.', {
+      size: 9,
+    }).xml
+  );
+  o.push(pill(596, 292, 200, 22, 'Order is the server’s seq', 'accent', { size: 9 }).xml);
+
+  /* ── 3 · Reconnect and backfill ────────────────────────────────── */
+
+  o.push(rule(24, 340, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 352, 400, 16, '3 · Reconnect — from a cursor, never from "now"', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const SEQ = [
+    ['101', 'ok'],
+    ['102', 'ok'],
+    ['103', 'ok'],
+    ['104', 'ok'],
+    ['105', 'bad'],
+    ['106', 'bad'],
+    ['107', 'bad'],
+    ['108', 'ok'],
+    ['109', 'ok'],
+  ];
+  SEQ.forEach(([n, t], i) => {
+    o.push(box(24 + i * 52, 378, 46, 26, n, t, { size: 9, mono: true, rx: 5 }).xml);
+  });
+  o.push(text(24, 406, 208, 14, 'seen — lastSeq = 104', { size: 8.5, color: C.ok }).xml);
+  o.push(text(232, 406, 156, 14, 'published while offline', { size: 8.5, color: C.bad }).xml);
+  o.push(text(388, 406, 120, 14, 'arrive live again', { size: 8.5, color: C.ok }).xml);
+
+  o.push(
+    arrow(500, 391, 540, 391, { color: C.line, width: 1.3 }).xml
+  );
+  o.push(box(546, 374, 250, 34, 'reconnect → subscribe(since: 104)', 'accent', {
+    size: 9.5,
+    mono: true,
+    rx: 8,
+  }).xml);
+  o.push(
+    text(546, 410, 250, 14, 'server replays 105–107, then resumes', { size: 8.5, italic: true }).xml
+  );
+
+  o.push(
+    text(24, 430, W - 48, 28, 'Resume from "now" and 105–107 are lost in silence — no error, no gap, just three messages the player never sees. A sequence number per channel is what makes the gap detectable at all.', {
+      size: 9,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      466,
+      'Client-generated id, server-generated order. The id makes retries idempotent so the network can be as unreliable as it likes; the seq makes gaps detectable so a reconnect can be correct rather than hopeful.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Log viewer — ring buffer, follow gate, windowed viewport
+   ══════════════════════════════════════════════════════════════════ */
+
+function logViewer() {
+  const o = [];
+  const H = 596;
+
+  o.push(
+    title(
+      'A streaming log viewer — bounded memory, bounded renders',
+      'The stream is infinite. Every part of the design exists to put a ceiling on something'
+    )
+  );
+
+  /* ── The pipeline ──────────────────────────────────────────────── */
+
+  const STAGES = [
+    ['Stream in', '10k lines/sec', 'info', 'SSE or WebSocket'],
+    ['Frame gate', 'coalesce to 1/frame', 'warn', 'rAF batch, not per line'],
+    ['Ring buffer', 'cap 50k, drop oldest', 'accent', 'the memory ceiling'],
+    ['Window', 'render ~40 rows', 'ok', 'the render ceiling'],
+  ];
+  STAGES.forEach(([name, sub, t, foot], i) => {
+    const x = 24 + i * 196;
+    o.push(box(x, 82, 180, 34, name, t, { size: 11, bold: true, rx: 8 }).xml);
+    o.push(text(x, 118, 180, 14, sub, { size: 9, align: 'center', mono: true }).xml);
+    o.push(text(x, 132, 180, 14, foot, { size: 8.5, align: 'center', italic: true }).xml);
+    if (i < STAGES.length - 1) {
+      o.push(arrow(x + 182, 99, x + 194, 99, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+
+  /* ── The buffer and the viewport ───────────────────────────────── */
+
+  o.push(rule(24, 160, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 172, 500, 16, 'What is in memory, and what is in the DOM', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  // The buffer as a long strip; only a slice of it is mounted.
+  const BX = 24;
+  const BW = 600;
+  o.push(box(BX, 198, BW, 46, '', 'sunken', { rx: 6 }).xml);
+  o.push(box(BX, 198, 92, 46, 'evicted', 'bad', { size: 9, rx: 6, dashed: true }).xml);
+  o.push(box(BX + 300, 202, 120, 38, 'mounted', 'ok', { size: 9, bold: true, rx: 6 }).xml);
+  o.push(box(BX + 244, 202, 52, 38, 'buffer', 'accent', { size: 8, rx: 6 }).xml);
+  o.push(box(BX + 424, 202, 52, 38, 'buffer', 'accent', { size: 8, rx: 6 }).xml);
+  o.push(
+    text(BX, 246, BW, 14, 'retained in JS (the ring buffer)  ·  only the green slice exists as DOM nodes', {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+  o.push(
+    text(BX, 262, 200, 14, 'oldest — dropped to hold the cap', { size: 8.5, color: C.bad }).xml
+  );
+  o.push(text(BX + 500, 262, 100, 14, 'newest', { size: 8.5, align: 'right', color: C.ok }).xml);
+
+  o.push(pill(640, 198, 156, 22, 'memory: O(cap)', 'accent', { size: 9 }).xml);
+  o.push(pill(640, 226, 156, 22, 'DOM: O(viewport)', 'ok', { size: 9 }).xml);
+  o.push(
+    text(640, 250, 156, 30, 'Neither grows with how long the tab is open.', {
+      size: 8.5,
+      italic: true,
+    }).xml
+  );
+
+  /* ── The follow gate ───────────────────────────────────────────── */
+
+  o.push(rule(24, 296, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 308, 500, 16, 'The follow gate — the bug everyone ships', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(box(60, 336, 170, 36, 'FOLLOWING', 'ok', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(
+    text(60, 374, 170, 26, 'pinned to bottom,\nauto-scrolls on append'.replace('\n', ' '), {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+
+  o.push(box(360, 336, 170, 36, 'FROZEN', 'warn', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(
+    text(360, 374, 170, 26, 'viewport never moves;\nlines still buffer'.replace('\n', ' '), {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+
+  o.push(
+    arrow(232, 346, 358, 346, {
+      color: C.warn,
+      width: 1.4,
+      label: 'user scrolls up',
+      size: 8.5,
+    }).xml
+  );
+  o.push(
+    arrow(358, 364, 232, 364, {
+      color: C.ok,
+      width: 1.4,
+      label: 'scrolls to bottom / clicks the pill',
+      size: 8.5,
+    }).xml
+  );
+
+  o.push(pill(560, 336, 236, 24, '↓  412 new lines', 'accent', { size: 10 }).xml);
+  o.push(
+    text(560, 364, 236, 40, 'The pill is the whole affordance: it says you are behind, how far, and how to catch up — without moving anything you are reading.', {
+      size: 8.5,
+    }).xml
+  );
+
+  o.push(
+    text(24, 412, W - 48, 16, 'Auto-scrolling while the user is scrolled up is the single most common defect in this component.', {
+      size: 9,
+      italic: true,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(
+    legend(24, 440, [
+      ['bad', 'dropped'],
+      ['accent', 'in memory'],
+      ['ok', 'in the DOM'],
+      ['warn', 'user is behind'],
+    ])
+  );
+
+  o.push(
+    takeaway(
+      470,
+      'Three independent ceilings: a frame gate caps renders per second, a ring buffer caps memory, and virtualization caps DOM nodes. Miss any one and the tab dies — just at a different point.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Metrics dashboard — one range, one clock, twelve widgets
+   ══════════════════════════════════════════════════════════════════ */
+
+function metricsDashboard() {
+  const o = [];
+  const H = 620;
+
+  o.push(
+    title(
+      'A metrics dashboard — one range, one clock, twelve widgets',
+      'Every widget owning its own time range and its own timer is the design that does not scale'
+    )
+  );
+
+  /* ── Shared state at the top ───────────────────────────────────── */
+
+  const shared = panel(24, 74, W - 48, 92, 'Owned by the dashboard, not the widget', 'accent');
+  o.push(shared.xml);
+
+  const SHARED = [
+    ['timeRange', 'last 6h · absolute on zoom', 'accent'],
+    ['refresh clock', 'one timer ticks them all', 'accent'],
+    ['crosshair', 'hovered timestamp, shared', 'info'],
+    ['selection', 'brushed sub-range', 'info'],
+  ];
+  SHARED.forEach(([name, sub, t], i) => {
+    const x = 44 + i * 188;
+    o.push(box(x, 104, 172, 26, name, t, { size: 10, bold: true, rx: 6, mono: true }).xml);
+    o.push(text(x, 132, 172, 26, sub, { size: 8.5, align: 'center' }).xml);
+  });
+
+  /* ── The widget grid ───────────────────────────────────────────── */
+
+  o.push(
+    text(24, 170, 460, 16, 'Widgets subscribe — they never fetch on their own schedule', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const GRID = [
+    ['p99 latency', 'ok'],
+    ['throughput', 'ok'],
+    ['error rate', 'bad'],
+    ['queue depth', 'warn'],
+  ];
+  GRID.forEach(([name, t], i) => {
+    const x = 24 + i * 196;
+    o.push(box(x, 206, 180, 30, name, t, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(arrow(x + 90, 188, x + 90, 204, { color: C.line, width: 1.2, dashed: true }).xml);
+  });
+  o.push(
+    text(24, 240, W - 48, 14, 'Loading, empty and error are per widget — one failing query must not blank the dashboard.', {
+      size: 8.5,
+      italic: true,
+      align: 'center',
+    }).xml
+  );
+
+  /* ── One widget, exploded ──────────────────────────────────────── */
+
+  o.push(rule(24, 268, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 280, 400, 16, 'Inside one widget', { size: 11, bold: true, color: C.fg }).xml
+  );
+
+  const PIPE = [
+    ['Query', '6h at 1s\n= 21,600 points', 'info'],
+    ['Downsample', 'to ~600 —\none per pixel', 'accent'],
+    ['Render', 'SVG under 1k pts,\ncanvas above', 'ok'],
+  ];
+  PIPE.forEach(([name, sub, t], i) => {
+    const x = 24 + i * 200;
+    o.push(box(x, 306, 184, 30, name, t, { size: 10, bold: true, rx: 8 }).xml);
+    o.push(text(x, 338, 184, 28, sub.replace('\n', ' '), { size: 8.5, align: 'center' }).xml);
+    if (i < PIPE.length - 1) {
+      o.push(arrow(x + 186, 321, x + 198, 321, { color: C.line, width: 1.3 }).xml);
+    }
+  });
+
+  o.push(pill(628, 306, 168, 22, '36× fewer points', 'ok', { size: 9 }).xml);
+  o.push(
+    text(628, 332, 168, 44, 'A 600px chart cannot show 21,600 points. Drawing them is work the user cannot see.', {
+      size: 8.5,
+    }).xml
+  );
+
+  /* ── Downsampling caveat ───────────────────────────────────────── */
+
+  o.push(
+    box(24, 378, W - 48, 42, '', 'warn', { rx: 8 }).xml
+  );
+  o.push(
+    text(38, 380, W - 76, 18, 'Downsample with min/max per bucket, not by picking every nth point', {
+      size: 10,
+      bold: true,
+      color: C.warnFg,
+    }).xml
+  );
+  o.push(
+    text(38, 398, W - 76, 18, 'Every-nth drops the one-second spike that is the entire reason someone opened this dashboard.', {
+      size: 9,
+      color: C.warnFg,
+    }).xml
+  );
+
+  /* ── The fan-out win ───────────────────────────────────────────── */
+
+  o.push(
+    text(24, 434, 400, 16, 'What the shared range buys you', { size: 11, bold: true, color: C.fg })
+      .xml
+  );
+
+  o.push(box(24, 460, 370, 30, 'Widget owns its range + timer', 'bad', { size: 10, rx: 8 }).xml);
+  o.push(
+    text(24, 492, 370, 26, '12 timers, 12 unsynchronised fetches, charts showing different windows', {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+
+  o.push(box(426, 460, 370, 30, 'Dashboard owns both', 'ok', { size: 10, rx: 8 }).xml);
+  o.push(
+    text(426, 492, 370, 26, '1 tick → 1 batched request → every chart on the same window', {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      528,
+      'Hoist the time range, the refresh clock and the crosshair to the dashboard; leave the query, the downsample and the render inside the widget. That one boundary decision is most of what this round is grading.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'loading-waterfall': {
     title: 'The critical path — serialised vs parallelised',
@@ -2675,7 +3423,7 @@ export const DIAGRAMS = {
     build: stateTopology,
   },
   'realtime-transports': {
-    title: 'Real-time transports — polling, long polling, SSE, WebSocket',
+    title: 'Real-time transports — polling, long polling, SSE, WebSocket, WebTransport',
     build: realtimeTransports,
   },
   'container-anatomy': {
@@ -2705,5 +3453,25 @@ export const DIAGRAMS = {
   'normalized-state': {
     title: 'Normalized state — byId and allIds',
     build: normalizedState,
+  },
+  'speed-test': {
+    title: 'A speed test — parallel streams, sampling, trimmed mean',
+    build: speedTest,
+  },
+  'webhook-delivery': {
+    title: 'Webhooks — a reverse API call, server to server',
+    build: webhookDelivery,
+  },
+  'game-chat': {
+    title: 'A multiplayer chat — one id, four states, one cursor',
+    build: gameChat,
+  },
+  'log-viewer': {
+    title: 'A streaming log viewer — bounded memory, bounded renders',
+    build: logViewer,
+  },
+  'metrics-dashboard': {
+    title: 'A metrics dashboard — one range, one clock, twelve widgets',
+    build: metricsDashboard,
   },
 };

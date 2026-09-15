@@ -12,7 +12,7 @@
  * domain-wide", which is exactly the misunderstanding.
  */
 
-import { C, box, text, arrow, panel, rule } from './drawio-builder.mjs';
+import { C, box, text, arrow, panel, rule, pill } from './drawio-builder.mjs';
 import { W, title, takeaway } from './diagram-furniture.mjs';
 
 /* Reachability marks. Rendered as words with a tick rather than a tick and a
@@ -564,6 +564,174 @@ function httpVersions() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   5 · The Performance API — one timeline, four sources of entries
+   ──────────────────────────────────────────────────────────────────── */
+
+function performanceApi() {
+  const o = [];
+  const H = 610;
+
+  o.push(
+    title(
+      'The Performance API — one monotonic timeline, four kinds of entry',
+      'Everything is measured in milliseconds since `performance.timeOrigin`, never since 1970'
+    )
+  );
+
+  const X = 150; // where the timeline starts
+  const TW = 560; // its full width — ms 0 … 2400
+
+  /* ── The axis ──────────────────────────────────────────────────── */
+
+  o.push(
+    box(X - 8, 78, 16, 16, '', 'accent', { rx: 30, fill: C.accent, stroke: C.accent }).xml
+  );
+  o.push(
+    text(X - 76, 78, 64, 16, 'timeOrigin', { align: 'right', size: 9.5, bold: true, mono: true })
+      .xml
+  );
+  o.push(arrow(X, 86, X + TW + 20, 86, { color: C.line, width: 1.5 }).xml);
+  for (const [ms, dx] of [[0, 0], [600, 140], [1200, 280], [1800, 420], [2400, 560]]) {
+    o.push(arrow(X + dx, 82, X + dx, 90, { color: C.line, width: 1, endArrow: 'none' }).xml);
+    o.push(
+      text(X + dx - 26, 92, 52, 13, `${ms}ms`, { align: 'center', size: 8.5, mono: true }).xml
+    );
+  }
+
+  /* ── Row 1 · Navigation Timing ─────────────────────────────────── */
+
+  const rows = [
+    {
+      label: 'Navigation Timing',
+      sub: 'one entry, the document itself',
+      y: 124,
+      api: "getEntriesByType('navigation')",
+      draw(y) {
+        const segs = [
+          ['DNS', 0, 52, 'info'],
+          ['TCP', 52, 60, 'info'],
+          ['TLS', 112, 56, 'info'],
+          ['request', 168, 44, 'warn'],
+          ['TTFB wait', 212, 96, 'warn'],
+          ['response', 308, 74, 'ok'],
+          ['DOM parse', 382, 104, 'accent'],
+        ];
+        return segs
+          .map(([n, dx, w, t]) => box(X + dx, y, w, 17, n, t, { size: 8, rx: 4 }).xml)
+          .join('');
+      },
+      note: 'nav.responseStart − nav.requestStart is your TTFB',
+    },
+    {
+      label: 'Resource Timing',
+      sub: 'one entry per asset fetched',
+      y: 186,
+      api: "getEntriesByType('resource')",
+      draw(y) {
+        const res = [
+          ['app.js · 142 KB', 120, 150, 'accent'],
+          ['main.css · 18 KB', 280, 78, 'ok'],
+          ['/api/me · 2 KB', 372, 96, 'warn'],
+        ];
+        return res.map(([n, dx, w, t]) => box(X + dx, y, w, 17, n, t, { size: 8, rx: 4 }).xml).join('');
+      },
+      note: 'transferSize === 0 means it came from cache',
+    },
+    {
+      label: 'User Timing',
+      sub: 'the marks you set yourself',
+      y: 248,
+      api: "mark() · measure()",
+      draw(y) {
+        const out = [];
+        const a = X + 180;
+        const b = X + 430;
+        for (const [x, n] of [[a, 'fetch-start'], [b, 'fetch-end']]) {
+          out.push(arrow(x, y - 6, x, y + 22, { color: C.accent, width: 1.5, endArrow: 'none' }).xml);
+          out.push(
+            text(x - 46, y + 22, 92, 13, n, { align: 'center', size: 8, mono: true, color: C.accent })
+              .xml
+          );
+        }
+        out.push(box(a, y, b - a, 17, "measure('UserDataFetch') — 250ms", 'accent', { size: 8, rx: 4 }).xml);
+        return out.join('');
+      },
+      note: 'the only entries that know what your app was doing',
+    },
+    {
+      label: 'Paint & Element',
+      sub: 'what the user actually saw',
+      y: 320,
+      api: "type: 'paint' · 'largest-contentful-paint'",
+      draw(y) {
+        const out = [];
+        for (const [dx, n, t] of [[196, 'FCP', 'ok'], [392, 'LCP', 'warn']]) {
+          out.push(
+            box(X + dx - 7, y + 1, 14, 14, '', t, {
+              rx: 30,
+              fill: t === 'ok' ? C.ok : C.warn,
+              stroke: t === 'ok' ? C.ok : C.warn,
+            }).xml
+          );
+          out.push(
+            text(X + dx - 40, y + 16, 80, 13, n, {
+              align: 'center',
+              size: 9,
+              bold: true,
+              color: t === 'ok' ? C.ok : C.warn,
+            }).xml
+          );
+        }
+        return out.join('');
+      },
+      note: 'buffered: true — these fire before your observer exists',
+    },
+  ];
+
+  for (const row of rows) {
+    o.push(text(24, row.y - 4, 120, 16, row.label, { size: 11, bold: true, color: C.fg }).xml);
+    o.push(text(24, row.y + 11, 120, 24, row.sub, { size: 8.5 }).xml);
+    o.push(row.draw(row.y));
+    o.push(text(X, row.y + 36, TW, 13, row.note, { size: 8.5, italic: true }).xml);
+  }
+
+  /* ── now() vs Date.now() ───────────────────────────────────────── */
+
+  o.push(rule(24, 396, W - 48, { dashed: true }).xml);
+
+  const cmp = panel(24, 410, W - 48, 118, 'Why not just Date.now()?', 'bad');
+  o.push(cmp.xml);
+
+  const COLS = [
+    ['Date.now()', 'bad', 'Unix epoch · whole ms', 'Resyncs with NTP — can jump\nbackwards mid-measurement'],
+    ['performance.now()', 'ok', 'timeOrigin · fractional ms', 'Monotonic — only ever moves\nforward, immune to clock drift'],
+  ];
+  COLS.forEach(([name, t, unit, why], i) => {
+    const x = 48 + i * 370;
+    o.push(pill(x, 442, 200, 24, name, t, { size: 10, mono: true }).xml);
+    o.push(text(x + 210, 442, 150, 24, unit, { size: 9 }).xml);
+    o.push(text(x, 470, 340, 30, why.replace('\n', ' '), { size: 9 }).xml);
+  });
+
+  o.push(
+    text(48, 500, W - 96, 22, 'Both are rounded by the browser — to 5–100µs — so a Spectre-style timing attack cannot read the cache through them.', {
+      size: 9,
+      italic: true,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      544,
+      'Everything above lands on the same monotonic timeline, so a user-timing mark can be compared directly against TTFB or LCP. Poll `getEntries()` and you race the entries that fired before your code ran — use a `PerformanceObserver` with `buffered: true` instead.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'storage-scope': {
     title: 'Scope — localStorage is origin-locked, a cookie is not',
@@ -580,5 +748,9 @@ export const DIAGRAMS = {
   'http-versions': {
     title: 'HTTP/1.1, HTTP/2, HTTP/3 — where head-of-line blocking lives',
     build: httpVersions,
+  },
+  'performance-api': {
+    title: 'The Performance API — one monotonic timeline, four kinds of entry',
+    build: performanceApi,
   },
 };

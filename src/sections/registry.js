@@ -32,15 +32,16 @@ export const SECTIONS = {
     subtitle: null,
     inNav: false,
   },
-  // Temporary — prep for the Acceldata interview. Routable via direct link
-  // (/acceldata-prep), but hidden from the sidebar navigation.
+  // Temporary — prep for the Acceldata interview. Surfaced in the sidebar for
+  // the run-up to the 16 Sep LLD round; set `inNav: false` again (or delete the
+  // section outright, see ACCELDATA-PREP-REMOVAL.md) once it is done.
   'acceldata-prep': {
     label: 'Work Experience Deep Dive',
     navIcon: 'WE',
     category: null,
     kind: 'learning',
     subtitle: ENTRIES,
-    inNav: false,
+    inNav: true,
   },
   mcq: { label: 'JavaScript MCQs', navIcon: 'JS', category: 'js', kind: 'mcq', subtitle: QUESTIONS },
   learnings: {

@@ -96,7 +96,7 @@ export const CURRICULUM = {
     {
       key: 'rendering',
       label: 'Rendering & Performance',
-      ids: [154, 155],
+      ids: [154, 155, 163],
     },
     {
       key: 'network',
@@ -134,20 +134,25 @@ export const CURRICULUM = {
     {
       key: 'building-blocks',
       label: 'HLD: Building Blocks',
-      ids: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 112, 113, 114, 115, 116, 110, 111],
+      ids: [
+        100, 101, 102, 103, 104, 105, 117, 106, 107, 108, 109, 112, 113, 114, 115, 116, 110,
+        111,
+      ],
     },
     {
       key: 'case-studies',
       label: 'HLD: Case Studies',
       ids: [
         200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216,
-        217, 218, 1,
+        217, 218, 219, 1,
       ],
     },
     {
       key: 'component-design',
       label: 'LLD: Component Design',
-      ids: [300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312],
+      ids: [
+        300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 313, 314, 315, 312,
+      ],
     },
     {
       key: 'deep-dives',
