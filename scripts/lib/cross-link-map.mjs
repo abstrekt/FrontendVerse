@@ -56,6 +56,11 @@ export const TOPICS = [
   { section: 'browser', id: 162, terms: ['brotli', 'gzip'] },
   { section: 'browser', id: 122, terms: ['AJAX'] },
   { section: 'browser', id: 159, terms: ['API layer'] },
+  {
+    section: 'browser',
+    id: 163,
+    terms: ['Performance API', 'PerformanceObserver', 'Navigation Timing', 'Resource Timing', 'User Timing'],
+  },
 
   /* ── Web fundamentals ────────────────────────────────────────────── */
   { section: 'web-fundamentals', id: 1, terms: ['render pipeline', 'preload scanner', 'CSSOM'] },
@@ -94,7 +99,11 @@ export const TOPICS = [
   { section: 'system-design', id: 414, terms: ['monorepo'] },
   { section: 'system-design', id: 101, terms: ['rendering strategies'] },
   { section: 'system-design', id: 102, terms: ['GraphQL', 'BFF'] },
-  { section: 'system-design', id: 105, terms: ['WebSocket', 'Server-Sent Events', 'long polling'] },
+  {
+    section: 'system-design',
+    id: 105,
+    terms: ['WebSocket', 'Server-Sent Events', 'long polling', 'WebTransport'],
+  },
   { section: 'system-design', id: 106, terms: ['offline-first', 'background sync'] },
   { section: 'system-design', id: 107, terms: ['micro-frontends', 'micro-frontend'] },
   { section: 'system-design', id: 108, terms: ['design system'] },
@@ -105,6 +114,25 @@ export const TOPICS = [
   { section: 'system-design', id: 114, terms: ['blue-green', 'rolling update', 'canary'] },
   { section: 'system-design', id: 115, terms: ['origin shield', 'CDN'] },
   { section: 'system-design', id: 116, terms: ['edge functions', 'edge function'] },
+  { section: 'system-design', id: 117, terms: ['webhooks', 'webhook'] },
+  { section: 'system-design', id: 8, terms: ['non-functional requirements', 'functional requirements'] },
+  { section: 'system-design', id: 104, terms: ['state topology', 'server state'] },
+  { section: 'system-design', id: 110, terms: ['white-labelling', 'multi-tenancy'] },
+  { section: 'system-design', id: 404, terms: ['lazy loading'] },
+  { section: 'system-design', id: 406, terms: ['WCAG', 'focus management', 'screen reader'] },
+  { section: 'system-design', id: 410, terms: ['graceful degradation', 'exponential backoff'] },
+
+  /* ── System design — the case studies and components that own a term ── */
+  { section: 'system-design', id: 204, terms: ['CRDT', 'CRDTs'] },
+  { section: 'system-design', id: 217, terms: ['resumable upload'] },
+  { section: 'system-design', id: 219, terms: ['bufferbloat', 'loaded latency'] },
+  { section: 'system-design', id: 300, terms: ['LLD round'] },
+  { section: 'system-design', id: 301, terms: ['component API'] },
+  { section: 'system-design', id: 302, terms: ['combobox'] },
+  { section: 'system-design', id: 304, terms: ['focus trap'] },
+  { section: 'system-design', id: 312, terms: ['normalized state'] },
+  { section: 'system-design', id: 314, terms: ['log viewer', 'ring buffer'] },
+  { section: 'system-design', id: 315, terms: ['metrics dashboard', 'downsampling'] },
 
   /* ── React ───────────────────────────────────────────────────────── */
   { section: 'react-guide', id: 15, terms: ['React.memo', 'reference trap'] },

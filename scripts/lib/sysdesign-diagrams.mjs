@@ -3369,6 +3369,110 @@ function metricsDashboard() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Accessibility — the same interaction, two accessibility trees
+   ══════════════════════════════════════════════════════════════════ */
+
+function a11yTree() {
+  const o = [];
+  const H = 530;
+
+  o.push(
+    title(
+      'Accessibility is a tree the browser derives from your markup',
+      'The same click handler, two elements — and everything downstream differs'
+    )
+  );
+
+  const COLS = [
+    {
+      x: 24,
+      tone: 'bad',
+      heading: 'A div with a click handler',
+      markup: '<div onclick="save()">Save</div>',
+      node: 'role: generic\nname: (none)\nfocusable: no',
+      rows: [
+        'tabindex="0" — by hand',
+        'keydown for Enter AND Space',
+        'role="button" — a promise you now owe',
+        'OS high-contrast mode: nothing',
+      ],
+    },
+    {
+      x: 416,
+      tone: 'ok',
+      heading: 'The native button',
+      markup: '<button onclick="save()">Save</button>',
+      node: 'role: button\nname: "Save"\nfocusable: yes',
+      rows: [
+        'in the tab order already',
+        'Enter and Space already work',
+        'announced as a button',
+        'honours OS high contrast',
+      ],
+    },
+  ];
+
+  for (const col of COLS) {
+    o.push(panel(col.x, 88, 380, 230, col.heading, col.tone).xml);
+    o.push(
+      box(col.x + 20, 120, 340, 26, col.markup, 'sunken', { size: 9, mono: true, rx: 4 }).xml
+    );
+    o.push(
+      arrow(col.x + 190, 150, col.x + 190, 168, {
+        color: C.line,
+        width: 1.3,
+        label: 'derives',
+        size: 8,
+      }).xml
+    );
+    o.push(box(col.x + 20, 172, 340, 46, col.node, col.tone, { size: 9, mono: true, rx: 6 }).xml);
+    col.rows.forEach((r, i) => {
+      o.push(pill(col.x + 20, 228 + i * 22, 340, 18, r, col.tone, { size: 8.5 }).xml);
+    });
+  }
+
+  o.push(
+    text(24, 322, W - 48, 14, 'Assistive technology never sees your DOM. It sees this tree — so the element you pick is the API.', {
+      size: 9,
+      align: 'center',
+      italic: true,
+    }).xml
+  );
+
+  /* ── The decisions that are expensive to reverse ───────────────── */
+
+  o.push(rule(24, 346, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 358, 500, 16, 'Four architecture decisions, and what each one costs you', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const DECISIONS = [
+    ['Custom dropdown', 'you now own the whole\ncombobox ARIA pattern', 'warn'],
+    ['Virtualized list', 'the tree misreports its\nsize unless you set it', 'warn'],
+    ['Canvas rendering', 'opaque — needs a\nparallel DOM tree', 'bad'],
+    ['Client-side routing', 'nothing announces the\nchange; you must', 'warn'],
+  ];
+  DECISIONS.forEach(([name, why, t], i) => {
+    const x = 24 + i * 196;
+    o.push(box(x, 384, 180, 26, name, t, { size: 9.5, bold: true, rx: 8 }).xml);
+    o.push(text(x, 412, 180, 28, why.replace('\n', ' '), { size: 8.5, align: 'center' }).xml);
+  });
+
+  o.push(
+    takeaway(
+      450,
+      'None of those four is a styling choice — each one changes the component tree, and focus behaviour retrofitted onto a tree that already exists is most of a rewrite. That is why this belongs in the architecture stage, not the last minute.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'loading-waterfall': {
     title: 'The critical path — serialised vs parallelised',
@@ -3473,5 +3577,9 @@ export const DIAGRAMS = {
   'metrics-dashboard': {
     title: 'A metrics dashboard — one range, one clock, twelve widgets',
     build: metricsDashboard,
+  },
+  'a11y-tree': {
+    title: 'Accessibility is a tree the browser derives from your markup',
+    build: a11yTree,
   },
 };
