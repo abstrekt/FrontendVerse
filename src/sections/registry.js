@@ -34,8 +34,8 @@ export const SECTIONS = {
   },
   // Temporary — prep for the Acceldata interview. Surfaced in the sidebar for
   // the run-up to the 16 Sep LLD round; set `inNav: false` again (or delete the
-  // section outright, see ACCELDATA-PREP-REMOVAL.md) once it is done.
-  'acceldata-prep': {
+  // section outright, see WORK-EXPERIENCE-REMOVAL.md) once it is done.
+  'work-experience-deep-dive': {
     label: 'Work Experience Deep Dive',
     navIcon: 'WE',
     category: null,
@@ -97,6 +97,13 @@ export const SECTIONS = {
     category: 'react',
     kind: 'learning',
     subtitle: ENTRIES,
+  },
+  'react-mcq': {
+    label: 'React MCQs',
+    navIcon: 'RM',
+    category: 'react',
+    kind: 'mcq',
+    subtitle: QUESTIONS,
   },
   'system-design': {
     label: 'System Design',

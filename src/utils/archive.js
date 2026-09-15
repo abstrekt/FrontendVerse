@@ -1,5 +1,6 @@
 export const EMPTY_ARCHIVED = {
-  'acceldata-prep': [],
+  'work-experience-deep-dive': [],
+  'react-mcq': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
@@ -17,10 +18,11 @@ export const EMPTY_ARCHIVED = {
   output: [],
 };
 
-export const SECTIONS = ['acceldata-prep', 'test-prep', 'mcq', 'learnings', 'browser', 'css', 'ai-dev', 'web-fundamentals', 'react-learnings', 'react-guide', 'advanced-react', 'system-design', 'algorithm', 'blind75', 'coding', 'output'];
+export const SECTIONS = ['work-experience-deep-dive', 'test-prep', 'mcq', 'learnings', 'browser', 'css', 'ai-dev', 'web-fundamentals', 'react-learnings', 'react-guide', 'advanced-react', 'react-mcq', 'system-design', 'algorithm', 'blind75', 'coding', 'output'];
 
 export const SECTION_LABELS = {
-  'acceldata-prep': 'Work Experience Deep Dive',
+  'work-experience-deep-dive': 'Work Experience Deep Dive',
+  'react-mcq': 'React MCQs',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',

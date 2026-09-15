@@ -49,8 +49,8 @@ function single(load) {
 }
 
 export const LEARNING_LOADERS = {
-  // Temporary — see ACCELDATA-PREP-REMOVAL.md
-  'acceldata-prep': single(() => import('../../data/acceldata-prep.json')),
+  // Temporary — see WORK-EXPERIENCE-REMOVAL.md
+  'work-experience-deep-dive': single(() => import('../../data/work-experience-deep-dive.json')),
   learnings: merge(JS_LEARNINGS),
   browser: single(() => import('../../data/browser-platform-learnings.json')),
   css: single(() => import('../../data/css-learnings.json')),

@@ -9,7 +9,6 @@ const ROOT = join(__dirname, '..');
 const CONTENT_FILES = [
   { file: 'questions.json', key: 'questions', fields: ['body', 'explanation'] },
   { file: 'data/output-questions.json', key: 'questions', fields: ['body', 'explanation'], syncCode: true },
-  { file: 'data/scope-output-questions.json', key: 'questions', fields: ['body', 'explanation'], syncCode: true },
   { file: 'data/coding-questions.json', key: 'questions', fields: ['description', 'explanation'] },
   { file: 'data/learnings.json', key: 'learnings', fields: ['answer'] },
   { file: 'data/algorithm-learnings.json', key: 'learnings', fields: ['answer'] },

@@ -70,7 +70,7 @@ import {
 } from './utils/practiceQueue';
 import questionsData from '../questions.json';
 import outputQuestionsData from '../data/output-questions.json';
-import scopeOutputQuestionsData from '../data/scope-output-questions.json';
+import reactMcqQuestionsData from '../data/react-mcq-questions.json';
 import codingQuestionsData from '../data/coding-questions.json';
 import {
   loadCodingProgress,
@@ -196,8 +196,8 @@ function usePracticeQueueStorage(key, legacyKey) {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
-  // Temporary — see ACCELDATA-PREP-REMOVAL.md
-  const [acceldataPrep, setAcceldataPrep] = useState([]);
+  // Temporary — see WORK-EXPERIENCE-REMOVAL.md
+  const [workExperience, setWorkExperience] = useState([]);
   const [learnings, setLearnings] = useState([]);
   const [reactLearnings, setReactLearnings] = useState([]);
   const [reactGuide, setReactGuide] = useState([]);
@@ -223,7 +223,7 @@ export default function App() {
   const { route, navigate, setSection, setViewMode, learningSetters } = useAppRoute();
   const {
     'learnings': setLearningId,
-    'acceldata-prep': setAcceldataPrepLearningId,
+    'work-experience-deep-dive': setWorkExperienceLearningId,
     'css': setCssLearningId,
     'ai-dev': setAiDevLearningId,
     'web-fundamentals': setWebFundamentalsLearningId,
@@ -249,6 +249,12 @@ export default function App() {
   const [outputQueue, setOutputQueue] = usePracticeQueueStorage('output-queue', 'output-quiz-session');
   const [outputIncludeCompleted, setOutputIncludeCompleted] = useLocalStorage('output-quiz-include-completed', true);
   const [mcqIncludeCompleted, setMcqIncludeCompleted] = useLocalStorage('mcq-include-completed', true);
+  // The React MCQ bank reuses the generic progress and practice-queue utils;
+  // only the storage keys and the pool are its own.
+  const [reactMcqQuestions, setReactMcqQuestions] = useState([]);
+  const [reactMcqProgress, setReactMcqProgress] = useLocalStorage('react-mcq-progress', EMPTY_PROGRESS);
+  const [reactMcqQueue, setReactMcqQueue] = usePracticeQueueStorage('react-mcq-queue');
+  const [reactMcqIncludeCompleted, setReactMcqIncludeCompleted] = useLocalStorage('react-mcq-include-completed', true);
   const [codingIncludeCompleted, setCodingIncludeCompleted] = useLocalStorage('coding-include-completed', true);
   const [completed, setCompleted] = useLocalStorage('quiz-completed', EMPTY_COMPLETED);
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
@@ -266,6 +272,7 @@ export default function App() {
   // Latest-value refs so answer handlers can guard against double-recording
   // without depending on (and re-creating themselves for) every state change.
   const mcqQueueRef = useLatestRef(mcqQueue);
+  const reactMcqQueueRef = useLatestRef(reactMcqQueue);
   const outputQueueRef = useLatestRef(outputQueue);
   const codingQueueRef = useLatestRef(codingQueue);
   const completedRef = useLatestRef(completed);
@@ -294,9 +301,9 @@ export default function App() {
     () => filterActive(advancedReact, 'advanced-react', archived),
     [advancedReact, archived]
   );
-  const activeAcceldataPrep = useMemo(
-    () => filterActive(acceldataPrep, 'acceldata-prep', archived),
-    [acceldataPrep, archived]
+  const activeWorkExperience = useMemo(
+    () => filterActive(workExperience, 'work-experience-deep-dive', archived),
+    [workExperience, archived]
   );
   const activeCssLearnings = useMemo(
     () => filterActive(cssLearnings, 'css', archived),
@@ -334,12 +341,23 @@ export default function App() {
     () => filterActive(outputQuestions, 'output', archived),
     [outputQuestions, archived]
   );
+  const activeReactMcqQuestions = useMemo(
+    () => filterActive(reactMcqQuestions, 'react-mcq', archived),
+    [reactMcqQuestions, archived]
+  );
   const archivedCount = useMemo(() => getArchivedCount(archived), [archived]);
   const archivedMcqSet = useMemo(() => getArchivedSet(archived, 'mcq'), [archived]);
 
   const starredActiveQuestions = useMemo(
     () => (starredFilter.mcq ? filterStarred(activeQuestions, 'mcq', starred) : activeQuestions),
     [activeQuestions, starredFilter.mcq, starred]
+  );
+  const starredActiveReactMcqQuestions = useMemo(
+    () =>
+      starredFilter['react-mcq']
+        ? filterStarred(activeReactMcqQuestions, 'react-mcq', starred)
+        : activeReactMcqQuestions,
+    [activeReactMcqQuestions, starredFilter, starred]
   );
   const starredActiveLearnings = useMemo(
     () => (starredFilter.learnings ? filterStarred(activeLearnings, 'learnings', starred) : activeLearnings),
@@ -357,12 +375,12 @@ export default function App() {
     () => (starredFilter['test-prep'] ? filterStarred(activeTestPrep, 'test-prep', starred) : activeTestPrep),
     [activeTestPrep, starredFilter, starred]
   );
-  const starredActiveAcceldataPrep = useMemo(
+  const starredActiveWorkExperience = useMemo(
     () =>
-      starredFilter['acceldata-prep']
-        ? filterStarred(activeAcceldataPrep, 'acceldata-prep', starred)
-        : activeAcceldataPrep,
-    [activeAcceldataPrep, starredFilter, starred]
+      starredFilter['work-experience-deep-dive']
+        ? filterStarred(activeWorkExperience, 'work-experience-deep-dive', starred)
+        : activeWorkExperience,
+    [activeWorkExperience, starredFilter, starred]
   );
   const starredActiveCssLearnings = useMemo(
     () => (starredFilter.css ? filterStarred(activeCssLearnings, 'css', starred) : activeCssLearnings),
@@ -412,9 +430,9 @@ export default function App() {
     () => sortCompletedToEnd(starredActiveTestPrep, 'test-prep', completed),
     [starredActiveTestPrep, completed]
   );
-  const orderedStarredActiveAcceldataPrep = useMemo(
-    () => sortCompletedToEnd(starredActiveAcceldataPrep, 'acceldata-prep', completed),
-    [starredActiveAcceldataPrep, completed]
+  const orderedStarredActiveWorkExperience = useMemo(
+    () => sortCompletedToEnd(starredActiveWorkExperience, 'work-experience-deep-dive', completed),
+    [starredActiveWorkExperience, completed]
   );
   const orderedStarredActiveCssLearnings = useMemo(
     () => sortCompletedToEnd(starredActiveCssLearnings, 'css', completed),
@@ -457,6 +475,11 @@ export default function App() {
     [activeOutputQuestions, starredFilter.output, starred]
   );
   const mcqStarredCount = useMemo(() => getStarredCount(starred, 'mcq'), [starred]);
+  const reactMcqStarredCount = useMemo(() => getStarredCount(starred, 'react-mcq'), [starred]);
+  const reactMcqCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'react-mcq', activeReactMcqQuestions),
+    [completed, activeReactMcqQuestions]
+  );
   const mcqCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'mcq', activeQuestions),
     [completed, activeQuestions]
@@ -485,9 +508,9 @@ export default function App() {
     () => getActiveCompletedCount(completed, 'test-prep', activeTestPrep),
     [completed, activeTestPrep]
   );
-  const acceldataPrepCompletedCount = useMemo(
-    () => getActiveCompletedCount(completed, 'acceldata-prep', activeAcceldataPrep),
-    [completed, activeAcceldataPrep]
+  const workExperienceCompletedCount = useMemo(
+    () => getActiveCompletedCount(completed, 'work-experience-deep-dive', activeWorkExperience),
+    [completed, activeWorkExperience]
   );
   const cssCompletedCount = useMemo(
     () => getActiveCompletedCount(completed, 'css', activeCssLearnings),
@@ -525,7 +548,7 @@ export default function App() {
   const reactLearningsStarredCount = useMemo(() => getStarredCount(starred, 'react-learnings'), [starred]);
   const reactGuideStarredCount = useMemo(() => getStarredCount(starred, 'react-guide'), [starred]);
   const testPrepStarredCount = useMemo(() => getStarredCount(starred, 'test-prep'), [starred]);
-  const acceldataPrepStarredCount = useMemo(() => getStarredCount(starred, 'acceldata-prep'), [starred]);
+  const workExperienceStarredCount = useMemo(() => getStarredCount(starred, 'work-experience-deep-dive'), [starred]);
   const cssStarredCount = useMemo(() => getStarredCount(starred, 'css'), [starred]);
   const aiDevStarredCount = useMemo(() => getStarredCount(starred, 'ai-dev'), [starred]);
   const webFundamentalsStarredCount = useMemo(() => getStarredCount(starred, 'web-fundamentals'), [starred]);
@@ -540,7 +563,7 @@ export default function App() {
   const searchDocs = useMemo(
     () =>
       buildSearchIndex({
-        acceldataPrep: activeAcceldataPrep,
+        workExperience: activeWorkExperience,
         testPrep: activeTestPrep,
         mcq: activeQuestions,
         learnings: activeLearnings,
@@ -556,9 +579,10 @@ export default function App() {
         blind75: activeBlind75Learnings,
         coding: activeCodingQuestions,
         output: activeOutputQuestions,
+        reactMcq: activeReactMcqQuestions,
       }),
     [
-      activeAcceldataPrep,
+      activeWorkExperience,
       activeTestPrep,
       activeQuestions,
       activeLearnings,
@@ -574,6 +598,7 @@ export default function App() {
       activeBlind75Learnings,
       activeCodingQuestions,
       activeOutputQuestions,
+      activeReactMcqQuestions,
     ]
   );
 
@@ -603,6 +628,23 @@ export default function App() {
   const passTotal = mcqVisibleQueue?.passTotal ?? sessionTotal;
   const currentQuestion = mcqRestored[0] ?? null;
   const isPassComplete = remaining === 0 && sessionTotal > 0;
+
+  const reactMcqPassRecordedRef = useRef(false);
+  const reactMcqVisibleQueue = useMemo(
+    () => restrictQueueToPool(reactMcqQueue, starredActiveReactMcqQuestions),
+    [reactMcqQueue, starredActiveReactMcqQuestions]
+  );
+  const reactMcqRestored = useMemo(
+    () => restorePracticeQueue(reactMcqVisibleQueue, starredActiveReactMcqQuestions),
+    [reactMcqVisibleQueue, starredActiveReactMcqQuestions]
+  );
+  const reactMcqScore = reactMcqVisibleQueue?.score ?? 0;
+  const reactMcqAnswered = reactMcqVisibleQueue?.answered ?? 0;
+  const reactMcqSessionTotal = reactMcqRestored.length;
+  const reactMcqRemaining = reactMcqVisibleQueue?.remaining ?? 0;
+  const reactMcqPassTotal = reactMcqVisibleQueue?.passTotal ?? reactMcqSessionTotal;
+  const currentReactMcqQuestion = reactMcqRestored[0] ?? null;
+  const isReactMcqPassComplete = reactMcqRemaining === 0 && reactMcqSessionTotal > 0;
 
   const outputVisibleQueue = useMemo(
     () => restrictQueueToPool(outputQueue, starredActiveOutputQuestions),
@@ -652,6 +694,7 @@ export default function App() {
     prune(mcqQueue, mcqVisibleQueue, setMcqQueue);
     prune(outputQueue, outputVisibleQueue, setOutputQueue);
     prune(codingQueue, codingVisibleQueue, setCodingQueue);
+    prune(reactMcqQueue, reactMcqVisibleQueue, setReactMcqQueue);
   }, [
     loading,
     mcqQueue,
@@ -663,6 +706,9 @@ export default function App() {
     codingQueue,
     codingVisibleQueue,
     setCodingQueue,
+    reactMcqQueue,
+    reactMcqVisibleQueue,
+    setReactMcqQueue,
   ]);
 
   // A pass can be completed more than once (unarchiving or jumping to a
@@ -677,6 +723,9 @@ export default function App() {
   useEffect(() => {
     if (codingRemaining > 0) codingPassRecordedRef.current = false;
   }, [codingRemaining]);
+  useEffect(() => {
+    if (reactMcqRemaining > 0) reactMcqPassRecordedRef.current = false;
+  }, [reactMcqRemaining]);
 
   const selectedLearning = useMemo(() => {
     if (activeSection !== 'learnings') return null;
@@ -710,13 +759,13 @@ export default function App() {
     return orderedStarredActiveTestPrep[0] ?? null;
   }, [orderedStarredActiveTestPrep, route.learningId, activeSection]);
 
-  const selectedAcceldataPrep = useMemo(() => {
-    if (activeSection !== 'acceldata-prep') return null;
+  const selectedWorkExperience = useMemo(() => {
+    if (activeSection !== 'work-experience-deep-dive') return null;
     if (route.learningId) {
-      return orderedStarredActiveAcceldataPrep.find((item) => item.id === route.learningId) ?? orderedStarredActiveAcceldataPrep[0] ?? null;
+      return orderedStarredActiveWorkExperience.find((item) => item.id === route.learningId) ?? orderedStarredActiveWorkExperience[0] ?? null;
     }
-    return orderedStarredActiveAcceldataPrep[0] ?? null;
-  }, [orderedStarredActiveAcceldataPrep, route.learningId, activeSection]);
+    return orderedStarredActiveWorkExperience[0] ?? null;
+  }, [orderedStarredActiveWorkExperience, route.learningId, activeSection]);
 
   const selectedCssLearning = useMemo(() => {
     if (activeSection !== 'css') return null;
@@ -839,11 +888,11 @@ export default function App() {
   }, [activeSection, route.learningId, orderedStarredActiveTestPrep, setTestPrepLearningId]);
 
   useEffect(() => {
-    if (activeSection !== 'acceldata-prep' || !orderedStarredActiveAcceldataPrep.length) return;
-    if (route.learningId && !orderedStarredActiveAcceldataPrep.some((item) => item.id === route.learningId)) {
-      setAcceldataPrepLearningId(orderedStarredActiveAcceldataPrep[0].id, { replace: true });
+    if (activeSection !== 'work-experience-deep-dive' || !orderedStarredActiveWorkExperience.length) return;
+    if (route.learningId && !orderedStarredActiveWorkExperience.some((item) => item.id === route.learningId)) {
+      setWorkExperienceLearningId(orderedStarredActiveWorkExperience[0].id, { replace: true });
     }
-  }, [activeSection, route.learningId, orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId]);
+  }, [activeSection, route.learningId, orderedStarredActiveWorkExperience, setWorkExperienceLearningId]);
 
   useEffect(() => {
     if (activeSection !== 'css' || !orderedStarredActiveCssLearnings.length) return;
@@ -1009,12 +1058,11 @@ export default function App() {
 
   useEffect(() => {
     const allQuestions = questionsData.questions;
-    const allOutputQuestions = [
-      ...outputQuestionsData.questions,
-      ...scopeOutputQuestionsData.questions,
-    ];
+    const allOutputQuestions = outputQuestionsData.questions;
     const allCodingQuestions = codingQuestionsData.questions;
+    const allReactMcqQuestions = reactMcqQuestionsData.questions;
     setQuestions(allQuestions);
+    setReactMcqQuestions(allReactMcqQuestions);
     setOutputQuestions(allOutputQuestions);
     setOutputSourceUrl(outputQuestionsData.source);
     setCodingQuestions(allCodingQuestions);
@@ -1025,6 +1073,10 @@ export default function App() {
     const starredMcq = starredFilter.mcq ? filterStarred(activeMcq, 'mcq', starred) : activeMcq;
     const starredOutput = starredFilter.output ? filterStarred(activeOutput, 'output', starred) : activeOutput;
     const starredCoding = starredFilter.coding ? filterStarred(activeCoding, 'coding', starred) : activeCoding;
+    const activeReactMcq = filterActive(allReactMcqQuestions, 'react-mcq', archived);
+    const starredReactMcq = starredFilter['react-mcq']
+      ? filterStarred(activeReactMcq, 'react-mcq', starred)
+      : activeReactMcq;
 
     setMcqQueue((saved) => {
       let state = normalizePracticeQueue(saved);
@@ -1065,6 +1117,18 @@ export default function App() {
       return createPracticeQueue(queue);
     });
 
+    setReactMcqQueue((saved) => {
+      const state = sanitizePracticeQueue(normalizePracticeQueue(saved), 'react-mcq', archived);
+      if (isRestorablePracticeQueue(state, starredReactMcq)) {
+        return state;
+      }
+      const pool = filterPoolByCompleted(starredReactMcq, completed, {
+        includeCompleted: reactMcqIncludeCompleted,
+        section: 'react-mcq',
+      });
+      return createPracticeQueue(smartShuffle(pool, reactMcqProgress));
+    });
+
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1075,7 +1139,7 @@ export default function App() {
   // section is usually instant.
   useEffect(() => {
     const setters = {
-      'acceldata-prep': setAcceldataPrep,
+      'work-experience-deep-dive': setWorkExperience,
       learnings: setLearnings,
       css: setCssLearnings,
       'ai-dev': setAiDev,
@@ -1226,11 +1290,114 @@ export default function App() {
     });
   }, [isCodingPassComplete, codingScore, codingPassTotal, codingQueue, setCodingProgress]);
 
+  useEffect(() => {
+    if (!isReactMcqPassComplete || reactMcqPassRecordedRef.current) return;
+    reactMcqPassRecordedRef.current = true;
+
+    const pct = reactMcqPassTotal > 0 ? Math.round((reactMcqScore / reactMcqPassTotal) * 100) : 0;
+    setReactMcqProgress((prev) =>
+      recordSession(prev, {
+        score: reactMcqScore,
+        total: reactMcqPassTotal,
+        pct,
+        mode: 'all',
+        topics: [],
+        difficulties: [],
+        questionIds: reactMcqQueue?.queueIds ?? [],
+      })
+    );
+  }, [isReactMcqPassComplete, reactMcqScore, reactMcqPassTotal, reactMcqQueue, setReactMcqProgress]);
+
   const startQuiz = useCallback(
     (pool, nextMode = 'all', { resetPass = true, topics = selectedTopics, difficulties = selectedDifficulties } = {}) => {
       startMcqPass(pool, nextMode, topics, difficulties, { resetPass });
     },
     [startMcqPass, selectedTopics, selectedDifficulties]
+  );
+
+  const startReactMcqPass = useCallback(
+    ({ resetPass = true, includeCompleted: includeCompletedOverride, pool: poolOverride } = {}) => {
+      const includeCompleted = includeCompletedOverride ?? reactMcqIncludeCompleted;
+      const pool = filterPoolByCompleted(poolOverride ?? starredActiveReactMcqQuestions, completed, {
+        includeCompleted,
+        section: 'react-mcq',
+      });
+      setReactMcqQueue(
+        createPracticeQueue(smartShuffle(pool, reactMcqProgress), {
+          resetPass,
+          answeredIds: reactMcqQueue?.answeredIds ?? [],
+          correctIds: reactMcqQueue?.correctIds ?? [],
+        })
+      );
+      reactMcqPassRecordedRef.current = false;
+    },
+    [
+      starredActiveReactMcqQuestions,
+      completed,
+      reactMcqIncludeCompleted,
+      reactMcqProgress,
+      reactMcqQueue,
+      setReactMcqQueue,
+    ]
+  );
+
+  const handleReactMcqPick = useCallback(
+    (correct, question) => {
+      const state = reactMcqQueueRef.current;
+      if (!state || state.answeredIds.includes(question.id)) return;
+
+      setReactMcqProgress((prev) => recordAnswer(prev, question, correct));
+      if (correct) {
+        setCompleted((prev) => markCompletedId(prev, 'react-mcq', question.id));
+      }
+      setReactMcqQueue((prev) => recordAnswerInQueue(prev, question.id, correct));
+    },
+    [setReactMcqProgress, setReactMcqQueue, setCompleted, reactMcqQueueRef]
+  );
+
+  const handleReactMcqNext = useCallback(() => {
+    setReactMcqQueue((state) => advancePass(state));
+  }, [setReactMcqQueue]);
+
+  const handleReactMcqSkip = useCallback(
+    (question) => {
+      setReactMcqQueue((state) => skipQuestionInQueue(state, question.id));
+    },
+    [setReactMcqQueue]
+  );
+
+  const handleReactMcqRestart = useCallback(() => {
+    startReactMcqPass({ resetPass: true });
+  }, [startReactMcqPass]);
+
+  const handleOpenReactMcqQuestion = useCallback(
+    (questionId) => {
+      setReactMcqQueue((state) => {
+        if (!state) return state;
+        if (!starredActiveReactMcqQuestions.some((q) => q.id === questionId)) return state;
+        return openQuestionInQueue(state, questionId, { clearSkipped: true });
+      });
+    },
+    [starredActiveReactMcqQuestions, setReactMcqQueue]
+  );
+
+  const handleReactMcqStarredFilterChange = useCallback(
+    (value) => {
+      setStarredFilter((prev) => ({ ...prev, 'react-mcq': value }));
+      const pool = value
+        ? filterStarred(activeReactMcqQuestions, 'react-mcq', starred)
+        : activeReactMcqQuestions;
+      startReactMcqPass({ resetPass: true, pool });
+    },
+    [setStarredFilter, activeReactMcqQuestions, starred, startReactMcqPass]
+  );
+
+  const handleArchiveReactMcq = useCallback(
+    (question) => {
+      setArchived((prev) => archiveId(prev, 'react-mcq', question.id));
+      setReactMcqQueue((state) => archiveFromQueue(state, question.id));
+    },
+    [setArchived, setReactMcqQueue]
   );
 
   const handlePick = useCallback(
@@ -1355,8 +1522,8 @@ export default function App() {
         setSection('advanced-react', { learningId: id });
         return;
       }
-      if (section === 'acceldata-prep') {
-        setSection('acceldata-prep', { learningId: id });
+      if (section === 'work-experience-deep-dive') {
+        setSection('work-experience-deep-dive', { learningId: id });
         return;
       }
       if (section === 'css') {
@@ -1407,12 +1574,18 @@ export default function App() {
       if (section === 'output') {
         setSection('output', { itemId: id });
         handleOpenOutputQuestion(id);
+        return;
+      }
+      if (section === 'react-mcq') {
+        setSection('react-mcq', { itemId: id });
+        handleOpenReactMcqQuestion(id);
       }
     },
     [
       activeQuestions,
       handleOpenCodingQuestion,
       handleOpenOutputQuestion,
+      handleOpenReactMcqQuestion,
       getPracticeQueueQuestionIds,
       setMcqQueue,
       setSection,
@@ -1440,7 +1613,7 @@ export default function App() {
   useEffect(() => {
     if (loading || deepLinkAppliedRef.current) return;
     if (route.itemId == null) return;
-    if (!['coding', 'output', 'mcq'].includes(route.section)) return;
+    if (!['coding', 'output', 'mcq', 'react-mcq'].includes(route.section)) return;
 
     deepLinkAppliedRef.current = true;
     handleSearchSelect({ section: route.section, id: route.itemId });
@@ -1478,9 +1651,9 @@ export default function App() {
     [orderedStarredActiveTestPrep, setTestPrepLearningId, completed, setCompleted]
   );
 
-  const handleToggleAcceldataPrepCompleted = useMemo(
-    () => makeLearningToggleCompleted('acceldata-prep', orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId, completed, setCompleted),
-    [orderedStarredActiveAcceldataPrep, setAcceldataPrepLearningId, completed, setCompleted]
+  const handleToggleWorkExperienceCompleted = useMemo(
+    () => makeLearningToggleCompleted('work-experience-deep-dive', orderedStarredActiveWorkExperience, setWorkExperienceLearningId, completed, setCompleted),
+    [orderedStarredActiveWorkExperience, setWorkExperienceLearningId, completed, setCompleted]
   );
 
   const handleToggleCssLearningCompleted = useMemo(
@@ -1621,21 +1794,21 @@ export default function App() {
     [setStarredFilter, activeTestPrep, starred, route.learningId, setTestPrepLearningId]
   );
 
-  const handleAcceldataPrepStarredFilterChange = useCallback(
+  const handleWorkExperienceStarredFilterChange = useCallback(
     (value) => {
-      setStarredFilter((prev) => ({ ...prev, 'acceldata-prep': value }));
+      setStarredFilter((prev) => ({ ...prev, 'work-experience-deep-dive': value }));
       if (value) {
-        const nextStarred = filterStarred(activeAcceldataPrep, 'acceldata-prep', starred);
+        const nextStarred = filterStarred(activeWorkExperience, 'work-experience-deep-dive', starred);
         if (
           route.learningId &&
           !nextStarred.some((item) => item.id === route.learningId) &&
           nextStarred.length > 0
         ) {
-          setAcceldataPrepLearningId(nextStarred[0].id);
+          setWorkExperienceLearningId(nextStarred[0].id);
         }
       }
     },
-    [setStarredFilter, activeAcceldataPrep, starred, route.learningId, setAcceldataPrepLearningId]
+    [setStarredFilter, activeWorkExperience, starred, route.learningId, setWorkExperienceLearningId]
   );
 
   const handleCssStarredFilterChange = useCallback(
@@ -1864,16 +2037,16 @@ export default function App() {
     [setArchived, archived, testPrep, route.learningId, setTestPrepLearningId]
   );
 
-  const handleArchiveAcceldataPrep = useCallback(
+  const handleArchiveWorkExperience = useCallback(
     (learning) => {
-      setArchived((prev) => archiveId(prev, 'acceldata-prep', learning.id));
-      const nextArchived = archiveId(archived, 'acceldata-prep', learning.id);
-      const nextActive = filterActive(acceldataPrep, 'acceldata-prep', nextArchived);
+      setArchived((prev) => archiveId(prev, 'work-experience-deep-dive', learning.id));
+      const nextArchived = archiveId(archived, 'work-experience-deep-dive', learning.id);
+      const nextActive = filterActive(workExperience, 'work-experience-deep-dive', nextArchived);
       if (learning.id === route.learningId && nextActive.length > 0) {
-        setAcceldataPrepLearningId(nextActive[0].id);
+        setWorkExperienceLearningId(nextActive[0].id);
       }
     },
-    [setArchived, archived, acceldataPrep, route.learningId, setAcceldataPrepLearningId]
+    [setArchived, archived, workExperience, route.learningId, setWorkExperienceLearningId]
   );
 
   const handleArchiveCssLearning = useCallback(
@@ -2259,6 +2432,77 @@ export default function App() {
     return null;
   }
 
+  function reactMcqContent() {
+    if (loading) {
+      return <div className="quiz-container loading"><p>Loading questions...</p></div>;
+    }
+
+    if (starredActiveReactMcqQuestions.length === 0) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>
+              {starredFilter['react-mcq']
+                ? 'No starred React questions yet.'
+                : 'No React questions available.'}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (isReactMcqPassComplete) {
+      return (
+        <div className="quiz-container">
+          <Results
+            score={reactMcqScore}
+            totalQuestions={reactMcqPassTotal}
+            sessionCount={reactMcqProgress.sessions.length}
+            bestPct={getBestPct(reactMcqProgress.sessions)}
+            missedCount={0}
+            onRestart={handleReactMcqRestart}
+          />
+        </div>
+      );
+    }
+
+    if (reactMcqSessionTotal === 0) {
+      return (
+        <div className="quiz-container">
+          <div className="filtered-empty">
+            <p>No React questions left in this session. Start a new quiz to continue.</p>
+            <button onClick={handleReactMcqRestart}>Start new quiz</button>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentReactMcqQuestion) {
+      return (
+        <QuizQuestion
+          key={currentReactMcqQuestion.id}
+          question={currentReactMcqQuestion}
+          remaining={reactMcqRemaining}
+          sessionTotal={reactMcqSessionTotal}
+          score={reactMcqScore}
+          answered={reactMcqAnswered}
+          highlight={syntaxHighlight}
+          theme={editorTheme}
+          onPick={handleReactMcqPick}
+          onNext={handleReactMcqNext}
+          onSkip={handleReactMcqSkip}
+          onArchive={handleArchiveReactMcq}
+          isStarred={isStarred(currentReactMcqQuestion.id, 'react-mcq', starred)}
+          onToggleStar={() => handleToggleStar('react-mcq', currentReactMcqQuestion.id)}
+          isCompleted={isCompleted(currentReactMcqQuestion.id, 'react-mcq', completed)}
+          onToggleCompleted={() => handleToggleCompleted('react-mcq', currentReactMcqQuestion.id)}
+        />
+      );
+    }
+
+    return null;
+  }
+
   function codingContent() {
     if (loading) {
       return <div className="quiz-container loading"><p>Loading questions...</p></div>;
@@ -2457,11 +2701,12 @@ export default function App() {
      prop list in between. */
   const navCounts = useMemo(
     () => ({
-      'acceldata-prep': {
-        done: acceldataPrepCompletedCount,
-        total: sectionCount('acceldata-prep', activeAcceldataPrep),
+      'work-experience-deep-dive': {
+        done: workExperienceCompletedCount,
+        total: sectionCount('work-experience-deep-dive', activeWorkExperience),
       },
       mcq: { done: mcqCompletedCount, total: activeQuestions.length },
+      'react-mcq': { done: reactMcqCompletedCount, total: activeReactMcqQuestions.length },
       learnings: {
         done: learningsCompletedCount,
         total: sectionCount('learnings', activeLearnings),
@@ -2512,8 +2757,9 @@ export default function App() {
       },
     }),
     [
-      acceldataPrepCompletedCount, activeAcceldataPrep,
+      workExperienceCompletedCount, activeWorkExperience,
       mcqCompletedCount, activeQuestions.length,
+      reactMcqCompletedCount, activeReactMcqQuestions.length,
       learningsCompletedCount, activeLearnings, cssCompletedCount, activeCssLearnings,
       aiDevCompletedCount, activeAiDev,
       webFundamentalsCompletedCount, activeWebFundamentals,
@@ -2701,14 +2947,14 @@ export default function App() {
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
               />
-            ) : activeSection === 'acceldata-prep' ? (
+            ) : activeSection === 'work-experience-deep-dive' ? (
               <LearningsView
-                learning={selectedAcceldataPrep}
-                onArchive={handleArchiveAcceldataPrep}
-                isStarred={selectedAcceldataPrep ? isStarred(selectedAcceldataPrep.id, 'acceldata-prep', starred) : false}
-                onToggleStar={() => selectedAcceldataPrep && handleToggleStar('acceldata-prep', selectedAcceldataPrep.id)}
-                isCompleted={selectedAcceldataPrep ? isCompleted(selectedAcceldataPrep.id, 'acceldata-prep', completed) : false}
-                onToggleCompleted={() => selectedAcceldataPrep && handleToggleAcceldataPrepCompleted(selectedAcceldataPrep.id)}
+                learning={selectedWorkExperience}
+                onArchive={handleArchiveWorkExperience}
+                isStarred={selectedWorkExperience ? isStarred(selectedWorkExperience.id, 'work-experience-deep-dive', starred) : false}
+                onToggleStar={() => selectedWorkExperience && handleToggleStar('work-experience-deep-dive', selectedWorkExperience.id)}
+                isCompleted={selectedWorkExperience ? isCompleted(selectedWorkExperience.id, 'work-experience-deep-dive', completed) : false}
+                onToggleCompleted={() => selectedWorkExperience && handleToggleWorkExperienceCompleted(selectedWorkExperience.id)}
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
@@ -2830,7 +3076,7 @@ export default function App() {
                 reactLearnings={reactLearnings}
                 reactGuide={reactGuide}
                 advancedReact={advancedReact}
-                acceldataPrep={acceldataPrep}
+                workExperience={workExperience}
                 cssLearnings={cssLearnings}
                 aiDev={aiDev}
                 webFundamentals={webFundamentals}
@@ -2840,12 +3086,15 @@ export default function App() {
                 blind75Learnings={blind75Learnings}
                 codingQuestions={codingQuestions}
                 outputQuestions={outputQuestions}
+                reactMcqQuestions={reactMcqQuestions}
                 onUnarchive={handleUnarchive}
               />
             ) : activeSection === 'coding' ? (
               codingContent()
             ) : activeSection === 'output' ? (
               outputContent()
+            ) : activeSection === 'react-mcq' ? (
+              reactMcqContent()
             ) : (
               centerContent()
             )}
@@ -2911,19 +3160,19 @@ export default function App() {
                 title="HackerEarth Frontend Test Prep"
               />
             </div>
-          ) : activeSection === 'acceldata-prep' ? (
+          ) : activeSection === 'work-experience-deep-dive' ? (
             <div className="topics-panel learnings-panel">
               <LearningsPanel
-                starredIds={starred['acceldata-prep']}
-                completedIds={completed['acceldata-prep']}
-                activeItem={selectedAcceldataPrep}
-                learnings={orderedStarredActiveAcceldataPrep}
-                selectedLearningId={selectedAcceldataPrep?.id ?? null}
-                sectionKey="acceldata-prep"
-                starredOnly={starredFilter['acceldata-prep']}
-                starredCount={acceldataPrepStarredCount}
-                onStarredOnlyChange={handleAcceldataPrepStarredFilterChange}
-                onSelect={setAcceldataPrepLearningId}
+                starredIds={starred['work-experience-deep-dive']}
+                completedIds={completed['work-experience-deep-dive']}
+                activeItem={selectedWorkExperience}
+                learnings={orderedStarredActiveWorkExperience}
+                selectedLearningId={selectedWorkExperience?.id ?? null}
+                sectionKey="work-experience-deep-dive"
+                starredOnly={starredFilter['work-experience-deep-dive']}
+                starredCount={workExperienceStarredCount}
+                onStarredOnlyChange={handleWorkExperienceStarredFilterChange}
+                onSelect={setWorkExperienceLearningId}
                 title="Work Experience Deep Dive"
               />
             </div>
@@ -3089,6 +3338,24 @@ export default function App() {
                 onStarredOnlyChange={handleCodingStarredFilterChange}
                 onSelect={handleOpenCodingQuestion}
                 title="Javascript Coding"
+              />
+            </div>
+          ) : activeSection === 'react-mcq' ? (
+            <div className="topics-panel output-panel">
+              <PanelList
+                items={starredActiveReactMcqQuestions}
+                title="React MCQs"
+                selectedId={currentReactMcqQuestion?.id ?? null}
+                onSelect={handleOpenReactMcqQuestion}
+                starredIds={starred['react-mcq']}
+                completedIds={completed['react-mcq']}
+                starredOnly={starredFilter['react-mcq']}
+                starredCount={reactMcqStarredCount}
+                onStarredOnlyChange={handleReactMcqStarredFilterChange}
+                getLabel={(q) => q.question ?? `Question ${q.id}`}
+                emptyLabel="No React questions yet"
+                emptyStarredLabel="No starred questions yet."
+                searchPlaceholder="Filter questions…"
               />
             </div>
           ) : activeSection === 'output' ? (

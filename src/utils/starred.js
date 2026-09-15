@@ -1,7 +1,8 @@
 import { SECTIONS } from './archive';
 
 export const EMPTY_STARRED = {
-  'acceldata-prep': [],
+  'work-experience-deep-dive': [],
+  'react-mcq': [],
   'test-prep': [],
   mcq: [],
   learnings: [],
@@ -20,7 +21,8 @@ export const EMPTY_STARRED = {
 };
 
 export const EMPTY_STARRED_FILTER = {
-  'acceldata-prep': false,
+  'work-experience-deep-dive': false,
+  'react-mcq': false,
   'test-prep': false,
   mcq: false,
   learnings: false,

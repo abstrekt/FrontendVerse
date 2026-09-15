@@ -2,7 +2,8 @@ import { SECTIONS } from './archive.js';
 import { GROUPED_SECTIONS } from '../data/curriculum.js';
 
 export const EMPTY_COMPLETED = {
-  'acceldata-prep': [],
+  'work-experience-deep-dive': [],
+  'react-mcq': [],
   'test-prep': [],
   mcq: [],
   learnings: [],

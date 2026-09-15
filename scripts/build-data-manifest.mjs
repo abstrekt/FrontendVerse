@@ -18,7 +18,7 @@ const OUT_PATH = join(ROOT, 'data', 'counts.json');
 
 // Mirrors LEARNING_LOADERS in src/data/datasets.js.
 const SECTIONS = {
-  'acceldata-prep': ['data/acceldata-prep.json'],
+  'work-experience-deep-dive': ['data/work-experience-deep-dive.json'],
   learnings: [
     'data/learnings.json',
     'data/tekion-interview-learnings.json',

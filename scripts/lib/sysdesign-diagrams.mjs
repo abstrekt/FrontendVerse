@@ -3178,7 +3178,7 @@ function logViewer() {
   );
 
   o.push(
-    arrow(232, 346, 358, 346, {
+    arrow(232, 344, 358, 344, {
       color: C.warn,
       width: 1.4,
       label: 'user scrolls up',
@@ -3186,10 +3186,10 @@ function logViewer() {
     }).xml
   );
   o.push(
-    arrow(358, 364, 232, 364, {
+    arrow(358, 368, 232, 368, {
       color: C.ok,
       width: 1.4,
-      label: 'scrolls to bottom / clicks the pill',
+      label: 'back at the bottom',
       size: 8.5,
     }).xml
   );

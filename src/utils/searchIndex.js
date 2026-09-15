@@ -1,5 +1,6 @@
 const SECTION_LABELS = {
-  'acceldata-prep': 'Work Experience Deep Dive',
+  'work-experience-deep-dive': 'Work Experience Deep Dive',
+  'react-mcq': 'React MCQs',
   'test-prep': 'Test Prep',
   mcq: 'MCQ',
   learnings: 'Learnings',
@@ -49,7 +50,8 @@ const SNIPPET_FIELDS = new Set(['body', 'explanation', 'description', 'code', 'o
 
 export const SEARCH_SECTIONS = [
   'all',
-  'acceldata-prep',
+  'work-experience-deep-dive',
+  'react-mcq',
   'test-prep',
   'mcq',
   'learnings',
@@ -99,11 +101,11 @@ export function stripMarkdown(text) {
     .trim();
 }
 
-function buildMcqDoc(item) {
+function buildMcqDoc(item, section = 'mcq') {
   const topics = item.topics ?? [];
   return {
-    key: `mcq:${item.id}`,
-    section: 'mcq',
+    key: `${section}:${item.id}`,
+    section,
     id: item.id,
     title: item.question ?? '',
     company: null,
@@ -182,7 +184,7 @@ function buildOutputDoc(item) {
 }
 
 export function buildSearchIndex({
-  acceldataPrep = [],
+  workExperience = [],
   testPrep = [],
   mcq = [],
   learnings = [],
@@ -192,6 +194,7 @@ export function buildSearchIndex({
   reactLearnings = [],
   reactGuide = [],
   advancedReact = [],
+  reactMcq = [],
   systemDesign = [],
   algorithm = [],
   blind75 = [],
@@ -199,7 +202,7 @@ export function buildSearchIndex({
   output = [],
 } = {}) {
   return [
-    ...acceldataPrep.map((item) => buildLearningDoc(item, 'acceldata-prep')),
+    ...workExperience.map((item) => buildLearningDoc(item, 'work-experience-deep-dive')),
     ...testPrep.map((item) => buildLearningDoc(item, 'test-prep')),
     ...mcq.map(buildMcqDoc),
     ...learnings.map((item) => buildLearningDoc(item, 'learnings')),
@@ -209,6 +212,7 @@ export function buildSearchIndex({
     ...reactLearnings.map((item) => buildLearningDoc(item, 'react-learnings')),
     ...reactGuide.map((item) => buildLearningDoc(item, 'react-guide')),
     ...advancedReact.map((item) => buildLearningDoc(item, 'advanced-react')),
+    ...reactMcq.map((item) => buildMcqDoc(item, 'react-mcq')),
     ...systemDesign.map((item) => buildLearningDoc(item, 'system-design')),
     ...algorithm.map((item) => buildLearningDoc(item, 'algorithm')),
     ...blind75.map((item) => buildLearningDoc(item, 'blind75')),

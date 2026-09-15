@@ -1,5 +1,5 @@
 export const LEARNING_SECTIONS = [
-  'acceldata-prep',
+  'work-experience-deep-dive',
   'test-prep',
   'learnings',
   'browser',
@@ -14,7 +14,7 @@ export const LEARNING_SECTIONS = [
   'blind75',
 ];
 
-const ITEM_SECTIONS = ['coding', 'output'];
+const ITEM_SECTIONS = ['coding', 'output', 'react-mcq'];
 
 function parseId(part) {
   const parsed = part ? Number(part) : null;

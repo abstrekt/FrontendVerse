@@ -66,7 +66,7 @@ const TARGET_FILES = {
 const TITLE_FILES = {
   ...TARGET_FILES,
   'data/test-prep.json': 'test-prep',
-  'data/acceldata-prep.json': 'acceldata-prep',
+  'data/work-experience-deep-dive.json': 'work-experience-deep-dive',
   'questions.json': 'mcq',
   'data/output-questions.json': 'output',
 };
