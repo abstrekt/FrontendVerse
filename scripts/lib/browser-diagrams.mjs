@@ -732,6 +732,140 @@ function performanceApi() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   6 · Web worker vs service worker — same thread trick, opposite jobs
+   ──────────────────────────────────────────────────────────────────── */
+
+function workerTypes() {
+  const o = [];
+  const H = 606;
+
+  o.push(
+    title(
+      'Web worker vs service worker — same thread trick, opposite jobs',
+      'One moves computation off the main thread; the other sits on the network path'
+    )
+  );
+
+  o.push(
+    text(24, 74, W - 48, 16, 'Two tabs of the same origin, two web workers, one service worker', {
+      size: 11,
+      bold: true,
+      color: C.fg,
+      align: 'center',
+    }).xml
+  );
+
+  /* ── The tabs, each with its own dedicated worker ──────────────── */
+
+  const TABS = [
+    { y: 104, name: 'Tab A — page thread', worker: 'Web Worker A' },
+    { y: 236, name: 'Tab B — page thread', worker: 'Web Worker B' },
+  ];
+  for (const t of TABS) {
+    o.push(box(24, t.y, 210, 44, t.name, 'accent', { size: 10, bold: true, rx: 8 }).xml);
+    o.push(
+      arrow(129, t.y + 46, 129, t.y + 64, {
+        color: C.line,
+        width: 1.3,
+        startArrow: 'blockThin',
+        label: 'postMessage',
+        size: 8,
+      }).xml
+    );
+    o.push(box(24, t.y + 66, 210, 34, t.worker, 'info', { size: 9.5, rx: 8 }).xml);
+    // Into the service worker.
+    o.push(
+      arrow(236, t.y + 22, 322, t.y + 22, { color: C.ok, width: 1.4, label: 'fetch', size: 8.5 })
+        .xml
+    );
+  }
+
+  o.push(
+    text(24, 340, 210, 14, '1 : 1 — dies when its tab closes', {
+      size: 8.5,
+      align: 'center',
+      italic: true,
+      color: C.info,
+    }).xml
+  );
+
+  /* ── The one service worker both tabs share ────────────────────── */
+
+  o.push(box(324, 104, 180, 232, 'Service Worker\n\nthe network proxy', 'warn', {
+    size: 11,
+    bold: true,
+    rx: 8,
+  }).xml);
+  o.push(
+    text(324, 340, 180, 14, '1 : many — outlives every tab', {
+      size: 8.5,
+      align: 'center',
+      italic: true,
+      color: C.warn,
+    }).xml
+  );
+
+  o.push(box(584, 104, 212, 44, 'Cache Storage', 'ok', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(box(584, 236, 212, 44, 'Network', 'plain', { size: 10, bold: true, rx: 8 }).xml);
+  o.push(
+    arrow(506, 126, 582, 126, { color: C.ok, width: 1.4, label: 'hit', size: 8.5 }).xml
+  );
+  o.push(
+    arrow(506, 258, 582, 258, { color: C.line, width: 1.4, label: 'miss', size: 8.5 }).xml
+  );
+  o.push(
+    text(584, 152, 212, 28, 'Answered offline, with no network at all.', {
+      size: 8.5,
+      align: 'center',
+    }).xml
+  );
+
+  /* ── The distinction ───────────────────────────────────────────── */
+
+  o.push(rule(24, 362, W - 48, { dashed: true }).xml);
+
+  const COLS = [
+    {
+      x: 24,
+      tone: 'info',
+      heading: 'Web worker — a compute worker',
+      rows: [
+        'Purpose: move CPU work off the main thread',
+        'Lifetime: tied to the tab that spawned it',
+        'Network: cannot intercept a single request',
+        'Woken by: postMessage, and nothing else',
+      ],
+    },
+    {
+      x: 416,
+      tone: 'warn',
+      heading: 'Service worker — a network worker',
+      rows: [
+        'Purpose: cache, offline, background delivery',
+        'Lifetime: independent of tabs; wakes on events',
+        'Network: intercepts every fetch in its scope',
+        'Woken by: install, activate, fetch, push, sync',
+      ],
+    },
+  ];
+  for (const col of COLS) {
+    o.push(panel(col.x, 376, 380, 148, col.heading, col.tone).xml);
+    col.rows.forEach((r, i) => {
+      o.push(pill(col.x + 18, 408 + i * 26, 344, 20, r, col.tone, { size: 8.5 }).xml);
+    });
+  }
+
+  o.push(
+    takeaway(
+      540,
+      'Both run off the main thread with no DOM, and that is where the similarity ends. Reach for a web worker when the main thread is busy; reach for a service worker when the network is the problem.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'storage-scope': {
     title: 'Scope — localStorage is origin-locked, a cookie is not',
@@ -752,5 +886,9 @@ export const DIAGRAMS = {
   'performance-api': {
     title: 'The Performance API — one monotonic timeline, four kinds of entry',
     build: performanceApi,
+  },
+  'worker-types': {
+    title: 'Web worker vs service worker — same thread trick, opposite jobs',
+    build: workerTypes,
   },
 };

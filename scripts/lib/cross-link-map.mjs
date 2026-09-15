@@ -48,7 +48,7 @@ export const TOPICS = [
   { section: 'browser', id: 155, terms: ['layout thrashing', 'forced synchronous layout'] },
   { section: 'browser', id: 157, terms: ['HTTP caching'] },
   { section: 'browser', id: 156, terms: ['CORS'] },
-  { section: 'browser', id: 133, terms: ['web workers', 'web worker'] },
+  { section: 'browser', id: 133, terms: ['web workers', 'web worker', 'structured clone'] },
   { section: 'browser', id: 158, terms: ['CSRF', 'XSS', 'JWT'] },
   { section: 'browser', id: 132, terms: ['localStorage', 'sessionStorage'] },
   { section: 'browser', id: 160, terms: ['TTFB', 'TLS handshake'] },
@@ -76,7 +76,7 @@ export const TOPICS = [
   { section: 'web-fundamentals', id: 12, terms: ['FormData', 'constraint validation'] },
   { section: 'web-fundamentals', id: 13, terms: ['CSS grid', 'flexbox', 'container queries'] },
   { section: 'web-fundamentals', id: 14, terms: ['AbortController', 'AbortSignal'] },
-  { section: 'web-fundamentals', id: 15, terms: ['service workers', 'service worker'] },
+  { section: 'web-fundamentals', id: 15, terms: ['service workers', 'service worker', 'app shell'] },
   { section: 'web-fundamentals', id: 16, terms: ['IndexedDB', 'BroadcastChannel', 'Cache Storage'] },
 
   /* ── CSS ─────────────────────────────────────────────────────────── */
