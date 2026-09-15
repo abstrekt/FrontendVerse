@@ -28,11 +28,11 @@ export async function askAboutSelection({ mode, subject, context, title }) {
     throw new Error('Could not reach the server. Are you offline?');
   }
 
-  // `pnpm dev` is Vite alone and does not serve /api, so the SPA rewrite hands
-  // back index.html. Say that plainly instead of "unexpected token <".
+  // If /api is not mounted the SPA rewrite hands back index.html; say so
+  // plainly instead of surfacing "unexpected token <".
   const type = response.headers.get('content-type') ?? '';
   if (!type.includes('application/json')) {
-    throw new Error('Define needs the API running — use `vercel dev` locally.');
+    throw new Error('The /api route is not responding — restart the dev server.');
   }
 
   const data = await response.json().catch(() => null);

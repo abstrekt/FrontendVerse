@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -49,7 +49,14 @@ export function headingToSlug(text) {
     .replace(/(^-|-$)/g, '');
 }
 
-export default function CodeBody({
+/**
+ * Memoised because opening the selection tooltip sets state in LearningsView,
+ * which would otherwise re-render this on every selection — re-parsing several
+ * thousand words of markdown and rebuilding the element tree under the user's
+ * live selection, which the browser then collapses. Every prop here is already
+ * referentially stable, so the default shallow compare is enough.
+ */
+function CodeBody({
   content,
   highlight,
   theme = 'dark',
@@ -236,3 +243,5 @@ export default function CodeBody({
     </div>
   );
 }
+
+export default memo(CodeBody);
