@@ -34,6 +34,24 @@ function apiRoutes(env) {
           return;
         }
 
+        // Dev-only ergonomics: the production handler just says the key is
+        // unset, which is no help when the real cause is a typo in the var
+        // name or a dev server started before .env.local was edited. Names
+        // only — never echo a value.
+        if (!process.env.GROQ_API_KEY) {
+          const seen = Object.keys(env).filter((k) => /GROQ/i.test(k));
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(
+            JSON.stringify({
+              error: seen.length
+                ? `GROQ_API_KEY is empty. .env.local defines: ${seen.join(', ')}.`
+                : 'No GROQ_* var found in .env.local. Add GROQ_API_KEY=... and restart `pnpm dev`.',
+            })
+          );
+          return;
+        }
+
         const body = await readJsonBody(req);
 
         // The handler is written against Vercel's req/res, which is Node's
