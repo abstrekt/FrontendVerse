@@ -14,6 +14,7 @@ import { getSyntaxStyle } from '../utils/syntaxTheme';
 import MermaidDiagram from './MermaidDiagram';
 import VisualTrace from './VisualTrace';
 import InlineSvg from './InlineSvg';
+import ZoomableFigure from './ZoomableFigure';
 import TexNotation from './TexNotation';
 import { rehypeMarkRanges, EMPTY_MARKS, PREVIEW_MARK_ID } from '../utils/markRanges';
 
@@ -141,7 +142,11 @@ function CodeBody({
             if (typeof src === 'string' && src.startsWith('/diagrams/') && src.endsWith('.svg')) {
               return <InlineSvg src={src} alt={alt} />;
             }
-            return <img src={src} alt={alt} {...props} />;
+            return (
+              <ZoomableFigure label={alt}>
+                <img src={src} alt={alt} {...props} />
+              </ZoomableFigure>
+            );
           },
           a({ href, children, ...props }) {
             const isInternal = typeof href === 'string' && href.startsWith('/');

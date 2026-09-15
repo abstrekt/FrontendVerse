@@ -104,6 +104,15 @@ const PATHS = {
     'M12 7v14',
   ],
   filter: ['M3 5h18l-7 8v6l-4 2v-8z'],
+  expand: [
+    'M15 3h6v6',
+    'M9 21H3v-6',
+    'M21 3l-7 7',
+    'M3 21l7-7',
+  ],
+  'zoom-in': ['M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16', 'm21 21-4.3-4.3', 'M11 8v6', 'M8 11h6'],
+  'zoom-out': ['M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16', 'm21 21-4.3-4.3', 'M8 11h6'],
+  reset: ['M3 12a9 9 0 1 0 3-6.7', 'M3 4v5h5'],
 };
 
 export default function Icon({ name, size = 16, filled = false, className = '' }) {

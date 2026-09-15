@@ -1,0 +1,11 @@
+# Vercel falls back to .gitignore when this file is absent, but a secret is
+# not something to leave to a fallback: be explicit about the env files.
+.env
+.env.*
+node_modules
+.vercel
+dist
+.claude
+.cursor
+.commandcode
+.playwright-mcp

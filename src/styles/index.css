@@ -7172,3 +7172,190 @@ kbd.kbd {
 .selection-tooltip-error {
   color: var(--danger, #dc2626);
 }
+
+/* ── Zoomable figures ──────────────────────────────────────────────────
+   Every rendered figure — an inlined diagram, a mermaid chart, a plain
+   <img> — is wrapped so it can be opened full screen. The wrapper is
+   `display: contents`-adjacent in spirit but needs a positioned box for
+   the expand button, so it takes the figure's own margins instead and
+   lets the child sit flush. */
+.zoomable {
+  position: relative;
+}
+
+.zoomable-body > .diagram-frame,
+.zoomable-body > .mermaid-diagram {
+  margin-block: 0;
+}
+
+.zoomable {
+  margin: var(--space-6) 0;
+}
+
+.zoomable-body > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.zoomable-expand {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line, var(--border));
+  border-radius: var(--radius);
+  background: var(--card-bg, var(--surface));
+  color: var(--text-secondary, currentColor);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.zoomable:hover .zoomable-expand,
+.zoomable:focus-within .zoomable-expand {
+  opacity: 1;
+}
+
+.zoomable-expand:hover {
+  color: var(--accent, currentColor);
+  border-color: var(--accent, var(--border));
+}
+
+.zoomable-expand:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Touch has no hover, so the affordance has to be permanently visible. */
+@media (hover: none) {
+  .zoomable-expand {
+    opacity: 0.75;
+  }
+}
+
+/* ── Lightbox ─────────────────────────────────────────────────────── */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgb(0 0 0 / 0.72);
+  backdrop-filter: blur(2px);
+  display: flex;
+}
+
+.lightbox-panel {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox-toolbar {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg, 10px);
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--line, var(--border));
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.35);
+}
+
+.lightbox-scale {
+  min-width: 4ch;
+  padding-inline: var(--space-1);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.lightbox-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary, currentColor);
+  cursor: pointer;
+}
+
+.lightbox-btn:hover {
+  background: var(--surface-sunken, rgb(0 0 0 / 0.06));
+  color: var(--text);
+}
+
+.lightbox-viewport {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.lightbox-viewport:active {
+  cursor: grabbing;
+}
+
+.lightbox-stage {
+  /* The transform is applied inline; this just keeps it scaling about the
+     middle so wheel-zoom maths stay simple. */
+  transform-origin: center center;
+  will-change: transform;
+  background: var(--dg-surface, var(--card-bg));
+  border-radius: var(--radius-lg, 10px);
+  padding: var(--space-4);
+  max-width: 92vw;
+}
+
+.lightbox-stage .diagram-frame,
+.lightbox-stage .mermaid-diagram {
+  margin: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.lightbox-stage .diagram-svg {
+  min-width: min(1100px, 88vw);
+}
+
+.lightbox-stage svg,
+.lightbox-stage img {
+  display: block;
+  max-width: 88vw;
+  max-height: 80vh;
+  height: auto;
+}
+
+.lightbox-hint {
+  margin: 0;
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: rgb(255 255 255 / 0.72);
+}
+
+@media (max-width: 640px) {
+  .lightbox-hint {
+    display: none;
+  }
+}

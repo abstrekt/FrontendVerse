@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import mermaid from 'mermaid';
+import ZoomableFigure from './ZoomableFigure';
 
 let mermaidInitialized = false;
 
@@ -64,5 +65,9 @@ export default function MermaidDiagram({ chart, theme = 'light' }) {
     };
   }, [chart, theme, renderId]);
 
-  return <div className="mermaid-diagram" ref={containerRef} />;
+  return (
+    <ZoomableFigure label="Diagram">
+      <div className="mermaid-diagram" ref={containerRef} />
+    </ZoomableFigure>
+  );
 }

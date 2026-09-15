@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ZoomableFigure from './ZoomableFigure';
 
 /**
  * Renders a local SVG inline rather than through `<img src>`.
@@ -69,20 +70,28 @@ export default function InlineSvg({ src, alt = '', className = '' }) {
 
   // Falling back to <img> keeps the diagram visible if the fetch fails; it
   // just will not follow the theme.
-  if (failed) return <img src={src} alt={alt} className={className} />;
+  if (failed) {
+    return (
+      <ZoomableFigure label={alt}>
+        <img src={src} alt={alt} className={className} />
+      </ZoomableFigure>
+    );
+  }
 
   if (markup === null) {
     return <div className={`diagram-frame is-loading ${className}`.trim()} aria-hidden="true" />;
   }
 
   return (
-    <figure className={`diagram-frame ${className}`.trim()}>
-      <div
-        className="diagram-svg"
-        role="img"
-        aria-label={alt || undefined}
-        dangerouslySetInnerHTML={{ __html: markup }}
-      />
-    </figure>
+    <ZoomableFigure label={alt}>
+      <figure className={`diagram-frame ${className}`.trim()}>
+        <div
+          className="diagram-svg"
+          role="img"
+          aria-label={alt || undefined}
+          dangerouslySetInnerHTML={{ __html: markup }}
+        />
+      </figure>
+    </ZoomableFigure>
   );
 }
