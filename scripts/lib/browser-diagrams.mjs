@@ -866,6 +866,123 @@ function workerTypes() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   7 · Shipping RUM data — the flush that survives the page going away
+   ──────────────────────────────────────────────────────────────────── */
+
+function beaconFlush() {
+  const o = [];
+  const H = 596;
+
+  o.push(
+    title(
+      'Shipping RUM data — the flush that survives the page going away',
+      'Collect into an array, flush once on `visibilitychange`, hand the request to the browser'
+    )
+  );
+
+  /* ── 1 · Collect ───────────────────────────────────────────────── */
+
+  o.push(
+    text(24, 72, W - 48, 16, '1 · Collect — one array, not one request per entry', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(box(24, 94, 168, 32, 'PerformanceObserver', 'accent', { size: 9.5, mono: true }).xml);
+  o.push(arrow(196, 110, 226, 110, { color: C.line, width: 1.5 }).xml);
+  o.push(box(230, 94, 150, 32, 'callback(list)', 'plain', { size: 9.5, mono: true }).xml);
+  o.push(arrow(384, 110, 414, 110, { color: C.line, width: 1.5 }).xml);
+  o.push(
+    box(418, 94, 378, 32, 'metrics[] — LCP · CLS · INP · your own marks', 'info', {
+      size: 9.5,
+    }).xml
+  );
+
+  o.push(
+    text(24, 130, W - 48, 14, 'push and return — the callback runs on the main thread you are trying to measure', {
+      size: 9,
+      italic: true,
+    }).xml
+  );
+
+  /* ── 2 · Flush ─────────────────────────────────────────────────── */
+
+  o.push(
+    text(24, 156, W - 48, 16, '2 · Flush — the lifecycle event that actually fires', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const STATES = [
+    ['visible', 'ok', 24, 170],
+    ['hidden — tab or app switch', 'warn', 228, 190],
+    ['frozen / bfcache', 'info', 442, 156],
+    ['terminated', 'sunken', 622, 174],
+  ];
+  for (const [label, t, x, w] of STATES) {
+    o.push(box(x, 178, w, 30, label, t, { size: 9.5 }).xml);
+  }
+  o.push(arrow(198, 193, 224, 193, { color: C.line, width: 1.5 }).xml);
+  o.push(arrow(422, 193, 438, 193, { color: C.line, width: 1.5 }).xml);
+  o.push(arrow(602, 193, 618, 193, { color: C.line, width: 1.5 }).xml);
+
+  const TRANSPORTS = [
+    [
+      '`unload` / `beforeunload`',
+      'bad',
+      'Unreliable on mobile — a swiped-away tab often never fires it. Registering either handler also disqualifies the page from the back/forward cache.',
+    ],
+    [
+      '`fetch()` in the handler',
+      'bad',
+      'The document is being torn down, so the browser cancels the in-flight request. `keepalive: true` is the escape hatch, and it shares the same 64KB budget.',
+    ],
+    [
+      '`visibilitychange` → `sendBeacon`',
+      'ok',
+      'Fires on every hide, including the ones that end in termination. The browser takes ownership of the request and sends it after the page is gone.',
+    ],
+  ];
+  TRANSPORTS.forEach(([name, t, why], i) => {
+    const y = 224 + i * 46;
+    o.push(pill(24, y, 236, 26, name, t, { size: 9.5 }).xml);
+    o.push(text(274, y - 3, 522, 34, why, { size: 9 }).xml);
+  });
+
+  /* ── 3 · What the browser does not give back ───────────────────── */
+
+  o.push(rule(24, 376, W - 48, { dashed: true }).xml);
+
+  o.push(panel(24, 388, W - 48, 116, '3 · What `sendBeacon` will not do for you', 'warn').xml);
+
+  const LIMITS = [
+    ['returns `true`', '— queued, not delivered'],
+    ['no response', '— fire and forget, nothing to read'],
+    ['~64KB cap', '— over it, it returns `false` and sends nothing'],
+    ['text/plain', '— wrap the JSON in a Blob to set the type; CORS still applies'],
+  ];
+  LIMITS.forEach(([head, tail], i) => {
+    const x = 44 + (i % 2) * 384;
+    const y = 420 + Math.floor(i / 2) * 38;
+    o.push(pill(x, y, 108, 22, head, 'warn', { size: 9 }).xml);
+    o.push(text(x + 116, y, 250, 22, tail, { size: 9 }).xml);
+  });
+
+  o.push(
+    takeaway(
+      522,
+      'Buffer in memory, flush once when the page is hidden, and let the browser own the send. A `fetch()` on the way out is cancelled; an `unload` handler costs you the bfcache.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
   'storage-scope': {
     title: 'Scope — localStorage is origin-locked, a cookie is not',
@@ -890,5 +1007,9 @@ export const DIAGRAMS = {
   'worker-types': {
     title: 'Web worker vs service worker — same thread trick, opposite jobs',
     build: workerTypes,
+  },
+  'beacon-flush': {
+    title: 'Shipping RUM data — the flush that survives the page going away',
+    build: beaconFlush,
   },
 };

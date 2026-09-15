@@ -7245,8 +7245,8 @@ kbd.kbd {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgb(0 0 0 / 0.72);
-  backdrop-filter: blur(2px);
+  background: rgb(0 0 0 / 0.86);
+  backdrop-filter: blur(3px);
   display: flex;
 }
 
@@ -7307,12 +7307,10 @@ kbd.kbd {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  cursor: grab;
+  /* The canvas owns every touch and wheel gesture: without this the browser
+     runs its own pan and pinch-zoom on top of ours. */
   touch-action: none;
-}
-
-.lightbox-viewport:active {
-  cursor: grabbing;
+  overscroll-behavior: contain;
 }
 
 .lightbox-stage {
