@@ -106,6 +106,12 @@ import {
   syncCompletedFromProgress,
   syncOutputCompletedFromProgress,
 } from './utils/completed';
+import {
+  EMPTY_HIGHLIGHTS,
+  addMark,
+  marksFor,
+  removeMark,
+} from './utils/highlights';
 import { buildSearchIndex } from './utils/searchIndex';
 import { loadLearningSection, LEARNING_LOADERS } from './data/datasets';
 import datasetCounts from '../data/counts.json';
@@ -257,6 +263,7 @@ export default function App() {
   const [reactMcqIncludeCompleted, setReactMcqIncludeCompleted] = useLocalStorage('react-mcq-include-completed', true);
   const [codingIncludeCompleted, setCodingIncludeCompleted] = useLocalStorage('coding-include-completed', true);
   const [completed, setCompleted] = useLocalStorage('quiz-completed', EMPTY_COMPLETED);
+  const [highlights, setHighlights] = useLocalStorage('quiz-highlights', EMPTY_HIGHLIGHTS);
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('layout-sidebar-collapsed', false);
   const [sectionCategory, setSectionCategory] = useLocalStorage('sidebar-section-category', 'all');
   const [panelCollapsed, setPanelCollapsed] = useLocalStorage('layout-panel-collapsed', false);
@@ -345,6 +352,18 @@ export default function App() {
     () => filterActive(reactMcqQuestions, 'react-mcq', archived),
     [reactMcqQuestions, archived]
   );
+  // Bound to the active section so each LearningsView branch only needs the
+  // entry id it already has.
+  const marksApi = useMemo(
+    () => ({
+      for: (id) => marksFor(highlights, activeSection, id),
+      add: (id, mark) => setHighlights((prev) => addMark(prev, activeSection, id, mark)),
+      remove: (id, markId) =>
+        setHighlights((prev) => removeMark(prev, activeSection, id, markId)),
+    }),
+    [highlights, activeSection, setHighlights]
+  );
+
   const archivedCount = useMemo(() => getArchivedCount(archived), [archived]);
   const archivedMcqSet = useMemo(() => getArchivedSet(archived, 'mcq'), [archived]);
 
@@ -2922,6 +2941,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'react-learnings' ? (
               <LearningsView
@@ -2934,6 +2954,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'test-prep' ? (
               <LearningsView
@@ -2946,6 +2967,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'work-experience-deep-dive' ? (
               <LearningsView
@@ -2958,6 +2980,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'css' ? (
               <LearningsView
@@ -2970,6 +2993,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'web-fundamentals' ? (
               <LearningsView
@@ -2982,6 +3006,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'ai-dev' ? (
               <LearningsView
@@ -2994,6 +3019,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'advanced-react' ? (
               <LearningsView
@@ -3006,6 +3032,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'react-guide' ? (
               <LearningsView
@@ -3018,6 +3045,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'browser' ? (
               <LearningsView
@@ -3030,6 +3058,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'system-design' ? (
               <LearningsView
@@ -3042,6 +3071,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'algorithm' ? (
               <LearningsView
@@ -3054,6 +3084,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'blind75' ? (
               <LearningsView
@@ -3066,6 +3097,7 @@ export default function App() {
                 highlight={syntaxHighlight}
                 theme={editorTheme}
                 onNavigate={handleInternalLink}
+                marksApi={marksApi}
               />
             ) : activeSection === 'archived' ? (
               <ArchivedView

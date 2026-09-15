@@ -7040,3 +7040,135 @@ kbd.kbd {
     display: none;
   }
 }
+
+/* ── Text highlights and the selection tooltip ──────────────────────────
+   Marks are produced by a rehype plugin (src/utils/markRanges.js), so they
+   are ordinary elements in the article tree and need no positioning. The
+   tooltip is portalled to <body> because the article scrolls inside an
+   overflow container that would clip it. */
+
+:root {
+  --hl-mark-bg: #fdf0c3;
+  --hl-mark-bg-hover: #fbe49a;
+  --hl-mark-line: #d9a441;
+  --hl-preview-bg: rgba(81, 69, 229, 0.14);
+  --hl-preview-line: var(--accent);
+}
+
+[data-theme='dark'] {
+  /* A paper-highlighter yellow is unreadable on a dark ground; keep the hue
+     and move the lightness to the text instead of the fill. */
+  --hl-mark-bg: rgba(226, 176, 62, 0.26);
+  --hl-mark-bg-hover: rgba(226, 176, 62, 0.4);
+  --hl-mark-line: rgba(226, 176, 62, 0.75);
+  --hl-preview-bg: rgba(129, 120, 255, 0.24);
+  --hl-preview-line: #8178ff;
+}
+
+.hl-mark {
+  background: var(--hl-mark-bg);
+  color: inherit;
+  border-bottom: 1.5px solid var(--hl-mark-line);
+  border-radius: 2px;
+  padding: 0.05em 0.1em;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.hl-mark:hover {
+  background: var(--hl-mark-bg-hover);
+}
+
+/* The sentence Explain is about to act on — transient, and never clickable. */
+.hl-mark-preview,
+.hl-mark-preview:hover {
+  background: var(--hl-preview-bg);
+  border-bottom-color: var(--hl-preview-line);
+  cursor: default;
+}
+
+.selection-tooltip {
+  position: fixed;
+  z-index: 60;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: min(340px, calc(100vw - 32px));
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.selection-tooltip-below {
+  transform: translate(-50%, 0);
+}
+
+.selection-tooltip-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px;
+}
+
+.selection-tooltip-actions button {
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.selection-tooltip-actions button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.selection-tooltip-actions button:disabled {
+  color: var(--text-muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.selection-tooltip-sep {
+  width: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+
+.selection-tooltip-panel {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 12px;
+  background: var(--surface-sunken);
+}
+
+.selection-tooltip-heading {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.selection-tooltip-answer,
+.selection-tooltip-loading,
+.selection-tooltip-error {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.selection-tooltip-loading {
+  color: var(--text-muted);
+}
+
+.selection-tooltip-error {
+  color: var(--danger, #dc2626);
+}

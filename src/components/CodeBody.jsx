@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -14,6 +15,7 @@ import MermaidDiagram from './MermaidDiagram';
 import VisualTrace from './VisualTrace';
 import InlineSvg from './InlineSvg';
 import TexNotation from './TexNotation';
+import { rehypeMarkRanges, EMPTY_MARKS, PREVIEW_MARK_ID } from '../utils/markRanges';
 
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('js', js);
@@ -47,15 +49,44 @@ export function headingToSlug(text) {
     .replace(/(^-|-$)/g, '');
 }
 
-export default function CodeBody({ content, highlight, theme = 'dark', onNavigate }) {
+export default function CodeBody({
+  content,
+  highlight,
+  theme = 'dark',
+  onNavigate,
+  marks = EMPTY_MARKS,
+  onMarkClick,
+}) {
   const syntaxStyle = getSyntaxStyle(theme);
   const isDark = theme === 'dark';
+
+  // Recomputed only when the marks actually change — the plugin walks every
+  // text node in the entry, and these articles run to several thousand words.
+  const rehypePlugins = useMemo(
+    () => (marks.length ? [rehypeMarkRanges(marks)] : []),
+    [marks]
+  );
 
   return (
     <div className="code-body">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={rehypePlugins}
         components={{
+          mark({ node, children }) {
+            const id =
+              node?.properties?.dataMarkId ?? node?.properties?.['data-mark-id'] ?? null;
+            const preview = id === PREVIEW_MARK_ID;
+            return (
+              <mark
+                className={preview ? 'hl-mark hl-mark-preview' : 'hl-mark'}
+                data-mark-id={id}
+                onClick={preview ? undefined : (event) => onMarkClick?.(id, event)}
+              >
+                {children}
+              </mark>
+            );
+          },
           h2({ children, ...props }) {
             const rawText = Array.isArray(children)
               ? children.map((c) => (typeof c === 'string' ? c : (c?.props?.children ?? ''))).join('')
