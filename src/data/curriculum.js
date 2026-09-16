@@ -96,7 +96,7 @@ export const CURRICULUM = {
     {
       key: 'rendering',
       label: 'Rendering & Performance',
-      ids: [154, 155, 163, 164],
+      ids: [154, 155, 165, 163, 164],
     },
     {
       key: 'network',

@@ -983,7 +983,109 @@ function beaconFlush() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ── IntersectionObserver ─────────────────────────────────────────── */
+
+function intersectionObserver() {
+  const o = [];
+  const H = 690;
+
+  o.push(
+    title(
+      'IntersectionObserver — let the browser watch visibility for you',
+      'No scroll listener, no forced layout: the callback runs only when a threshold is crossed'
+    )
+  );
+
+  /* 1 · Legacy vs observer */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · The work moves off your scroll handler', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  o.push(panel(24, 94, 378, 134, 'Legacy — The Nervous Checker', 'bad').xml);
+  o.push(
+    box(38, 128, 350, 86, '`scroll` fires ~60×/s → your handler runs\n`getBoundingClientRect()` → **forced layout** each time\nall on the **main thread**, even when nothing changed', 'bad', {
+      size: 9.5,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+
+  o.push(panel(418, 94, 378, 134, '`IntersectionObserver` — The Lookout', 'ok').xml);
+  o.push(
+    box(432, 128, 350, 86, 'browser computes intersections **during its own rendering**\nno per-pixel work in your code\ncallback **batched**, only when a threshold is crossed', 'ok', {
+      size: 9.5,
+      align: 'left',
+      padLeft: 10,
+    }).xml
+  );
+
+  /* 2 · root, rootMargin, targets */
+
+  o.push(rule(24, 242, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 250, W - 48, 16, '2 · `root`, `rootMargin` and what counts as intersecting', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  o.push(panel(60, 278, 220, 146, '`root` — the viewport (`null`)', 'accent').xml);
+  o.push(box(90, 322, 160, 40, 'target **A**', 'ok', { size: 10 }).xml);
+
+  o.push(box(60, 430, 220, 50, '', 'warn', { dashed: true }).xml);
+  o.push(box(90, 440, 160, 30, 'target **B**', 'warn', { size: 10 }).xml);
+
+  o.push(box(90, 500, 160, 30, 'target **C**', 'sunken', { size: 10 }).xml);
+
+  o.push(
+    text(300, 322, 496, 40, '**A** — inside the root. `isIntersecting: true`, `intersectionRatio: 1`.', { size: 10, color: C.fg }).xml
+  );
+  o.push(
+    text(300, 430, 496, 50, '**B** — still offscreen, but inside `rootMargin: "0px 0px 50px 0px"`, which grows the root 50px downward. Counts as intersecting → **load it early**.', {
+      size: 10,
+      color: C.fg,
+    }).xml
+  );
+  o.push(text(300, 500, 496, 30, '**C** — outside root + margin. No callback, zero cost.', { size: 10, color: C.fg }).xml);
+
+  /* 3 · threshold */
+
+  o.push(rule(24, 546, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 554, W - 48, 16, '3 · `threshold: [0, 0.25, 0.5, 0.75, 1]` — one callback per crossing', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  const MARKS = [
+    ['`0`', 'first pixel visible'],
+    ['`0.25`', 'a quarter in'],
+    ['`0.5`', 'half — ad viewability'],
+    ['`0.75`', 'mostly in'],
+    ['`1`', 'fully visible'],
+  ];
+  MARKS.forEach(([v, why], i) => {
+    const x = 24 + i * 158;
+    o.push(pill(x, 580, 150, 24, v, i === 2 ? 'warn' : 'accent', { size: 10, mono: true }).xml);
+    o.push(text(x, 606, 150, 16, why, { size: 9, align: 'center' }).xml);
+    if (i < 4) o.push(arrow(x + 151, 592, x + 157, 592, { color: C.line, width: 1.2 }).xml);
+  });
+
+  o.push(
+    takeaway(
+      634,
+      'Describe **when** you care, let the browser tell you. `unobserve` one-shot targets; `disconnect()` on unmount.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
+  'intersection-observer': {
+    title: 'IntersectionObserver — root, rootMargin, threshold',
+    build: intersectionObserver,
+  },
   'storage-scope': {
     title: 'Scope — localStorage is origin-locked, a cookie is not',
     build: storageScope,
