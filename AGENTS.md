@@ -68,11 +68,10 @@ node scripts/validate-summaries.mjs                # part of `pnpm test`
 node scripts/validate-summaries.mjs --list-missing # what is still unwritten
 ```
 
-The authoring rules, the reference entry, the two validator rules that catch
-people, and the 44 entries still to write are in
-[`SUMMARY-CARDS-ROLLOUT.md`](SUMMARY-CARDS-ROLLOUT.md). Read it before writing a
-batch — a `signature` invented rather than verified against the entry's own code
-blocks is worse than no card at all.
+The authoring rules, the reference entry, and the two validator rules that
+catch people are in [`SUMMARY-CARDS-ROLLOUT.md`](SUMMARY-CARDS-ROLLOUT.md).
+Read it before writing a batch — a `signature` invented rather than verified
+against the entry's own code blocks is worse than no card at all.
 
 The card renders **outside** the `articleRef` element in `LearningsView`, because
 select-to-highlight anchors marks by nth-occurrence within it and prose added

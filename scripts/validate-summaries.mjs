@@ -24,7 +24,7 @@ const ROOT = join(__dirname, '..');
  * below fails if a file listed here turns out to have nothing missing, so a
  * finished file cannot be quietly left behind.
  */
-const IN_PROGRESS = new Set(['data/react-learnings.json', 'data/advanced-react.json']);
+const IN_PROGRESS = new Set([]);
 
 const FILES = [
   'data/browser-platform-learnings.json',

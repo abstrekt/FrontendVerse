@@ -2,27 +2,18 @@
 
 Every learning entry opens with a card giving a jargon-free definition, the API
 you actually type, and one concrete example — before any hook, diagram or code.
-The mechanism is finished and 248 of 292 entries are written. **44 remain**, in
-two files.
+The mechanism is finished and all **292 of 292 entries** are written across
+all 17 files.
 
 ```bash
-node scripts/validate-summaries.mjs                # state + what is left
-node scripts/validate-summaries.mjs --list-missing # the per-entry checklist
+node scripts/validate-summaries.mjs                # state + validation
+node scripts/validate-summaries.mjs --list-missing # checklist (0 remaining)
 ```
 
-`pnpm test` runs the validator and is green: the two unfinished files are listed
-in `IN_PROGRESS` in the script, where a *missing* summary is reported as
-remaining work rather than a failure. A summary that exists is validated exactly
-as strictly there as anywhere else.
+## Rollout complete
 
-## What is left
-
-| File | Entries | Route |
-| --- | --- | --- |
-| `data/react-learnings.json` | 28 | `/react-learnings/:id` |
-| `data/advanced-react.json` | 16 | `/advanced-react/:id` |
-
-`--list-missing` prints them as a checklist with ids and titles.
+All entries in the 17 learning files have plain-words summary cards.
+`IN_PROGRESS` in `scripts/validate-summaries.mjs` is empty.
 
 ## The field
 
