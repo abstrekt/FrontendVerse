@@ -161,7 +161,7 @@ Do **not** invent one-off synonyms when a close existing tag exists (`Promise` n
 | Title | Yes — from main concept |
 | Tags / topics / difficulty / company | Yes — from classifier above |
 | `source` | Yes — short citation (URL, company notes label, or `user paste:` / `user request:`) on every new entry |
-| Learnings `answer` | Yes if source is thin notes/outline; expand into clear markdown (examples + code fences). If source is already a full article, clean/structure it — don’t discard useful detail |
+| Learnings `answer` | Yes if source is thin notes/outline; expand it. If source is already a full article, restructure it — don’t discard useful detail. **Always** in the explainer style from `AGENTS.md` → "Write the `answer` in explainer style" (table first, one-line difference, nicknamed section per concept, code alone + together) |
 | Coding `description`, `template`, `testCases`, `runner`, `functionName` | Yes — invent a solvable stub + real tests; pick runner per skill (`expression`, `asyncExpression`, `timer`, …) |
 | Coding `explanation` | Yes — reference solution in markdown (required for Coding-only loads; can mirror Learnings `answer` when paired) |
 | MCQ `options`, `answer`, `explanation` | Yes if only stem/code given; ensure one correct key and plausible distractors |

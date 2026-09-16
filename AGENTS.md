@@ -77,6 +77,33 @@ The card renders **outside** the `articleRef` element in `LearningsView`, becaus
 select-to-highlight anchors marks by nth-occurrence within it and prose added
 inside would move every stored highlight.
 
+## Write the `answer` in explainer style
+
+Every new, updated or merged learning `answer` (and Coding `explanation`) is
+written as a scannable mentor-style breakdown, not an essay. Order inside
+`answer`, after the `summary` card:
+
+1. **Comparison table first** — no intro paragraph. Columns fit the topic:
+   `Mechanism | Syntax / Values | What It Controls | Best Used For`, or
+   `Feature | A | B` with rows like Primary Action, Execution, Blocking, Placement.
+   One concept? Table its values/options.
+2. **The core difference in one line** under the table, when comparing:
+   "`<script>` downloads *and runs*; `<link rel="preload">` only downloads."
+3. **Diagram** (`![…](/diagrams/…svg)`) — see the visuals section below.
+4. **One `##` section per concept**, header with a nickname
+   (`## <script> — The Executor`). Inside: what the browser/engine does, step by
+   step in plain words; each value as a bullet (`` `lazy` ``: what + when); one
+   **Note:** for the classic mistake (never `loading="lazy"` on the hero image).
+5. **Code** — short, realistic, key line commented. Each concept alone, then a
+   `## How They Work Together` block when they combine.
+6. **Trace** (`` ```trace ``) where it shows the mechanism running.
+
+Rules: bold key terms; bullets over paragraphs (max 2–3 sentences each); max 5
+bullets per list; define jargon inline where it first appears ("LCP — when the
+biggest visible element finishes painting"); correct an imprecise premise in the
+source in one line; no "great question", recap or closing paragraph. A source that
+is already a full article is restructured into this shape, not trimmed of detail.
+
 ## Visuals are mandatory for new content
 
 **Every new or substantially rewritten entry ships two things: a draw.io

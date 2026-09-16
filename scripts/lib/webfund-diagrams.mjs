@@ -743,7 +743,137 @@ function serviceWorker() {
   return { width: W, height: H, cells: o.join('') };
 }
 
+/* ── · Loading levers — loading, fetchpriority, preload ───────────── */
+
+function loadingLevers() {
+  const o = [];
+  const H = 604;
+
+  o.push(
+    title(
+      'loading, fetchpriority, preload — three levers, three questions',
+      'When the request starts, how urgent it is once queued, and how early the browser finds out it exists'
+    )
+  );
+
+  /* 1 · The three levers */
+
+  o.push(
+    text(24, 70, W - 48, 16, '1 · Each one answers a different question', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  const LEVERS = [
+    {
+      x: 24,
+      tone: 'info',
+      name: '`loading` — The Doorman',
+      q: '**WHEN** does the fetch start?',
+      body: '`lazy`: wait until near the viewport\n`eager`: fetch now (default)',
+      use: 'below-the-fold `<img>`, `<iframe>`',
+    },
+    {
+      x: 288,
+      tone: 'warn',
+      name: '`fetchpriority` — The VIP Pass',
+      q: '**HOW URGENT** once queued?',
+      body: '`high`: ahead of peers\n`low`: yield bandwidth · `auto`: default',
+      use: 'the LCP hero image',
+    },
+    {
+      x: 552,
+      tone: 'ok',
+      name: '`rel="preload"` — The Scout',
+      q: '**HOW EARLY** is it discovered?',
+      body: 'declared in `<head>`, fetched before\nthe CSS/JS that references it is parsed',
+      use: 'fonts, CSS `background-image` hero',
+    },
+  ];
+
+  for (const l of LEVERS) {
+    o.push(panel(l.x, 94, 244, 170, l.name, l.tone).xml);
+    o.push(text(l.x + 14, 128, 216, 20, l.q, { size: 11, color: C.fg }).xml);
+    o.push(box(l.x + 14, 152, 216, 52, l.body, 'sunken', { size: 9, align: 'left', padLeft: 8 }).xml);
+    o.push(text(l.x + 14, 212, 216, 40, `Use for: ${l.use}`, { size: 9 }).xml);
+  }
+
+  /* 2 · Request order, before and after */
+
+  o.push(rule(24, 278, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 286, W - 48, 16, '2 · The same page, in download order', { size: 11.5, bold: true, color: C.fg }).xml
+  );
+
+  const ROWS = [
+    {
+      y: 314,
+      label: 'No hints',
+      cells: [
+        ['`index.html`', 'sunken'],
+        ['`app.css`', 'sunken'],
+        ['`app.js`', 'sunken'],
+        ['`row-9.avif`\nwasted, offscreen', 'bad'],
+        ['`hero.avif`\nfound late', 'bad'],
+      ],
+    },
+    {
+      y: 374,
+      label: 'Tuned',
+      cells: [
+        ['`index.html`', 'sunken'],
+        ['`hero.avif`\npreload + high', 'ok'],
+        ['`app.css`', 'sunken'],
+        ['`app.js`', 'sunken'],
+        ['`row-9.avif`\nlazy: on scroll', 'info'],
+      ],
+    },
+  ];
+
+  for (const r of ROWS) {
+    o.push(text(24, r.y, 104, 40, r.label, { size: 10.5, bold: true, color: C.fg, align: 'right' }).xml);
+    r.cells.forEach(([c, t], i) => {
+      const x = 140 + i * 132;
+      o.push(box(x, r.y, 120, 40, c, t, { size: 9, dashed: c.includes('lazy') }).xml);
+      if (i < 4) o.push(arrow(x + 121, r.y + 20, x + 131, r.y + 20, { color: C.line, width: 1.2 }).xml);
+    });
+  }
+
+  /* 3 · script vs link preload */
+
+  o.push(rule(24, 428, W - 48, { dashed: true }).xml);
+  o.push(
+    text(24, 436, W - 48, 16, '3 · `<script src>` vs `<link rel="preload" as="script">`', {
+      size: 11.5,
+      bold: true,
+      color: C.fg,
+    }).xml
+  );
+
+  o.push(
+    box(24, 462, 378, 66, '**`<script src>` — The Executor**\ndownload → **run**\nparser stops unless `defer` / `async`', 'warn', {
+      size: 10,
+    }).xml
+  );
+  o.push(
+    box(418, 462, 378, 66, '**`<link rel="preload">` — The Scout**\ndownload → cache only, **never runs**\nruns when a matching `<script>` appears', 'ok', {
+      size: 10,
+    }).xml
+  );
+
+  o.push(
+    takeaway(
+      544,
+      '`preload` fixes **discovery**, `fetchpriority` fixes **importance**, `loading="lazy"` fixes **waste**. They combine: `<link rel="preload" as="image" fetchpriority="high">` for the hero, `lazy` for everything below the fold.'
+    )
+  );
+
+  return { width: W, height: H, cells: o.join('') };
+}
+
 export const DIAGRAMS = {
+  'loading-levers': {
+    title: 'loading, fetchpriority and preload — three levers',
+    build: loadingLevers,
+  },
   'render-pipeline': {
     title: 'From HTML to pixels — the render pipeline',
     build: renderPipeline,
