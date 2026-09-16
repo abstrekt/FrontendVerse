@@ -9,6 +9,32 @@
         "arrow functions",
         "scope"
       ],
+      "summary": {
+        "definition": "Inside a `setTimeout` callback, `this` depends entirely on which kind of function you passed. An arrow function has no `this` of its own and keeps whatever was around it when it was written; a regular function gets a fresh `this`, which for a timer is the global object.",
+        "api": [
+          {
+            "signature": "setTimeout(() => {...})",
+            "note": "arrow: `this` is inherited from the surrounding code — usually what you meant"
+          },
+          {
+            "signature": "setTimeout(function () {...})",
+            "note": "regular: `this` is `window` (or `undefined` in strict mode), so `this.name` comes back undefined"
+          },
+          {
+            "signature": "setTimeout(fn.bind(this))",
+            "note": "the pre-arrow fix — pin `this` before handing the function over"
+          },
+          {
+            "signature": "const self = this",
+            "note": "the even older fix, still worth recognising in existing code"
+          },
+          {
+            "signature": "an object method passed by reference",
+            "note": "`setTimeout(obj.method)` loses the object — passing the function detaches it from the dot"
+          }
+        ],
+        "useCase": "A class method that schedules `setTimeout(function () { console.log(this.name) })` and logs `undefined` — changing it to an arrow function fixes it with no other edits."
+      },
       "answer": "The behavior of `this` inside a `setTimeout` callback comes down to one fundamental difference in JavaScript: arrow functions use **lexical scoping** for `this`, while regular functions use **dynamic scoping** (based on how they are called).\n\nHere is exactly how they behave, side-by-side.\n\n## 1. Arrow Function (`() => {}`)\n\nAn arrow function does not have its own `this` context. Instead, it inherits `this` from the surrounding scope exactly where you wrote the code. It doesn't matter that `setTimeout` is executing it later; the arrow function remembers the `this` of its parent.\n\n```javascript\nconst user = {\n  name: \"Alice\",\n  greet: function () {\n    // 'this' here refers to the 'user' object\n    setTimeout(() => {\n      // The arrow function inherits 'this' from the greet() method\n      console.log(`Hello, ${this.name}`);\n    }, 100);\n  },\n};\n\nuser.greet(); // Output: \"Hello, Alice\"\n```\n\n## 2. Regular Function Expression (`function() {}`)\n\nA regular function's `this` is determined by how it is called. When you pass a regular function to `setTimeout`, the JavaScript engine executes it later in a completely different context.\n\nBecause it is executed as a standalone function (not as a method on your object), it loses its original context. By default, `setTimeout` will bind `this` to the global object (`window` in browsers, or the global object in Node.js).\n\n```javascript\nconst user = {\n  name: \"Alice\",\n  greet: function () {\n    // 'this' here refers to the 'user' object\n    setTimeout(function () {\n      // 'this' has been reset to the global window object!\n      console.log(`Hello, ${this.name}`);\n    }, 100);\n  },\n};\n\n// Assuming 'window.name' is not set\nuser.greet(); // Output: \"Hello, undefined\" (or \"\" in some browsers)\n```"
     },
     {
@@ -19,6 +45,32 @@
         "async"
       ],
       "source": "user paste: Promise combinators, this, functions, prototype, Set/Map",
+      "summary": {
+        "definition": "The Promise combinators run several promises together and differ only in when they settle. `all` needs every one to succeed, `allSettled` waits for all of them regardless, `race` takes the first to settle either way, and `any` takes the first to succeed.",
+        "api": [
+          {
+            "signature": "Promise.all([...])",
+            "note": "resolves to an array of values, rejects on the first failure — the rest keep running, you just stop hearing about them"
+          },
+          {
+            "signature": "Promise.allSettled([...])",
+            "note": "never rejects; each result is `{ status, value }` or `{ status, reason }`"
+          },
+          {
+            "signature": "Promise.race([...])",
+            "note": "first to *settle* wins, including a rejection — which is how you build a timeout"
+          },
+          {
+            "signature": "Promise.any([...])",
+            "note": "first to *succeed* wins; if all fail you get an `AggregateError` with every reason"
+          },
+          {
+            "signature": "try/catch around await",
+            "note": "`all` throws only the first reason, so catching it loses the others — use `allSettled` when you need them"
+          }
+        ],
+        "useCase": "A dashboard loading four widgets: `allSettled` so one failing endpoint leaves the other three on screen, instead of `all` blanking the page."
+      },
       "answer": "Promise provides four static combinators for running multiple promises together. Each has different success and failure behavior.\n\n## `Promise.all()`\n\n- **On success:** Returns an **array of resolved values** in the exact order of the input array.\n- **On failure:** Throws the **error/rejection reason of the first promise** that fails.\n\n```javascript\nconst p1 = Promise.resolve(\"p1\");\nconst p2 = Promise.resolve(\"p2\");\nconst pError = Promise.reject(\"error_1\");\n\n// --- SUCCESS SCENARIO ---\ntry {\n  const data = await Promise.all([p1, p2]);\n  console.log(data);\n  // Output: [\"p1\", \"p2\"]\n} catch (err) {\n  console.error(err);\n}\n\n// --- FAILURE SCENARIO ---\ntry {\n  const data = await Promise.all([p1, pError]);\n  console.log(data); // This line never runs\n} catch (err) {\n  console.error(err);\n  // Output: \"error_1\"\n}\n```\n\n## `Promise.allSettled()`\n\n- **On success:** Returns an **array of objects**, describing the outcome (`status` and either `value` or `reason`) of every promise.\n- **On failure:** It **never throws an error** due to a rejected promise. You do not strictly need a `try/catch` block.\n\n```javascript\nconst p1 = Promise.resolve(\"p1\");\nconst pError = Promise.reject(\"error_1\");\n\nconst data = await Promise.allSettled([p1, pError]);\n\nconsole.log(data);\n// Output:\n// [\n//   { status: \"fulfilled\", value: \"p1\" },\n//   { status: \"rejected\", reason: \"error_1\" }\n// ]\n```\n\n## `Promise.race()`\n\n- **On success:** Returns the **single value** of the _first_ promise to resolve (if a success finished first).\n- **On failure:** Throws the **single error** of the _first_ promise to reject (if a failure finished first).\n\n```javascript\nconst slowP = new Promise((resolve) =>\n  setTimeout(() => resolve(\"slow_p\"), 300),\n);\nconst fastError = new Promise((_, reject) =>\n  setTimeout(() => reject(\"fast_error\"), 100),\n);\n\n// --- FAILURE SCENARIO (Error happens first) ---\ntry {\n  const data = await Promise.race([slowP, fastError]);\n  console.log(data); // This line never runs\n} catch (err) {\n  console.error(err);\n  // Output: \"fast_error\" (Because 100ms < 300ms)\n}\n\n// --- SUCCESS SCENARIO (Success happens first) ---\nconst fastP = new Promise((resolve) => setTimeout(() => resolve(\"fast_p\"), 50));\n\ntry {\n  const data = await Promise.race([slowP, fastP]);\n  console.log(data);\n  // Output: \"fast_p\" (Because 50ms < 300ms)\n} catch (err) {\n  console.error(err);\n}\n```\n\n## `Promise.any()`\n\n- **On success:** Returns the **single value** of the _first_ promise to successfully resolve (ignores any failures).\n- **On failure:** Throws an **`AggregateError`** containing an array of all rejection reasons, but _only_ if every single promise fails.\n\n```javascript\nconst pError1 = Promise.reject(\"error_1\");\nconst pError2 = Promise.reject(\"error_2\");\nconst p1 = new Promise((resolve) => setTimeout(() => resolve(\"p1\"), 100));\n\n// --- SUCCESS SCENARIO (At least one succeeds) ---\ntry {\n  const data = await Promise.any([pError1, pError2, p1]);\n  console.log(data);\n  // Output: \"p1\" (Ignored the two failures)\n} catch (err) {\n  console.error(err);\n}\n\n// --- FAILURE SCENARIO (Every single one fails) ---\ntry {\n  const data = await Promise.any([pError1, pError2]);\n  console.log(data); // This line never runs\n} catch (err) {\n  console.error(err.errors);\n  // Output: [\"error_1\", \"error_2\"]\n}\n```\n\n## Quick comparison\n\n| API | Resolves when | Rejects when |\n| --- | --- | --- |\n| `Promise.all` | All fulfill | First rejection |\n| `Promise.allSettled` | All settle | Never rejects outer |\n| `Promise.race` | First settle (either) | First rejection if that's first |\n| `Promise.any` | First fulfillment | All reject (`AggregateError`) |"
     },
     {
@@ -30,6 +82,36 @@
         "scope"
       ],
       "source": "user paste: senior frontend JS concepts",
+      "summary": {
+        "definition": "`this` refers to the object that is running the current function, and in a regular function it is decided by *how* the function is called, not where it was written. Arrow functions are the exception: they have no `this` of their own and use the one from the surrounding scope.",
+        "api": [
+          {
+            "signature": "obj.method()",
+            "note": "called with a dot, so `this` is `obj` — the only rule most code relies on"
+          },
+          {
+            "signature": "const fn = obj.method; fn()",
+            "note": "same function, no dot, so `this` is `undefined` in strict mode — this is how it gets lost"
+          },
+          {
+            "signature": "() => {}",
+            "note": "lexical: takes `this` from where it was written, and nothing can change it"
+          },
+          {
+            "signature": "fn.call(ctx) / fn.apply(ctx, args)",
+            "note": "run it once with a chosen `this`; `call` takes arguments separately, `apply` takes an array"
+          },
+          {
+            "signature": "fn.bind(ctx)",
+            "note": "returns a new function pinned to that `this`, permanently"
+          },
+          {
+            "signature": "new Fn()",
+            "note": "`this` is the brand-new object being constructed"
+          }
+        ],
+        "useCase": "Passing `this.handleClick` to `addEventListener` and having `this` become the DOM element — `bind` or an arrow method keeps it pointing at your component."
+      },
       "answer": "The **`this`** keyword refers to the object that is executing the current function. Its value is determined dynamically by **how** a function is called:\n\n- In a **method**, `this` refers to the owner object.\n- In a **regular function** (non-strict mode), `this` refers to the global object (`window`).\n- In an **event listener**, `this` refers to the element that received the event.\n\n**One sentence:** Regular functions define `this` when **called**. Arrow functions capture `this` when **written**.\n\n```javascript\nconst user = {\n  name: \"Alex\",\n  normalFn: function () {\n    console.log(this.name);\n  },\n  arrowFn: () => {\n    console.log(this.name);\n  },\n};\n\nuser.normalFn(); // \"Alex\"\nuser.arrowFn(); // undefined (or empty string in browsers)\n```\n\n## How `this` is determined in regular functions\n\n| How called | `this` value |\n| --- | --- |\n| `obj.method()` | `obj` |\n| `fn()` ([strict mode](/learnings/102)) | `undefined` |\n| `fn()` (non-strict) | `window` / global |\n| `new Fn()` | new instance |\n| `fn.call(ctx)` / `fn.apply(ctx)` | `ctx` |\n| `fn.bind(ctx)()` | `ctx` (permanently) |\n\n## Lexical scope\n\n**Lexical scoping** (static scoping): a function's access to variables is determined by where the function is **written** in the code, not where or how it is called. Inner functions can \"look out\" into parent scopes; outer scopes cannot look in.\n\n## Arrow functions — lexical `this`\n\nArrow functions have **no own `this`**. They inherit it from the enclosing scope at definition time — and that binding is permanent. `call`, `apply`, `bind`, and `new` cannot change it.\n\n## The classic callback problem\n\n```javascript\nconst timer = {\n  count: 0,\n  startBroken() {\n    setInterval(function () {\n      this.count++; // this = window, not timer\n    }, 1000);\n  },\n  startFixed() {\n    setInterval(() => {\n      this.count++; // this = timer\n    }, 1000);\n  },\n};\n```\n\n## Class methods + event listeners\n\n```javascript\nclass Button {\n  constructor(label) {\n    this.label = label;\n  }\n  handleClick() {\n    console.log(this.label);\n  } // breaks as callback\n  handleClickFixed = () => {\n    console.log(this.label);\n  }; // this = instance\n}\n\nconst btn = new Button(\"Submit\");\ndocument.querySelector(\"button\").addEventListener(\"click\", btn.handleClick); // wrong\ndocument\n  .querySelector(\"button\")\n  .addEventListener(\"click\", btn.handleClickFixed); // right\n```\n\n## `call` / `apply` / `bind`\n\n```javascript\nfunction introduce(greeting, punctuation) {\n  console.log(`${greeting}, I'm ${this.name}${punctuation}`);\n}\n\nconst person = { name: \"Arjun\" };\n\nintroduce.call(person, \"Hello\", \"!\"); // invoke immediately, comma args\nintroduce.apply(person, [\"Hi\", \".\"]); // invoke immediately, array args\nconst bound = introduce.bind(person); // returns permanently-bound fn\nbound(\"Hey\", \"?\");\n\n// Arrow functions IGNORE call/apply/bind\nconst arrow = (g) => console.log(`${g}, I'm ${this.name}`);\narrow.call(person, \"Hello\"); // undefined — this is lexical\n```\n\n**Memory trick:** `call` = comma args. `apply` = array args. `bind` = bake a new function.\n\n## Common traps\n\n```javascript\n// Trap 1 — extracting a method loses this\nconst fn = obj.get;\nfn(); // this = undefined\n\n// Trap 2 — nested regular function inside method\nconst obj = {\n  val: 42,\n  outer() {\n    function inner() {\n      console.log(this.val);\n    } // undefined\n    const innerArrow = () => console.log(this.val); // 42\n    inner();\n    innerArrow();\n  },\n};\n\n// Trap 3 — arrow as object method\nconst obj2 = {\n  val: 10,\n  arrow: () => this.val, // this = outer scope, not obj2\n};\n\n// Trap 4 — new with arrow throws\nconst Person = (name) => {\n  this.name = name;\n};\nnew Person(\"Arjun\"); // TypeError: Person is not a constructor\n```\n\n## Interview-level answer\n\n> \"Arrow functions don't have their own `this` — they close over the `this` of the enclosing scope at definition time. Regular functions get a new `this` on every call, determined by how they're invoked. Use regular functions for methods and constructors; use arrow functions for callbacks and anything that needs to preserve the outer `this`.\""
     },
     {
@@ -41,6 +123,32 @@
         "closures"
       ],
       "source": "user paste: Promise combinators, this, functions, prototype, Set/Map",
+      "summary": {
+        "definition": "A function expression is a function written in a position where a value is expected — assigned to a variable, passed as an argument, or returned. Because it is a value, it can be stored and passed around like any other.",
+        "api": [
+          {
+            "signature": "const greet = function () {}",
+            "note": "the plain form; the variable name is how you refer to it"
+          },
+          {
+            "signature": "const greet = () => {}",
+            "note": "the arrow form — shorter, and with no `this` or `arguments` of its own"
+          },
+          {
+            "signature": "arr.map(function (x) {...})",
+            "note": "passed straight as an argument, never named at all"
+          },
+          {
+            "signature": "(function () {...})()",
+            "note": "an IIFE — an expression invoked on the spot, the pre-module way to get a private scope"
+          },
+          {
+            "signature": "const f = function inner() {}",
+            "note": "a named function expression: `inner` is visible only inside itself, which helps in stack traces"
+          }
+        ],
+        "useCase": "Passing a comparator straight into `sort` — the function exists only as an argument and never needs a name of its own."
+      },
       "answer": "A **function expression** is a way to define a function by assigning it to a variable or using it within an expression, allowing the function to be stored, passed as an argument, or executed immediately.\n\n- Function expressions can be **named** or **anonymous**.\n- They are **not hoisted** — meaning they are accessible only after their definition (the variable name may hoist with `var`, but the function value is not available until the assignment line runs).\n- Frequently used in **callbacks**, **[closures](/learnings/130)**, and dynamic function creation.\n- Enable **encapsulation** of functionality within a limited scope.\n\n```javascript\nconst greet = function (name) {\n  return `Hello, ${name}`;\n};\n\n// Named function expression\nconst factorial = function fact(n) {\n  return n <= 1 ? 1 : n * fact(n - 1);\n};\n```"
     },
     {
@@ -51,6 +159,32 @@
         "hoisting"
       ],
       "source": "user paste: Promise combinators, this, functions, prototype, Set/Map",
+      "summary": {
+        "definition": "A function declaration defines a named function as a statement, and it is hoisted — usable anywhere in its scope, including above the line that defines it. A function expression assigns a function to a variable, so it only exists once that line has run.",
+        "api": [
+          {
+            "signature": "function foo() {}",
+            "note": "a declaration: hoisted whole, so calling it earlier in the file works"
+          },
+          {
+            "signature": "const foo = function () {}",
+            "note": "an expression: the `const` is in the temporal dead zone until this line runs"
+          },
+          {
+            "signature": "var foo = function () {}",
+            "note": "hoisted as `undefined`, so calling it early gives \"foo is not a function\" rather than a clear error"
+          },
+          {
+            "signature": "declarations inside a block",
+            "note": "behave inconsistently across modes; keep them at the top level of a function or module"
+          },
+          {
+            "signature": "the name in a stack trace",
+            "note": "a declaration is always named; an anonymous expression shows up as `<anonymous>`"
+          }
+        ],
+        "useCase": "Calling a helper at the top of a module and having it work because it is a declaration — then converting it to `const` and getting a ReferenceError from the same line."
+      },
       "answer": "A **function declaration** defines a named function directly in the current scope and is **hoisted** (available throughout its scope before code executes). A **function expression** defines a function as part of a larger expression (like assigning it to a variable) and is evaluated only when execution reaches that line.\n\n## Key differences at a glance\n\n| Feature | Function declaration | Function expression |\n| --- | --- | --- |\n| **Syntax** | `function foo() {}` | `const foo = function() {};` |\n| **[Hoisting](/learnings/99)** | Fully hoisted (can call before defining) | Not hoisted (variable declaration hoists, but definition doesn't) |\n| **Name requirement** | Name is required | Can be anonymous or named |\n| **Execution** | Parsed before code executes | Executed line-by-line |\n| **Typical use case** | Top-level main functions | Callbacks, [closures](/learnings/130), IIFEs, conditionally assigned functions |\n\n```javascript\n// Declaration — works before the line appears\nconsole.log(declared()); // \"ok\"\n\nfunction declared() {\n  return \"ok\";\n}\n\n// Expression — fails if called before assignment\nconsole.log(typeof expr); // undefined (var) or ReferenceError (let/const)\nvar expr = function () {\n  return \"ok\";\n};\n```"
     },
     {
@@ -62,6 +196,36 @@
         "objects"
       ],
       "source": "user paste: prototype and prototypal inheritance (update)",
+      "summary": {
+        "definition": "A prototype is an object that another object falls back to when a property is not found on it. Prototypal inheritance is that fallback repeated: each object links to its prototype, that one to its own, and so on until `null`.",
+        "api": [
+          {
+            "signature": "[[Prototype]]",
+            "note": "the internal link every object has; the chain ends at `Object.prototype`, then `null`"
+          },
+          {
+            "signature": "Object.getPrototypeOf(obj)",
+            "note": "the correct way to read that link"
+          },
+          {
+            "signature": "obj.__proto__",
+            "note": "the legacy accessor for the same thing — recognise it, do not write it"
+          },
+          {
+            "signature": "Fn.prototype",
+            "note": "a different thing entirely: the object that will *become* the prototype of instances made with `new Fn()`"
+          },
+          {
+            "signature": "class / extends",
+            "note": "syntax over exactly this machinery — `extends` sets up the prototype link for you"
+          },
+          {
+            "signature": "shadowing",
+            "note": "assigning to a property writes it on the object itself, hiding the prototype's version rather than changing it"
+          }
+        ],
+        "useCase": "Calling `[1,2,3].map(...)` — the array has no `map` of its own, so the lookup walks up to `Array.prototype`, where it lives once for every array in the program."
+      },
       "answer": "## 1. What is a prototype?\n\nIn JavaScript, almost every object has a hidden, internal property called `[[Prototype]]`. You can think of this as a **fallback object**.\n\nIf you ask an object for a property or method it doesn't have, it doesn't immediately give up. Instead, it looks at its prototype and asks, \"Hey, do you have this?\"\n\n## 2. Prototypal inheritance (the chain)\n\nIf the prototype object doesn't have the property either, JavaScript checks that prototype's prototype. This linking of objects is called the **[prototype chain](/learnings/123)**.\n\nThe engine keeps walking up the chain until it either finds the property, or hits an object whose prototype is `null` (usually after passing through `Object.prototype`). If it hits `null`, it finally returns `undefined`.\n\n```\nobj → … → Object.prototype → null\n```\n\nHere is how it looks in practice:\n\n```javascript\nconst animal = {\n  eats: true,\n  walk() {\n    console.log(\"Animal walking...\");\n  },\n};\n\nconst rabbit = {\n  jumps: true,\n};\n\n// Set 'animal' as the fallback (prototype) for 'rabbit'\nObject.setPrototypeOf(rabbit, animal);\n\n// 'rabbit' has its own property:\nconsole.log(rabbit.jumps); // true\n\n// 'rabbit' doesn't have 'eats', so it delegates to 'animal':\nconsole.log(rabbit.eats); // true\nrabbit.walk(); // \"Animal walking...\"\n```\n\n## 3. The classic trap: `__proto__` vs `.prototype`\n\nThis is where most developers get tripped up. These two terms look similar but serve entirely different roles.\n\n| Property | What it is | Where it lives |\n| --- | --- | --- |\n| `__proto__` | The actual hidden pointer to the object's fallback/prototype. (`Object.getPrototypeOf()` is the modern, safe way to read this.) | On **instances** (virtually all objects) |\n| `.prototype` | A blueprint property used only by constructor functions and classes. It tells JavaScript: \"When you use `new` to create an object from me, make its `[[Prototype]]` point to this.\" | On **constructor functions** (and ES6 classes) |\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(this.name + \" makes a noise.\");\n};\n\nconst myDog = new Animal(\"Rex\");\n\nmyDog.speak(); // \"Rex makes a noise.\"\n\n// The instance's [[Prototype]] points to the constructor's .prototype\nconsole.log(Object.getPrototypeOf(myDog) === Animal.prototype); // true\n```\n\n> Prefer `Object.getPrototypeOf()` over `.__proto__` — it's the standard way to read the link.\n\n## 4. ES6 classes are just syntactic sugar\n\nWhen you write `class` and `extends` in modern JavaScript, you aren't creating rigid, compiled blueprints. Under the hood, JavaScript is wiring up prototype chains for you.\n\n```javascript\nclass Animal {\n  walk() {\n    console.log(\"Walking\");\n  }\n}\n\nclass Rabbit extends Animal {}\n\nconst bugs = new Rabbit();\n\n// Under the hood, the class keyword just did this:\nconsole.log(Object.getPrototypeOf(bugs) === Rabbit.prototype); // true\nconsole.log(Object.getPrototypeOf(Rabbit.prototype) === Animal.prototype); // true\n```\n\n## 5. Shadowing (overriding)\n\nIf an object and its prototype both have a property with the same name, the object's **own** property \"shadows\" (hides) the prototype's property. The chain stops as soon as it finds the first match.\n\n```javascript\nconst user = { role: \"Guest\" };\nconst admin = { role: \"SuperAdmin\" };\n\nObject.setPrototypeOf(admin, user);\n\n// Finds 'role' on admin immediately — never checks user\nconsole.log(admin.role); // \"SuperAdmin\"\n```\n\n## Quick reference\n\n```javascript\nconsole.log(Object.getPrototypeOf([]) === Array.prototype); // true\nconsole.log(Object.getPrototypeOf(Array.prototype) === Object.prototype); // true\nconsole.log(Object.getPrototypeOf(Object.prototype)); // null\n```"
     },
     {
@@ -74,6 +238,36 @@
         "data structures"
       ],
       "source": "user paste: senior frontend JS concepts",
+      "summary": {
+        "definition": "A `Set` is a collection of unique values; a `Map` is a collection of key-value pairs where the key can be any type, including an object. Both keep insertion order and both report their size directly, which plain objects and arrays do not.",
+        "api": [
+          {
+            "signature": "set.add(v) / map.set(k, v)",
+            "note": "the add operations; `set` returns the map, so calls chain"
+          },
+          {
+            "signature": "set.has(v) / map.has(k)",
+            "note": "membership, O(1) — the reason to use either over `array.includes`"
+          },
+          {
+            "signature": "map.get(k)",
+            "note": "`undefined` for a missing key, which is ambiguous if `undefined` is a real value — use `has` to disambiguate"
+          },
+          {
+            "signature": "set.delete(v) / map.delete(k)",
+            "note": "returns a boolean saying whether anything was there"
+          },
+          {
+            "signature": ".size",
+            "note": "a property, not a method — unlike `array.length`, and unlike `Object.keys(o).length`"
+          },
+          {
+            "signature": "Map.groupBy(items, fn)",
+            "note": "ES2024: group a list into a Map in one call instead of a `reduce`"
+          }
+        ],
+        "useCase": "Deduplicating a list of ids with `[...new Set(ids)]`, and keying a cache by DOM node — something a plain object cannot do, since it would stringify the key."
+      },
       "answer": "Direct comparison of JavaScript **`Set`** (a collection of unique values) and **`Map`** (a collection of key-value pairs where keys can be any type).\n\n## Core CRUD methods comparison\n\n| Action | Set method | Map method | Key difference |\n| --- | --- | --- | --- |\n| **Add / Insert** | `set.add(val)` | `map.set(key, val)` | `Set` takes a single value; `Map` requires a key and value pair. Both return `this` for chaining. |\n| **Read value** | _N/A_ (check presence via `has`) | `map.get(key)` | `Set` does not store key-value pairs. `map.get()` returns `undefined` if key is not found. |\n| **Check existence** | `set.has(val)` | `map.has(key)` | `Set` checks if the value exists; `Map` checks if the **key** exists. |\n| **Delete** | `set.delete(val)` | `map.delete(key)` | Returns `true` if element was present and removed. |\n| **Clear all** | `set.clear()` | `map.clear()` | Removes all entries. |\n| **Size count** | `set.size` _(property)_ | `map.size` _(property)_ | Read-only property returning total count. |\n\n```javascript\nconst set = new Set();\nset.add(1).add(2);\nset.has(1); // true\nset.delete(2);\nset.size; // 1\n\nconst map = new Map();\nmap.set(\"a\", 1).set(\"b\", 2);\nmap.get(\"a\"); // 1\nmap.has(\"a\"); // true\nmap.delete(\"a\");\nmap.size; // 1\n```\n\n## Map instance methods\n\n| Method | Effect |\n| --- | --- |\n| `forEach(callback, thisArg)` | `callback(value, key, map)` for each entry |\n| `keys()` | Iterator of keys |\n| `values()` | Iterator of values |\n| `entries()` | Iterator of `[key, value]` pairs (default iterator) |\n\n```javascript\nconst map = new Map([\n  [\"a\", 1],\n  [\"b\", 2],\n]);\nfor (const [key, val] of map) {\n  /* same as map.entries() */\n}\nmap.forEach((value, key) => console.log(key, value));\n```\n\n## `Map.groupBy` (ES2024)\n\n```javascript\nMap.groupBy([1, 2, 3, 4], (x) => (x % 2 === 0 ? \"even\" : \"odd\"));\n// Map { \"even\" → [2, 4], \"odd\" → [1, 3] }\n```\n\n## `Map` vs `Object` — when to use `Map`\n\n| Feature | Map | Object |\n| --- | --- | --- |\n| **Key types** | Any value (objects, functions, primitives) | Strings or Symbols only |\n| **Order** | Insertion order guaranteed | Generally insertion order (modern), but not guaranteed for all keys |\n| **Size** | `map.size` property | Manual counting (`Object.keys(obj).length`) |\n| **Iteration** | Directly iterable (`for...of`) | Requires `Object.entries()` / `.keys()` / `.values()` |\n| **Performance** | Better for frequent add/remove operations | Better for static key-value pairs |\n| **Default keys** | None | Inherits from `Object.prototype` (e.g., `toString`, `constructor`) |\n| **Serialization** | No native JSON support (needs custom serializer) | Native `JSON.stringify()` support |\n\n```javascript\n// Keys can be any type in Map\nconst map = new Map();\nmap.set({}, \"object key\");\nmap.set(() => {}, \"function key\");\nmap.set(1, \"number key\");\n\n// Object keys are always coerced to strings\nconst obj = {};\nobj[{ a: 1 }] = \"value\"; // key becomes \"[object Object]\"\n```"
     },
     {
@@ -85,6 +279,32 @@
         "functions"
       ],
       "source": "user paste: instance vs static methods",
+      "summary": {
+        "definition": "Putting a function on `Array.prototype` makes it an instance method, called on an array with a dot, where `this` is that array. Putting it on `Array` itself makes it a static method, called on the constructor, with the array passed in as an argument.",
+        "api": [
+          {
+            "signature": "Array.prototype.customFn = function () {...}",
+            "note": "instance method: `[1,2,3].customFn()`, and `this` is the array"
+          },
+          {
+            "signature": "Array.customFn = function (arr) {...}",
+            "note": "static method: `Array.customFn([1,2,3])`, and there is no `this` to speak of"
+          },
+          {
+            "signature": ".map / .filter / .slice",
+            "note": "instance methods — which is why they chain"
+          },
+          {
+            "signature": "Array.isArray / Array.from / Array.of",
+            "note": "statics — utilities about arrays rather than operations on one"
+          },
+          {
+            "signature": "extending built-in prototypes",
+            "note": "avoid it: your method becomes visible to every array in the program, including other libraries'"
+          }
+        ],
+        "useCase": "Wanting `arr.last()` to chain like `map` and `filter` do — that requires the prototype, and is also exactly why doing it to a built-in is risky."
+      },
       "answer": "The main difference between adding a function to `Array.prototype` vs directly on `Array` is **instance method** vs **static method**.\n\n## 1. `Array.prototype.customFn` (Instance Method)\n\nAdding to `Array.prototype` attaches it to the [prototype chain](/learnings/123). Every array instance automatically inherits it.\n\n```javascript\nArray.prototype.customFn = function () {\n  // `this` refers to the array instance calling the method\n  return this.length * 2;\n};\n\nconst numbers = [1, 2, 3];\nconsole.log(numbers.customFn()); // 6\n```\n\n- **Called on:** Any array instance (`arr.customFn()`)\n- **`this` context:** The specific array instance\n- **Inherited by `[]`:** Yes\n- **Built-in analogue:** `.map()`, `.filter()`, `.slice()`, `.push()`\n\n## 2. `Array.customFn` (Static Method)\n\nAdding a function directly on `Array` attaches it as a static property on the constructor. Array instances do **not** inherit it.\n\n```javascript\nArray.customFn = function (arr) {\n  return arr.length * 2;\n};\n\nconst numbers = [1, 2, 3];\nconsole.log(Array.customFn(numbers)); // 6\n\n// Calling on an instance throws:\n// numbers.customFn(); // TypeError: numbers.customFn is not a function\n```\n\n- **Called on:** The `Array` global object directly (`Array.customFn(arr)`)\n- **`this` context:** The `Array` constructor, not an array instance\n- **Inherited by `[]`:** No\n- **Built-in analogue:** `Array.isArray()`, `Array.from()`, `Array.of()`\n\n## Summary\n\n| Feature | `Array.prototype.customFn` | `Array.customFn` |\n| --- | --- | --- |\n| **Type** | Instance method | Static method |\n| **Invocation** | `[1, 2, 3].customFn()` | `Array.customFn([1, 2, 3])` |\n| **`this` points to** | The specific array instance | The `Array` constructor |\n| **Inherited by `[]`?** | Yes | No |\n| **Built-in analogy** | `[1, 2].includes(1)` | `Array.isArray([1, 2])` |\n\n## Why this matters\n\n- Use **`prototype`** when you want every instance to have the method (like adding a polyfill for `.map()`)\n- Use **static** when the utility relates to the constructor/type, not a specific instance (like `Array.isArray()` — you are checking if something *is* an array, not operating on one you already have)\n\nThis pattern applies to all built-in constructors: `String`, `Object`, `Function`, `Date`, `Promise`, etc."
     },
     {
@@ -96,6 +316,32 @@
         "objects"
       ],
       "source": "user paste: F.prototype vs f.__proto__",
+      "summary": {
+        "definition": "`F.prototype` and `f.__proto__` point at the same object but hang off different things. `F.prototype` is a property of the constructor function, set up in advance. `f.__proto__` is the link on an instance, pointing back at the object it inherits from.",
+        "api": [
+          {
+            "signature": "F.prototype",
+            "note": "lives on the function; the object that instances *will* inherit from"
+          },
+          {
+            "signature": "f.__proto__",
+            "note": "lives on the instance; the object it *does* inherit from"
+          },
+          {
+            "signature": "new F()",
+            "note": "what connects them — it sets the new object's link to `F.prototype`"
+          },
+          {
+            "signature": "Object.getPrototypeOf(f) === F.prototype",
+            "note": "`true`, and the non-legacy way to state the whole relationship"
+          },
+          {
+            "signature": "reassigning F.prototype",
+            "note": "only affects instances made *afterwards*; the existing ones keep their old link"
+          }
+        ],
+        "useCase": "Adding a method to `F.prototype` after you have already created instances, and finding every existing instance gets it — because they hold a link to that same object, not a copy."
+      },
       "answer": "The short answer: **`F.prototype` and `f.__proto__` point to the same object**, but they live on different things and serve different roles.\n\nIf `F` is a constructor function and `f` is an instance created with `new F()`:\n\n```javascript\nf.__proto__ === F.prototype; // true\n```\n\n## `F.prototype` — the blueprint\n\nThe `.prototype` property exists **only on functions**. When you define a function, the engine attaches a `.prototype` object to it. That object is the shared blueprint for every instance created with `new F()`.\n\n- **Lives on:** the constructor function (`F`)\n- **Purpose:** holds methods and properties shared by all instances of `F`\n- **Created when:** the function `F` is defined\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(this.name + \" makes a noise.\");\n};\n```\n\n## `f.__proto__` — the link\n\n`.__proto__` is an accessor on almost every object. It points to the prototype object that **this specific instance** inherits from — the spec's internal `[[Prototype]]` link.\n\nWhen you access `f.speak()`, JavaScript looks on `f` first. If the property isn't there, it follows `f.__proto__` (i.e. `F.prototype`) to find shared methods.\n\n- **Lives on:** the instance object (`f`)\n- **Purpose:** the actual inheritance link from instance → constructor blueprint\n- **Created when:** the object `f` is instantiated with `new`\n\n```javascript\nconst myDog = new Animal(\"Rex\");\n\nmyDog.speak(); // \"Rex makes a noise.\"\n\nconsole.log(myDog.__proto__ === Animal.prototype); // true\n```\n\n> `__proto__` is legacy. Prefer **`Object.getPrototypeOf(f)`** for reading the link.\n\n```javascript\nconsole.log(Object.getPrototypeOf(myDog) === Animal.prototype); // true\n```\n\n## Summary comparison\n\n| Feature | `F.prototype` | `f.__proto__` |\n| --- | --- | --- |\n| **Where does it live?** | On the constructor function | On the instance object |\n| **What is its job?** | Blueprint for new instances | Pointer to that blueprint |\n| **When is it created?** | When `F` is defined | When `f` is instantiated |\n| **Modern standard** | Standard and actively used | Legacy — use `Object.getPrototypeOf()` |\n\n## Mental model\n\n```\nF (constructor)          f (instance)\n    │                        │\n    └── .prototype ◄─────────┴── .__proto__  (same object)\n              │\n         shared methods\n```\n\nOne object, two views: the constructor **defines** the blueprint (`F.prototype`); each instance **references** it (`f.__proto__` / `[[Prototype]]`)."
     },
     {
@@ -108,6 +354,32 @@
         "closures"
       ],
       "source": "user paste: deep nesting this binding",
+      "summary": {
+        "definition": "Nesting depth does not change how `this` works. Every arrow function passes the surrounding `this` straight through, so an unbroken chain of them preserves it however deep you go — and a single regular function anywhere in the chain resets it for everything below.",
+        "api": [
+          {
+            "signature": "an unbroken arrow chain",
+            "note": "ten levels of `() => {}` all see the same `this`, because none of them define one"
+          },
+          {
+            "signature": "one function () {} in the middle",
+            "note": "breaks the chain: it sets its own `this`, and every arrow below inherits the broken one"
+          },
+          {
+            "signature": "the golden rule",
+            "note": "look upward for the nearest regular function — its `this` is your `this`"
+          },
+          {
+            "signature": "fn.call(this)",
+            "note": "the repair: explicitly hand the outer `this` to the regular function"
+          },
+          {
+            "signature": "convert the offender to an arrow",
+            "note": "the better repair, when you control that function"
+          }
+        ],
+        "useCase": "A deeply nested callback chain where `this.name` is suddenly `undefined` — one `function () {}` five levels up broke it, and everything below inherited the break."
+      },
       "answer": "No matter how deep you nest your functions — even 10 levels down — the rules of JavaScript's `this` remain exactly the same. Depth does not change the rules; it only makes the **lexical chain** easier to misread.\n\nThe behavior all comes down to whether that chain gets **broken** by a regular function along the way.\n\n## Scenario 1: The unbroken arrow chain (works)\n\nIf you nest 10 arrow functions inside each other, the innermost function still successfully logs `42`.\n\nArrow functions do not have their own `this`. They treat `this` like a normal variable: JavaScript climbs the [scope chain](/learnings/100) — level by level — until it finds the nearest **regular function or method** that does have a `this` context.\n\n```javascript\nconst obj = {\n  val: 42,\n  outer() {\n    // 'this' belongs to obj here\n    const level1 = () => {\n      const level2 = () => {\n        const level3 = () => {\n          // ... imagine levels 4 through 9 here ...\n          const level10 = () => console.log(this.val);\n          level10();\n        };\n        level3();\n      };\n      level2();\n    };\n    level1();\n  },\n};\n\nobj.outer(); // 42\n```\n\nEvery arrow in the chain inherits the same `this` from `outer()` — no matter how many levels deep you go.\n\n## Scenario 2: The regular function chain (fails)\n\nIf you nest 10 regular functions, it fails immediately at level 1 and continues to fail all the way down to level 10.\n\nEvery `function () {}` declaration creates a **brand new** `this` context. When you execute a standard function call (`level10()`), JavaScript sets `this` from the **call site** — not from where the function was defined. A bare call defaults to the global object (or `undefined` in [strict mode](/learnings/102)).\n\n```javascript\nconst obj = {\n  val: 42,\n  outer() {\n    function level1() {\n      function level2() {\n        function level10() {\n          console.log(this.val);\n        }\n        level10(); // 'this' is undefined/global\n      }\n      level2(); // 'this' is undefined/global\n    }\n    level1(); // 'this' is undefined/global\n  },\n};\n\nobj.outer(); // undefined (or TypeError if you access a property on undefined)\n```\n\nNesting deeper does not recover the lost context — each regular function re-binds `this` at its own call site.\n\n## Scenario 3: The broken chain (mixed nesting)\n\nThis is the trap that catches most developers. If levels 2 through 10 are arrow functions but **level 1 is a regular function**, the whole chain is ruined.\n\nThe arrows at the bottom walk up the scope chain, but they stop at `level1` because regular functions **do** have their own `this`. They inherit `level1`'s broken context — not `outer()`'s.\n\n```javascript\nconst obj = {\n  val: 42,\n  outer() {\n    // 'this' is obj\n\n    function level1() {\n      // Creates a new, broken 'this'\n\n      const level2 = () => {\n        const level10 = () => {\n          console.log(this.val);\n        };\n        level10();\n      };\n      level2();\n    }\n    level1(); // Called as standalone — context is lost\n  },\n};\n\nobj.outer(); // undefined\n```\n\nOne regular function between your method and your arrow is enough to break the chain.\n\n## The golden rule\n\n> An arrow function inherits `this` from the **closest surrounding regular function or method**. If that surrounding function lost its context, your arrow function loses it too.\n\n| Chain type | What happens to `this` |\n| --- | --- |\n| Method → arrows only | Arrows inherit method's `this` — works |\n| Method → regular functions only | Each level gets a new `this` from its call site — fails |\n| Method → regular → arrows | Arrows inherit the regular fn's `this`, not the method's — broken |\n\n## How to fix a broken chain\n\n```javascript\nconst obj = {\n  val: 42,\n  outer() {\n    const self = this; // capture once\n\n    function level1() {\n      const level2 = () => console.log(self.val); // use captured ref\n      level2();\n    }\n    level1(); // 42\n  },\n};\n```\n\nOther fixes: make `level1` an arrow, call `level1.call(this)`, or restructure so no regular function sits between the method and the arrow callbacks.\n\n## Interview one-liner\n\n> \"Arrow `this` is lexical — it walks up the scope chain to the nearest non-arrow function. One regular function called without a receiver breaks that chain for every arrow below it, no matter how deep the nesting goes.\""
     },
     {
@@ -120,6 +392,32 @@
         "browser"
       ],
       "source": "user paste: parallelism vs concurrency",
+      "summary": {
+        "definition": "Concurrency is structuring work so several tasks can be in progress at once; parallelism is actually running them at the same instant on different cores. JavaScript's event loop gives you the first on a single thread; web workers are how you get the second.",
+        "api": [
+          {
+            "signature": "async / await",
+            "note": "concurrency: one thread, interleaving while each task waits on something"
+          },
+          {
+            "signature": "Promise.all([...])",
+            "note": "concurrent I/O — the requests overlap, but your code still runs one statement at a time"
+          },
+          {
+            "signature": "new Worker(...)",
+            "note": "genuine parallelism in the browser: a second thread, on a second core"
+          },
+          {
+            "signature": "a blocking for loop",
+            "note": "neither — it holds the one thread, and no amount of `async` helps"
+          },
+          {
+            "signature": "the kitchen test",
+            "note": "one cook switching between pots is concurrency; two cooks is parallelism"
+          }
+        ],
+        "useCase": "Four `fetch` calls that finish in the time of the slowest — concurrency, not parallelism, since nothing of yours ran simultaneously."
+      },
       "answer": "The distinction between **concurrency** and **parallelism** comes down to **structure** versus **physical execution**.\n\nRob Pike put it simply:\n\n> **Concurrency** is about dealing with a lot of things at once. **Parallelism** is about doing a lot of things at once.\n\n- **Concurrency** is a way to **structure** a program — breaking it into independent tasks that can make progress over overlapping time periods.\n- **Parallelism** is a way to **execute** a program — running those tasks at the exact same moment across multiple processing units.\n\n## The kitchen analogy\n\n**Concurrency (one cook):** You put rice on to boil, switch to chopping vegetables, then check the oven. You are making progress on multiple dishes, but at any exact moment your hands are only doing one specific task.\n\n**Parallelism (multiple cooks):** You hire two more cooks. One boils rice, one chops vegetables, one mans the oven. All three tasks happen at the same physical time.\n\n## Concurrency: managing overlapping tasks\n\nConcurrency happens when tasks **start, run, and complete in overlapping time periods**. It does not mean they run at the exact same microsecond — the system rapidly switches context between them so they all make progress.\n\n### Frontend (JavaScript)\n\nWhen building UIs with JavaScript, TypeScript, React, or Vue, you operate in a **concurrent but single-threaded** world. The browser's JavaScript engine has one call stack.\n\nIf a component fetches data from an API, the main thread cannot freeze while waiting — the whole UI would lock up. Instead, the runtime offloads the network request to the environment and immediately continues rendering or handling events. The **[event loop](/learnings/128)** is what makes this juggling possible.\n\n```javascript\n// Concurrent, not parallel — one thread, overlapping work\nasync function loadUser() {\n  const res = await fetch(\"/api/user\"); // main thread is free while waiting\n  const user = await res.json();\n  setUser(user); // UI updates when data arrives\n}\n```\n\n### Backend (async I/O)\n\nOn a backend built with FastAPI (or Node.js), `async`/`await` lets a **single worker** handle thousands of database queries. While waiting for PostgreSQL to return data for User A, the server switches to processing User B. Highly concurrent — maximizing I/O efficiency without needing multiple CPU cores.\n\n## Parallelism: simultaneous execution\n\nParallelism requires **physical hardware** — multiple CPU cores or separate machines. It is the literal simultaneous execution of multiple computations.\n\n### Frontend (Web Workers)\n\nFor a **CPU-bound** task on the frontend — parsing a massive dataset, image processing — standard JavaScript concurrency will not help; the main thread still blocks. To achieve parallelism, spin up **[Web Workers](/browser/133)**, distributing work to separate threads on different CPU cores.\n\n```javascript\n// main thread\nconst worker = new Worker(\"parse-worker.js\");\nworker.postMessage(largeDataset);\nworker.onmessage = (e) => console.log(\"Parsed:\", e.data);\n```\n\nSee also **Web Workers (#133)** in this app for API details and limitations.\n\n### Backend (multi-process / multi-core)\n\nDeploying a Dockerized app on a multi-core AWS instance lets you run multiple worker processes (e.g. Uvicorn workers). If four users hit the server at once, four separate CPU cores can process Python code for each user **simultaneously**.\n\n## Summary comparison\n\n| Feature | Concurrency | Parallelism |\n| --- | --- | --- |\n| **Core concept** | Juggling multiple tasks | Executing tasks simultaneously |\n| **Focus** | Program structure & design | Hardware execution |\n| **Hardware** | Can run on a single-core CPU | Requires multi-core or multiple CPUs |\n| **Best for** | I/O-bound work (network, DB queries) | CPU-bound work (image processing, heavy math) |\n| **Bottleneck** | Waiting on external resources | CPU processing power |\n| **JS example** | `fetch` + event loop, `async`/`await` | Web Workers |\n\n## Interview one-liner\n\n> \"JavaScript in the browser is **concurrent** by design — one thread juggling async I/O via the event loop. **Parallelism** needs extra threads (Web Workers) or multiple processes on the server. Concurrency is how you organize work; parallelism is how many cores actually run it at once.\""
     },
     {
@@ -130,6 +428,32 @@
         "scoping",
         "closures"
       ],
+      "summary": {
+        "definition": "`var` is scoped to the whole function, not to each turn of a loop, so all the callbacks created inside the loop share one variable. By the time any of them runs, the loop has finished and that shared variable holds its final value.",
+        "api": [
+          {
+            "signature": "for (var i = 0; ...)",
+            "note": "one binding for the entire loop — every closure sees the same `i`"
+          },
+          {
+            "signature": "for (let i = 0; ...)",
+            "note": "a fresh binding per iteration; the fix, and a special rule of `let` in `for` heads"
+          },
+          {
+            "signature": "(function (j) {...})(i)",
+            "note": "the pre-ES6 fix: an IIFE copies the value into a new scope"
+          },
+          {
+            "signature": "arr.forEach((item, i) => ...)",
+            "note": "also fixes it — the callback is a function call, so `i` is a parameter"
+          },
+          {
+            "signature": "setTimeout in the same loop",
+            "note": "the same bug with a different symptom: every timer logs the final value"
+          }
+        ],
+        "useCase": "Five buttons wired up in a `var` loop where all five log `5` — changing one word to `let` makes them log 0 through 4."
+      },
       "answer": "**Question:** what does this print, why, and how do you fix it so each button logs its own index?\n\n```javascript\nconst buttons = document.querySelectorAll(\"button\"); // three buttons\n\nfor (var i = 0; i < 3; i++) {\n  buttons[i].addEventListener(\"click\", function () {\n    console.log(i);\n  });\n}\n```\n\n## The output\n\nEvery button logs **3**.\n\n## Why\n\n`var` is **function-scoped**, not block-scoped. The loop does not create a new `i` per iteration — there is exactly **one** `i` for the entire enclosing function scope.\n\nAll three callbacks close over that same single binding. The loop finishes, leaving `i` at `3` (the value that failed the condition). Later, when you click, each callback reads the one shared variable and finds `3`.\n\nThe callbacks aren't capturing *values* — they're capturing a *variable*, and by click time they all point at the same one.\n\n## Fix 1: `let`\n\n```javascript\nfor (let i = 0; i < 3; i++) {\n  buttons[i].addEventListener(\"click\", function () {\n    console.log(i); // 0, 1, 2\n  });\n}\n```\n\n`let` is block-scoped, and a `for` loop with `let` creates a **fresh binding on every iteration** — the language copies the value forward between iterations specifically so closures behave as expected. Three iterations, three separate `i` variables, three correct values.\n\nThis is the answer to give.\n\n## Fix 2: an IIFE (the pre-ES6 way)\n\n```javascript\nfor (var i = 0; i < 3; i++) {\n  (function (index) {\n    buttons[index].addEventListener(\"click\", function () {\n      console.log(index);\n    });\n  })(i);\n}\n```\n\nThe immediately-invoked function creates a new scope per iteration, and `index` is a parameter — a fresh variable holding a copy of `i` at that moment. Worth knowing because you'll meet it in older code, and because it demonstrates *why* `let` works.\n\n## Fix 3: a function-scoped extra\n\n`forEach` gives each iteration its own scope for free, since the callback is a function:\n\n```javascript\nbuttons.forEach((button, i) => {\n  button.addEventListener(\"click\", () => console.log(i));\n});\n```\n\n(`querySelectorAll` returns a NodeList, which does have `forEach`. Spread it with `[...buttons]` if you need real array methods.)\n\n## The `setTimeout` variant\n\nSame bug, same fix, different disguise — this is the version that shows up in MCQs:\n\n```javascript\nfor (var i = 0; i < 3; i++) setTimeout(() => console.log(i), 0); // 3 3 3\nfor (let i = 0; i < 3; i++) setTimeout(() => console.log(i), 0); // 0 1 2\n```\n\nThe timeouts all run after the loop completes, so `var` gives three reads of one finished variable.\n\n## Related\n\n- [Closures](/learnings/130) · [IIFE](/learnings/106)\n- [MCQ Hit-List: JavaScript](/test-prep/18)\n- [The Stale Closure Trap](/react-guide/7) — the same bug inside React",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -141,6 +465,32 @@
         "arrays",
         "functional"
       ],
+      "summary": {
+        "definition": "`reduce` walks an array and folds it into a single result. You give it a function receiving the running total and the current element, and whatever that function returns becomes the running total for the next element.",
+        "api": [
+          {
+            "signature": "arr.reduce((acc, cur, i, arr) => ..., init)",
+            "note": "the full signature; `acc` is the running value, `init` is where it starts"
+          },
+          {
+            "signature": "the initial value",
+            "note": "omit it and the first element becomes the accumulator — which breaks on an empty array with a TypeError"
+          },
+          {
+            "signature": "return acc",
+            "note": "the commonest bug is forgetting to return; the next iteration then gets `undefined`"
+          },
+          {
+            "signature": "an object as the accumulator",
+            "note": "the result does not have to be a number — this is how you group or index a list"
+          },
+          {
+            "signature": "Object.fromEntries(arr.map(...))",
+            "note": "usually clearer than a `reduce` when you are only building a lookup"
+          }
+        ],
+        "useCase": "Turning a list of users into a `{ [id]: user }` lookup in one pass, so later code can find a user without scanning the array."
+      },
       "answer": "**Question:** explain how `reduce()` works — the roles of accumulator, current element, and initial value.\n\n## The signature\n\n```javascript\narray.reduce(callback, initialValue);\n// callback: (accumulator, currentValue, currentIndex, sourceArray) => newAccumulator\n```\n\n`reduce` walks the array once, carrying a value along. Each call returns the accumulator for the next step, and the final return is the result.\n\n- **Accumulator** — the running value carried between iterations. Whatever the callback returns becomes the next accumulator.\n- **Current value** — the element being visited on this pass.\n- **Initial value** — the accumulator's starting value.\n\n## Walking through it\n\n```javascript\nconst nums = [1, 2, 3, 4];\nconst sum = nums.reduce((acc, curr) => acc + curr, 0);\n```\n\n| Step | acc | curr | returns |\n|---|---|---|---|\n| 1 | 0 | 1 | 1 |\n| 2 | 1 | 2 | 3 |\n| 3 | 3 | 3 | 6 |\n| 4 | 6 | 4 | **10** |\n\nThe critical habit: **the callback must return the accumulator.** Forgetting the `return` — especially with a block body or when pushing into an array — makes `acc` become `undefined` on the second iteration. It's the number one `reduce` bug:\n\n```javascript\n// BROKEN — returns undefined\narr.reduce((acc, x) => {\n  acc.push(x * 2);\n}, []);\n\n// Fixed\narr.reduce((acc, x) => {\n  acc.push(x * 2);\n  return acc;\n}, []);\n```\n\n## Why the initial value matters\n\nOmit it and `reduce` uses **the first element as the accumulator** and starts at index 1:\n\n```javascript\n[1, 2, 3].reduce((a, b) => a + b); // 6 — works\n[].reduce((a, b) => a + b); // TypeError: Reduce of empty array with no initial value\n[].reduce((a, b) => a + b, 0); // 0 — safe\n```\n\nTwo rules follow:\n\n- **Always pass an initial value** unless you're certain the array is non-empty.\n- **You must pass it when the accumulator is a different type than the elements** — summing numbers can skip it; building an object from an array cannot.\n\n## The accumulator doesn't have to be a number\n\nThis is where `reduce` earns its keep:\n\n```javascript\n// Group by a key\nconst byRole = users.reduce((acc, user) => {\n  (acc[user.role] ??= []).push(user);\n  return acc;\n}, {});\n\n// Count occurrences\nconst counts = words.reduce((acc, w) => {\n  acc[w] = (acc[w] || 0) + 1;\n  return acc;\n}, {});\n\n// Index by id for O(1) lookup\nconst byId = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});\n\n// Flatten one level\nconst flat = nested.reduce((acc, arr) => acc.concat(arr), []);\n```\n\nNote the `byId` version spreads on every iteration, which is O(n²). For large arrays mutate the accumulator, or use `Object.fromEntries(users.map(u => [u.id, u]))`.\n\n## When not to use it\n\nA `reduce` that's really a `map` or `filter` in disguise is harder to read for no benefit. Reach for it when you're collapsing many values into **one** value — a sum, an object, a grouping. If the result is another array of the same length, `map` says it better.\n\n## Related\n\n- [Implementing myReduce](/learnings/150) · [Array.reduce() polyfill](/coding/5)\n- [Array.reduce() polyfill — coding drill](/coding/5) · [groupBy](/coding/31)\n- [Cold Recall: Arrays & Objects](/test-prep/14)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -152,6 +502,36 @@
         "prototypes",
         "arrays"
       ],
+      "summary": {
+        "definition": "Writing your own `reduce` means implementing it on `Array.prototype`, where `this` is the array. The related question — why not to put helpers on `Object.prototype` — is that every object in the program would inherit them, and every `for...in` loop would suddenly see them.",
+        "api": [
+          {
+            "signature": "Array.prototype.myReduce = function (cb, init) {...}",
+            "note": "a regular function, not an arrow — you need `this` to be the array"
+          },
+          {
+            "signature": "arguments.length > 1",
+            "note": "how you tell \"no initial value\" from \"an initial value of `undefined`\""
+          },
+          {
+            "signature": "if (i in array)",
+            "note": "skip holes in a sparse array, which is what the real `reduce` does"
+          },
+          {
+            "signature": "throw new TypeError(...)",
+            "note": "when the callback is not a function — matching the spec's behaviour"
+          },
+          {
+            "signature": "Object.prototype pollution",
+            "note": "adds the key to every object, so every `for...in` picks it up — the reason the question is asked"
+          },
+          {
+            "signature": "Object.create(null)",
+            "note": "the escape hatch: a dictionary with no prototype to inherit anything from"
+          }
+        ],
+        "useCase": "A `for...in` loop over a config object that suddenly yields an extra key, because a library added a helper to `Object.prototype`."
+      },
       "answer": "**Question:** implement your own `reduce`. Explain why extending `Object.prototype` is a bad idea, and do it correctly on `Array.prototype` with optional initial value support.\n\n## Why not `Object.prototype`\n\nBecause **every object in JavaScript inherits from it** — arrays, functions, dates, DOM nodes, and every object literal in every library you depend on. Adding a property there is a global mutation with app-wide blast radius:\n\n```javascript\nObject.prototype.myReduce = function () {\n  /* ... */\n};\n\nconst config = { host: \"localhost\", port: 5432 };\n\nfor (const key in config) {\n  console.log(key); // host, port, AND myReduce\n}\n```\n\n`for...in` walks the [prototype chain](/learnings/123), so **every `for...in` loop in the entire program** now sees your addition. That silently corrupts config iteration, serialization, and object-shape checks in code you didn't write.\n\nBeyond that:\n\n- **Name collisions.** If two libraries add `myReduce`, one silently wins. If a future spec adds it, your version shadows the native one — this is exactly what happened with `Array.prototype.flatten` and forced TC39 to rename it `flat`.\n- **`Object.create(null)`** has no prototype, so your method mysteriously doesn't exist there.\n- **Engine deoptimization.** Mutating built-in prototypes invalidates inline caches and slows down property access across the program.\n\n`Array.prototype` is *less* dangerous — arrays are a narrower target and `for...in` over an array is already a mistake — but it's the same category of risk. **Modern answer: don't patch prototypes at all.** Write a standalone function. The exercise is worth doing to prove you understand `this` and the prototype chain, not because it's good practice.\n\n## The implementation\n\n```javascript\nArray.prototype.myReduce = function (callback, ...initialValue) {\n  if (typeof callback !== \"function\") {\n    throw new TypeError(`${callback} is not a function`);\n  }\n\n  const array = this; // `this` is the array it was called on\n  const hasInitial = initialValue.length > 0;\n\n  if (array.length === 0 && !hasInitial) {\n    throw new TypeError(\"Reduce of empty array with no initial value\");\n  }\n\n  let accumulator = hasInitial ? initialValue[0] : array[0];\n  let startIndex = hasInitial ? 0 : 1;\n\n  for (let i = startIndex; i < array.length; i++) {\n    if (i in array) {\n      // skip holes in sparse arrays\n      accumulator = callback(accumulator, array[i], i, array);\n    }\n  }\n\n  return accumulator;\n};\n```\n\n## The four details that make it correct\n\n**1. Detecting \"no initial value\" via rest parameters.** You cannot use `initialValue === undefined`, because `undefined` is a legitimate accumulator:\n\n```javascript\n[1, 2].myReduce((a, b) => a, undefined); // must start at undefined, not at 1\n```\n\nCollecting into a rest array and checking `.length` distinguishes \"not passed\" from \"passed as undefined\". `arguments.length > 1` works too.\n\n**2. Empty array plus no initial value throws.** Matching the spec exactly, including the message.\n\n**3. Skipping holes.** `[1, , 3]` has a gap, and the real `reduce` skips it. `i in array` is false for holes but true for an explicit `undefined` — which `array[i] === undefined` can't distinguish.\n\n**4. Using a `function`, not an arrow.** An arrow has no own `this`, so `this` would not be the array. This is the whole reason the method works.\n\n## The version you should actually write\n\n```javascript\nfunction reduce(array, callback, ...initialValue) {\n  // same body, using `array` instead of `this`\n}\n```\n\nNo global mutation, explicit about what it operates on, and works on anything array-like.\n\n## Related\n\n- [How Array.prototype.reduce() Works](/learnings/149) · [Array.reduce() polyfill](/coding/5)\n- [Coding drill: Array.reduce() polyfill](/coding/5) · [map](/coding/3) · [filter](/coding/4)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -163,6 +543,32 @@
         "this",
         "scoping"
       ],
+      "summary": {
+        "definition": "`this` inside a `forEach` callback is not the object whose method you are in. The callback is a plain function that `forEach` calls, so it gets its own `this` — `undefined` in strict mode — unless you do something about it.",
+        "api": [
+          {
+            "signature": "arr.forEach((x) => ...)",
+            "note": "an arrow keeps the enclosing `this`; the fix that needs no extra variables"
+          },
+          {
+            "signature": "arr.forEach(fn, thisArg)",
+            "note": "`forEach`'s little-known second argument sets `this` for the callback"
+          },
+          {
+            "signature": "arr.forEach(fn.bind(this))",
+            "note": "works, but allocates a new function on every call"
+          },
+          {
+            "signature": "const self = this",
+            "note": "the disqualified answer here — it works, but the question asks for no new variables"
+          },
+          {
+            "signature": "map / filter / some / every / find",
+            "note": "all take the same `thisArg`, and all have the same trap"
+          }
+        ],
+        "useCase": "A `team.list()` method that logs `undefined is on ...` for every member — the callback lost the team, and one arrow function restores it."
+      },
       "answer": "**Question:** why is `this.name` undefined inside the `forEach` callback, and how do you fix it without adding any variables?\n\n## The setup\n\n```javascript\nconst team = {\n  name: \"Platform\",\n  members: [\"Ada\", \"Bo\", \"Cy\"],\n\n  list() {\n    this.members.forEach(function (member) {\n      console.log(`${member} is on ${this.name}`); // this.name is undefined\n    });\n  },\n};\n\nteam.list();\n// Ada is on undefined\n// Bo is on undefined\n// Cy is on undefined\n```\n\n## Why\n\n`this` in JavaScript is set by **how a function is called**, not where it's written.\n\n`team.list()` is a method call, so inside `list`, `this` is `team` — that part works. But the callback passed to `forEach` is invoked **by `forEach` itself**, as a plain function call with no receiver. There's no `team.` in front of it.\n\nFor a plain call, `this` is `undefined` in [strict mode](/learnings/102) (including all module and class code) or the global object in sloppy mode. Either way it isn't `team`, so `this.name` is `undefined` — or throws outright in strict mode.\n\n`this.members` works and `this.name` doesn't, which is what makes this confusing: they're in different functions.\n\n## Fix 1: an arrow function\n\n```javascript\nlist() {\n  this.members.forEach((member) => {\n    console.log(`${member} is on ${this.name}`);\n  });\n}\n```\n\nArrow functions have **no `this` of their own**. They resolve it lexically, from the enclosing scope — which is `list`, where `this` is `team`. Nothing is added, nothing is bound; the arrow simply never creates the binding that was shadowing it.\n\nThis is the answer to give.\n\n## Fix 2: `forEach`'s second argument\n\nLess known, and a good one to mention:\n\n```javascript\nlist() {\n  this.members.forEach(function (member) {\n    console.log(`${member} is on ${this.name}`);\n  }, this);          // ← thisArg\n}\n```\n\n`forEach` accepts a **`thisArg`** as its second parameter and calls the callback with that as `this`. `map`, `filter`, `some`, `every`, `find`, and `flatMap` all take it too.\n\nNote it has no effect on an arrow function — arrows ignore any attempt to set `this`, including `call`, `apply`, and `bind`.\n\n## Fix 3: `.bind(this)`\n\n```javascript\nthis.members.forEach(\n  function (member) {\n    console.log(`${member} is on ${this.name}`);\n  }.bind(this),\n);\n```\n\nWorks, but allocates a new bound function on every call. Fine to know, rarely the best choice.\n\n## The fix that's disqualified\n\nThe classic pre-ES6 workaround introduces a variable, which the question rules out:\n\n```javascript\nconst self = this; // not allowed here\nthis.members.forEach(function (member) {\n  console.log(`${member} is on ${self.name}`);\n});\n```\n\nWorth naming as the historical answer, then giving the arrow.\n\n## The general rule\n\n| Call form | `this` |\n|---|---|\n| `obj.method()` | `obj` |\n| `fn()` | `undefined` (strict) / `globalThis` (sloppy) |\n| `new Fn()` | the new instance |\n| `fn.call(x)` / `.apply(x)` / `.bind(x)` | `x` |\n| arrow function | inherited lexically — cannot be changed |\n| callback passed to a library | whatever that library calls it with |\n\n## Related\n\n- [MCQ Hit-List: JavaScript](/test-prep/18) — `this` is the largest topic in the bank\n- [Array.map() polyfill](/coding/3) · [Array.filter() polyfill](/coding/4) — both implement `thisArg`",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -175,6 +581,32 @@
         "functions"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "Currying turns a function that takes several arguments into a chain of functions that each take one, so `add(1, 2, 3)` becomes `add(1)(2)(3)`. Partial application is the looser cousin: fix some arguments now and get back a function wanting the rest.",
+        "api": [
+          {
+            "signature": "fn.length",
+            "note": "how many arguments the function declares — what a generic `curry` uses to know when to stop"
+          },
+          {
+            "signature": "curried(1)(2)(3)",
+            "note": "one at a time, the strict form"
+          },
+          {
+            "signature": "curried(1, 2)(3)",
+            "note": "what most real `curry` helpers also allow — technically partial application"
+          },
+          {
+            "signature": "fn.bind(null, a)",
+            "note": "partial application built into the language; no library needed"
+          },
+          {
+            "signature": "curry(handleChange)(fieldName)",
+            "note": "where it earns its keep — a per-field handler made once, not rebuilt on every render"
+          }
+        ],
+        "useCase": "Building one change handler per form field up front, so the JSX passes `onChange={handlers.email}` instead of creating a new arrow function on every render."
+      },
       "answer": "**Currying** transforms a function that takes many arguments into a chain of functions that each take one.\n\nTo put it simply: instead of `add(1, 2, 3)`, you get `add(1)(2)(3)` — and every step along the way is a usable function in its own right.\n\n## The Problem\n\nYou have a general-purpose function and you keep calling it with the same first argument:\n\n```javascript\nmultiply(2, 5);\nmultiply(2, 10);\nmultiply(2, 17);\n```\n\nThat repeated `2` is noise. What you actually want is a `double` function. Writing one by hand for every such case means a pile of near-identical wrappers.\n\n## The Solution\n\nCurrying lets you supply arguments *over time*. Each call that doesn't yet have enough arguments returns a new function that remembers what it's been given so far:\n\n```javascript\nconst double = curry(multiply)(2);\ndouble(5); // 10\ndouble(10); // 20\n```\n\nYou've **specialized** a general function without writing a wrapper.\n\n## What actually is a curried function?\n\n**It's a closure holding an array of arguments.** Nothing more.\n\nEach partial call returns a new function that has captured the arguments collected so far in its scope. When a call finally brings the total up to what the original function needs, it fires. The \"magic\" is just an array that grows across [closures](/learnings/130).\n\n```javascript\nfunction curry(fn) {\n  return function curried(...args) {\n    // Enough arguments? Run for real.\n    if (args.length >= fn.length) {\n      return fn.apply(this, args);\n    }\n\n    // Not yet — hand back a collector that remembers what we have.\n    return function (...rest) {\n      return curried.apply(this, [...args, ...rest]);\n    };\n  };\n}\n```\n\nThe mechanism that decides \"enough\" is **`fn.length`** — the number of declared parameters. And that has a gotcha worth knowing cold:\n\n```javascript\n((a, b) => 0).length; // 2\n((a, b = 1) => 0).length; // 1 — default parameters are not counted\n((...args) => 0).length; // 0 — rest is not counted\n```\n\nSo variadic functions can't be curried this way; they fire immediately. Mention this and you're ahead of most candidates.\n\n## Currying vs partial application\n\nThey get conflated constantly, and knowing the difference is a cheap win:\n\n- **Currying** — strictly one argument at a time: `f(a)(b)(c)`.\n- **Partial application** — fix *some* arguments now, the rest later, in one step: `f.bind(null, a)` gives you something you call as `g(b, c)`.\n\nMost real-world \"curry\" implementations (including the one above, and lodash's) are actually **hybrid** — they accept either. That flexibility is why `curried(1, 2)(3)` and `curried(1)(2)(3)` both work.\n\n`Function.prototype.bind` is partial application built into the language.\n\n## Where you'd actually use it\n\n- **Specialized handlers** — `const onFieldChange = curry(handleChange)(fieldName)`\n- **Functional pipelines** — `pipe(map(double), filter(isEven))`, where each stage needs its config before it ever sees data\n- **Reusable configuration** — a `fetchWithConfig(baseUrl)(endpoint)` pattern\n\n## Trade-offs\n\n**Readability.** `f(a)(b)(c)` is harder to scan than `f(a, b, c)` for anyone unfamiliar with it. On a mixed team this is a real cost.\n\n**Debugging.** Stack traces fill up with anonymous intermediate functions.\n\n**Performance.** Every partial call allocates a closure. Irrelevant at normal scale; measurable in a hot loop.\n\n**Arity fragility.** Because it depends on `fn.length`, adding a default parameter to the underlying function silently changes when the curried version fires. That's a genuinely nasty bug class.\n\nIn practice, most React codebases use it rarely and reach for an inline arrow instead. Being able to say *that* — \"I know it, here's when it's worth it, and it usually isn't\" — is a better answer than enthusiasm.\n\nImplement it at [curry](/coding/39)."
     },
     {
@@ -188,6 +620,36 @@
         "ES6"
       ],
       "source": "user paste: for...in vs for...of, Array.from vs new Array, MapIterator",
+      "summary": {
+        "definition": "`for...in` walks the *keys* of an object, including the ones it inherits from its prototype. `for...of` walks the *values* of anything iterable — arrays, strings, Maps, Sets — and does not work on a plain object at all.",
+        "api": [
+          {
+            "signature": "for (const key in obj)",
+            "note": "keys as strings, and it climbs the prototype chain — the trap"
+          },
+          {
+            "signature": "Object.hasOwn(obj, key)",
+            "note": "the guard that makes `for...in` safe; `hasOwnProperty` is the older spelling"
+          },
+          {
+            "signature": "for (const value of arr)",
+            "note": "values, via the iterator protocol, and `break` and `continue` both work"
+          },
+          {
+            "signature": "obj is not iterable (TypeError)",
+            "note": "what `for...of` throws on a plain object — it has no `[Symbol.iterator]`"
+          },
+          {
+            "signature": "Object.entries(obj)",
+            "note": "the bridge: gives an array of pairs, which `for...of` can walk"
+          },
+          {
+            "signature": "for await (const x of stream)",
+            "note": "the async variant, for an async iterator such as a streamed response"
+          }
+        ],
+        "useCase": "A `for...in` over a config object that picks up a method a library added to `Object.prototype` — switching to `Object.entries` and `for...of` removes the class of bug entirely."
+      },
       "answer": "The fundamental difference between `for...in` and `for...of` comes down to what they iterate over and what protocol they use:\n\n- **`for...in`** enumerates **enumerable property keys** (names or indices) across an object and its **[prototype chain](/learnings/123)**.\n- **`for...of`** iterates over **values** produced by an **iterable** object via its `[Symbol.iterator]` method.\n\n## Quick Comparison\n\n| Feature | `for...in` | `for...of` |\n| --- | --- | --- |\n| **Iterates over** | Enumerable property keys (strings/symbols) | Values emitted by the iterator |\n| **Primary target** | Plain objects (inspecting property names) | Iterables (`Array`, `String`, `Map`, `Set`, `NodeList`, generators) |\n| **Prototype chain** | **Traverses inherited enumerable properties** | **Ignores prototype properties** (only visits values from `[Symbol.iterator]`) |\n| **Plain objects** | Works directly (`for (const key in obj)`) | **Throws `TypeError: obj is not iterable`** |\n| **Arrays** | Avoid (returns string indices, includes custom/prototype properties) | **Preferred** (returns elements in sequential order) |\n| **Control flow** | Supports `break`, `continue`, `return` | Supports `break`, `continue`, `return`, `await` (`for await...of`) |\n\n## 1. `for...in` and the Prototype Chain Trap\n\n`for...in` visits every enumerable property on the object *and* any enumerable property on its prototype chain:\n\n```javascript\nconst user = { name: \"Alice\", age: 25 };\n\nfor (const key in user) {\n  console.log(key); // \"name\", \"age\"\n  console.log(user[key]); // \"Alice\", 25\n}\n```\n\n### The Prototype Trap\nIf any library or script extends a prototype (e.g. `Object.prototype` or an inherited class prototype), `for...in` will pick up those inherited properties:\n\n```javascript\nObject.prototype.customHelper = function () {};\n\nconst config = { port: 8080 };\nfor (const key in config) {\n  console.log(key); // \"port\", AND \"customHelper\"\n}\n```\n\nTo prevent this bug, you must guard with `Object.hasOwn(obj, key)`:\n\n```javascript\nfor (const key in config) {\n  if (Object.hasOwn(config, key)) {\n    console.log(key); // only own properties\n  }\n}\n```\n\n> **Never use `for...in` for Arrays.** Array indices are returned as strings (`\"0\"`, `\"1\"`), iteration order is not strictly guaranteed, and array prototype methods or custom properties will be included in the loop.\n\n## 2. `for...of` with Plain Objects\n\nPlain JavaScript objects do not implement `[Symbol.iterator]` by default (because iterating an object is inherently ambiguous — keys, values, or entries?). Attempting `for (const x of user)` throws a runtime error:\n\n```javascript\nconst user = { name: \"Alice\", role: \"Admin\" };\ntry {\n  for (const item of user) {\n  }\n} catch (err) {\n  console.log(err.name); // \"TypeError: user is not iterable\"\n}\n```\n\n### 3 Ways to Iterate Plain Objects with `for...of`\n\nModern JavaScript uses `Object` static methods to convert the object into an iterable array:\n\n```javascript\nconst user = { name: \"Alice\", age: 25, role: \"Admin\" };\n\n// 1. Loop through keys\nfor (const key of Object.keys(user)) {\n  console.log(`${key}: ${user[key]}`);\n}\n\n// 2. Loop through values\nfor (const value of Object.values(user)) {\n  console.log(value); // \"Alice\", 25, \"Admin\"\n}\n\n// 3. Loop through [key, value] pairs (Recommended)\nfor (const [key, value] of Object.entries(user)) {\n  console.log(`${key} -> ${value}`);\n}\n```\n\n**Why `Object.entries()` is superior to `for...in`:**\n- Only returns **own** enumerable properties; prototype properties are completely ignored.\n- Eliminates the need for `Object.hasOwn()` guards.\n- Destructures cleanly into `[key, value]` directly in the loop header.\n\n## 3. `for...of` with `Map` and `Set`\n\n`Map` and `Set` are native ES6 iterables. Unlike plain objects, they guarantee **insertion order** and support keys of any data type (objects, functions, primitives):\n\n```javascript\nconst userRoles = new Map([\n  [\"Alice\", \"Admin\"],\n  [\"Bob\", \"User\"],\n  [\"Charlie\", \"Guest\"],\n]);\n\n// 1. Default iteration yields [key, value] entries\nfor (const [user, role] of userRoles) {\n  console.log(`${user} is an ${role}`);\n}\n\n// 2. Keys only\nfor (const user of userRoles.keys()) {\n  console.log(`User: ${user}`);\n}\n\n// 3. Values only\nfor (const role of userRoles.values()) {\n  console.log(`Role: ${role}`);\n}\n```\n\n## 4. Making an Object Custom-Iterable\n\nTo allow a plain object to work natively with `for...of`, define a `[Symbol.iterator]` method:\n\n```javascript\nconst team = {\n  lead: \"Alice\",\n  members: [\"Bob\", \"Charlie\"],\n  *[Symbol.iterator]() {\n    yield this.lead;\n    yield* this.members;\n  },\n};\n\nfor (const person of team) {\n  console.log(person); // \"Alice\", \"Bob\", \"Charlie\"\n}\n```\n\n## Key Takeaways\n\n- Use **`for...of`** for arrays, strings, Maps, Sets, and iterables.\n- Use **`Object.entries(obj)`** with `for...of` for plain objects.\n- Avoid **`for...in`** unless you explicitly need to inspect enumerable keys across an object and its prototype chain, and always guard it with `Object.hasOwn(obj, key)`."
     },
     {
@@ -200,6 +662,36 @@
         "methods"
       ],
       "source": "user paste: for...in vs for...of, Array.from vs new Array, MapIterator",
+      "summary": {
+        "definition": "`new Array(5)` makes an array with five *holes* — length five, but no elements at all. `Array.from({ length: 5 })` makes one with five real `undefined` values. Most array methods skip holes, which is why one of them appears to do nothing.",
+        "api": [
+          {
+            "signature": "new Array(5)",
+            "note": "`[empty × 5]` — length 5, zero actual elements"
+          },
+          {
+            "signature": "new Array(5).map((_, i) => i)",
+            "note": "returns holes again; `map` skips them, which is the bug people hit"
+          },
+          {
+            "signature": "Array.from({ length: 5 }, (_, i) => i)",
+            "note": "real values, and a mapping function built in — the one to reach for"
+          },
+          {
+            "signature": "new Array(5).fill(0)",
+            "note": "fills the holes with real values, after which `map` works normally"
+          },
+          {
+            "signature": ".fill({}) ",
+            "note": "the reference pitfall: every slot is the *same* object, so changing one changes all"
+          },
+          {
+            "signature": "5 in arr",
+            "note": "how you actually tell a hole from an `undefined` value"
+          }
+        ],
+        "useCase": "Building a 5×5 grid with `new Array(5).fill(new Array(5).fill(0))` and finding that editing one cell edits a whole column — every row is the same array."
+      },
       "answer": "Comparing `Array.from({ length: 5 })` and `new Array(5)` exposes one of JavaScript's most common traps: the difference between **empty slots (holes in sparse arrays)** and **elements initialized to `undefined`**.\n\n## 1. Reference Equality (`===`)\n\n```javascript\nArray.from({ length: 5 }) === new Array(5); // false\n```\n\nIn JavaScript, comparing two array instances with `===` always evaluates to `false` because they are two distinct objects in memory. But more importantly, their **internal structures** are completely different.\n\n## 2. Empty Slots (Holes) vs Initialized Values\n\n| Expression | Value in DevTools | Internal State |\n| --- | --- | --- |\n| `new Array(5)` | `[empty × 5]` | **Sparse array**: length is 5, but indices `0` through `4` do not exist as properties on the object. |\n| `Array.from({ length: 5 })` | `[undefined, undefined, undefined, undefined, undefined]` | **Dense array**: 5 real elements, each initialized to `undefined`. |\n\nYou can verify this using the `in` operator, which checks whether an index property exists:\n\n```javascript\nconst sparse = new Array(5);\nconst dense = Array.from({ length: 5 });\n\n0 in sparse; // false — index 0 does not exist!\n0 in dense; // true — index 0 exists with value undefined\n```\n\n## 3. The Iteration Trap with `new Array(n)`\n\nArray prototype iteration methods — such as `.map()`, `.filter()`, `.forEach()`, `.reduce()`, `.every()`, and `.some()` — **skip empty slots** according to the ECMAScript specification (`i in this` check):\n\n```javascript\n// BROKEN: The callback is NEVER executed!\nconst broken = new Array(5).map((_, i) => i);\nconsole.log(broken); // [empty × 5]\n\n// WORKS: Array.from visits every index\nconst working = Array.from({ length: 5 }, (_, i) => i);\nconsole.log(working); // [0, 1, 2, 3, 4]\n```\n\nMethods that *do* visit holes include `for...of`, `Array.from()`, `Array.prototype.includes()`, and the [spread operator](/learnings/118) `[...arr]`.\n\n## 4. Does `Array.prototype.fill()` Take a Callback?\n\n**No.** `.fill(value, start, end)` only accepts a **static value**.\n\nIf you pass a function to `.fill()`, it treats that function itself as the static value and stores the identical function reference in every slot:\n\n```javascript\nconst fns = new Array(3).fill(() => 0);\n// [ [Function], [Function], [Function] ] — all pointing to the identical function\n```\n\n### The Object Reference Pitfall\nBecause `.fill()` takes a static value, passing an object or array copies the **reference**, not the object itself:\n\n```javascript\n// DANGEROUS: All 3 slots reference the EXACT same object in memory!\nconst board = new Array(3).fill({ score: 0 });\n\nboard[0].score = 99;\nconsole.log(board);\n// Output: [{ score: 99 }, { score: 99 }, { score: 99 }]\n```\n\nMutating one element mutates all of them because `board[0] === board[1] === board[2]`.\n\n## 5. The Correct Solutions\n\nTo generate arrays with computed values or distinct object instances, use `Array.from()` with its second `mapFn` argument:\n\n```javascript\n// 1. Generate range of numbers / indices\nconst indices = Array.from({ length: 5 }, (_, i) => i);\n// [0, 1, 2, 3, 4]\n\n// 2. Generate independent object instances\nconst players = Array.from({ length: 3 }, () => ({ score: 0 }));\nplayers[0].score = 99;\nconsole.log(players);\n// Output: [{ score: 99 }, { score: 0 }, { score: 0 }]\n\n// 3. Generate 2D Matrix (independent rows)\nconst matrix = Array.from({ length: 3 }, () => new Array(3).fill(0));\nmatrix[0][0] = 1;\nconsole.log(matrix[1][0]); // 0 (Row 1 was unaffected)\n```\n\n## Summary Comparison\n\n| Method | Holes? | `.map()` works? | Object Reference Safe? | Recommended Use Case |\n| --- | --- | --- | --- | --- |\n| `new Array(n)` | Yes (`empty × n`) | ❌ No (skipped) | N/A | Pre-allocating before manual index assignment |\n| `new Array(n).fill(val)` | No | ✅ Yes | ❌ Only safe for primitives | Filling primitive values (`0`, `false`, `\"\"`) |\n| `[...Array(n)]` | No (`undefined × n`) | ✅ Yes | N/A | Quick spread, but slower than `Array.from` |\n| `Array.from({ length: n })` | No (`undefined × n`) | ✅ Yes | N/A | Dense array of `undefined` |\n| `Array.from({ length: n }, fn)` | No | ✅ Combined | ✅ Yes (new instance per slot) | **Standard**: computed values, ranges, and objects |"
     },
     {
@@ -212,6 +704,36 @@
         "ES6"
       ],
       "source": "user paste: for...in vs for...of, Array.from vs new Array, MapIterator",
+      "summary": {
+        "definition": "`map.values()` does not return an array. It returns a `MapIterator` — a lazy, one-use object that produces values on demand. It has no `map` or `filter`, and once you have walked it, it is spent.",
+        "api": [
+          {
+            "signature": "map.keys() / values() / entries()",
+            "note": "all three return iterators, not arrays"
+          },
+          {
+            "signature": "iter.next()",
+            "note": "the underlying protocol — returns `{ value, done }` one step at a time"
+          },
+          {
+            "signature": "[...map.values()]",
+            "note": "spread into a real array when you want array methods — the usual fix"
+          },
+          {
+            "signature": "Array.from(map.values())",
+            "note": "the same, and it takes a mapping function in the second argument"
+          },
+          {
+            "signature": "for (const v of map.values())",
+            "note": "consume it directly; nothing is allocated, which is the point of laziness"
+          },
+          {
+            "signature": "iter.map is not a function",
+            "note": "the error you get from treating it as an array — the giveaway"
+          }
+        ],
+        "useCase": "Calling `.filter()` on `map.values()` and getting a TypeError — spreading it into an array first is the one-character-ish fix."
+      },
       "answer": "Calling `myMap.values()`, `myMap.keys()`, or `myMap.entries()` does not return an array. Instead, it returns a **`MapIterator`** object.\n\n```javascript\nconst map = new Map([\n  [\"a\", 1],\n  [\"b\", 2],\n  [\"c\", 3],\n]);\n\nconst valuesIter = map.values();\nconsole.log(valuesIter); // [Map Iterator] { 1, 2, 3 }\nconsole.log(Array.isArray(valuesIter)); // false\n```\n\nBecause it is an iterator and not an array, calling array methods like `valuesIter.map()` or `valuesIter.filter()` will throw `TypeError: valuesIter.map is not a function`.\n\n## 1. Key Characteristics of `MapIterator`\n\n### A. It is Iterable\nA `MapIterator` implements both the **Iterable Protocol** and the **Iterator Protocol**:\n- It has a `next()` method returning `{ value, done: boolean }`.\n- Its `[Symbol.iterator]()` method returns `this` (itself).\n\nBecause it implements `[Symbol.iterator]`, you can pass it directly to `for...of` loops, the [spread operator](/learnings/118) (`...`), and `Array.from()`.\n\n### B. It is Lazy (On-Demand Evaluation)\nThe iterator does not allocate memory for a new array of all values upfront. Instead, it advances through the Map's internal collection **one element at a time** as requested. This is optimal for performance and memory when working with large Maps.\n\n### C. It is a One-Time Use Object (Consumable)\nOnce an iterator reaches completion (`done: true`), it is exhausted and **cannot be restarted or rewound**:\n\n```javascript\nconst iter = map.values();\n\n// First consumption\nfor (const val of iter) {\n  console.log(val); // 1, 2, 3\n}\n\n// Second consumption — prints NOTHING!\nfor (const val of iter) {\n  console.log(val); // Does not run\n}\n\nconsole.log(iter.next()); // { value: undefined, done: true }\n```\n\nTo iterate again, you must obtain a fresh iterator by calling `map.values()` again.\n\n## 2. Three Ways to Consume `MapIterator`\n\n### 1. Convert to an Array\nIf you need array transformation methods (`.map()`, `.filter()`, `.slice()`), unpack the iterator:\n\n```javascript\n// Using spread syntax\nconst arr1 = [...map.values()]; // [1, 2, 3]\n\n// Using Array.from()\nconst arr2 = Array.from(map.values()); // [1, 2, 3]\n\n// Now array methods work:\nconst doubled = [...map.values()].map((x) => x * 2); // [2, 4, 6]\n```\n\n### 2. Loop Directly with `for...of`\nNo conversion to an array is necessary if you just need to traverse the elements:\n\n```javascript\nfor (const val of map.values()) {\n  console.log(val); // 1, 2, 3\n}\n```\n\n### 3. Step Manually with `.next()`\nUseful for custom pipelines, coroutines, or pulling items on demand:\n\n```javascript\nconst iter = map.values();\n\nconsole.log(iter.next()); // { value: 1, done: false }\nconsole.log(iter.next()); // { value: 2, done: false }\nconsole.log(iter.next()); // { value: 3, done: false }\nconsole.log(iter.next()); // { value: undefined, done: true }\n```\n\n## 3. Insertion Order & Live Mutation Semantics\n\nJavaScript `Map` iterators iterate in **insertion order**. Furthermore, iterators operate over live data:\n\n```javascript\nconst queue = new Map([[\"task1\", \"pending\"]]);\n\nfor (const [task, status] of queue) {\n  console.log(task, status);\n  if (task === \"task1\") {\n    // Adding an item DURING iteration will be visited!\n    queue.set(\"task2\", \"pending\");\n  }\n}\n// Output:\n// task1 pending\n// task2 pending\n```\n\n- If you add entries to a `Map` while iterating, they **will be visited** by the ongoing loop.\n- If you delete an unvisited entry, it **will not be visited**.\n\n## 4. Map Iteration Methods Summary\n\n| Method | Returns | Yielded Item |\n| --- | --- | --- |\n| `map.keys()` | `MapIterator` | Key only |\n| `map.values()` | `MapIterator` | Value only |\n| `map.entries()` | `MapIterator` | `[key, value]` tuple |\n| `map[Symbol.iterator]()` | `MapIterator` | Same as `map.entries()` (default) |\n\n> Note: `Set.prototype.values()` and `Set.prototype.keys()` behave identically, returning a `SetIterator` yielding unique set elements."
     }
   ]

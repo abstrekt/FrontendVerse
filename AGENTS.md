@@ -55,6 +55,29 @@ global binding (ArrowRight = next question) from also firing while the focus
 is in a widget that owns arrows — the column resizers and the step-through
 traces both rely on it.
 
+## Every entry opens with a plain-words summary
+
+**Every learning entry carries a `summary` field** — a jargon-free definition,
+the API you actually type, and one concrete example — rendered as a card above
+the body, before any hook, diagram or code. It exists because entries used to
+open with framing ("Both run JavaScript off the main thread, which is why the
+question comes up constantly") that assumes you already know what the thing is.
+
+```bash
+node scripts/validate-summaries.mjs                # part of `pnpm test`
+node scripts/validate-summaries.mjs --list-missing # what is still unwritten
+```
+
+The authoring rules, the reference entry, the two validator rules that catch
+people, and the 44 entries still to write are in
+[`SUMMARY-CARDS-ROLLOUT.md`](SUMMARY-CARDS-ROLLOUT.md). Read it before writing a
+batch — a `signature` invented rather than verified against the entry's own code
+blocks is worse than no card at all.
+
+The card renders **outside** the `articleRef` element in `LearningsView`, because
+select-to-highlight anchors marks by nth-occurrence within it and prose added
+inside would move every stored highlight.
+
 ## Visuals are mandatory for new content
 
 **Every new or substantially rewritten entry ships two things: a draw.io

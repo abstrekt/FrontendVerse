@@ -21,6 +21,7 @@ const SECTION_LABELS = {
 const FIELD_LABELS = {
   title: 'In title',
   body: 'In content',
+  summary: 'In summary',
   explanation: 'In explanation',
   description: 'In description',
   code: 'In code',
@@ -39,6 +40,7 @@ const FIELD_WEIGHTS = {
   topics: 70,
   difficulty: 50,
   functionName: 45,
+  summary: 60,
   options: 30,
   description: 25,
   explanation: 20,
@@ -46,7 +48,14 @@ const FIELD_WEIGHTS = {
   code: 15,
 };
 
-const SNIPPET_FIELDS = new Set(['body', 'explanation', 'description', 'code', 'options']);
+const SNIPPET_FIELDS = new Set([
+  'summary',
+  'body',
+  'explanation',
+  'description',
+  'code',
+  'options',
+]);
 
 export const SEARCH_SECTIONS = [
   'all',
@@ -125,6 +134,18 @@ function buildMcqDoc(item, section = 'mcq') {
   };
 }
 
+/* The plain-words card as one searchable string: the definition, every API
+   signature and its note, then the example. Flattening the signatures in is
+   what makes a bare method name like `respondWith` find the entry that
+   introduces it, even when the body only ever shows it inside a code fence. */
+function summaryText(summary) {
+  if (!summary) return '';
+  const api = (summary.api ?? [])
+    .map(({ signature, note }) => `${signature ?? ''} ${note ?? ''}`)
+    .join(' ');
+  return stripMarkdown([summary.definition ?? '', api, summary.useCase ?? ''].join(' ').trim());
+}
+
 function buildLearningDoc(item, section) {
   const tags = item.tags ?? [];
   return {
@@ -139,6 +160,7 @@ function buildLearningDoc(item, section) {
       { name: 'title', text: item.title ?? '' },
       { name: 'company', text: item.company ?? '' },
       { name: 'tags', text: tags.join(' ') },
+      { name: 'summary', text: summaryText(item.summary) },
       { name: 'body', text: stripMarkdown(item.answer ?? '') },
     ],
   };

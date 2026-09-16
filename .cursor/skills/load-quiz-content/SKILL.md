@@ -90,9 +90,31 @@ Merge rules:
   "title": "Array.map() polyfill",
   "tags": ["polyfill", "Array", "iteration"],
   "source": "https://example.com/polyfills",
+  "summary": {
+    "definition": "A polyfill is a plain-JavaScript reimplementation of a built-in method, so code that expects it still runs where it is missing.",
+    "api": [
+      { "signature": "Array.prototype.map = function (cb, thisArg) {…}", "note": "an instance method, so it must be a regular function \u2014 `this` is the array" },
+      { "signature": "if (i in this)", "note": "skip holes in a sparse array, which is what the real `map` does" },
+      { "signature": "cb.call(thisArg, this[i], i, this)", "note": "the full callback contract \u2014 value, index and the array, with an optional `this`" }
+    ],
+    "useCase": "Shipping to a browser that predates `map`, where one file restores it for every array in the program."
+  },
   "answer": "Markdown with ```code``` blocks, examples, and follow-ups."
 }
 ```
+
+**`summary` is required on every learning entry** and validated by
+`scripts/validate-summaries.mjs` as part of `pnpm test`:
+
+- `definition` — one sentence, present tense, naming the subject in the first
+  three words (`"A polyfill is…"`). What it **is**, not why it matters.
+- `api` — 3–6 `{ signature, note }` rows of what you actually type. Verify every
+  signature against the entry's own code blocks; an invented one is worse than
+  no card. Required whenever the entry has a fence with a language.
+- `useCase` — one sentence, a specific scene, never a category.
+
+No headings, lists, links or newlines in any of the three. Full rules and the
+reference entry (`browser` id 133) are in `SUMMARY-CARDS-ROLLOUT.md`.
 
 Interview / company entry:
 

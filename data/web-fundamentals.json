@@ -11,6 +11,32 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "The render pipeline is the fixed sequence a browser runs to turn downloaded bytes into pixels: parse HTML into a DOM, parse CSS into style rules, combine them into a render tree, lay out where everything goes, paint it, and composite the layers.",
+        "api": [
+          {
+            "signature": "DOM + CSSOM → render tree",
+            "note": "the two parse results combined; only what is actually rendered ends up here"
+          },
+          {
+            "signature": "display: none vs visibility: hidden",
+            "note": "the first is left out of the render tree entirely; the second still takes up its space"
+          },
+          {
+            "signature": "transform / opacity",
+            "note": "the cheap properties — they skip layout and paint and run on the compositor"
+          },
+          {
+            "signature": "width / top / left",
+            "note": "the expensive ones — changing any of these re-runs layout for the whole subtree"
+          },
+          {
+            "signature": "el.offsetHeight / getComputedStyle(el)",
+            "note": "reads that force layout to run early, before the browser was ready to"
+          }
+        ],
+        "useCase": "Animating a sidebar with `transform: translateX()` and getting a smooth 60fps, where animating `left` drops frames because every step re-runs layout."
+      },
       "answer": "Everything else in this section is a detail of this one process. A browser receives bytes and has to end up with coloured pixels, and it does that in the same order every time.\n\n![From HTML to pixels](/diagrams/webfund/render-pipeline.svg)\n\n## The steps\n\n1. **Bytes → characters → tokens → nodes → DOM.** The HTML parser reads top to bottom, building the DOM tree incrementally. It can paint what it has before the document is finished — this is why a slow tail of HTML does not necessarily mean a blank screen.\n2. **CSS → CSSOM.** Every stylesheet is parsed into a second tree. **CSS is render-blocking**: the browser will not paint until it has the CSS it knows about, because painting first would mean showing unstyled content and repainting.\n3. **DOM + CSSOM → render tree.** Only what is visible. `display: none` produces no render-tree node; `visibility: hidden` does, because it still occupies space.\n4. **Layout (reflow).** Compute the geometry — the box of every node, in real pixels. This is where `%`, `em` and `auto` become numbers.\n5. **Paint.** Fill in pixels for each box: text, colours, shadows, borders. Produces layers.\n6. **Composite.** Assemble the layers, on the GPU where possible, and put them on screen.\n\n## Why the order matters to you\n\n**A `<script>` in the middle of the body stops the parser.** The DOM cannot continue being built, because the script might call `document.write`. The parser resumes only when the script has been fetched and executed — see [Script loading](/web-fundamentals/2).\n\n**A script that reads layout must wait for CSS.** If a stylesheet is still loading, `getComputedStyle` or `offsetHeight` cannot be answered, so the script blocks until the CSSOM is ready — a script that does not even mention CSS ends up waiting on it.\n\n**Changing a property at a different stage costs a different amount:**\n\n| You change | Work triggered |\n| --- | --- |\n| `width`, `top`, `font-size`, adding a node | Layout → Paint → Composite |\n| `color`, `background`, `box-shadow` | Paint → Composite |\n| `transform`, `opacity` | Composite only |\n\nThat table is the entire reason animations use `transform` and `opacity` rather than `left` and `width`. Sixty frames a second gives you 16.7 ms per frame; a layout pass on a large tree does not fit.\n\n## The preload scanner\n\nWhile the main parser is blocked on a script, a second, simpler parser races ahead through the raw HTML looking for `src` and `href` so it can start downloads early. It is the reason a page with a blocking script still fetches images in parallel.\n\nIt only sees **markup**. Anything discovered by JavaScript — a CSS `background-image`, a font referenced by a stylesheet the browser has not parsed yet, a lazily imported chunk — is invisible to it, which is exactly what [resource hints](/web-fundamentals/3) exist to fix.\n\n## Reflow is not free, and you can force it\n\n```javascript\n// Layout thrashing: read, write, read, write.\nfor (const el of items) {\n  const h = el.offsetHeight; // forces layout — the browser must flush pending writes\n  el.style.height = `${h * 2}px`; // invalidates layout again\n}\n\n// Batch: all reads, then all writes. One layout.\nconst heights = items.map((el) => el.offsetHeight);\nitems.forEach((el, i) => (el.style.height = `${heights[i] * 2}px`));\n```\n\nThe details of that pattern are in [Layout Thrashing & Forced Synchronous Layout](/browser/155).\n\n## Key takeaways\n\n- DOM and CSSOM are built separately, then combined into the render tree.\n- CSS blocks rendering; a synchronous script blocks parsing — and can end up blocked on CSS.\n- Layout → Paint → Composite. The property you animate decides how much of that runs.\n- The preload scanner rescues markup-declared resources, not JavaScript-discovered ones.\n\n## Interview follow-ups\n\n- **\"Why is CSS render-blocking but images are not?\"** — Painting without CSS means a flash of unstyled content and a full [repaint](/css/6); an image can arrive later and paint into space that layout already reserved (if you gave it dimensions).\n- **\"What is the difference between reflow and repaint?\"** — Reflow recomputes geometry, repaint refills pixels. Reflow always implies repaint; the reverse is not true.\n- **\"How would you make an animation cheap?\"** — Keep it on `transform`/`opacity` so only the compositor runs, and promote the layer deliberately rather than by accident."
     },
     {
@@ -24,6 +50,32 @@
       ],
       "difficulty": "easy",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Script loading is the choice of when a `<script>` downloads and when it runs. A plain script stops the HTML parser dead where it sits; `defer` and `async` let the parser carry on and differ in when the code finally executes.",
+        "api": [
+          {
+            "signature": "<script src>",
+            "note": "parsing stops, downloads, runs, then parsing resumes — the slowest option"
+          },
+          {
+            "signature": "<script defer src>",
+            "note": "downloads alongside parsing, runs after the HTML is done, in document order — the sane default"
+          },
+          {
+            "signature": "<script async src>",
+            "note": "downloads alongside parsing, runs the instant it arrives; order between async scripts is undefined"
+          },
+          {
+            "signature": "<script type=\"module\">",
+            "note": "deferred automatically, so you never write `defer` on one"
+          },
+          {
+            "signature": "DOMContentLoaded",
+            "note": "fires after HTML parsing and all deferred scripts — but async scripts may still be pending"
+          }
+        ],
+        "useCase": "Moving an analytics tag from a plain `<script>` in the `<head>` to `async`, and watching first paint drop from 1.8s to 0.4s."
+      },
       "answer": "Where you put a `<script>` tag and which attribute you give it decides whether your page renders in 200 ms or 2 seconds. It is the highest-value thing on this page and it fits in one diagram.\n\n![Script loading — blocking, async, defer](/diagrams/webfund/script-loading.svg)\n\n## The four behaviours\n\n| Form | Fetch | Execute | Parser |\n| --- | --- | --- | --- |\n| `<script src>` | Immediately, blocking | The moment it arrives | **Stopped** while fetching *and* executing |\n| `<script async src>` | In parallel | As soon as it lands | Paused only for execution; **order not guaranteed** |\n| `<script defer src>` | In parallel | After parsing completes, before `DOMContentLoaded` | Never blocked; **document order preserved** |\n| `<script type=\"module\">` | In parallel | Deferred by default, after parsing | Like `defer`, plus its own dependency graph |\n\nTwo of those rows are the ones you use. `defer` is the sane default for your own code: it downloads in parallel, runs in order, and the DOM exists by the time it runs. `async` is right for genuinely independent third parties — an analytics beacon that touches nothing you own.\n\n## Step through it\n\n```trace\n{\n  \"input\": \"<head> with one blocking script, one async, one defer\",\n  \"lanes\": [\n    { \"id\": \"parser\", \"label\": \"HTML parser\", \"kind\": \"slots\", \"slots\": [\"position\"] },\n    { \"id\": \"tags\", \"label\": \"Scripts in the document\", \"kind\": \"cells\", \"cells\": [\"blocking.js\", \"async.js\", \"defer.js\"], \"indices\": true },\n    { \"id\": \"log\", \"label\": \"What the browser does\", \"kind\": \"log\" }\n  ],\n  \"vars\": [\"parsing\", \"DOM ready\"],\n  \"steps\": [\n    {\n      \"note\": \"The parser reaches `<script src=\\\"blocking.js\\\">`. Parsing **stops**. The preload scanner races ahead and starts the other two downloads anyway.\",\n      \"cells\": { \"parser\": [\"at blocking.js\"], \"log\": [\"fetch blocking.js — parser stopped\"] },\n      \"marks\": { \"tags\": { \"0\": \"bad\" } },\n      \"vars\": { \"parsing\": \"stopped\", \"DOM ready\": \"no\" }\n    },\n    {\n      \"note\": \"`blocking.js` arrives and executes. Only now can parsing resume. Every millisecond of that round trip was a millisecond of blank screen.\",\n      \"cells\": { \"parser\": [\"at blocking.js\"], \"log\": [\"fetch blocking.js — parser stopped\", \"run blocking.js\"] },\n      \"marks\": { \"tags\": { \"0\": \"done\" } },\n      \"vars\": { \"parsing\": \"stopped\", \"DOM ready\": \"no\" }\n    },\n    {\n      \"note\": \"Parsing continues. `async.js` has finished downloading, so it runs the moment it lands — interrupting the parser mid-document.\",\n      \"cells\": { \"parser\": [\"mid-body\"], \"log\": [\"run blocking.js\", \"async.js landed → runs now\"] },\n      \"marks\": { \"tags\": { \"0\": \"done\", \"1\": \"active\" } },\n      \"vars\": { \"parsing\": \"interrupted\", \"DOM ready\": \"no\" }\n    },\n    {\n      \"note\": \"Parsing finishes: the DOM is complete. `defer.js` has been waiting, downloaded, for exactly this moment.\",\n      \"cells\": { \"parser\": [\"end of document\"], \"log\": [\"async.js ran\", \"parsing complete\"] },\n      \"marks\": { \"tags\": { \"0\": \"done\", \"1\": \"done\", \"2\": \"window\" } },\n      \"vars\": { \"parsing\": \"done\", \"DOM ready\": \"yes\" }\n    },\n    {\n      \"note\": \"`defer.js` runs, in document order, with the whole DOM available — then `DOMContentLoaded` fires.\",\n      \"cells\": { \"parser\": [\"end of document\"], \"log\": [\"parsing complete\", \"run defer.js\", \"DOMContentLoaded\"] },\n      \"marks\": { \"tags\": { \"0\": \"done\", \"1\": \"done\", \"2\": \"hit\" } },\n      \"vars\": { \"parsing\": \"done\", \"DOM ready\": \"yes\" }\n    }\n  ]\n}\n```\n\n## The rules\n\n```html\n<head>\n  <!-- Your app. Parallel download, in-order execution, DOM guaranteed. -->\n  <script defer src=\"/assets/app.8f3a2b.js\"></script>\n\n  <!-- A module is deferred already. `async` on a module opts back out. -->\n  <script type=\"module\" src=\"/assets/app.mjs\"></script>\n\n  <!-- Independent third party that touches nothing of yours. -->\n  <script async src=\"https://cdn.example.com/analytics.js\"></script>\n</head>\n```\n\n- **`defer` for anything of yours.** In-order and DOM-ready are both things your code assumes.\n- **`async` only for independent scripts.** Two `async` scripts have no ordering, so one cannot depend on the other.\n- **\"Put scripts at the end of the body\"** is the pre-`defer` version of this advice. It still works, but `defer` in the head starts the download earlier, which is the part that mattered.\n- **Inline scripts always block**, attribute or not — `async`/`defer` are ignored on them. A tiny inline script is fine; a large one is a parser stall you cannot see in the network panel.\n- **`type=\"module\"` implies deferred**, always, even inline. And modules are fetched with [CORS](/browser/156), so a cross-origin one needs `crossorigin` and the right headers.\n\n## Common mistakes\n\n- A blocking `<script>` in the `<head>` for a bundle that could have been `defer`.\n- `async` on application code, then a race where one file runs before the library it needs.\n- Assuming `defer` guarantees the *images* have loaded. It guarantees the DOM, not the subresources — that is `load`.\n- A blocking third-party tag (chat widget, tag manager) in the head, which turns their outage into your blank page.\n\n## Key takeaways\n\n- `defer` for your code, `async` for independent third parties, plain `<script>` almost never.\n- A blocking script stops the parser for the whole round trip, not just the execution.\n- Modules are deferred by default and bring their own dependency graph.\n- The [preload scanner](/web-fundamentals/1) keeps downloads going while the parser is stalled — but it only sees markup.\n\n## Interview follow-ups\n\n- **\"`async` vs `defer` in one sentence?\"** — Both download in parallel; `async` runs as soon as it lands and in no particular order, `defer` runs after parsing in document order.\n- **\"Why is `defer` in the head better than a script at the end of the body?\"** — The download starts as soon as the head is parsed instead of after the whole document, and execution timing is the same.\n- **\"What breaks if you put `async` on your app bundle?\"** — Execution can beat the DOM it queries and can reorder relative to other scripts; both are intermittent, which is the worst kind of bug."
     },
     {
@@ -37,6 +89,32 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Resource hints are `<link>` tags that tell the browser about a file it will need before it would have discovered that file on its own — so the download can start early instead of waiting for the parser to reach it.",
+        "api": [
+          {
+            "signature": "<link rel=\"preload\" as=\"font\" crossorigin>",
+            "note": "fetch now at high priority; `as` is mandatory, and fonts need `crossorigin` or you fetch twice"
+          },
+          {
+            "signature": "<link rel=\"preconnect\">",
+            "note": "do the DNS, TCP and TLS handshakes now so the real fetch starts warm"
+          },
+          {
+            "signature": "<link rel=\"dns-prefetch\">",
+            "note": "just the name lookup — cheaper, and much weaker"
+          },
+          {
+            "signature": "<link rel=\"prefetch\">",
+            "note": "lowest priority, for the *next* navigation, not this one"
+          },
+          {
+            "signature": "fetchpriority=\"high\"",
+            "note": "the cheaper lever: reprioritise something already in the HTML rather than preloading it"
+          }
+        ],
+        "useCase": "A hero image inside a CSS `background-image` that the browser cannot see until the CSS parses — `preload` starts it immediately and cuts a second off Largest Contentful Paint."
+      },
       "answer": "The browser is good at prioritising what it can *see*. Resource hints are how you tell it about the things it cannot see yet, or cannot see at all.\n\n## The four, and what each actually does\n\n| Hint | Says | Use it for |\n| --- | --- | --- |\n| `preconnect` | \"Open the connection now\" — DNS + TCP + TLS, before any request | A known third-party origin you will hit soon (fonts, API, image [CDN](/system-design/115)) |\n| `dns-prefetch` | \"Just resolve the DNS\" | A fallback for `preconnect` on older browsers, or a maybe-origin |\n| `preload` | \"Fetch this **now**, at high priority — I need it for this page\" | A late-discovered critical resource: a font, a hero image, a CSS-referenced asset |\n| `prefetch` | \"Fetch this when idle — the **next** page probably needs it\" | The bundle for the route the user is most likely to click |\n\n```html\n<!-- Save the connection cost before the first font request exists. -->\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n\n<!-- The font is referenced from CSS, so it is discovered two round trips late. -->\n<link\n  rel=\"preload\"\n  as=\"font\"\n  type=\"font/woff2\"\n  href=\"/fonts/inter-var.woff2\"\n  crossorigin\n/>\n\n<!-- The LCP image, discovered by the preload scanner but competing with everything. -->\n<link rel=\"preload\" as=\"image\" href=\"/hero.avif\" fetchpriority=\"high\" />\n\n<!-- Probably next. Idle-time, low priority, cached for later. -->\n<link rel=\"prefetch\" href=\"/assets/route-checkout.4c1d.js\" />\n```\n\n## Why preload exists at all\n\nThe [preload scanner](/web-fundamentals/1) sees markup, and only markup. A font is referenced by `@font-face` inside a stylesheet, so the chain is: HTML → stylesheet → parse CSS → discover the font → fetch it. That is two full round trips of delay before the request even starts. `preload` collapses the chain by declaring the resource in the HTML where the scanner can see it immediately.\n\nThe same applies to anything discovered by JavaScript: a hero image set via `background-image`, a chunk imported inside a click handler, a JSON payload your app fetches on boot.\n\n## `fetchpriority`, the cheaper lever\n\n```html\n<img src=\"/hero.avif\" fetchpriority=\"high\" alt=\"\" />\n<!-- LCP candidate -->\n<img src=\"/footer-logo.svg\" fetchpriority=\"low\" alt=\"\" />\n<!-- below the fold -->\n```\n\nImages below the fold are fetched at low priority automatically, but the browser cannot know which of three above-the-fold images is the LCP element. `fetchpriority=\"high\"` on that one, and `loading=\"lazy\"` on everything below the fold, usually beats adding another `preload`.\n\n## The rules that keep hints from backfiring\n\n- **`preload` is a promise you have to keep.** If nothing uses the resource within a few seconds, the console warns and you have spent bandwidth competing with resources that mattered.\n- **Preloading everything is preloading nothing.** Hints work by reordering a queue; move everything to the front and the order is unchanged, minus the bandwidth you wasted.\n- **`as` is mandatory.** Without it the browser cannot assign a priority or match the eventual request, and the resource is fetched twice.\n- **`crossorigin` must match the eventual request exactly.** Fonts are always fetched in [CORS](/browser/156) mode, so a font `preload` without `crossorigin` is a guaranteed double download — the classic version of this bug.\n- **Four to six `preconnect`s at most.** Each one holds an open connection; beyond a handful they contend for bandwidth with the requests you actually made.\n\n## Key takeaways\n\n- `preconnect` buys the handshake, `preload` buys the round trips to discovery, `prefetch` buys the *next* navigation.\n- Preload is for late-discovered critical resources, above all fonts and the LCP image.\n- Get `as` and `crossorigin` right or you download the file twice.\n- `fetchpriority` and `loading=\"lazy\"` are often the cheaper fix.\n\n## Interview follow-ups\n\n- **\"`preload` vs `prefetch`?\"** — Priority and intent: preload is \"this page needs it now\", prefetch is \"the next page might, do it when idle\".\n- **\"Why does a preloaded font sometimes download twice?\"** — A `crossorigin` mismatch, so the preloaded response does not match the CSS-issued request and cannot be reused.\n- **\"When would you not add a hint?\"** — When the resource is already discoverable in the markup at the right priority; the hint then only adds contention."
     },
     {
@@ -50,6 +128,36 @@
       ],
       "difficulty": "easy",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "The `<head>` is read top to bottom by a parser that halts for some of its contents, so the order of the tags in it is a schedule, not a style preference — what you put first decides what downloads first.",
+        "api": [
+          {
+            "signature": "<meta charset=\"utf-8\">",
+            "note": "first, within the first 1024 bytes, or the parser may have to restart"
+          },
+          {
+            "signature": "<meta name=\"viewport\">",
+            "note": "next — mobile layout depends on it, and it costs nothing"
+          },
+          {
+            "signature": "<link rel=\"preconnect\">",
+            "note": "early, so the handshakes to third-party origins run while the rest parses"
+          },
+          {
+            "signature": "<link rel=\"stylesheet\">",
+            "note": "render-blocking — before it, nothing paints; after it, everything is already waiting"
+          },
+          {
+            "signature": "<link rel=\"stylesheet\" media=\"print\">",
+            "note": "loads without blocking render — the trick for non-critical CSS"
+          },
+          {
+            "signature": "<html lang=\"en\">",
+            "note": "not in the head, but the thing most often missing — screen readers pick the wrong voice without it"
+          }
+        ],
+        "useCase": "A `<title>` placed above the stylesheet so the tab label appears immediately, instead of the tab sitting blank while a 200 kB CSS file downloads."
+      },
       "answer": "The `<head>` is executed top to bottom by a parser that stops for some of it. Order is not cosmetic — it is a schedule.\n\n## The order that works\n\n```html\n<!doctype html>\n<html lang=\"en\">\n  <head>\n    <!-- 1. Encoding, first, within the first 1024 bytes.\n         Otherwise the parser guesses and may restart. -->\n    <meta charset=\"utf-8\" />\n\n    <!-- 2. Viewport, before any CSS — layout depends on it. -->\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\n    <!-- 3. Title, early: it is what the tab and the crawler read first. -->\n    <title>Page title — Site</title>\n\n    <!-- 4. Connections to origins you are about to use. -->\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n\n    <!-- 5. Critical CSS, or the stylesheet link. Render-blocking, on purpose. -->\n    <link rel=\"stylesheet\" href=\"/assets/app.8f3a.css\" />\n\n    <!-- 6. Preloads for late-discovered critical resources. -->\n    <link\n      rel=\"preload\"\n      as=\"font\"\n      type=\"font/woff2\"\n      href=\"/fonts/inter.woff2\"\n      crossorigin\n    />\n\n    <!-- 7. Scripts, deferred. -->\n    <script defer src=\"/assets/app.2b7c.js\"></script>\n\n    <!-- 8. Everything that does not affect the first paint. -->\n    <meta name=\"description\" content=\"…\" />\n    <link rel=\"canonical\" href=\"https://example.com/page\" />\n    <link rel=\"icon\" href=\"/favicon.svg\" type=\"image/svg+xml\" />\n  </head>\n</html>\n```\n\n## Why each position\n\n- **`charset` first.** The parser needs the encoding before it can interpret bytes as characters. Declared late, it may throw away its work and re-parse.\n- **`viewport` before CSS.** Media queries and layout depend on the viewport width; setting it after the stylesheet can cost a re-layout.\n- **CSS before scripts.** A script that reads layout blocks until the [CSSOM](/web-fundamentals/1) is ready; putting the stylesheet first means that wait overlaps with the script's own download instead of following it.\n- **`preconnect` before the request that needs it**, or it saves nothing.\n- **Everything social and descriptive last.** `og:` tags, canonical, icons — a crawler reads the whole head, and none of it affects the first paint.\n\n## The bits people get wrong\n\n- **A blocking `<script>` above the stylesheet.** Now nothing is downloading the CSS during that script's round trip.\n- **A synchronous third-party tag in the head.** Their latency becomes your Time to First Byte, and their outage becomes your blank page.\n- **Multiple stylesheets, all render-blocking.** They are fetched in parallel but paint waits for the last one. Split by media (`media=\"print\"`) or inline the critical part.\n- **`title` after 40 lines of meta tags.** Not a performance bug, but the first thing a person sees in the tab.\n- **No `lang` on `<html>`.** Screen readers pick the wrong voice, and hyphenation rules go with it.\n\n## Non-blocking CSS, when you need it\n\n```html\n<!-- Load a non-critical stylesheet without blocking the first paint. -->\n<link rel=\"stylesheet\" href=\"/print.css\" media=\"print\" />\n<link\n  rel=\"stylesheet\"\n  href=\"/below-the-fold.css\"\n  media=\"print\"\n  onload=\"this.media = 'all'\"\n/>\n```\n\nThe `media=\"print\"` trick downloads at low priority without blocking render, then swaps to `all` once it has arrived. Use it sparingly — a late stylesheet swap can cause a visible [reflow](/css/6).\n\n## Key takeaways\n\n- `charset`, `viewport`, `title`, connections, CSS, preloads, deferred scripts, then the rest.\n- Anything render-blocking should be as early and as small as possible.\n- A third-party script in the head makes their uptime your uptime.\n- `lang` on `<html>` is one attribute and it is an accessibility requirement.\n\n## Interview follow-ups\n\n- **\"Why must `charset` come first?\"** — The parser has to know how to decode bytes; discovering it late can force a re-parse of everything it has read.\n- **\"How would you stop a stylesheet blocking the first paint?\"** — Inline the critical rules and load the rest with the `media` swap, or split the stylesheet by route."
     },
     {
@@ -62,6 +170,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Three separate mechanisms decide what a CSS property ends up as: the cascade picks which declaration wins, inheritance fills in anything you never declared, and the value is then resolved through several stages before it is used.",
+        "api": [
+          {
+            "signature": "cascade order: layer → specificity → source order",
+            "note": "origin and `@layer` come first — specificity only breaks ties inside the same layer"
+          },
+          {
+            "signature": "specificity (inline, id, class, element)",
+            "note": "counted as a tuple, not a score — one id always beats any number of classes"
+          },
+          {
+            "signature": ":where(...)",
+            "note": "specificity zero, which is how you write a default that is trivially overridden"
+          },
+          {
+            "signature": "!important",
+            "note": "jumps the whole ordering; in `@layer` the importance order is *reversed*"
+          },
+          {
+            "signature": "inherit / initial / unset / revert",
+            "note": "the four explicit value keywords — `revert` goes back to the browser's stylesheet, `initial` to the spec default"
+          },
+          {
+            "signature": "--custom-property",
+            "note": "inherits and resolves at use time, so it is substituted late and cannot be transitioned like a normal value"
+          }
+        ],
+        "useCase": "A button that ignores your class because a `#sidebar a` rule elsewhere has one id in it — no amount of extra classes wins, and wrapping the other rule in `:where()` does."
+      },
       "answer": "Most \"CSS is weird\" moments are one of three mechanisms being invisible: the cascade choosing a declaration, inheritance filling in what you did not declare, and the value being resolved through several stages before it becomes pixels.\n\n## The cascade, in the real order\n\nFor one property on one element, the browser sorts every declaration that matches and takes the winner. In order of precedence:\n\n1. **Origin and importance** — user-agent < user < author < author `!important` < user `!important`. `!important` genuinely inverts the order, which is why it is so hard to undo.\n2. **Cascade layers** (`@layer`) — an unlayered declaration beats a layered one, and later layers beat earlier ones.\n3. **Specificity** — `(inline, id, class/attribute/pseudo-class, element)`, compared left to right. Detail and examples: [CSS Specificity and Selector Priority](/css/3).\n4. **Source order** — the last one wins. This is the tie-break, not the rule.\n\n```css\n@layer reset, components, utilities;\n\n@layer components {\n  .button { padding: 8px 16px; }   /* loses to anything in utilities… */\n}\n@layer utilities {\n  .p-0 { padding: 0; }             /* …regardless of specificity */\n}\n```\n\nLayers are the modern answer to the specificity arms race: instead of adding another class to win, you declare *which bucket wins* once, and the selectors inside stay simple.\n\n`:where()` is the other half — it has **zero specificity**, so `:where(.a, .b) p` is as easy to override as `p`.\n\n## Inheritance\n\nSome properties inherit by default (`color`, `font-*`, `line-height`, `visibility`, `cursor`); most do not (`margin`, `padding`, `border`, `background`, `display`). That split is why setting `font-family` on `body` styles the whole page but setting `border` there does not.\n\nFour keywords control it explicitly:\n\n| Keyword | Meaning |\n| --- | --- |\n| `inherit` | Take the parent's computed value, always |\n| `initial` | The property's spec default — **not** the browser's stylesheet value |\n| `unset` | `inherit` for inheriting properties, `initial` for the rest |\n| `revert` | Roll back to the previous origin — usually the browser's own stylesheet |\n\n`initial` on `display` is `inline`, not `block` — a common surprise. `revert` is usually what people actually mean.\n\n## The value stages\n\nOne declared value passes through several forms before layout:\n\n```\nspecified  →  computed  →  used  →  actual\nfont-size: 2em     32px        32px      32px\nwidth: 50%         50%         640px     640px\n```\n\n- **Computed** resolves relative units against the element and is what inherits — this is why a child of a `font-size: 2em` parent doubles again, and why `line-height: 1.5` (unitless) inherits the *ratio* while `line-height: 150%` inherits the *result*.\n- **Used** needs layout: percentages and `auto` become real pixels only once the containing block is known.\n- **Actual** is the used value after the device rounds it.\n\n`getComputedStyle()` returns the *resolved* value, which is the used value for layout properties and the computed value for the rest — which is why it can force a layout pass ([layout thrashing](/browser/155)).\n\n## Custom properties are different\n\n```css\n:root { --gap: 8px; }\n.card { --gap: 16px; padding: var(--gap); } /* 16px, and children inherit 16px */\n```\n\nCustom properties **inherit** and are resolved at computed-value time, so a variable set on an ancestor changes every descendant that reads it — no rebuild, no re-declaration. That is what makes them the right vehicle for theming, and why the app's own design tokens work that way.\n\n## Key takeaways\n\n- Importance → layers → specificity → source order. Specificity is one step, not the whole story.\n- `@layer` and `:where()` are how you stop competing on specificity.\n- Inherited vs non-inherited is a fixed property list; `unset` and `revert` are the escape hatches.\n- Computed values inherit; used values need layout. Unitless `line-height` inherits the ratio.\n\n## Interview follow-ups\n\n- **\"How do you override a third-party style without `!important`?\"** — Put your rules in a later `@layer`, or reduce theirs with `:where()` if you control the import.\n- **\"Why does `line-height: 1.5` behave differently from `150%`?\"** — The unitless version inherits the ratio and recomputes per element; the percentage inherits the already-computed pixel value.\n- **\"What does `getComputedStyle` cost?\"** — For a layout property it forces the browser to flush pending style and layout work before it can answer."
     },
     {
@@ -75,6 +213,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "A web font is a font file your CSS downloads. It arrives late — the browser only learns it is needed after the CSS has parsed and it has found text that uses it — so your text is either invisible or in the wrong font until it lands.",
+        "api": [
+          {
+            "signature": "font-display: swap",
+            "note": "show a fallback immediately and swap when the font lands — flash of unstyled text, no invisible text"
+          },
+          {
+            "signature": "font-display: optional",
+            "note": "one short window; if the font misses it, the fallback stays for this page load — no shift at all"
+          },
+          {
+            "signature": "<link rel=\"preload\" as=\"font\" crossorigin>",
+            "note": "start the download before the CSS reveals it; `crossorigin` is required even for your own domain"
+          },
+          {
+            "signature": "size-adjust / ascent-override",
+            "note": "match the fallback's metrics to the real font so the swap does not move the text"
+          },
+          {
+            "signature": "unicode-range",
+            "note": "subsetting: ship only the glyphs the page uses, often a 10× saving"
+          },
+          {
+            "signature": "woff2",
+            "note": "the only format worth serving now; the old `ttf`/`eot` fallback stack is dead weight"
+          }
+        ],
+        "useCase": "A heading that is invisible for 800ms on a slow connection, fixed by one line — `font-display: swap` — so it renders in a system font and swaps when the webfont lands."
+      },
       "answer": "A font file is the resource most likely to be both **render-blocking in effect** and **discovered late**. It is also the one with a purely declarative fix.\n\n![Web font loading — FOIT, FOUT and the fix](/diagrams/webfund/font-loading.svg)\n\n## Why fonts arrive late\n\nThe chain is: HTML → stylesheet → parse CSS → match `@font-face` → *only now* request the font. Two round trips before the request starts, and the browser will not even ask for a font that no element on the page currently uses.\n\nMeanwhile the text has to be drawn in something. The two failure modes have names:\n\n- **FOIT** — Flash of Invisible Text. The browser hides the text while it waits. Historically up to 3 seconds of nothing where your headline should be.\n- **FOUT** — Flash of Unstyled Text. It draws the fallback immediately and swaps when the web font arrives. Text is readable at once, but it moves — a layout shift, which is a [Core Web Vitals](/system-design/402) problem.\n\n## `font-display` picks your poison\n\n```css\n@font-face {\n  font-family: 'Inter';\n  src: url('/fonts/inter-var.woff2') format('woff2-variations');\n  font-weight: 100 900;\n  font-display: swap;\n  /* Match the fallback's metrics so the swap does not move the text. */\n  size-adjust: 107%;\n  ascent-override: 90%;\n}\n```\n\n| Value | Block period | Swap period | Result |\n| --- | --- | --- | --- |\n| `auto` | Browser default (usually ~3 s) | — | FOIT |\n| `block` | ~3 s | Infinite | FOIT, deliberately |\n| `swap` | 0 | Infinite | FOUT — text is instantly readable |\n| `fallback` | ~100 ms | ~3 s | Brief FOIT, then give up permanently |\n| `optional` | ~100 ms | 0 | Use it if it is already cached, otherwise never — **zero shift** |\n\n`swap` for body text: readable immediately beats pretty eventually. `optional` for anything decorative, and for a repeat-visit-heavy site where the font will be in cache anyway.\n\n## Removing the shift, not just the invisibility\n\n`swap` trades invisible text for moving text. The fix is to make the fallback occupy the same space as the real font:\n\n```css\n/* A fallback face that is metrically matched to the web font. */\n@font-face {\n  font-family: 'Inter fallback';\n  src: local('Arial');\n  size-adjust: 107%;\n  ascent-override: 90%;\n  descent-override: 22%;\n  line-gap-override: 0%;\n}\nbody { font-family: 'Inter', 'Inter fallback', sans-serif; }\n```\n\nNow the swap changes the glyph shapes and nothing else moves. This is the single highest-value font technique and almost nobody does it.\n\n## Cut the bytes\n\n- **`woff2` only.** Every browser you support has it; shipping `woff`, `ttf` and `eot` alongside is dead weight in the `src` list.\n- **Subset.** A Latin subset of a typical face is 15–25 kB; the full multi-script file is 200 kB+. `unicode-range` lets you ship several subsets and have the browser download only the ones the page actually uses.\n- **A variable font replaces a family.** One 40 kB variable file instead of regular + medium + bold + their italics is usually a large net win — but only if you use three or more weights.\n- **Self-host.** A third-party font host means an extra DNS + TCP + [TLS handshake](/browser/160), no cache sharing across sites (partitioned caches killed that), and a third party in your critical path. Copy the file into your own origin behind your own [CDN](/system-design/115).\n\n```html\n<!-- Self-hosted and preloaded: the request starts with the HTML, not two round trips later. -->\n<link\n  rel=\"preload\"\n  as=\"font\"\n  type=\"font/woff2\"\n  href=\"/fonts/inter-var.woff2\"\n  crossorigin\n/>\n```\n\n`crossorigin` is required even for a same-origin font, because fonts are always fetched in [CORS](/browser/156) mode — without it you get two downloads. See [resource hints](/web-fundamentals/3).\n\n## Key takeaways\n\n- Fonts are discovered two round trips late; `preload` them, with `crossorigin`.\n- `font-display: swap` for text you need read, `optional` for decoration.\n- Metric-matched fallbacks (`size-adjust`, `ascent-override`) remove the layout shift `swap` causes.\n- `woff2`, subset, self-hosted. Variable fonts pay off from about three weights.\n\n## Interview follow-ups\n\n- **\"FOIT or FOUT?\"** — FOUT, with a metric-matched fallback so the swap does not shift anything. Invisible text is a worse experience than the wrong shapes.\n- **\"Why did preloading the font make no difference?\"** — Usually a `crossorigin` mismatch, so the preload was not reused and the font downloaded twice.\n- **\"What is `font-display: optional` for?\"** — Zero layout shift: the font is used only if it is already cached, so a first visit renders in the fallback and later visits get the real thing."
     },
     {
@@ -88,6 +256,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Images are usually the heaviest thing a page downloads and the most common cause of content jumping around as it loads. Three declarative HTML features handle nearly all of it: the right format, the right size for the screen, and reserved space.",
+        "api": [
+          {
+            "signature": "width and height attributes",
+            "note": "lets the browser reserve the box before the file arrives — the single fix for image layout shift"
+          },
+          {
+            "signature": "aspect-ratio",
+            "note": "the CSS equivalent when the image is fluid; keeps the reserved box the right shape"
+          },
+          {
+            "signature": "srcset + sizes",
+            "note": "offer several widths and say how wide the slot is, so the browser picks one file"
+          },
+          {
+            "signature": "<picture> + <source type>",
+            "note": "for changing *format* or art direction — a different crop on mobile"
+          },
+          {
+            "signature": "loading=\"lazy\"",
+            "note": "defer offscreen images; never put it on the hero, which is the one you need first"
+          },
+          {
+            "signature": "fetchpriority=\"high\"",
+            "note": "on the hero image, to pull it ahead of everything else in the queue"
+          }
+        ],
+        "useCase": "An article where the text jumps down as each photo loads — adding `width` and `height` to every `<img>` reserves the space up front and the jumping stops."
+      },
       "answer": "Images are usually the largest thing you ship and the most common cause of layout shift. Three declarative features cover nearly all of it.\n\n## Formats, in one table\n\n| Format | Use for | Notes |\n| --- | --- | --- |\n| **AVIF** | Photos | Smallest, ~50% under JPEG; slower to encode |\n| **WebP** | Photos, everything | ~30% under JPEG, universally supported |\n| **JPEG** | The fallback | Still fine; use progressive |\n| **PNG** | Transparency, screenshots, flat colour | Lossless and large — never for photos |\n| **SVG** | Icons, logos, diagrams | Scales, themeable via CSS if inlined |\n\n```html\n<picture>\n  <source srcset=\"/hero.avif\" type=\"image/avif\" />\n  <source srcset=\"/hero.webp\" type=\"image/webp\" />\n  <img src=\"/hero.jpg\" alt=\"\" width=\"1200\" height=\"630\" />\n</picture>\n```\n\nThe browser takes the first `<source>` it understands. `<img>` is the fallback and carries the attributes.\n\n## Responsive images\n\n```html\n<img\n  src=\"/photo-800.jpg\"\n  srcset=\"/photo-400.jpg 400w, /photo-800.jpg 800w, /photo-1600.jpg 1600w\"\n  sizes=\"(max-width: 600px) 100vw, 50vw\"\n  width=\"800\"\n  height=\"600\"\n  alt=\"A description that says what the image conveys\"\n/>\n```\n\n- **`srcset` with `w` descriptors** tells the browser what each file *is*, in real pixels.\n- **`sizes`** tells it how big the image will be *rendered* — the browser cannot know before layout, and it chooses the file before layout. Getting `sizes` wrong is why the browser downloads a 1600px file for a 300px slot.\n- The browser also accounts for device pixel ratio, so you do not write `2x` variants by hand.\n\n## Stop the layout shift\n\n**Always set `width` and `height`.** Modern browsers turn them into an `aspect-ratio`, reserving the correct box before a single byte of the image arrives. Without them, the image occupies zero height, everything below it renders, then jumps down when the image lands — Cumulative Layout Shift, and the most common source of it.\n\n```css\nimg { max-width: 100%; height: auto; } /* keeps the attributes responsive */\n```\n\nFor a container whose ratio is fixed but whose image size is not:\n\n```css\n.thumb { aspect-ratio: 16 / 9; object-fit: cover; }\n```\n\n## Lazy loading and priority\n\n```html\n<!-- Above the fold, likely LCP: eager, high priority. -->\n<img src=\"/hero.avif\" fetchpriority=\"high\" width=\"1200\" height=\"630\" alt=\"\" />\n\n<!-- Below the fold: do not compete with the first paint. -->\n<img\n  src=\"/row-9.avif\"\n  loading=\"lazy\"\n  decoding=\"async\"\n  width=\"400\"\n  height=\"300\"\n  alt=\"\"\n/>\n```\n\n- **Never `loading=\"lazy\"` on the LCP image.** It delays the request past layout and directly regresses your headline metric — a top-three self-inflicted performance bug.\n- `decoding=\"async\"` keeps the decode off the critical path.\n- Below-the-fold images are already deprioritised by the browser; `lazy` additionally skips them entirely until they approach the viewport.\n\n## Alt text, briefly\n\n- Informative image: describe what it conveys, not what it depicts pixel by pixel.\n- Decorative image: `alt=\"\"` — empty, present. Omitting the attribute makes a [screen reader](/system-design/406) read the filename.\n- An image inside a link: the alt text describes the *destination*, because that is what it acts as.\n\n## Key takeaways\n\n- AVIF/WebP with a JPEG fallback via `<picture>`; SVG for anything vector.\n- `srcset` + `sizes` so the browser picks the file; wrong `sizes` is the usual cause of oversized downloads.\n- `width` and `height` on every image — that is the CLS fix.\n- `loading=\"lazy\"` below the fold, never on the LCP image.\n\n## Interview follow-ups\n\n- **\"How do you fix layout shift from images?\"** — Intrinsic dimensions or `aspect-ratio`, so the box exists before the bytes do.\n- **\"`srcset` vs `<picture>`?\"** — `srcset` is the same image at different sizes and the browser chooses; `<picture>` is *art direction* or format negotiation and you choose.\n- **\"Your LCP is 4 s and it is a hero image.\"** — Check that it is not lazy-loaded, is preloaded or `fetchpriority=\"high\"`, is AVIF/WebP, is sized for the slot, and is served from a [CDN](/system-design/115) close to the user."
     },
     {
@@ -101,6 +299,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "ES modules and CommonJS are two ways of splitting JavaScript into files. ES modules (`import`/`export`) are static — the imports are known before the code runs. CommonJS (`require`) is dynamic — a `require` is an ordinary function call that happens at runtime.",
+        "api": [
+          {
+            "signature": "import { x } from './m'",
+            "note": "static and hoisted; the bundler knows the graph without executing anything"
+          },
+          {
+            "signature": "const { x } = require('./m')",
+            "note": "runs at call time, so it can sit inside an `if` — and that is why it cannot be tree-shaken"
+          },
+          {
+            "signature": "import('./m')",
+            "note": "the bridge: dynamic, returns a promise, and marks a code-splitting point for the bundler"
+          },
+          {
+            "signature": "this at module top level",
+            "note": "`undefined` in an ES module, `module.exports` in CommonJS — the classic interop bug"
+          },
+          {
+            "signature": "\"type\": \"module\" in package.json",
+            "note": "what decides how Node reads a `.js` file at all"
+          },
+          {
+            "signature": "\"sideEffects\": false",
+            "note": "your promise to the bundler that dropping an unused import changes nothing"
+          }
+        ],
+        "useCase": "A library that imports fine in your app and crashes in a Node script, because it is CommonJS and the default export is `module.exports` rather than a real `default`."
+      },
       "answer": "Two module systems that look similar and behave differently, and every [bundler](/web-fundamentals/9) config problem you will ever hit lives in the gap between them.\n\n## The difference that causes everything else\n\n**ESM is static. CJS is dynamic.**\n\n```javascript\n// ESM — the imports are part of the syntax. Resolvable without running the file.\nimport { debounce } from \"./utils.js\";\nexport const wait = 300;\n\n// CJS — `require` is a function call. You only know what it loads by executing it.\nconst { debounce } = require(\"./utils\");\nif (process.env.NODE_ENV === \"test\") {\n  module.exports = require(\"./mock\"); // legal, and unanalysable\n}\n```\n\nBecause ESM's dependency graph is known before execution, a bundler can build the graph, follow which exports are used, and drop the rest. That is [tree shaking](/web-fundamentals/10), and it is why the static/dynamic distinction matters commercially rather than academically.\n\n## The behaviour differences worth knowing\n\n| | ESM | CommonJS |\n| --- | --- | --- |\n| Resolution | Static, at parse time | Dynamic, at call time |\n| Loading | Asynchronous | Synchronous |\n| Bindings | **Live** — the importer sees later reassignments | A **copy** of the value at require time |\n| `this` at top level | `undefined` | `module.exports` |\n| [Strict mode](/learnings/102) | Always | Only if declared |\n| [Hoisting](/learnings/99) | Imports are hoisted, and evaluated before the body | `require` runs where it is written |\n| Circular deps | Handled via the binding graph; may see a TDZ error | Returns a partially-populated `exports` object |\n| Available in browsers | Yes, natively | No, needs a bundler |\n\nLive bindings are the surprise:\n\n```javascript\n// counter.js\nexport let count = 0;\nexport const inc = () => {\n  count += 1;\n};\n\n// main.js\nimport { count, inc } from \"./counter.js\";\ninc();\nconsole.log(count); // 1 — the binding, not a snapshot\n```\n\nThe CJS equivalent logs `0`, because the importer took a copy.\n\n## Dynamic import is the bridge\n\n```javascript\n// Returns a promise, works in both worlds, and is a code-split point.\nconst { Chart } = await import(\"./chart.js\");\n```\n\nIt is the only way to load a module conditionally in ESM, and it is how route-level splitting is expressed — the bundler sees the `import()` and emits a separate chunk.\n\n## What actually happens in your app\n\n- **Your source is ESM.** You write `import`/`export` and the bundler resolves the graph.\n- **Some dependency is CJS.** The bundler wraps it in an interop shim, and that shim usually cannot be tree-shaken — a CJS dependency drags in its whole file.\n- **The published package tells the bundler which to use**:\n\n```json\n{\n  \"name\": \"my-lib\",\n  \"type\": \"module\",\n  \"main\": \"./dist/index.cjs\",\n  \"module\": \"./dist/index.mjs\",\n  \"exports\": {\n    \".\": {\n      \"types\": \"./dist/index.d.ts\",\n      \"import\": \"./dist/index.mjs\",\n      \"require\": \"./dist/index.cjs\"\n    }\n  },\n  \"sideEffects\": false\n}\n```\n\n`exports` is the modern field and it is exclusive: once it exists, anything not listed cannot be imported from the package, deep import paths included. `sideEffects: false` is the promise that tree shaking depends on.\n\n## Native modules in the browser\n\n```html\n<script type=\"module\" src=\"/app.mjs\"></script>\n```\n\nDeferred by default, always strict, fetched with [CORS](/browser/156), and each module executes **once** no matter how many files import it. Native ESM is real, but a bundler still earns its place: it resolves bare specifiers (`import React from \"react\"` is not a URL), and it stops a deep import graph from becoming hundreds of waterfalled requests.\n\n## Key takeaways\n\n- ESM is statically analysable; CJS is not, and that single fact drives tree shaking, interop pain and bundle size.\n- ESM has live bindings, async loading and always-strict semantics.\n- `import()` is the dynamic escape hatch and the code-split boundary.\n- `exports` and `sideEffects` in `package.json` are what let a bundler do its job.\n\n## Interview follow-ups\n\n- **\"Why can't CommonJS be tree-shaken?\"** — Its exports are computed at runtime, so a tool cannot prove which ones go unused without executing the module.\n- **\"What is a live binding?\"** — The importer references the exporter's variable, not a copy, so a later reassignment inside the module is visible to everyone who imported it.\n- **\"Why do you still need a bundler if browsers support modules?\"** — Bare specifier resolution, dependency graphs of hundreds of files, minification, and the chunking strategy."
     },
     {
@@ -114,6 +342,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "A bundler is the tool that takes your entry file, follows every import to build a graph of your code, transforms each file, and writes out the small number of files the browser actually downloads.",
+        "api": [
+          {
+            "signature": "resolution — './utils' → './utils.ts'",
+            "note": "job one: turn every import string into a real file on disk, including bare `react`"
+          },
+          {
+            "signature": "transformation",
+            "note": "job two: TypeScript, JSX and modern syntax down to something browsers run"
+          },
+          {
+            "signature": "the module graph",
+            "note": "job three: walk every import from the entry, which is what makes tree shaking possible"
+          },
+          {
+            "signature": "chunking + import()",
+            "note": "job four: split the graph into files; each dynamic `import()` becomes a split point"
+          },
+          {
+            "signature": "package.json exports / main / module",
+            "note": "the fields resolution actually reads, and where most \"it works in dev but not the build\" bugs live"
+          },
+          {
+            "signature": "process.env.NODE_ENV",
+            "note": "swapped at build time, which is how the whole development branch of a library disappears"
+          }
+        ],
+        "useCase": "A dev server that starts in 200ms but a production build that takes two minutes — they are doing different jobs, and only the second one bundles."
+      },
       "answer": "\"It bundles\" explains nothing. A bundler runs four distinct jobs, and every configuration question you have is really a question about one of them.\n\n![What a bundler does — resolve, transform, graph, emit](/diagrams/webfund/bundler-pipeline.svg)\n\n## The four jobs\n\n**1 · Resolve.** Turn a specifier into a file. `./utils` → `./utils.ts`; `react` → `node_modules/react/index.js`, chosen by the `exports` map, the `main`/`module` fields and the current condition (`import` vs `require`, `browser` vs `node`, `development` vs `production`). Nearly every \"module not found\" is a resolution problem, not a bundling one.\n\n**2 · Transform.** Run each file through a loader: TypeScript stripped, JSX compiled, CSS extracted or turned into a module, an SVG into a component, syntax lowered to the browser targets. Historically Babel; now usually esbuild or SWC, which is where most of the speed jump of the last few years came from.\n\n**3 · Build the graph.** Start at the entry, follow every static `import`, mark every `import()` as a **split point**. The result is a directed graph of modules with the dynamic boundaries marked.\n\n**4 · Emit.** Cut the graph into chunks, order them, minify, hash the filenames for cache busting, and write a manifest so the HTML knows what to load.\n\n```javascript\n// vite.config.js — the two knobs you actually turn.\nexport default {\n  build: {\n    target: \"es2020\", // job 2: how far to lower\n    rollupOptions: {\n      output: {\n        manualChunks: {\n          // job 4: chunk by change frequency\n          react: [\"react\", \"react-dom\"],\n        },\n      },\n    },\n  },\n};\n```\n\n## Dev server vs production build\n\nThey are two different programs, and expecting them to behave identically is a common source of \"works in dev, broken in prod\".\n\n| | Dev (Vite) | Production |\n| --- | --- | --- |\n| Modules | Served native ESM, unbundled | Bundled and chunked |\n| Transform | On demand, per file | Whole graph |\n| Dependencies | Pre-bundled once with esbuild | Bundled with the app |\n| Minify / tree-shake | No | Yes |\n| Source maps | Cheap | Configured |\n\n[Tree shaking](/web-fundamentals/10), minification and chunking only happen in the production build — which is why a bug caused by a side effect being dropped never reproduces locally.\n\n## Chunking, briefly\n\nSplit by **change frequency**, not by folder: framework, vendor, shared, per-route. A deploy should invalidate the smallest possible surface. The full argument, with the caching headers that make it work, is in [Build and deploy topology](/system-design/109).\n\nTwo failure modes:\n- **Too few chunks** — every deploy re-downloads everything.\n- **Too many** — dozens of tiny requests, and on HTTP/1.1 a connection limit; even on [HTTP/2](/browser/161) each chunk has its own compression floor and execution overhead.\n\n## The tools, and when each fits\n\n| Tool | Shape |\n| --- | --- |\n| **Vite** | Dev server on native ESM + Rollup for production. The default for apps. |\n| **esbuild** | Go, extremely fast, used *inside* other tools. Fewer plugins. |\n| **Rollup** | The library bundler: cleanest ESM output, best tree shaking. |\n| **webpack** | The most configurable and the most established; slower, huge plugin ecosystem. |\n| **Rspack / Turbopack** | Rust rewrites of the webpack model, aimed at large existing configs. |\n\nFor an app: Vite. For a published library: Rollup (or tsup over esbuild). For a legacy monolith with 40 plugins: webpack, until someone funds the migration.\n\n## Key takeaways\n\n- Resolve → transform → graph → emit. Name the stage and the problem gets much smaller.\n- `import()` is what creates a chunk boundary; nothing else does.\n- Dev and production are different pipelines — tree shaking and minification are production-only.\n- Chunk by change frequency so a deploy invalidates as little as possible.\n\n## Interview follow-ups\n\n- **\"Why is the dev server so fast now?\"** — It does not bundle: it serves native ESM and transforms each file on request, with dependencies pre-bundled once.\n- **\"How do you decide chunk boundaries?\"** — Route-level `import()` first, then split by how often each group changes, then measure against a size budget in CI.\n- **\"Something works in dev and breaks in the build.\"** — Almost always tree shaking removing a side effect, a different resolution condition, or minification exposing a reliance on function names."
     },
     {
@@ -127,6 +385,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Tree shaking is the bundler removing code you never use. It walks out from the entry file, marks everything reachable, and drops the rest — but only where it can prove that dropping the code changes nothing observable.",
+        "api": [
+          {
+            "signature": "\"sideEffects\": false",
+            "note": "in package.json: your promise that importing a file does nothing on its own, so unused ones can go"
+          },
+          {
+            "signature": "\"sideEffects\": [\"*.css\"]",
+            "note": "the honest version — CSS imports do have an effect and must be kept"
+          },
+          {
+            "signature": "export * from './x' (barrel file)",
+            "note": "the classic silent failure: one import from the barrel can pull in every module behind it"
+          },
+          {
+            "signature": "import * as X then X[name]",
+            "note": "a computed member access is unprovable, so nothing in that namespace can be dropped"
+          },
+          {
+            "signature": "/*#__PURE__*/",
+            "note": "annotate a call whose result is unused as safe to delete"
+          },
+          {
+            "signature": "bundle analyzer",
+            "note": "verify rather than assume — the only way to know whether it worked"
+          }
+        ],
+        "useCase": "Importing one icon from a library and finding all 900 in your bundle, because the package is a barrel file with no `sideEffects` declaration."
+      },
       "answer": "Tree shaking is dead-code elimination over the module graph: keep what is reachable from the entry, drop the rest. It works only when the [bundler](/web-fundamentals/9) can *prove* that dropping something changes nothing — and most of the time it cannot.\n\n## What must be true\n\n1. **ESM.** Static imports and exports, so the graph is known without running the code ([ESM vs CJS](/web-fundamentals/8)).\n2. **Production build.** It does not run in dev.\n3. **No side effects** — or an honest declaration of where they are.\n\n## The side-effect problem\n\nA module's top level can do things: register a polyfill, add a global, inject CSS. A bundler that drops an unused import from such a module breaks the app. So unless told otherwise, it keeps the whole module.\n\n```json\n// package.json — \"importing my modules changes nothing on its own\"\n{ \"sideEffects\": false }\n\n// Or, honestly, the ones that do:\n{ \"sideEffects\": [\"*.css\", \"./src/polyfills.js\"] }\n```\n\n`\"sideEffects\": false` on a package whose CSS import you rely on will silently delete your styles. It is a promise, and it must be true.\n\n```javascript\n// This is a side effect, and it defeats shaking for the whole module.\nwindow.myLib = createLib();\n\n// So is this — the call happens at import time.\nexport const config = loadConfig();\n\n// This is not: nothing runs until someone calls it.\nexport const createConfig = () => loadConfig();\n```\n\n## Barrel files\n\n```javascript\n// components/index.js — the barrel\nexport * from \"./Button\";\nexport * from \"./Table\";\nexport * from \"./Chart\"; // pulls in a 180 kB charting library\n\n// Somewhere else\nimport { Button } from \"../components\"; // did you just import the chart library?\n```\n\nIdeally the bundler shakes the rest away. In practice it often cannot: one re-exported module has a side effect, or a CJS dependency sits in the chain, or the analysis gives up on a deep `export *`. The barrel also hurts dev-server speed and cold builds, because every consumer pulls the whole index.\n\nImport from the file, not the barrel — `import { Button } from \"../components/Button\"` — or keep barrels to leaf-level, side-effect-free modules.\n\n## The other silent failures\n\n- **A CommonJS dependency.** Its exports are dynamic, so the interop wrapper keeps the whole file. Prefer packages that ship an ESM build.\n- **Class methods.** Minifiers rarely drop unused methods on a class, because a property access could reach any of them. A tree of small functions shakes; a large class does not.\n- **`import * as X`.** Namespace imports are shakeable in principle, but a single dynamic access (`X[name]`) forces everything to be kept.\n- **Polyfills and `core-js`.** Imported for effect, by design. Target modern browsers and ship fewer of them.\n- **`/*#__PURE__*/` missing.** A top-level function call the bundler cannot prove is pure is kept. Library authors annotate; app authors should avoid top-level calls.\n\n## Verify, do not assume\n\n```bash\nnpx vite-bundle-visualizer          # or rollup-plugin-visualizer / webpack-bundle-analyzer\n```\n\nOpen the treemap and look for the module you thought you shook out. A size budget that fails CI is the guard that keeps it out later — see [Build and deploy topology](/system-design/109).\n\n## Key takeaways\n\n- Tree shaking needs ESM, a production build, and provable absence of side effects.\n- `sideEffects` in `package.json` is the single most load-bearing flag, in both directions.\n- Barrel files, CJS dependencies and large classes are the three usual reasons nothing was shaken.\n- Measure with a bundle visualiser; \"it should be tree-shaken\" is not evidence.\n\n## Interview follow-ups\n\n- **\"Why did importing one icon add 300 kB?\"** — A barrel re-exporting the whole set, over a package with no `sideEffects` declaration or a CJS build.\n- **\"What is a side effect for a bundler?\"** — Anything a module does at import time that is observable outside it: assigning a global, registering, injecting CSS, calling a function at the top level.\n- **\"How would you prove a dependency was dropped?\"** — Bundle analyser on the production build, plus a size budget in CI so it stays dropped."
     },
     {
@@ -140,6 +428,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "Alongside the DOM the browser builds a second tree, the accessibility tree, which is what a screen reader reads out. Semantic HTML is using the element that already means what you mean, so that tree comes out right for free.",
+        "api": [
+          {
+            "signature": "<button> vs <div onclick>",
+            "note": "the button is focusable, works with Enter and Space, and announces as a button — the div is none of those"
+          },
+          {
+            "signature": "<label for> / wrapping <label>",
+            "note": "gives an input its name, and makes the label text a click target for it"
+          },
+          {
+            "signature": "alt on <img>",
+            "note": "the name of an image; `alt=\"\"` is the correct value for a decorative one, not a missing attribute"
+          },
+          {
+            "signature": "naming order: aria-labelledby → aria-label → content → title",
+            "note": "the browser picks the first that exists, which is why a stray `aria-label` silently wins"
+          },
+          {
+            "signature": "<main> / <nav> / <header> / <footer>",
+            "note": "landmarks; a screen reader user jumps between them instead of reading top to bottom"
+          },
+          {
+            "signature": "role=\"...\"",
+            "note": "overrides what an element means — almost always a sign you picked the wrong element"
+          }
+        ],
+        "useCase": "A `<div onclick>` styled as a button that a keyboard user simply cannot reach — swapping it for `<button>` fixes focus, Enter, Space and the announcement in one line."
+      },
       "answer": "The browser builds a second tree next to the [DOM](/browser/95): the **accessibility tree**, which is what a [screen reader](/system-design/406), a voice control tool and every automated audit actually read. Your markup is the input to it, and `<div>` contributes nothing.\n\n![The DOM and the accessibility tree](/diagrams/webfund/a11y-tree.svg)\n\n## What the browser derives\n\nEach node in the accessibility tree carries four things:\n\n| Property | From | Example |\n| --- | --- | --- |\n| **Role** | The element, or an explicit `role` | `<button>` → `button` |\n| **Name** | Content, `aria-label`, `<label>`, `alt` | \"Save changes\" |\n| **State** | Attributes | `disabled`, `checked`, `aria-expanded=\"false\"` |\n| **Value** | The control's value | The text in an input |\n\nA `<div>` has role `generic` — no name, no state, nothing to announce. That is not a small gap: a screen reader user navigating by heading, landmark or form control will not find it at all.\n\n## What you get free from the right element\n\n```html\n<button type=\"button\">Save</button>\n```\n\nThat single tag gives you: the `button` role, keyboard focus, Enter and Space activation, the disabled state, the platform focus ring, and a form-submission behaviour. The `div` version needs all of it rebuilt:\n\n```html\n<!-- The same thing, done the hard way — and this is still missing things. -->\n<div\n  role=\"button\"\n  tabindex=\"0\"\n  aria-disabled=\"false\"\n  onclick=\"save()\"\n  onkeydown=\"\n    if (event.key === 'Enter' || event.key === ' ') {\n      event.preventDefault();\n      save();\n    }\n  \"\n>\n  Save\n</div>\n```\n\nThe first rule of ARIA is the one worth memorising: **no ARIA is better than bad ARIA**, and a native element is better than both.\n\n## The elements that carry meaning\n\n- **Landmarks** — `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>`, `<section aria-label>`. Screen reader users jump between these the way you use a table of contents. One `<main>` per page.\n- **Headings** — `<h1>`–`<h6>`, in order, no skipping. The heading list *is* the document outline; styling decides the size, the level decides the structure.\n- **Lists** — `<ul>`/`<ol>` announce \"list, 6 items\", which tells someone how much is coming.\n- **`<button>` vs `<a>`** — a button performs an action, a link navigates to a URL. If it changes the page location it is a link; if it opens a menu it is a button. A link with no `href` is not focusable.\n- **`<table>`** with `<th scope>` for real tabular data. Not for layout.\n- **`<dialog>`**, `<details>`, `<summary>` — native versions of things people rebuild badly.\n\n## Naming, in priority order\n\nThe accessible name comes from the first of these that exists: `aria-labelledby` → `aria-label` → the element's own content → `title`. Two consequences:\n\n```html\n<!-- aria-label WINS over the visible text — so a voice-control user saying\n     \"click Save\" cannot activate this button. -->\n<button aria-label=\"Submit form\">Save</button>\n\n<!-- Icon-only: the label is the only name there is. -->\n<button aria-label=\"Close dialog\"><svg aria-hidden=\"true\">…</svg></button>\n```\n\nKeep the accessible name and the visible text consistent, and hide decorative SVGs with `aria-hidden=\"true\"` so they do not leak stray text into the name.\n\nThe priority resolving on one button, step by step:\n\n```trace\n{\n  \"input\": \"one Save button, four naming sources present at once\",\n  \"lanes\": [\n    { \"id\": \"src\", \"label\": \"naming sources, in priority order\", \"kind\": \"slots\", \"slots\": [\"aria-labelledby\", \"aria-label\", \"content\", \"title\"] }\n  ],\n  \"vars\": [\"accessible name\", \"voice control\"],\n  \"steps\": [\n    {\n      \"note\": \"Start with the plain element. Only its own content is present, so the content is the name — visible text and accessible name agree.\",\n      \"marks\": { \"src\": { \"content\": \"hit\" } },\n      \"cells\": { \"src\": [\"—\", \"—\", \"\\\"Save\\\"\", \"—\"] },\n      \"vars\": { \"accessible name\": \"\\\"Save\\\"\", \"voice control\": \"\\\"click Save\\\" works\" }\n    },\n    {\n      \"note\": \"Add `title=\\\"Save the record\\\"`. It sits **below** content in the priority order, so it changes nothing — `title` is the last resort, not a label.\",\n      \"marks\": { \"src\": { \"content\": \"hit\", \"title\": \"skip\" } },\n      \"cells\": { \"src\": [\"—\", \"—\", \"\\\"Save\\\"\", \"\\\"Save the record\\\"\"] },\n      \"vars\": { \"accessible name\": \"\\\"Save\\\"\", \"voice control\": \"\\\"click Save\\\" works\" }\n    },\n    {\n      \"note\": \"Add `aria-label=\\\"Submit form\\\"`. It outranks the content, so the name silently changes to something the user cannot see.\",\n      \"marks\": { \"src\": { \"aria-label\": \"hit\", \"content\": \"bad\", \"title\": \"skip\" } },\n      \"cells\": { \"src\": [\"—\", \"\\\"Submit form\\\"\", \"\\\"Save\\\"\", \"\\\"Save the record\\\"\"] },\n      \"vars\": { \"accessible name\": \"\\\"Submit form\\\"\", \"voice control\": \"\\\"click Save\\\" now FAILS\" }\n    },\n    {\n      \"note\": \"That is the bug: the button says Save, the tree says Submit form. A voice-control user reads the screen and says a word the browser does not have.\",\n      \"marks\": { \"src\": { \"aria-label\": \"bad\", \"content\": \"bad\" } },\n      \"cells\": { \"src\": [\"—\", \"\\\"Submit form\\\"\", \"\\\"Save\\\"\", \"\\\"Save the record\\\"\"] },\n      \"vars\": { \"accessible name\": \"\\\"Submit form\\\"\", \"voice control\": \"\\\"click Save\\\" now FAILS\" }\n    },\n    {\n      \"note\": \"Add `aria-labelledby` pointing at the visible text node and it wins outright — the correct fix for an icon-only button, where there is no content to inherit.\",\n      \"marks\": { \"src\": { \"aria-labelledby\": \"hit\", \"aria-label\": \"skip\", \"content\": \"done\", \"title\": \"skip\" } },\n      \"cells\": { \"src\": [\"\\\"Save\\\"\", \"\\\"Submit form\\\"\", \"\\\"Save\\\"\", \"\\\"Save the record\\\"\"] },\n      \"vars\": { \"accessible name\": \"\\\"Save\\\"\", \"voice control\": \"\\\"click Save\\\" works\" }\n    }\n  ],\n  \"result\": \"the accessible name must match the visible text — anything that overrides it breaks voice control\"\n}\n```\n\n## The five checks that catch most of it\n\n1. **Tab through the page.** Everything interactive reachable, in a sensible order, with a visible focus ring.\n2. **Headings in order**, one `<h1>`.\n3. **Every image has `alt`** — empty for decorative ([images](/web-fundamentals/7)).\n4. **Every input has a `<label>`** ([forms](/web-fundamentals/12)).\n5. **Colour is never the only signal** — add an icon or text.\n\nAutomated tools catch maybe 30–40% of real issues. They will not tell you that your tab order is nonsense or that your label lies.\n\n## Key takeaways\n\n- The accessibility tree is derived from your markup; `div` contributes nothing to it.\n- Role, name, state, value — that is what a native element gives you for free.\n- Landmarks and headings are the navigation structure for anyone not using a mouse.\n- No ARIA beats bad ARIA; reach for the native element first.\n\n## Interview follow-ups\n\n- **\"Why not `<div onclick>`?\"** — No role, no keyboard, no focus, no state. You end up reimplementing a button badly, and usually forgetting Space.\n- **\"When is `role` justified?\"** — When no native element expresses the pattern (a tablist, a tree, a [combobox](/system-design/302)) — and then you owe it the full keyboard behaviour too.\n- **\"How do you test?\"** — Keyboard only, then a screen reader on the critical flow, then automated checks in CI as a floor rather than a ceiling."
     },
     {
@@ -153,6 +471,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "A form is the browser's own data-collection widget. It already knows how to label fields, validate them, show the right mobile keyboard, autofill them and submit them — most form bugs come from replacing that behaviour rather than using it.",
+        "api": [
+          {
+            "signature": "<label for=\"id\">",
+            "note": "the name of the field; without it the input is unlabelled to a screen reader and the text is not clickable"
+          },
+          {
+            "signature": "name attribute",
+            "note": "what actually gets submitted — a field with no `name` is not in the payload at all"
+          },
+          {
+            "signature": "type=\"email\" / tel / number / date",
+            "note": "changes the mobile keyboard and gets you free validation"
+          },
+          {
+            "signature": "autocomplete=\"current-password\"",
+            "note": "the specific tokens password managers look for; `off` is mostly ignored and mostly wrong"
+          },
+          {
+            "signature": ":user-invalid",
+            "note": "style the error state only *after* the user has interacted — unlike `:invalid`, which is red from the start"
+          },
+          {
+            "signature": "new FormData(form)",
+            "note": "read every named field at once, instead of one controlled state hook per input"
+          }
+        ],
+        "useCase": "A checkout where mobile users get the full alphabet keyboard for their card number — `inputmode=\"numeric\"` and the right `autocomplete` token fix it without any JavaScript."
+      },
       "answer": "Forms are where the platform gives you the most for free and where frameworks most often throw it away.\n\n## The label is not optional\n\n```html\n<!-- Explicit: for → id. Works everywhere, and clicking the text focuses the input. -->\n<label for=\"email\">Email</label>\n<input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" required />\n\n<!-- Implicit: wrapping. Fine, but harder to style. -->\n<label>Email <input name=\"email\" type=\"email\" /></label>\n```\n\nA placeholder is **not** a label: it disappears on focus, fails contrast in most designs, and is announced inconsistently. `aria-label` is the fallback for a genuinely label-less control (a search field with an icon), not the default.\n\n`name` is what appears in the submitted data. An input without `name` submits nothing — the single most common \"why is the field missing on the server\".\n\n## Input types earn their keep on mobile\n\n`type=\"email\"`, `tel`, `url`, `number`, `date`, `search` change the on-screen keyboard, add free validation, and enable the right autofill. Pair them with `autocomplete` (`email`, `current-password`, `new-password`, `one-time-code`, `street-address`) — filling a checkout by hand is a conversion problem, and `autocomplete=\"off\"` on an address form is user-hostile.\n\nUse `inputmode=\"numeric\"` for a numeric string like an OTP; `type=\"number\"` on a card number gives you spinners and a value that drops leading zeros.\n\n## Native validation, and where it stops\n\n```html\n<input\n  type=\"email\"\n  required\n  minlength=\"3\"\n  maxlength=\"80\"\n  pattern=\"[^@]+@[^@]+\"\n/>\n```\n\n```javascript\nform.addEventListener(\"submit\", (event) => {\n  if (!form.checkValidity()) {\n    event.preventDefault();\n    // Show your own messages; the browser bubbles are unstyleable and vanish.\n    for (const field of form.elements) {\n      if (field.willValidate && !field.checkValidity())\n        showError(field, field.validationMessage);\n    }\n  }\n});\n\n// A custom rule joins the same system rather than living beside it.\nconfirm.addEventListener(\"input\", () => {\n  confirm.setCustomValidity(\n    confirm.value === password.value ? \"\" : \"Passwords do not match\",\n  );\n});\n```\n\n`novalidate` on the `<form>` turns off the browser's UI while keeping the API — the usual setup for a custom design. And `:user-invalid` styles a field only *after* the user has interacted with it, which is what you actually want instead of `:invalid` painting every empty required field red on load.\n\n**Server-side validation is not optional.** Everything above is UX; the request can be made without the page.\n\n## Submission\n\n```javascript\nform.addEventListener(\"submit\", async (event) => {\n  event.preventDefault();\n  const data = new FormData(form); // every named control, files included\n  data.append(\"source\", \"settings-page\");\n\n  await fetch(\"/api/profile\", { method: \"POST\", body: data }); // multipart, no header needed\n  // JSON instead: JSON.stringify(Object.fromEntries(data))\n});\n```\n\nThings worth knowing:\n\n- A `<button>` inside a form is `type=\"submit\"` **by default**. A button that does something else needs `type=\"button\"` — otherwise it submits the form and reloads the page.\n- Enter in a text input submits the form via the first submit button. Removing that button breaks Enter for keyboard users.\n- Disabled controls do not submit. Use `readonly` when you still want the value.\n- Checkbox groups: repeat `name`, read with `data.getAll(name)`.\n- Multiple submit buttons: give each a `name`/`value` to tell them apart server-side.\n\n## Errors people can actually use\n\n- Put the message **next to the field**, and connect it: `aria-describedby=\"email-error\"` plus `aria-invalid=\"true\"`.\n- Summarise at the top for long forms, with links to each field.\n- Announce asynchronous errors with an `aria-live=\"polite\"` region, or focus moves nowhere and a [screen reader](/system-design/406) user hears nothing.\n- Never clear what the user typed on a failed submit.\n- Validate on blur and on submit, not on every keystroke — mid-typing errors are noise.\n\n## Controlled vs uncontrolled, briefly\n\nReact's controlled input re-renders on every keystroke and gives you per-key control; an uncontrolled input keeps its value in the DOM and you read it with `FormData` on submit. For a large form, uncontrolled plus native validation is usually both faster and less code — see [Controlled vs. Uncontrolled](/react-guide/22) for the React-side trade-off.\n\n## Key takeaways\n\n- Label every control, and give it a `name` — that is what submits.\n- Input types and `autocomplete` are the mobile experience.\n- Use the constraint validation API and style with `:user-invalid`; the browser's own bubbles are not designable.\n- `FormData` handles multipart and files without you touching a header.\n- Errors belong beside the field, wired up with `aria-describedby`.\n\n## Interview follow-ups\n\n- **\"Why is placeholder not a label?\"** — It vanishes on focus, is often too low-contrast, and is not reliably announced. The user loses the question while answering it.\n- **\"How do you validate?\"** — Native constraints for the common rules, `setCustomValidity` for the rest, `novalidate` so the UI is mine, and the server as the actual authority.\n- **\"Your form reloads the page when a button is clicked.\"** — The button defaulted to `type=\"submit\"`."
     },
     {
@@ -165,6 +513,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "CSS has three layout systems. Flow is the default — blocks stack, text wraps. Flex lays things out along one axis. Grid lays them out on two at once. Most layout arguments are really about which of the three the problem belongs to.",
+        "api": [
+          {
+            "signature": "flex: 1 (= 1 1 0%)",
+            "note": "equal columns regardless of content; `flex: auto` is `1 1 auto`, which sizes by content instead"
+          },
+          {
+            "signature": "min-width: 0",
+            "note": "the fix for a flex child that refuses to shrink — the default `min-width: auto` is the culprit"
+          },
+          {
+            "signature": "minmax(0, 1fr)",
+            "note": "the grid version of the same problem, for a track that overflows its content"
+          },
+          {
+            "signature": "repeat(auto-fit, minmax(200px, 1fr))",
+            "note": "a responsive grid with no media queries at all; `auto-fill` keeps the empty tracks"
+          },
+          {
+            "signature": "display: grid; place-items: center",
+            "note": "two lines to centre anything in both directions"
+          },
+          {
+            "signature": "container-type: inline-size + @container",
+            "note": "respond to the component's own width rather than the viewport's"
+          }
+        ],
+        "useCase": "A card whose long unbroken title stretches the flex row and pushes the price offscreen — one `min-width: 0` on the text column and it wraps instead."
+      },
       "answer": "Three layout systems, and almost every layout argument is really a disagreement about which one the problem belongs to.\n\n![Flow, flex and grid — the same content in three systems](/diagrams/webfund/layout-systems.svg)\n\n## Which one, in one line each\n\n| System | Shape of problem | Sizing |\n| --- | --- | --- |\n| **Flow** | A document: text, headings, paragraphs | Block fills the inline axis, height from content |\n| **Flex** | One axis — a row or a column of items | Content-out: items size themselves, then distribute |\n| **Grid** | Two axes at once — rows *and* columns aligned | Container-in: you define the tracks, items land in them |\n\nThe useful test: **do the items in the other direction have to line up?** A toolbar, a list of chips, a card footer — no, that is flex. A page shell, a form with aligned label and field columns, a photo gallery — yes, that is grid.\n\nNesting them is normal: a grid page shell whose header is a flex row.\n\n## Flow is still doing most of the work\n\nBefore either of the other two: block boxes stack, inline boxes flow, and the box model decides the numbers.\n\n```css\n*, *::before, *::after { box-sizing: border-box; } /* width includes padding + border */\n```\n\nTwo flow behaviours that surprise people:\n\n- **Margin collapse.** Adjacent vertical margins merge into the larger one, and a parent with no padding or border collapses with its first child. It does not happen in flex or grid, which is half of why people reach for them.\n- **Containing block.** A percentage width resolves against the containing block, and `position: absolute` resolves against the nearest positioned ancestor — not the parent.\n\n## Flex, the parts that matter\n\n```css\n.toolbar {\n  display: flex;\n  gap: 12px;              /* replaces margin hacks entirely */\n  align-items: center;    /* cross axis */\n  justify-content: space-between; /* main axis */\n  flex-wrap: wrap;        /* let it break rather than overflow */\n}\n.toolbar .spacer { margin-inline-start: auto; } /* push the rest to the end */\n```\n\n`flex: 1` is shorthand for `1 1 0%` — grow, shrink, ignore my content width — which is why sidebars end up equal instead of proportional. `flex: auto` (`1 1 auto`) starts from the content size. `min-width: 0` on a flex child is the fix for the classic \"text refuses to truncate\": the default `min-width: auto` will not shrink below the content.\n\n## Grid, the parts that matter\n\n```css\n.page {\n  display: grid;\n  grid-template-columns: minmax(200px, 260px) 1fr;  /* sidebar, content */\n  grid-template-rows: auto 1fr auto;\n  min-height: 100dvh;\n}\n\n/* A responsive gallery with no media queries at all. */\n.gallery {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));\n  gap: 16px;\n}\n```\n\n`auto-fit` vs `auto-fill`: `auto-fit` collapses empty tracks so the existing items stretch; `auto-fill` keeps them, so items stay their size. `1fr` means \"one share of the *leftover* space\", and `minmax(0, 1fr)` is the grid version of the truncation fix.\n\nNamed areas make an intent obvious in review:\n\n```css\n.app {\n  display: grid;\n  grid-template-areas: \"nav header\" \"nav main\";\n  grid-template-columns: 240px 1fr;\n}\n.app > nav { grid-area: nav; }\n```\n\n## Centring, and the modern conveniences\n\nCentring is [its own entry](/css/2); the two-line version is `display: grid; place-items: center;`. Worth knowing alongside it:\n\n- **Container queries** — `container-type: inline-size` plus `@container (min-width: 400px)`. A component that responds to *its own* width is what people wanted media queries to be.\n- **Logical properties** — `margin-inline`, `padding-block`, `inset`. They flip correctly in RTL, which the physical ones do not.\n- **`aspect-ratio`**, `min()`, `max()`, `clamp()` — `font-size: clamp(1rem, 2.5vw, 1.5rem)` replaces three breakpoints.\n- **Subgrid** — a child's tracks align with the parent's, which is how you finally align card contents across a row.\n\n## Key takeaways\n\n- Flow for documents, flex for one axis, grid when both axes must align.\n- `gap` everywhere; `min-width: 0` / `minmax(0, 1fr)` when content refuses to shrink.\n- `auto-fit` collapses empty tracks, `auto-fill` keeps them.\n- Container queries and logical properties are the two modern defaults worth adopting now.\n\n## Interview follow-ups\n\n- **\"Flex or grid for a card layout?\"** — Grid if rows must align across cards; flex if it is a single wrapping row where alignment between rows does not matter.\n- **\"Why won't my flex text truncate?\"** — `min-width: auto` on the flex item; set `min-width: 0`.\n- **\"How do you build a responsive gallery without media queries?\"** — `repeat(auto-fill, minmax(220px, 1fr))`, and container queries where the component's own width is what matters."
     },
     {
@@ -178,6 +556,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "`fetch` makes an HTTP request and returns a promise. Three of its behaviours surprise people: it does not reject on a 404 or 500, the response body is a stream you can only read once, and it has no timeout of its own.",
+        "api": [
+          {
+            "signature": "if (!res.ok) throw new Error(...)",
+            "note": "the check you must write — only a network failure rejects, and that throws a bare `TypeError`"
+          },
+          {
+            "signature": "res.json() / res.text()",
+            "note": "each consumes the body; a second call on the same response throws"
+          },
+          {
+            "signature": "res.clone()",
+            "note": "when you genuinely need to read it twice, for example to log and to parse"
+          },
+          {
+            "signature": "new AbortController() → { signal }",
+            "note": "cancellation; the same signal also works with `addEventListener(…, { signal })`"
+          },
+          {
+            "signature": "AbortSignal.timeout(ms)",
+            "note": "the timeout `fetch` does not have, in one line"
+          },
+          {
+            "signature": "credentials: 'include'",
+            "note": "cookies are not sent cross-origin without it — the commonest \"my session is missing\" bug"
+          }
+        ],
+        "useCase": "A search box that fires a request per keystroke, where an `AbortController` cancels the previous one so a slow early response cannot overwrite the latest results."
+      },
       "answer": "`fetch` is three things people get wrong in the same interview: it does not reject on 404, its body is a stream you can only read once, and it has no timeout.\n\n## It only rejects on a network failure\n\n```javascript\nconst res = await fetch(\"/api/user/42\");\n// res.ok is false for 404 and 500 — but nothing threw.\nif (!res.ok) throw new Error(`HTTP ${res.status}`);\nconst user = await res.json();\n```\n\nA rejected `fetch` means the request never completed: DNS failure, connection refused, [CORS](/browser/156) blocked it, or it was aborted. Every HTTP status — including 500 — is a successful fetch. Wrapping `fetch` in a helper that checks `res.ok` is the first thing any real codebase does.\n\nNote that a CORS failure is deliberately opaque: you get a `TypeError` with no detail, and the reason is only in the console.\n\n## The body is a stream, and you get one read\n\n```javascript\nconst res = await fetch(\"/api/report\");\nconst text = await res.text();\nconst json = await res.json(); // ✗ TypeError: body stream already read\n```\n\n`res.clone()` before the first read if you genuinely need two. That single-read rule is the same reason a `Response` from the [Cache API](/web-fundamentals/15) has to be cloned before you both return and store it.\n\nReading it as a stream is what makes token-by-token UI possible:\n\n```javascript\nconst res = await fetch(\"/api/chat\", { method: \"POST\", body });\nconst reader = res.body.pipeThrough(new TextDecoderStream()).getReader();\n\nfor (;;) {\n  const { value, done } = await reader.read();\n  if (done) break;\n  append(value); // partial text, as it arrives\n}\n```\n\nThat is the mechanism behind [streaming AI responses](/ai-dev/6) and progressive server rendering.\n\n## Cancellation\n\n```javascript\nconst controller = new AbortController();\nconst res = await fetch(url, { signal: controller.signal });\ncontroller.abort(); // → the fetch rejects with an AbortError\n```\n\n`AbortSignal` is not fetch-specific: `addEventListener(…, { signal })` removes the listener on abort, and your own async helpers should accept a signal and check `signal.aborted`. One controller can cancel a whole tree of work.\n\nThere is no `timeout` option, so build one:\n\n```javascript\n// AbortSignal.timeout(5000) does this natively where available.\nasync function request(url, { timeout = 5000, signal } = {}) {\n  const merged = AbortSignal.any(\n    [AbortSignal.timeout(timeout), signal].filter(Boolean),\n  );\n  const res = await fetch(url, { signal: merged });\n  if (!res.ok)\n    throw Object.assign(new Error(`HTTP ${res.status}`), {\n      status: res.status,\n    });\n  return res.json();\n}\n```\n\nTwo patterns worth naming out loud in an interview:\n\n- **Abort the previous request** on every new keystroke, so a slow earlier response cannot overwrite a newer one. Abort alone is not sufficient — a request already in flight can still land, so keep a sequence number too.\n- **Abort on unmount**, so a resolved promise does not set state on a component that is gone.\n\n## The options that catch people\n\n| Option | Why it matters |\n| --- | --- |\n| `credentials: 'include'` | Cookies are **not** sent cross-origin without it — see [cookies and storage](/browser/132) |\n| `mode: 'cors'` | The default for cross-origin; `no-cors` gives you an opaque response you cannot read |\n| `cache: 'no-store'` | Bypass the HTTP cache for a version check or a poll |\n| `keepalive: true` | Lets a small request outlive the page — the right way to send a final beacon |\n| `redirect: 'manual'` | When you need to see the 3xx rather than follow it |\n\n## Retries, briefly\n\nRetry only idempotent requests, only on a network error or a 5xx, with [exponential backoff](/system-design/410) and jitter, and give up after two or three attempts. Retrying a `POST /orders` is how a customer gets charged twice; an idempotency key is what makes it safe.\n\n## Key takeaways\n\n- `fetch` rejects only on network failure — check `res.ok` yourself, always.\n- The body is a single-use stream: `clone()` to read twice, or read it as a stream for progressive UI.\n- No timeout is built in; compose `AbortSignal.timeout` with your own signal.\n- Cookies need `credentials: 'include'` cross-origin.\n- Retry idempotent requests only, with backoff.\n\n## Interview follow-ups\n\n- **\"Does `fetch` throw on a 500?\"** — No. Only a network-level failure rejects; a 500 is a fulfilled promise with `ok: false`.\n- **\"How do you cancel a search-as-you-type request?\"** — An `AbortController` per keystroke, aborting the previous — plus a sequence guard, because an aborted request may already have landed.\n- **\"Why is the response empty after you logged it?\"** — The body was already consumed; `console.log(res)` then `res.json()` is fine, but two reads are not."
     },
     {
@@ -192,6 +600,36 @@
       ],
       "difficulty": "hard",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "A service worker is a proxy you write in JavaScript. It runs in its own thread between your page and the network, sees every request the page makes, and can answer from a cache instead of going to the server — which is what makes a site work offline.",
+        "api": [
+          {
+            "signature": "navigator.serviceWorker.register('/sw.js')",
+            "note": "installs it; it controls pages within its scope, which defaults to the folder the file sits in"
+          },
+          {
+            "signature": "install → waiting → activate",
+            "note": "the lifecycle; a new worker waits until every old tab is gone, which is why your update does not appear"
+          },
+          {
+            "signature": "self.skipWaiting() + clients.claim()",
+            "note": "skip that wait and take control immediately — use knowingly, it can mix old and new assets"
+          },
+          {
+            "signature": "e.respondWith(caches.match(e.request))",
+            "note": "the interception point: return your own `Response` and the network is never touched"
+          },
+          {
+            "signature": "caches.open(name) → cache.addAll([...])",
+            "note": "precache the app shell during install, so the first offline load has something to show"
+          },
+          {
+            "signature": "cache versioning + cleanup in activate",
+            "note": "delete old cache names, or users are served last month's build forever"
+          }
+        ],
+        "useCase": "A field app that has to keep working in a warehouse with no signal — the shell and the last data load come from the cache, and writes queue until the connection returns."
+      },
       "answer": "A service worker is a **proxy you write in JavaScript**, running in its own thread, sitting between your page and the network. That single sentence explains both the power and every footgun.\n\n![The service worker — interception and the two cache strategies](/diagrams/webfund/service-worker.svg)\n\n## The lifecycle\n\n```javascript\n// In the page.\nnavigator.serviceWorker.register(\"/sw.js\"); // scope defaults to /\n```\n\n1. **Install** — first registration, or whenever the bytes of `sw.js` change. Precache the shell here.\n2. **Waiting** — the new worker sits idle while the old one still controls open pages. This is the step people trip over.\n3. **Activate** — takes control once the old one is gone; clean up stale caches here.\n4. **Fetch** — every request in scope now passes through it, until it is replaced.\n\n```javascript\nconst CACHE = \"shell-v4\";\n\nself.addEventListener(\"install\", (event) => {\n  event.waitUntil(\n    caches\n      .open(CACHE)\n      .then((c) => c.addAll([\"/\", \"/offline.html\", \"/assets/app.css\"])),\n  );\n});\n\nself.addEventListener(\"activate\", (event) => {\n  event.waitUntil(\n    caches\n      .keys()\n      .then((keys) =>\n        Promise.all(\n          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),\n        ),\n      ),\n  );\n});\n```\n\n**A page loaded before the worker existed is not controlled by it.** Registration takes effect on the next navigation unless you call `clients.claim()` in `activate` — which is fine for a first install and dangerous mid-session, because the page then starts talking to a worker whose assumptions it was not built for.\n\n## The interception point\n\n```javascript\nself.addEventListener(\"fetch\", (event) => {\n  const { request } = event;\n  if (request.method !== \"GET\") return; // never cache a mutation\n\n  // Hashed assets: cache-first. The name changes when the content does.\n  if (request.url.includes(\"/assets/\")) {\n    event.respondWith(\n      caches.match(request).then(\n        (hit) =>\n          hit ??\n          fetch(request).then((res) => {\n            const copy = res.clone(); // the body is single-use\n            caches.open(CACHE).then((c) => c.put(request, copy));\n            return res;\n          }),\n      ),\n    );\n    return;\n  }\n\n  // Navigations: network-first, fall back to the offline page.\n  if (request.mode === \"navigate\") {\n    event.respondWith(\n      fetch(request).catch(() => caches.match(\"/offline.html\")),\n    );\n  }\n});\n```\n\n| Strategy | Use for | Risk |\n| --- | --- | --- |\n| **Cache-first** | Hashed assets, fonts, images | Serves stale forever if the URL is not versioned |\n| **Network-first** | HTML, API GETs | Slow when the network is slow-but-alive |\n| **Stale-while-revalidate** | Avatars, feeds, anything a little stale is fine | The user sees the previous value once |\n| **Network-only** | Anything authenticated or mutating | — |\n\n## Step through one request\n\n```trace\n{\n  \"input\": \"Three navigations through a service worker with a precached shell\",\n  \"lanes\": [\n    { \"id\": \"req\", \"label\": \"Request\", \"kind\": \"slots\", \"slots\": [\"url\", \"network\"] },\n    { \"id\": \"sw\", \"label\": \"Service worker decision\", \"kind\": \"phases\", \"of\": [\"match cache\", \"hit\", \"go to network\", \"store\", \"respond\"] },\n    { \"id\": \"log\", \"label\": \"What the user gets\", \"kind\": \"log\" }\n  ],\n  \"vars\": [\"strategy\", \"served from\"],\n  \"steps\": [\n    {\n      \"note\": \"A hashed asset, already precached. The worker answers without touching the network at all.\",\n      \"cells\": { \"req\": [\"/assets/app.8f3a.js\", \"online\"], \"log\": [\"cache hit — 3 ms\"] },\n      \"marks\": { \"sw\": { \"match cache\": \"active\", \"hit\": \"hit\", \"respond\": \"done\" } },\n      \"vars\": { \"strategy\": \"cache-first\", \"served from\": \"Cache Storage\" }\n    },\n    {\n      \"note\": \"A new hashed chunk after a deploy. Miss, so the worker fetches it, clones the response, stores the copy and returns the original.\",\n      \"cells\": { \"req\": [\"/assets/feed.2d77.js\", \"online\"], \"log\": [\"cache hit — 3 ms\", \"miss → network 180 ms → stored\"] },\n      \"marks\": { \"sw\": { \"match cache\": \"active\", \"go to network\": \"active\", \"store\": \"window\", \"respond\": \"done\" } },\n      \"vars\": { \"strategy\": \"cache-first\", \"served from\": \"network, then cached\" }\n    },\n    {\n      \"note\": \"A navigation while offline. Network-first throws, and the `catch` serves the precached offline page instead of the browser's error screen.\",\n      \"cells\": { \"req\": [\"/dashboard\", \"offline\"], \"log\": [\"miss → network 180 ms → stored\", \"network failed → /offline.html\"] },\n      \"marks\": { \"sw\": { \"go to network\": \"bad\", \"match cache\": \"active\", \"respond\": \"hit\" } },\n      \"vars\": { \"strategy\": \"network-first\", \"served from\": \"Cache Storage (fallback)\" }\n    }\n  ]\n}\n```\n\n## The app shell model\n\nThe architecture the precaching above is *for*. Split the page in two:\n\n| Half | What it is | Where it comes from |\n| --- | --- | --- |\n| **The shell** | the minimum HTML, CSS and JS to draw the frame — nav, header, sidebar, layout, base styles | precached at install; served from Cache Storage, instantly |\n| **The content** | the actual data, usually JSON | fetched per view, or read from [IndexedDB](/web-fundamentals/16) when offline |\n\n```javascript\n// install: the shell is static and versioned, so cache-first is safe.\nconst SHELL = [\"/\", \"/assets/app.css\", \"/assets/app.js\", \"/offline.html\"];\n\nself.addEventListener(\"install\", (event) => {\n  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));\n});\n```\n\n**First visit** loads over the network and the worker precaches the shell.\n**Every visit after** serves the shell from local cache before a packet leaves the\nmachine, then hydrates it with fresh data. The user sees a real interface at\nroughly disk-read speed rather than at network speed, which is most of why a PWA\nfeels native.\n\nWhat it buys you, concretely: FCP stops depending on the network, and the layout\nis present before the data is, so there is no blank screen and no layout shift\nwhen the content lands — you are rendering into a frame that already exists.\n\nThe catch is that the shell is now **versioned state on the user's device**. Ship\na new shell and every returning user runs the old one until the next activation,\nso the shell and the API it calls have to stay compatible across at least one\nversion — the same [stale-tab problem](/system-design/109) as any deploy, except\nthe stale copy can be days old.\n\nTwo rules keep it honest:\n\n- **Nothing user-specific in the shell.** It is shared by every visitor on the\n  device and served before auth is checked; personalised markup baked into it\n  leaks between accounts.\n- **Never cache-first the data.** The shell is immutable and versioned, the data\n  is not. Cache-first for the shell, network-first (or stale-while-revalidate)\n  for anything from an API.\n\n## The traps\n\n- **Caching the HTML with cache-first.** Now your deploy never reaches anyone, and the fix is behind the cached HTML too — the [same outage as caching HTML at the CDN](/system-design/115), except this copy lives on the user's device and you cannot purge it.\n- **`skipWaiting()` without a prompt.** The new worker takes over mid-session and the open page starts getting responses from a version it was not built for. Prompt, then reload.\n- **Not versioning the cache name**, so `activate` never cleans up and storage grows until the browser evicts it.\n- **Caching authenticated responses.** They land in a shared cache on a shared device.\n- **Registering `sw.js` from a subdirectory**, which silently limits scope to that path.\n- **No dev story.** \"Update on reload\" and \"Bypass for network\" in DevTools exist because a stale worker will otherwise waste your afternoon.\n\n## What else it unlocks\n\nBackground sync (queue a failed POST until connectivity returns), push notifications, and periodic sync. All of it is the same trade: a long-lived script with its own lifecycle that your page does not control.\n\nFor the wider offline design — conflict resolution, queued mutations, the data model — see [Offline-first and background sync](/system-design/106).\n\n## Key takeaways\n\n- A service worker is a proxy you write; it intercepts every in-scope request.\n- Install → waiting → activate → fetch. The waiting step is where the update bugs live.\n- Cache-first for hashed assets, network-first for HTML, never for mutations.\n- `respondWith` a clone: a `Response` body can only be read once.\n- Version the cache name and clean up in `activate`.\n\n## Interview follow-ups\n\n- **\"How does a user get the new version?\"** — The new worker installs and waits; on the next navigation with no other tabs it activates. If you want it sooner, prompt and then `skipWaiting()` plus reload — never silently.\n- **\"What would you never cache?\"** — Mutations, authenticated responses, and the HTML with a cache-first strategy.\n- **\"Offline: what does the user see?\"** — A precached shell and offline page, cached GET data marked as stale, and queued writes that replay on reconnect."
     },
     {
@@ -205,6 +643,36 @@
       ],
       "difficulty": "medium",
       "source": "user request: web fundamentals every frontend engineer needs",
+      "summary": {
+        "definition": "The browser gives you about six places to keep data, and the choice comes down to three questions: does the server need to see it, does it have to survive a reload, and is it secret?",
+        "api": [
+          {
+            "signature": "localStorage",
+            "note": "strings, survives restarts, per-origin — and synchronous, so a big write blocks the main thread"
+          },
+          {
+            "signature": "sessionStorage",
+            "note": "same API, per-tab, gone when the tab closes"
+          },
+          {
+            "signature": "cookies (HttpOnly)",
+            "note": "the only option the server sees automatically, and the only one script cannot read"
+          },
+          {
+            "signature": "IndexedDB",
+            "note": "asynchronous, structured, large — worth it for real datasets, and worth a wrapper like `idb`"
+          },
+          {
+            "signature": "Cache Storage",
+            "note": "whole `Response` objects, for the service worker to serve back"
+          },
+          {
+            "signature": "in-memory (a variable)",
+            "note": "the right answer more often than people think — an access token that must not outlive the tab"
+          }
+        ],
+        "useCase": "Storing `undefined` in `localStorage` and getting the string `\"undefined\"` back on reload, which then crashes `JSON.parse` — the API only ever stores strings."
+      },
       "answer": "Six places, and the choice is nearly always decided by three questions: does the **server** need it, does it survive a **reload**, and is it **secret**?\n\n## The map\n\n| Store | Size | Lifetime | Sync? | Server sees it | Use for |\n| --- | --- | --- | --- | --- | --- |\n| **Memory** (a variable, a store) | RAM | Until reload | — | No | Anything derived, and access tokens |\n| **Cookie** | ~4 KB | You set it | Sync | **Yes, every request** | Session id, server-rendered preferences |\n| **`localStorage`** | ~5–10 MB | Forever | **Sync — blocks the main thread** | No | Theme, drafts, small caches |\n| **`sessionStorage`** | ~5 MB | The tab | Sync | No | Wizard progress, per-tab filters |\n| **IndexedDB** | Large (quota-based) | Forever | Async | No | Structured data, offline records, blobs |\n| **Cache Storage** | Large (quota-based) | Forever | Async | No | `Response` objects, via a [service worker](/web-fundamentals/15) |\n\nScoping, expiry and the cookie attributes are their own topic: [Cookies, localStorage, and sessionStorage](/browser/132).\n\n## Choosing, in three questions\n\n1. **Does the server need it on every request?** → Cookie. Nothing else is sent automatically.\n2. **Must it survive a reload?** → No: memory. Yes, and it is small and simple: `localStorage`. Yes, and it is large or structured: IndexedDB.\n3. **Is it sensitive?** → Not `localStorage`, ever. An `HttpOnly` cookie, or memory with a refresh cookie behind it.\n\n## `localStorage` is synchronous, and that is the catch\n\nEvery read and write blocks the main thread. A 2 MB JSON blob parsed on boot is a long task before your first paint — the kind of thing that shows up as a bad [INP or LCP](/system-design/402).\n\n```javascript\n// Also: it throws. Private mode, blocked site data, and quota all reject.\nfunction readJSON(key, fallback) {\n  try {\n    const raw = localStorage.getItem(key);\n    return raw ? JSON.parse(raw) : fallback;\n  } catch {\n    return fallback; // never let storage break the render\n  }\n}\n```\n\nIt is strings only, so everything round-trips through `JSON.stringify` — and `undefined` becomes the string `\"undefined\"`, which then fails to parse. Wrap it once and never call it raw.\n\n## IndexedDB, honestly\n\nThe native API is event-based and unpleasant; use a thin wrapper (`idb` is ~1 kB) rather than writing the raw transaction plumbing. It earns its place when you have real records: an offline inbox, a cached dataset, a queue of pending writes, files and blobs.\n\n```javascript\nimport { openDB } from \"idb\";\n\nconst db = await openDB(\"app\", 1, {\n  upgrade(db) {\n    const store = db.createObjectStore(\"messages\", { keyPath: \"id\" });\n    store.createIndex(\"by-thread\", \"threadId\");\n  },\n});\n\nawait db.put(\"messages\", {\n  id: \"m1\",\n  threadId: \"t1\",\n  body: \"…\",\n  pending: true,\n});\nconst pending = await db.getAllFromIndex(\"messages\", \"by-thread\", \"t1\");\n```\n\n## Two things people forget\n\n**Storage is evictable.** Under pressure the browser clears origin data for sites the user rarely visits, and Safari clears script-writable storage after seven days of no interaction. `navigator.storage.persist()` asks for an exemption; the answer may be no. **Never treat browser storage as the source of truth** — it is a cache of something the server owns.\n\n**Tabs share it.** `localStorage` writes fire a `storage` event in *other* tabs, which is the cheap way to sync a logout across them. For anything richer, use `BroadcastChannel`:\n\n```javascript\nconst bus = new BroadcastChannel(\"auth\");\nbus.postMessage({ type: \"logout\" }); // every other tab hears this\nbus.onmessage = (e) => e.data.type === \"logout\" && redirectToLogin();\n```\n\n## Key takeaways\n\n- Server needs it → cookie. Survives reload → `localStorage` (small) or IndexedDB (large). Secret → not `localStorage`.\n- `localStorage` is synchronous, string-only, and throws; wrap every access.\n- IndexedDB for structured or large data, with a small wrapper.\n- Everything except cookies is per-origin, evictable, and not a source of truth.\n- `storage` events and `BroadcastChannel` keep tabs in step.\n\n## Interview follow-ups\n\n- **\"Where would you keep an auth token?\"** — An `HttpOnly` cookie, or in memory with a refresh cookie behind it. Never `localStorage`, because any [XSS](/browser/158) reads it.\n- **\"Why is your app slow to boot?\"** — Often a large synchronous `localStorage` read and parse before the first paint.\n- **\"How do you log the user out of every tab?\"** — `BroadcastChannel`, or the `storage` event as the zero-dependency version."
     }
   ]

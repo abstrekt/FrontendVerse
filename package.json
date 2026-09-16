@@ -14,8 +14,9 @@
     "format:snippets": "node scripts/format-code-snippets.mjs",
     "scan:mcq-duplicates": "node scripts/scan-mcq-duplicates.mjs",
     "validate:learning-ids": "node scripts/validate-learning-ids.mjs",
+    "validate:summaries": "node scripts/validate-summaries.mjs",
     "audit:mcq-explanations": "node scripts/audit-mcq-explanations.mjs",
-    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs && node scripts/apply-blind75-traces.mjs --check && node scripts/apply-react-traces.mjs --check && node scripts/apply-cross-links.mjs --check",
+    "test": "node --test 'src/**/*.test.js' && node scripts/validate-learning-ids.mjs && node scripts/apply-blind75-traces.mjs --check && node scripts/apply-react-traces.mjs --check && node scripts/apply-cross-links.mjs --check && node scripts/validate-summaries.mjs",
     "build:data-manifest": "node scripts/build-data-manifest.mjs",
     "build:react-traces": "node scripts/apply-react-traces.mjs",
     "build:cross-links": "node scripts/apply-cross-links.mjs"

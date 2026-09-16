@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeBody from './CodeBody';
 import LearningBadges from './LearningBadges';
+import LearningSummary from './LearningSummary';
 import StarButton from './StarButton';
 import CompletedButton from './CompletedButton';
 import SelectionTooltip from './SelectionTooltip';
@@ -188,6 +189,7 @@ export default function LearningsView({
       </div>
 
       <div ref={scrollRef} className="learning-answer-scroll">
+        <LearningSummary summary={learning.summary} theme={theme} onNavigate={onNavigate} />
         <div
           ref={articleRef}
           className="learning-content learning-answer"

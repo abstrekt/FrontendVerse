@@ -8,6 +8,32 @@
         "flexbox",
         "layout"
       ],
+      "summary": {
+        "definition": "Flex children wrap to a new line only when you allow it, and they sit at a fixed width only when you tell them their starting size. Equal thirds is therefore two declarations: turn wrapping on, and fix each child's basis at a third.",
+        "api": [
+          {
+            "signature": "flex-wrap: wrap",
+            "note": "off by default — without it children squeeze onto one line instead of wrapping"
+          },
+          {
+            "signature": "flex: 0 0 33.3333%",
+            "note": "don't grow, don't shrink, start at a third — the three numbers are grow, shrink, basis"
+          },
+          {
+            "signature": "box-sizing: border-box",
+            "note": "or padding is added on top of the 33.3333% and the third item drops to the next row"
+          },
+          {
+            "signature": "gap + calc(33.3333% - gap)",
+            "note": "gaps eat into the width, so the basis has to account for them"
+          },
+          {
+            "signature": "grid-template-columns: repeat(3, 1fr)",
+            "note": "grid does this in one line, with `gap` handled for you"
+          }
+        ],
+        "useCase": "A product listing that should show exactly three cards per row and wrap onto the next line — where `flex: 1` gives you four uneven ones instead."
+      },
       "answer": "**Question:** given a parent with `display: flex`, how do you make children wrap to the next line while each takes exactly 1/3 of the width, all equal?\n\n## The answer\n\n```css\n.container {\n  display: flex;\n  flex-wrap: wrap;          /* without this, children never wrap */\n}\n\n.item {\n  flex: 0 0 33.3333%;       /* grow: 0, shrink: 0, basis: one third */\n  box-sizing: border-box;   /* keep padding/border inside the 33.3333% */\n}\n```\n\nThree parts, each load-bearing:\n\n- **`flex-wrap: wrap`** — the default is `nowrap`, which is why flex children squash instead of wrapping. This is the whole answer to \"how do I make them wrap.\"\n- **`flex: 0 0 33.3333%`** — the shorthand is `flex-grow flex-shrink flex-basis`. Basis sets the size; `grow: 0` stops a lonely last item stretching to fill its row; `shrink: 0` stops items being squeezed below a third.\n- **`box-sizing: border-box`** — without it, padding and border are *added* to 33.3333%, so three items exceed 100% and only two fit per row. This is the most common way this breaks.\n\n## With gaps\n\n`gap` occupies real space, so a plain 33.3333% no longer fits three per row. Subtract it:\n\n```css\n.container {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 16px;\n}\n\n.item {\n  /* 3 items per row means 2 gaps to share out */\n  flex: 0 0 calc((100% - 2 * 16px) / 3);\n}\n```\n\n## Why `flex: 1` is the usual mistake\n\n```css\n.item { flex: 1; }   /* = flex: 1 1 0% */\n```\n\nThis distributes space *equally among items on the same line*, which looks right until a row has fewer than three items — then two items become 50% each. Equal-to-each-other is not the same as exactly-one-third.\n\nSimilarly `flex: 1 1 33%` allows growth, so the last row stretches to fill.\n\n## Grid does this better\n\nIf the requirement is genuinely \"a grid of thirds\", grid says it more directly:\n\n```css\n.container {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n}\n```\n\n`1fr` already accounts for the gaps, so no `calc` and no `box-sizing` concern. Wrapping is implicit — items flow to new rows automatically.\n\nResponsive, without media queries:\n\n```css\ngrid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n```\n\n**Rule of thumb:** [flexbox](/web-fundamentals/13) for one-dimensional content that sizes to itself; grid when you're defining the tracks up front. \"Exactly three equal columns\" is a grid statement.\n\n## Related\n\n- [Centering an Element in CSS](/css/2) · [CSS Specificity](/css/3)\n- [MCQ Hit-List: CSS](/test-prep/19)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -19,6 +45,32 @@
         "layout",
         "centering"
       ],
+      "summary": {
+        "definition": "Centring in CSS means putting a child in the middle of its parent on both axes. Flexbox and grid each do it in two lines; the old absolute-positioning trick is still worth knowing because you meet it in existing code.",
+        "api": [
+          {
+            "signature": "display: grid; place-items: center",
+            "note": "the shortest correct answer — both axes, two words"
+          },
+          {
+            "signature": "display: flex; align-items: center; justify-content: center",
+            "note": "the same thing in flexbox; swap the two if `flex-direction: column`"
+          },
+          {
+            "signature": "position: absolute; top: 50%; left: 50%",
+            "note": "puts the child's top-left corner at the centre — only half done"
+          },
+          {
+            "signature": "transform: translate(-50%, -50%)",
+            "note": "the other half: pull it back by half its own size, without knowing that size"
+          },
+          {
+            "signature": "margin-inline: auto",
+            "note": "horizontal only, for a block element with a width — the oldest trick and still right"
+          }
+        ],
+        "useCase": "A modal dialog that has to sit dead centre whatever its content — `place-items: center` on the overlay, and no magic numbers anywhere."
+      },
       "answer": "**Question:** given a parent `<div>` and a child `<div>`, centre the child horizontally and vertically.\n\n## The modern answer\n\n```css\n.parent {\n  display: flex;\n  align-items: center;      /* cross axis  — vertical in a row */\n  justify-content: center;  /* main axis   — horizontal in a row */\n  height: 300px;            /* the parent needs a height to centre within */\n}\n```\n\nTwo lines. The one thing people forget is that **the parent needs a defined height** — centring vertically inside a container that's only as tall as its content does nothing visible.\n\nNote the axis trap: `align-items` and `justify-content` swap meaning under `flex-direction: column`. Centring both ways looks identical either way, which is why this is a safe default.\n\n## Grid: shorter still\n\n```css\n.parent {\n  display: grid;\n  place-items: center;   /* shorthand for align-items + justify-items */\n  height: 300px;\n}\n```\n\n`place-items: center` is the shortest correct answer in modern CSS. There's also `place-content: center` for centring the whole track, and `margin: auto` on a grid child centres it in both directions.\n\n## Absolute positioning\n\nWhen the child must be removed from flow — an overlay, a modal, a badge:\n\n```css\n.parent { position: relative; height: 300px; }\n\n.child {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n}\n```\n\n`top/left: 50%` positions the child's **top-left corner** at the centre, so it sits low and right. `translate(-50%, -50%)` pulls it back by half its own size — and percentages in `transform` resolve against the element itself, which is what makes this work without knowing the child's dimensions.\n\nOne caveat worth knowing: `transform` creates a stacking context and a containing block for fixed-position descendants, which can surprise you later ([portals](/advanced-react/13) covers where that bites).\n\n## Comparison\n\n| Method | Use when | Watch out for |\n|---|---|---|\n| `flex` + `align/justify: center` | Default choice, content in flow | Parent needs a height |\n| `grid` + `place-items: center` | Same, shortest syntax | Same |\n| `position: absolute` + `translate` | Child must leave the flow | Creates a stacking context |\n| `margin: auto` (flex/grid child) | Single child, no parent alignment | Doesn't work in normal flow vertically |\n| `text-align` + `line-height` | Single line of text only | Breaks on wrap; legacy |\n\n## Horizontal only, block element\n\nThe classic still works and is still right:\n\n```css\n.child { width: 300px; margin: 0 auto; }\n```\n\nNeeds a defined width — `auto` margins split leftover space, and without a width there's no leftover.\n\n## Related\n\n- [Flexbox: Wrapping Children into Equal Thirds](/css/1)\n- [MCQ Hit-List: CSS](/test-prep/19)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -30,6 +82,36 @@
         "specificity",
         "cascade"
       ],
+      "summary": {
+        "definition": "Specificity is how the browser picks a winner when several CSS rules set the same property on the same element. It counts the selector's parts into a tuple — ids, then classes, then elements — and the highest tuple wins, with source order breaking exact ties.",
+        "api": [
+          {
+            "signature": "(id, class, type)",
+            "note": "counted as a tuple, not a total — one id beats any number of classes"
+          },
+          {
+            "signature": "#title vs .card p",
+            "note": "`(1,0,0)` beats `(0,1,1)` no matter which is written later in the file"
+          },
+          {
+            "signature": "[data-x], :hover, .cls",
+            "note": "all count in the class column; `::before` and element names count in the type column"
+          },
+          {
+            "signature": "style=\"...\"",
+            "note": "an inline style outranks any selector; only `!important` goes over it"
+          },
+          {
+            "signature": ":is(#a, p)",
+            "note": "takes the specificity of its *strongest* argument, so this counts as an id"
+          },
+          {
+            "signature": ":where(#a, p)",
+            "note": "always zero — the one way to write a rule that anything can override"
+          }
+        ],
+        "useCase": "A `.btn-danger` class that refuses to turn the button red because a `#sidebar .btn` rule elsewhere wins — no extra classes help, since one id outranks all of them."
+      },
       "answer": "**Question:** given some HTML and CSS rules, what colour does the text end up, and how does rearranging the rules change it?\n\n*The specific snippet wasn't included, so this works through the algorithm and a representative example you can apply to any version of the question.*\n\n## How the cascade decides\n\nWhen several rules set the same property on the same element, CSS resolves it in this order — each step only consulted if the previous tied:\n\n1. **Origin and importance** — `!important` beats normal declarations\n2. **Specificity** — the score below\n3. **Source order** — last one wins\n\n## Scoring specificity\n\nCount three numbers, `(id, class, type)`, and compare left to right. A higher number in an earlier column wins outright, no matter what follows.\n\n| Selector | Score | Notes |\n|---|---|---|\n| `p` | 0,0,1 | type / element |\n| `.text` | 0,1,0 | class |\n| `[data-x]` | 0,1,0 | attribute — counts as a class |\n| `:hover` | 0,1,0 | pseudo-class — counts as a class |\n| `::before` | 0,0,1 | pseudo-**element** — counts as a type |\n| `#title` | 1,0,0 | id |\n| `div p` | 0,0,2 | two types |\n| `.card p` | 0,1,1 | |\n| `#main .card p` | 1,1,1 | |\n| `*`, `>`, `+`, `~` | 0,0,0 | combinators add nothing |\n\n**A single id beats any number of classes.** `#title` (1,0,0) wins against `.a.b.c.d.e` (0,5,0), because the id column is compared first. Specificity is not a sum.\n\nInline `style=\"\"` sits above all of them, and `!important` above that.\n\n## Worked example\n\n```html\n<div id=\"box\" class=\"card\">\n  <p class=\"text\">Hi</p>\n</div>\n```\n\n```css\np           { color: green;  }   /* 0,0,1 */\n.text       { color: blue;   }   /* 0,1,0 */\n.card p     { color: red;    }   /* 0,1,1 */\n#box p      { color: orange; }   /* 1,0,1 */\n```\n\nResult: **orange.** `#box p` scores 1,0,1 and the id column decides it immediately.\n\nRemove that rule and it's **red** — `.card p` (0,1,1) beats `.text` (0,1,0) on the type column.\n\nRemove that too and it's **blue** — `.text` (0,1,0) beats `p` (0,0,1) on the class column.\n\n## Does rearranging change it?\n\n**Only for rules of equal specificity.** Source order is the last tiebreaker, so:\n\n```css\n.text { color: blue; }\n.text { color: green; }   /* green wins — same specificity, later */\n```\n\nBut reordering `p` and `#box p` changes nothing. This is the point of the question: people assume \"later wins\" is the rule, when it's only the *tiebreaker*.\n\n## The modern pseudo-classes\n\nThree that behave differently and come up:\n\n- **`:is()`** and **`:not()`** take the specificity of their most specific argument. `:is(#a, p)` scores 1,0,0.\n- **`:where()`** always contributes **zero**. `:where(#a, p) span` scores just 0,0,1 — ideal for library defaults you want easy to override.\n\n```css\n:where(.btn) { color: grey; }   /* 0,0,0 — any rule beats it */\n.btn         { color: blue; }   /* wins */\n```\n\n## Practical guidance\n\n- **Don't fight specificity with more specificity.** Escalating to `#main .card .text p` makes the next override worse. Flatten instead.\n- **Avoid `!important`** outside utility classes and third-party overrides. The only way past it is another `!important`, and then you're comparing specificity of important rules.\n- **Prefer single classes.** A flat class-based system keeps every rule at 0,1,0, where source order is a predictable tiebreaker. That's the core insight behind BEM and utility CSS.\n\n## Related\n\n- [Flexbox: Wrapping Children into Equal Thirds](/css/1) · [Centering an Element](/css/2)\n- [MCQ Hit-List: CSS](/test-prep/19)",
       "source": "user paste: 15-question frontend interview set"
     },
@@ -42,6 +124,36 @@
         "layout",
         "flex-basis"
       ],
+      "summary": {
+        "definition": "`flex-basis` is a flex item's starting size along the main axis, before any growing or shrinking happens. It is the number flexbox begins from, and `flex-grow` and `flex-shrink` then adjust it to fill or fit the container.",
+        "api": [
+          {
+            "signature": "flex-basis: auto",
+            "note": "start from the item's `width` (or its content if no width is set) — the default"
+          },
+          {
+            "signature": "flex-basis: 0",
+            "note": "start from nothing, so growth is distributed purely by `flex-grow` — this is how you get equal columns"
+          },
+          {
+            "signature": "flex: 1 (= 1 1 0%)",
+            "note": "the shorthand everyone writes: grow, shrink, and start from zero"
+          },
+          {
+            "signature": "flex: auto (= 1 1 auto)",
+            "note": "grows and shrinks but starts from content size, so items end up unequal"
+          },
+          {
+            "signature": "flex-basis vs width",
+            "note": "`flex-basis` wins along the main axis; along the cross axis `width` still rules"
+          },
+          {
+            "signature": "min-width / max-width",
+            "note": "clamp the result — they are applied after grow and shrink have done their arithmetic"
+          }
+        ],
+        "useCase": "Three cards that should be exactly equal width no matter how much text each holds — `flex: 1` (basis 0) does it, `flex: auto` (basis content) does not."
+      },
       "answer": "## What is flex-basis?\n\nThe `flex-basis` CSS property defines the **initial main size** of a flex item before any extra space is distributed (`flex-grow`) or taken away (`flex-shrink`).\n\nThink of it as the \"ideal\" or \"starting\" size of the element before the [Flexbox](/web-fundamentals/13) algorithm makes adjustments to fit the container.\n\n## How it Works (The Main Axis)\n\n`flex-basis` applies to the main axis of your flex container:\n\n- If `flex-direction` is `row` (the default), `flex-basis` controls the **width**.\n- If `flex-direction` is `column`, `flex-basis` controls the **height**.\n\n## Common Values\n\n- **`auto` (Default)**: The item looks at its `width` or `height` property. If that is also `auto`, the item sizes itself based on its content.\n- **`content`**: Sized strictly based on the item's content, ignoring any `width` or `height` set on the element.\n- **Length values** (`px`, `%`, `rem`, `vw`): E.g., `200px` or `50%`. Sets a hard initial size.\n- **`0`**: The item starts with a size of zero. It will only take up space if `flex-grow` is applied to let it expand into the available space.\n\n## flex-basis vs. width\n\nWhen both are applied to a flex item (in a row layout), they follow a specific hierarchy:\n\n1. **`max-width` / `min-width`** (always win and constrain the size)\n2. **`flex-basis`** (overrides width)\n3. **`width`** (used only if `flex-basis` is `auto`)\n4. **Content size** (used if `flex-basis` is `auto` and `width` is `auto`)\n\n## The flex Shorthand\n\nYou will rarely see `flex-basis` written on its own. It is almost always declared as the **third value** in the `flex` shorthand property:\n\n```css\n.item {\n  /* flex: flex-grow | flex-shrink | flex-basis */\n  flex: 1 1 200px; \n}\n```\n\n- **`flex-grow: 1`** → Can it grow larger than 200px? Yes.\n- **`flex-shrink: 1`** → Can it shrink smaller than 200px? Yes.\n- **`flex-basis: 200px`** → Start calculating from 200px.\n\n## Common Shorthand Patterns\n\n```css\n/* Equal flex items that grow/shrink equally */\nflex: 1;            /* = flex: 1 1 0% */\n\n/* Fixed size, no grow/shrink */\nflex: 0 0 200px;    /* basis of 200px, doesn't flex */\n\n/* Grow to fill, but don't shrink below basis */\nflex: 1 0 200px;    /* basis 200px, grows but not shrinks */\n```\n\n## Practical Example\n\n```css\n.container {\n  display: flex;\n  gap: 16px;\n}\n\n.sidebar {\n  flex: 0 0 250px;  /* Fixed width, never changes */\n}\n\n.content {\n  flex: 1;          /* Grows to fill remaining space */\n}\n```\n\nThe sidebar stays 250px, and the content fills the rest — this is the classic sidebar pattern.\n\n## Related\n\n- [Flexbox: Wrapping Children into Equal Thirds](/css/1) · [Centering an Element in CSS](/css/2)\n- [CSS Specificity and Selector Priority](/css/3) · [CSS Units: px, %, rem, em, vw](/css/5)",
       "source": "CSS fundamentals collection"
     },
@@ -54,6 +166,36 @@
         "sizing",
         "typography"
       ],
+      "summary": {
+        "definition": "A CSS unit says what a number is measured against. `px` is a fixed size; `%`, `em`, `rem` and `vw` are all relative — to the parent, to the current font size, to the root font size, and to the viewport width.",
+        "api": [
+          {
+            "signature": "px",
+            "note": "fixed; right for borders and shadows, wrong for anything that should respect the user's font settings"
+          },
+          {
+            "signature": "rem",
+            "note": "relative to the root `<html>` font size (16px by default) — one stable reference, no compounding"
+          },
+          {
+            "signature": "em",
+            "note": "relative to *this element's* font size, so nested elements multiply — 1.5em inside 1.5em is 2.25×"
+          },
+          {
+            "signature": "%",
+            "note": "relative to the parent — but which parent property depends on which property you are setting"
+          },
+          {
+            "signature": "vw / vh",
+            "note": "1% of the viewport; `100vw` includes the scrollbar, which is the classic horizontal-overflow bug"
+          },
+          {
+            "signature": "clamp(min, preferred, max)",
+            "note": "how you use a relative unit without it getting absurd at the extremes"
+          }
+        ],
+        "useCase": "A user who sets their browser font to 20px for readability — `rem`-based spacing scales with them, and a `px` layout ignores them completely."
+      },
       "answer": "## Overview: Absolute vs. Relative Units\n\nCSS units fall into two main categories: **absolute** (fixed size) and **relative** (scale based on other factors).\n\n## 1. Absolute Unit\n\n### px (Pixel)\n\n**What it is**: A fixed-size unit. Technically, it maps to a single dot on a screen (though high-density displays handle this under the hood). `16px` will always look like `16px`, regardless of screen size or user settings.\n\n**Best for**: Things that require absolute precision and should not scale, like:\n- Borders: `border: 1px solid black`\n- Box shadows: `box-shadow: 0 2px 4px rgba(0,0,0,0.1)`\n- Very specific fixed-size icons\n\n## 2. Relative to the Parent\n\n### % (Percentage)\n\n**What it is**: Sized relative to its **immediate parent element**. If a parent is `400px` wide, a child with `width: 50%` will be `200px`.\n\n**Best for**:\n- Fluid layouts\n- Container widths\n- Responsive grid systems\n- Creating proportional spacing\n\n**Example**:\n```css\n.container { width: 400px; }\n.child { width: 50%; }     /* = 200px */\n```\n\n## 3. Relative to Typography: rem vs. em\n\nBoth `rem` and `em` are relative units, but they look at **different reference points** to calculate their pixel values: `rem` looks at the root (`<html>`) font size, while `em` looks at the element's current font size.\n\n### How Reference Points Work\n\n**rem (Root EM)**: Always calculates relative to `<html>`. If the root font size is `16px` (the browser default), `1rem` is always `16px`, `1.5rem` is always `24px`, and `2rem` is always `32px` — no matter where the element sits in the HTML tree.\n\n**em (Element EM)**: Calculates relative to the font size of the element itself (or its parent). If a `<div>` has a font size of `20px`, `1.5em` padding on that div equals `30px`.\n\n**Best for**:\n- **`rem`**: Global typography, margins, padding (scales consistently across the site). **Highly recommended for accessibility** — if a user changes their browser's default font size, `rem` units will scale proportionally.\n- **`em`**: Component-specific scaling where you want sizes to adapt when the container's font size changes.\n\n### The em Compounding Pitfall\n\nBecause `em` inherits from its parent when setting `font-size`, nesting elements using `em` causes **exponential growth**:\n\n```html\n<!-- html font-size = 16px -->\n<ul style=\"font-size: 1.2em;\">        <!-- 16px × 1.2 = 19.2px -->\n  <li>Item 1\n    <ul style=\"font-size: 1.2em;\">    <!-- 19.2px × 1.2 = 23.0px -->\n      <li>Nested Item\n        <ul style=\"font-size: 1.2em;\"><!-- 23.0px × 1.2 = 27.6px -->\n          <li>Double Nested Item</li>\n        </ul>\n      </li>\n    </ul>\n  </li>\n</ul>\n```\n\nIf you used `1.2rem` instead, every list level would remain a consistent `19.2px`.\n\n### Comparison Table\n\n| Feature | rem | em |\n|---------|-----|-----|\n| **Reference** | `<html>` root font-size | Current or parent element's font-size |\n| **Compounding** | No | Yes (when setting font-size on nested elements) |\n| **Predictability** | High (consistent across the entire app) | Contextual (changes based on container) |\n| **Best For** | Font sizes, layout spacing, padding, margins | Component scaling (buttons, icons, badges) |\n\n### Rule of Thumb\n\n- **Use `rem` for 90% of your styles**: Use it for body text, headings, layout grids, and standard margins/padding so your site scales cleanly when users change their browser font settings.\n- **Use `em` strictly for component self-containment**: Use it on padding or icon sizes inside reusable components (like buttons or badges) so that if you change the button's font-size, its padding and icons automatically scale in proportion.\n\n**Example**:\n```css\n/* Good use of em: padding scales if font-size changes */\n.btn-large {\n  font-size: 20px;\n  padding: 0.5em 1em; /* Padding becomes 10px top/bottom, 20px left/right */\n}\n\n/* Global spacing with rem */\nbody { margin: 1rem; padding: 1rem; }\nh1 { font-size: 2rem; margin-bottom: 1rem; }\n```\n\n## 4. Relative to the Viewport\n\n### vw (Viewport Width)\n\n**What it is**: `1vw` equals 1% of the **width of the browser window** (the viewport). If the browser window is `1000px` wide, `1vw = 10px` and `50vw = 500px`.\n\n**Best for**:\n- Full-bleed sections (width: `100vw` spans the whole screen regardless of parent containers)\n- Fluid typography that scales with the window\n- Hero banners\n- Creating responsive elements that adapt to screen width\n\n**Watch out for**: `100vw` can exceed `100%` on some browsers due to scrollbar width, causing horizontal overflow.\n\n**Example**:\n```css\n.hero { width: 100vw; height: 50vh; }\n.responsive-text { font-size: 4vw; } /* scales with viewport */\n```\n\n## Comparison Table\n\n| Unit | Relative to | Use case | Example |\n|---|---|---|---|\n| `px` | Fixed size | Borders, precise spacing | `border: 1px` |\n| `%` | Parent element | Fluid layouts, responsive grids | `width: 50%` |\n| `rem` | Root font size (16px default) | Accessible typography, global spacing | `margin: 1rem` |\n| `em` | Current element's font size | Component-specific scaling | `padding: 0.5em` |\n| `vw` | Viewport width | Full-bleed sections, responsive text | `width: 100vw` |\n\n## Decision Guide: Which Unit Should I Use?\n\n- **Typography (font-size, line-height)**: Use `rem` for global consistency and accessibility\n- **Margins and padding**: Use `rem` for global spacing; `em` for component-relative spacing\n- **Width and height**: Use `%` for fluid layouts; `px` for fixed sizes\n- **Responsive text**: Use `vw` or calculate a `rem` multiplier\n- **Fixed elements** (borders, shadows): Use `px`\n\n## Related\n\n- [Flexbox: flex-basis and Main Axis Sizing](/css/4) · [Flexbox: Wrapping Children into Equal Thirds](/css/1)\n- [CSS Specificity and Selector Priority](/css/3)",
       "source": "user paste: rem vs em deep dive"
     },
@@ -64,6 +206,32 @@
         "CSS",
         "performance"
       ],
+      "summary": {
+        "definition": "Reflow is the browser recalculating where everything sits; repaint is redrawing pixels without moving anything; compositing is just re-stacking layers that are already drawn. Animating a property that triggers reflow costs all three, every frame.",
+        "api": [
+          {
+            "signature": "transform: translateX(...)",
+            "note": "composite only — no layout, no paint, and it can run off the main thread"
+          },
+          {
+            "signature": "opacity",
+            "note": "the other composite-only property; these two are the whole cheap list"
+          },
+          {
+            "signature": "width / height / top / left / margin",
+            "note": "trigger reflow, which forces repaint and composite behind it — the expensive path"
+          },
+          {
+            "signature": "color / background",
+            "note": "repaint only: no geometry changes, so layout is skipped"
+          },
+          {
+            "signature": "will-change: transform",
+            "note": "promotes to its own layer ahead of time; overuse costs memory, so apply it just before the animation"
+          }
+        ],
+        "useCase": "A drawer animated with `left: -300px → 0` that judders on a mid-range phone, and runs at a solid 60fps the moment it becomes `transform: translateX()`."
+      },
       "answer": "Browsers render pages in stages: **layout (reflow)**, **paint**, and **composite**. Animating expensive properties triggers layout every frame and kills performance. **`transform`** and **`opacity`** typically run on the **compositor thread**, making them ideal for smooth 60fps animations.\n\n## Rendering pipeline\n\n```\nStyle → Layout (Reflow) → Paint → Composite\n```\n\n| Step | What happens | Triggers |\n| --- | --- | --- |\n| **Reflow** | Calculate geometry (size, position) | width, height, top, left, font-size, DOM insert |\n| **Repaint** | Redraw pixels (no layout) | color, visibility, box-shadow |\n| **Composite** | GPU layers blended together | transform, opacity (often) |\n\n## Comparison table\n\n| Property | Reflow? | Repaint? | Composite-friendly? |\n| --- | --- | --- | --- |\n| `width`, `height` | Yes | Yes | No |\n| `top`, `left` | Yes | Yes | No |\n| `color` | No | Yes | No |\n| `transform` | No* | No* | **Yes** |\n| `opacity` | No | Sometimes | **Yes** |\n\n*Does not trigger layout on modern browsers when promoted to own layer.\n\n## Why `transform` is preferred\n\n```css\n/* Bad for animation — triggers layout each frame */\n.box { transition: left 0.3s; }\n.box:hover { left: 100px; }\n\n/* Good — compositor-only */\n.box { transition: transform 0.3s; will-change: transform; }\n.box:hover { transform: translateX(100px); }\n```\n\n`translateX` doesn't change layout box — GPU moves a **layer**.\n\n## How to answer in the interview\n\n> \"Reflow recalculates layout and is expensive. Repaint redraws without geometry changes. I animate transform and opacity because they can run on the compositor without blocking the main thread. I avoid animating width and top/left.\"\n\n## Common mistakes\n\n- Overusing `will-change` everywhere (memory cost per layer)\n- Animating `margin`/`height` for expand/collapse on large lists\n- Not measuring with Performance panel / FPS meter\n\n## Key takeaways\n\n- Reflow > repaint > composite in cost (generally).\n- Prefer **transform + opacity** for animations.\n- Use `will-change` sparingly on elements about to animate.\n\n## Interview follow-ups\n\n- **What is [layout thrashing](/browser/155)?** — Interleaving DOM reads and writes forcing sync reflows.\n- **contain: layout?** — CSS containment limits reflow scope."
     }
   ]

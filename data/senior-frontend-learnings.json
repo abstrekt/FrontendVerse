@@ -9,6 +9,36 @@
         "async"
       ],
       "source": "user paste: event loop interview traps",
+      "summary": {
+        "definition": "JavaScript runs on a single thread, so it can only do one thing at a time. The event loop is the mechanism that keeps it from freezing: work that waits — a timer, a network call — is handed to the browser, and its callback is queued to run once the current code is finished.",
+        "api": [
+          {
+            "signature": "the call stack",
+            "note": "what is running now; the loop only looks at the queues when this is empty"
+          },
+          {
+            "signature": "the microtask queue",
+            "note": "the VIP lane — `.then`, `await`, `queueMicrotask`, drained *completely* before anything else"
+          },
+          {
+            "signature": "the macrotask queue",
+            "note": "the general lane — `setTimeout`, `setInterval`, events; exactly one runs per turn"
+          },
+          {
+            "signature": "setTimeout(fn, 0)",
+            "note": "not \"now\" — it is \"after the current code and after every pending microtask\""
+          },
+          {
+            "signature": "queueMicrotask(fn)",
+            "note": "explicitly join the VIP lane; an infinite loop of these starves the page completely"
+          },
+          {
+            "signature": "await",
+            "note": "syntax over `.then`, so everything after an `await` is a microtask, not a later task"
+          }
+        ],
+        "useCase": "A `setTimeout(fn, 0)` that logs *after* a `Promise.resolve().then(...)` registered later — microtasks all drain before the first macrotask gets a turn."
+      },
       "answer": "JavaScript is fundamentally **single-threaded** — it has only one **Call Stack** and can only do one thing at a time. The **event loop** is the architectural trick that makes JavaScript non-blocking: it can handle asynchronous tasks (fetching data, waiting on timers) without freezing the main thread.\n\nAfter synchronous code finishes on the **call stack**, the runtime drains **microtasks** completely before taking one **macrotask** — and may **render** the UI between macrotask turns.\n\n## The 4 pillars of the concurrency model\n\nTo understand the event loop, you need the four components it manages:\n\n### 1. The Call Stack\n\nThe main thread where standard, synchronous JavaScript executes line by line.\n\n### 2. Web APIs (or Node APIs)\n\nThe environment (browser or Node.js) handles background work. When you call `setTimeout` or `fetch()`, JavaScript hands the work off to the environment and immediately moves on.\n\n### 3. The Microtask Queue (VIP line)\n\nHigh-priority callbacks — almost exclusively Promises (`.then()`, `.catch()`, `.finally()`) and `queueMicrotask()`.\n\n### 4. The Macrotask Queue (General line)\n\nAlso called the **Task Queue**. Lower-priority callbacks like `setTimeout`, `setInterval`, and DOM events (clicks).\n\n## The Microtask Queue (VIP lane)\n\nThe **Microtask Queue** is the VIP lane — tasks here run immediately after the current script finishes, **before** the browser renders or handles other events.\n\n**What goes in here:**\n\n- Promise callbacks (`.then()`, `.catch()`, `.finally()`)\n- `queueMicrotask()`\n- `MutationObserver` callbacks\n- `process.nextTick` (Node.js — technically runs before standard microtasks, but same phase)\n\n**Execution rule:** The event loop **empties the entire Microtask Queue** before moving on. If a microtask schedules another microtask, it joins the end of the current queue and runs in the **same cycle**. An infinite microtask loop can block rendering.\n\n`queueMicrotask()` schedules a function at a safe point after sync code, before the next macrotask.\n\n## The Macrotask Queue (Task Queue)\n\nMacrotasks are larger, discrete units of work.\n\n**What goes in here:**\n\n- `setTimeout()` / `setInterval()`\n- `setImmediate()` (Node.js)\n- I/O operations (network, file reads)\n- UI rendering and user interactions (clicks, mouse moves)\n- `MessageChannel` callbacks\n\n**Execution rule:** The event loop processes **exactly one macrotask** per cycle. After it finishes, the engine checks the Microtask Queue again and drains it fully.\n\n## Event loop algorithm\n\nThe event loop is an endless loop whose only job is to look at the queues and push work onto the Call Stack in this priority order:\n\n1. **Clear the stack** — execute all synchronous code currently on the Call Stack\n2. **Process microtasks** — drain the entire Microtask Queue (if a microtask schedules another, it runs in this same phase)\n3. **Render** (browser only) — if the UI needs updating, [repaint](/css/6) the screen\n4. **Process one macrotask** — take the oldest callback from the Macrotask Queue\n5. **Repeat**\n\n| Queue | Priority | Examples |\n| --- | --- | --- |\n| Call stack (sync) | Highest | Function calls, synchronous code |\n| Microtasks | High | `Promise.then`, `queueMicrotask`, `MutationObserver` |\n| Macrotasks | Low | `setTimeout`, `setInterval`, I/O, UI events |\n\n## Classic interview test\n\nOnce you understand the priority (Sync Code → Microtasks → Macrotasks), you can predict the output of the most common JavaScript interview question:\n\n```javascript\nconsole.log(\"1. Sync\");\n\nsetTimeout(() => {\n  console.log(\"2. Macrotask\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"3. Microtask\");\n});\n\nconsole.log(\"4. Sync\");\n```\n\n**Output order:**\n\n1. `1. Sync` — executes immediately on the stack\n2. `4. Sync` — executes immediately on the stack\n3. `3. Microtask` — stack is empty → microtask queue runs next\n4. `2. Macrotask` — microtasks are done → macrotask queue runs last\n\n**Key insight:** `setTimeout(..., 0)` does **not** mean \"execute in zero seconds.\" It means \"execute as soon as the Call Stack is empty and all microtasks are finished.\"\n\n## Classic example (chained promises)\n\n```javascript\nconsole.log(\"1. Script start\"); // Synchronous\n\nsetTimeout(() => {\n  console.log(\"2. setTimeout\"); // Macrotask\n}, 0);\n\nPromise.resolve()\n  .then(() => {\n    console.log(\"3. Promise 1\"); // Microtask\n  })\n  .then(() => {\n    console.log(\"4. Promise 2\"); // Microtask — chained .then also microtask\n  });\n\nconsole.log(\"5. Script end\"); // Synchronous\n\n// Output:\n// 1. Script start\n// 5. Script end\n// 3. Promise 1\n// 4. Promise 2\n// 2. setTimeout\n```\n\n`setTimeout` was registered first, but **Promise 2** runs before it because the entire microtask queue drains before the next macrotask.\n\n## Simpler example\n\n```javascript\nconsole.log(\"1\");\n\nsetTimeout(() => console.log(\"2\"), 0);\n\nPromise.resolve().then(() => console.log(\"3\"));\n\nconsole.log(\"4\");\n// Output: 1, 4, 3, 2\n```\n\n## Can sync code interrupt microtask draining?\n\n**Q:** While executing the microtask queue, if a new sync call gets added to the Call Stack, will the event loop still continue emptying the microtask queue?\n\n**Short answer:** No — a new sync call cannot magically jump onto the Call Stack from outside while a microtask is executing. JavaScript is strictly single-threaded and follows **run-to-completion**: while a block of code (including a microtask) is running, nothing else can interrupt it or push onto the stack from the outside.\n\nThere are two ways a \"sync call\" can enter the picture during the microtask phase:\n\n### Scenario 1: The microtask itself triggers a sync call\n\nWhen the event loop runs a microtask, it pushes that callback onto the Call Stack. If the microtask contains a regular synchronous function call, that function is pushed on top of the stack and runs immediately — it is **part of** that microtask's execution, not an external interruption.\n\n```javascript\nfunction mySyncCall() {\n  console.log(\"2. Sync call running!\");\n}\n\nPromise.resolve().then(() => {\n  console.log(\"1. Microtask started\");\n  mySyncCall(); // goes straight to the top of the Call Stack\n  console.log(\"3. Microtask finished\");\n});\n// Output: 1, 2, 3\n```\n\nThe event loop does not pause draining the queue. Once `mySyncCall()` and the microtask finish, the loop picks up the next microtask.\n\n### Scenario 2: An external event happens\n\nWhat if you are processing 1,000 microtasks and the user clicks a button, or a `fetch` finishes?\n\nThose events do **not** go directly to the Call Stack:\n\n- A click → callback pushed to the **Macrotask Queue**\n- A finished fetch → `.then()` pushed to the **Microtask Queue**\n\nWhile JavaScript is busy executing the current microtask on the Call Stack, it ignores those queues until the current execution finishes.\n\n### The golden rule of the microtask queue\n\nOnce the event loop starts processing the Microtask Queue, it will not stop until the queue is **completely empty**:\n\n1. If a microtask schedules another microtask, it joins the back of the line and runs in this **same phase**\n2. It will **not** yield to the Macrotask Queue\n3. It will **not** yield to the browser renderer — the UI can freeze\n\nThe event loop only moves on when the Microtask Queue has `length === 0`.\n\n## Top 5 event loop interview traps\n\nEvent loop questions test your understanding of JavaScript's concurrency model. Interviewers want you to explain **why** the engine prioritized the queues the way it did — not just guess the output.\n\n### Trap 1: The synchronous Promise executor\n\n**The trap:** Assuming everything associated with a Promise is asynchronous.\n\n```javascript\nconsole.log(\"1\");\n\nnew Promise((resolve) => {\n  console.log(\"2\");\n  resolve();\n}).then(() => {\n  console.log(\"3\");\n});\n\nconsole.log(\"4\");\n// Output: 1, 2, 4, 3\n```\n\n**Why:** The function passed to `new Promise()` (the **executor**) runs **synchronously** on the Call Stack. Only the `.then()` callback goes to the Microtask Queue. So `1`, `2`, and `4` run before the engine drains microtasks to print `3`.\n\n### Trap 2: The async/await suspension\n\n**The trap:** Hiding microtasks behind `async`/`await` syntax.\n\n```javascript\nconsole.log(\"1\");\n\nasync function foo() {\n  console.log(\"2\");\n  await Promise.resolve();\n  console.log(\"3\");\n}\n\nfoo();\nconsole.log(\"4\");\n// Output: 1, 2, 4, 3\n```\n\n**Why:** `foo()` runs synchronously until `await`. It prints `2`, then `await` packages the rest of the function (`console.log(\"3\")`) as a microtask — equivalent to `.then()`. Control returns to the caller, `4` prints, then the microtask runs and prints `3`.\n\n### Trap 3: Interleaved Promise chains\n\n**The trap:** Assuming chained `.then()` blocks run as atomic units.\n\n```javascript\nPromise.resolve()\n  .then(() => console.log(\"1\"))\n  .then(() => console.log(\"2\"));\n\nPromise.resolve()\n  .then(() => console.log(\"3\"))\n  .then(() => console.log(\"4\"));\n// Output: 1, 3, 2, 4\n```\n\n**Why:** When the stack clears, the engine processes microtasks one at a time. It runs the first `.then()` of each chain (`1`, then `3`), which queues `2` and `4`. Then it processes `2` and `4` in order. Each `.then()` callback is queued individually — not as an entire chain.\n\n### Trap 4: Microtask inside a macrotask\n\n**The trap:** Thinking \"run all macrotasks, then all microtasks.\"\n\n```javascript\nsetTimeout(() => {\n  console.log(\"1\");\n  Promise.resolve().then(() => console.log(\"2\"));\n}, 0);\n\nsetTimeout(() => {\n  console.log(\"3\");\n}, 0);\n// Output: 1, 2, 3  (not 1, 3, 2)\n```\n\n**Why:** The event loop runs **one macrotask**, then **drains the entire Microtask Queue**, then the next macrotask. It prints `1`, queues `2` as a microtask, immediately runs `2`, and only then grabs the second `setTimeout` to print `3`.\n\n### Trap 5: Infinite microtask loop vs macrotask loop\n\n**The trap:** A conceptual question — \"What happens if you infinitely queue `setTimeout(..., 0)` vs `Promise.resolve().then(...)`?\"\n\n**Infinite `setTimeout` (macrotasks):** The browser stays responsive. The loop processes one macrotask, then may render the UI — so repaints and clicks can happen between callbacks.\n\n**Infinite `Promise.then` (microtasks):** The browser **freezes**. The loop must empty the entire Microtask Queue before rendering or macrotasks. If each microtask queues another, the queue never empties, the loop never yields, and the UI locks up.\n\n## Key takeaway\n\n> Microtasks always win the race against macrotasks scheduled in the same synchronous turn — including `setTimeout(fn, 0)`."
     },
     {
@@ -20,6 +50,36 @@
         "closures"
       ],
       "source": "user paste: execution context types and call stack",
+      "summary": {
+        "definition": "An execution context is the environment a piece of JavaScript runs in — a container holding its variables, its link to the enclosing scopes, and its value of `this`. One is created for the whole script and a new one for every function call.",
+        "api": [
+          {
+            "signature": "Global Execution Context",
+            "note": "created once; its variable object is `window` in a browser, `global` in Node"
+          },
+          {
+            "signature": "Function Execution Context",
+            "note": "created fresh on every call — which is why each call gets its own locals"
+          },
+          {
+            "signature": "the creation phase",
+            "note": "before a line runs, declarations are registered — this is what hoisting actually is"
+          },
+          {
+            "signature": "var x → undefined, let x → TDZ",
+            "note": "both are hoisted; only `var` is initialised, which is why `let` throws instead of giving `undefined`"
+          },
+          {
+            "signature": "the scope chain",
+            "note": "a link to the context it was *defined* in, not the one that called it — lexical, not dynamic"
+          },
+          {
+            "signature": "this binding",
+            "note": "the one part decided by how the function is *called*, which is why it is the part that surprises people"
+          }
+        ],
+        "useCase": "Logging a `var` before its declaration and getting `undefined` instead of an error — the creation phase already registered it, the assignment just has not run yet."
+      },
       "answer": "The **execution context** is the environment where your JavaScript code actually runs — a container that holds your code, its variables, and the objects it needs to execute properly.\n\nWhenever you run a JavaScript file or invoke a function, the JavaScript engine creates a new execution context.\n\n## The three types of execution context\n\n### Global Execution Context (GEC)\n\nThe default, base context. When your script first runs, the engine creates the GEC. It does two things:\n\n- Creates a **global object** (`window` in browsers, `global` in Node.js)\n- Binds **`this`** to that global object (in non-strict global code)\n\n### Function Execution Context (FEC)\n\nEvery time you call a function, a brand-new context is created specifically for that function call.\n\n### Eval Function Execution Context\n\nCreated when code runs inside `eval()`. Rarely used — usually avoided for security and performance reasons.\n\n## What's inside an execution context?\n\nEach context has three main components:\n\n### 1. Variable Environment\n\nStores variable and function declarations:\n\n- `var`, `let`, `const`\n- function declarations\n\n### 2. Scope Chain\n\nLinks the current context to its parent's context so inner code can access outer variables.\n\n```javascript\nfunction outer() {\n  let x = 10;\n\n  function inner() {\n    console.log(x); // finds x via scope chain\n  }\n\n  inner();\n}\n```\n\n### 3. `this` Binding\n\nDetermined by how the function is called.\n\n```javascript\nfunction test() {\n  console.log(this);\n}\n```\n\n## How it's built: the two phases\n\nEvery execution context goes through a strict two-step process. This is the secret to understanding **[hoisting](/learnings/99)** and **[closures](/learnings/130)**.\n\n### Phase 1: Creation Phase (the setup)\n\nBefore a single line of code runs, the engine scans the code and sets up the environment:\n\n- **Creates the Variable Object (VO) / Lexical Environment** — finds all variable and function declarations\n- **Hoisting occurs:**\n  - Function declarations are stored entirely in memory (callable before their line appears)\n  - `var` variables are registered but set to `undefined`\n  - `let` and `const` are registered but remain uninitialized (Temporal Dead Zone)\n- **Sets up the [Scope Chain](/learnings/100)** — links to the parent context\n- **Determines `this`** — decides what `this` will point to\n\n### Phase 2: Execution Phase (the run)\n\nThe engine runs code line by line:\n\n- Assigns real values to variables (e.g. `var x = undefined` → `var x = 10`)\n- Executes function calls, which spawn new Function Execution Contexts\n\n## The Call Stack: managing contexts\n\nJavaScript has one thread, so only one context runs at a time. Contexts are managed on the **Call Stack** — a LIFO (Last In, First Out) structure.\n\n1. **Script loads** — Global Execution Context is pushed to the bottom of the stack\n2. **Function called** — a new FEC is created and pushed on top\n3. **Execution** — the engine runs the context at the very top\n4. **Function finishes** — its context is popped off; memory is cleared unless a closure is formed; control returns to the context below\n\n```javascript\n// 1. Global Context created and pushed to stack\n\nfunction first() {\n  console.log(\"Inside first\");\n  second(); // 3. 'second' context created and pushed on top\n}\n\nfunction second() {\n  console.log(\"Inside second\");\n}\n\nfirst(); // 2. 'first' context created and pushed on top of Global\n```\n\n## How closures interact with execution contexts\n\nNormally, when a Function Execution Context finishes, it is **popped off the Call Stack** and its memory is reclaimed.\n\nA **closure** breaks that rule: if an inner function still references variables from an outer context, the engine keeps that outer **lexical environment** alive — even after the outer FEC has been popped.\n\n```javascript\nfunction makeCounter() {\n  let count = 0; // lives in makeCounter's FEC\n\n  return function () {\n    count++; // inner fn retains reference to outer VO\n    return count;\n  };\n}\n\nconst counter = makeCounter(); // makeCounter's FEC pops — but count survives\n\ncounter(); // 1\ncounter(); // 2\n```\n\n`makeCounter()`'s FEC is removed from the stack, but `count` is not garbage-collected because the returned function still closes over it. That is a closure: a function plus the execution context environment it captured.\n\nFor real-world closure patterns (privacy, [memoization](/learnings/111), React hooks), see **#130 Closures**."
     },
     {
@@ -30,6 +90,36 @@
         "scope"
       ],
       "source": "user paste: closures, memory leaks, and interview traps",
+      "summary": {
+        "definition": "A closure is a function bundled together with the variables from where it was defined. The inner function keeps those variables alive after the outer function has returned, which is how a function can remember something between calls.",
+        "api": [
+          {
+            "signature": "a function returned from a function",
+            "note": "the shape: the inner one still reaches the outer one's variables"
+          },
+          {
+            "signature": "a counter with no exposed variable",
+            "note": "data privacy — the only way in is through the functions you returned"
+          },
+          {
+            "signature": "a function factory",
+            "note": "bake in an argument once and return a specialised function"
+          },
+          {
+            "signature": "var in a for loop",
+            "note": "the classic trap: one shared binding, so every callback sees the final value — `let` creates one per iteration"
+          },
+          {
+            "signature": "useState / useCallback",
+            "note": "React hooks are closures; a stale value in a callback is this exact mechanism, not a React bug"
+          },
+          {
+            "signature": "a memo cache in the outer scope",
+            "note": "memoisation — and the leak risk, since whatever it holds cannot be collected"
+          }
+        ],
+        "useCase": "A `setInterval` inside a React component logging the same count forever — the callback closed over the value from the render it was created in."
+      },
       "answer": "A closure is the combination of a function bundled together (enclosed) with references to its surrounding state (its lexical environment).\n\nIn practical terms: A closure gives an inner function permanent access to an outer function's scope, even after the outer function has finished executing, popped off the call stack, and returned. Under the hood, JavaScript accomplishes this by attaching a hidden [[Environment]] reference to the function object, keeping its parent's variable storage alive in memory as long as the inner function can still be reached.\n\nFor how execution contexts and lexical environments are created, see **#129 [Execution Context](/learnings/129)**.\n\n## Real-world Use Cases\n\n### 1. Data Privacy (Encapsulation)\n\n```javascript\nfunction createCounter() {\n  let count = 0;\n\n  return {\n    increment() {\n      count++;\n    },\n    getCount() {\n      return count;\n    },\n  };\n}\n\nconst counter = createCounter();\ncounter.increment();\nconsole.log(counter.getCount()); // 1\n```\n\n`count` is **private** — very common in libraries / SDKs.\n\n### 2. Function Factories\n\n```javascript\nfunction multiply(x) {\n  return function (y) {\n    return x * y;\n  };\n}\n\nconst double = multiply(2);\ndouble(5); // 10\n```\n\n### 3. React Hooks (core concept)\n\nHooks (`useState`, `useEffect`, `useCallback`, etc.) rely entirely on closures to persist state between re-renders. See **React Learnings → Closures, useState & Stale Closures (#6)**.\n\n### 4. Async / Callbacks\n\n```javascript\nfunction fetchData() {\n  let user = \"Sam\";\n\n  setTimeout(() => {\n    console.log(user);\n  }, 1000);\n}\n```\n\nEven after the function finishes, `user` is remembered.\n\n### 5. Memoization\n\n```javascript\nfunction memoize(fn) {\n  let cache = {};\n\n  return function (x) {\n    if (cache[x]) return cache[x];\n    cache[x] = fn(x);\n    return cache[x];\n  };\n}\n```\n\n### 6. Event Handlers with State\n\n```javascript\nfunction setupButton() {\n  let clicks = 0;\n\n  document.getElementById(\"btn\").onclick = function () {\n    clicks++;\n    console.log(clicks);\n  };\n}\n```\n\n\n\n## The Classic Closure Trap: The var Loop\n\nThe most notorious trap involving closures occurs when creating asynchronous callbacks inside a standard loop using var.\n\n```javascript\nfunction setupTimers() {\n  for (var i = 1; i <= 3; i++) {\n    setTimeout(function () {\n      console.log(i);\n    }, 1000);\n  }\n}\n\nsetupTimers();\n```\n\n**The Output:**\n4, 4, 4 (instead of 1, 2, 3)\n\n**Why It Happens:**\nvar is function-scoped, not block-scoped. There is only one variable i shared across all iterations of the loop.\n\nWhen the setTimeout callbacks finally execute 1 second later, the loop has already completed, and i has reached the value of 4. Because all three closures share the exact same lexical environment, they all reference that same final value of i.\n\n**The Modern Fix:** Replace var with let. Because let is block-scoped, JavaScript creates a brand-new lexical environment (and a brand-new variable i) for every single iteration of the loop, giving each closure its own isolated backpack.\n\n## Tricky Closure Interview Questions\n\n### Interview Question 1: The Asynchronous Counter\n\n**The Prompt:** \"What will this code log to the console, and in what order?\"\n\n```javascript\nfunction createCounter() {\n  let count = 0;\n  return {\n    increment() {\n      count++;\n    },\n    getValue() {\n      setTimeout(() => {\n        console.log(`Current count: ${count}`);\n      }, 2000);\n    },\n  };\n}\n\nconst counter = createCounter();\ncounter.increment();\ncounter.increment();\ncounter.getValue();\ncounter.increment();\n```\n\n**The Output:** Current count: 3 (logged after 2 seconds)\n\n**The Explanation:** 1. counter.increment() sets count to 1.\n2. counter.increment() sets count to 2.\n3. counter.getValue() is called. It sets a timer that forms a closure over count.\n4. Right after calling getValue(), counter.increment() runs again, bumping count to 3.\n5. 2 seconds later, the setTimeout callback executes. Because closures reference live variables in memory (not static snapshots of when the function was called), it looks up count, sees its current live value of 3, and logs it.\n\n### Interview Question 2: The Module Pattern & Shared Scope\n\n**The Prompt:** \"What do these two functions output when called?\"\n\n```javascript\nfunction makeWallet(initialBalance) {\n  let balance = initialBalance;\n\n  return {\n    add(amount) {\n      balance += amount;\n      return balance;\n    },\n    subtract(amount) {\n      balance -= amount;\n      return balance;\n    },\n  };\n}\n\nconst walletA = makeWallet(100);\nconst walletB = makeWallet(50);\n\nconsole.log(walletA.add(20));\nconsole.log(walletB.subtract(10));\nconsole.log(walletA.add(5));\n```\n\n**The Output:** 1. 120\n2. 40\n3. 125\n\n**The Explanation:** Many candidates incorrectly assume that variables defined inside a function factory are shared globally. However, every time makeWallet() is invoked, it creates a brand-new Execution Context and a brand-new Lexical Environment (backpack).\n\nwalletA and walletB have entirely independent closures. Modifying walletA's balance has zero effect on walletB's balance.\n\n## Disadvantages of Closures\n\nThe exact mechanism that makes closures powerful — keeping the lexical environment alive — is exactly what makes them dangerous if mismanaged.\n\nA **memory leak** occurs when data is no longer needed, but the garbage collector cannot delete it because a lingering reference still exists. A closure acts as an unbreakable tether to its original scope; if the closure lives forever, its entire backpack lives forever too.\n\n### 1. Memory Leaks\n\n#### Trap 1: The Forgotten Event Listener (SPA killer)\n\n```javascript\nfunction attachHandler() {\n  const massiveData = new Array(1000000).fill(\"Data\");\n\n  document.addEventListener(\"scroll\", () => {\n    console.log(\"Scrolling with:\", massiveData.length);\n  });\n}\n\nattachHandler();\n```\n\n`document` holds the scroll handler forever; the handler closes over `massiveData` → GC cannot free it. Every call leaks another million items.\n\n**Fix:** Remove listeners when done. In React, return a cleanup from `useEffect`.\n\n```javascript\nfunction attachHandler() {\n  const massiveData = new Array(1000000).fill(\"Data\");\n  const handleScroll = () => console.log(massiveData.length);\n  document.addEventListener(\"scroll\", handleScroll);\n  return () => document.removeEventListener(\"scroll\", handleScroll);\n}\n```\n\n#### Trap 2: The Uncleared Interval\n\n```javascript\nfunction startPolling() {\n  const hugeDOMElement = document.getElementById(\"widget\");\n\n  setInterval(() => {\n    console.log(hugeDOMElement.innerHTML);\n  }, 1000);\n}\n```\n\nEven if `#widget` is removed from the DOM, the interval closure still references it.\n\n**Fix:** Store the interval id and call `clearInterval` when the job is done.\n\n#### Trap 3: The Shared Backpack (advanced)\n\n```javascript\nfunction outer() {\n  const giantObject = new Array(1000000).fill(\"Heavy\");\n  const tinyString = \"Hello\";\n\n  const keepAlive = function () {\n    console.log(tinyString);\n  };\n\n  const unusedFunc = function () {\n    console.log(giantObject);\n  };\n\n  return keepAlive;\n}\n\nconst myFunc = outer();\n```\n\n`keepAlive` only uses `tinyString`, but it shares the **same** lexical environment as `unusedFunc`. While `myFunc` exists, `giantObject` cannot be collected.\n\n**Fix:** Nullify heavy objects when done if they share a scope with long-living closures:\n\n```javascript\nlet giantObject = new Array(1000000).fill(\"Heavy\");\n// ... use giantObject ...\ngiantObject = null;\n```\n\n### 2. Performance Overhead\n\nMore memory usage; slower garbage collection if misused in large loops or heavy apps.\n\n### 3. Harder to Debug\n\nHidden state — variables not visible globally; bugs become tricky in large codebases.\n\n### 4. Overengineering\n\nDon't force closures everywhere when simple objects/classes are better.\n\n## When to Use Closures\n\n**Use when you need:** private state, persistent state without globals, function customization, async state retention.\n\n**Avoid when:** large memory-heavy data, or simple logic that should stay readable.\n\n## Interview-level Answer\n\n> \"A closure is a function plus the lexical environment it captured. Closures enable encapsulation, factories, [memoization](/learnings/111), and async state — and React hooks depend on them. Watch for the `var` loop trap, stale async callbacks, and memory leaks from forgotten listeners, uncleared intervals, or shared lexical environments. Use `let`, functional setters, and cleanup functions to stay safe.\""
     },
     {
@@ -40,6 +130,32 @@
         "functions"
       ],
       "source": "user paste: senior frontend JS concepts",
+      "summary": {
+        "definition": "An expression is any piece of code that produces a value; a statement is a piece of code that performs an action. The quick test is whether you can put it inside `console.log(...)` — if it produces a SyntaxError there, it is a statement.",
+        "api": [
+          {
+            "signature": "a + b, x > 0, typeof x",
+            "note": "expressions — each evaluates to a value you can pass around"
+          },
+          {
+            "signature": "x = 5",
+            "note": "assignment is an expression too, which is why `a = b = c = 0` chains"
+          },
+          {
+            "signature": "cond ? a : b",
+            "note": "the expression form of `if`, and why it works inside JSX where `if` does not"
+          },
+          {
+            "signature": "if, for, while, switch",
+            "note": "statements — they do something, they do not evaluate to anything"
+          },
+          {
+            "signature": "function greet() {}",
+            "note": "a declaration (statement); wrap it in parentheses and it becomes an expression"
+          }
+        ],
+        "useCase": "Needing a conditional inside JSX: `if` is a statement so it cannot go there, and the ternary — an expression — can."
+      },
       "answer": "The core mental model: **can you put it inside `console.log(...)`?** If yes → expression. If it causes a SyntaxError → statement.\n\n**Expressions** are anything the JS engine can *evaluate down to a value*:\n\n- Literals: `42`, `\"hi\"`, `true`\n- Operators: `a + b`, `x > 0`, `typeof x`\n- Function calls: `Math.max(1, 2)` — the return value is the expression's value\n- Ternary: `x ? 'yes' : 'no'` — this is why ternary exists; `if/else` can't produce a value\n- Assignment: `x = 5` — assignment evaluates to the assigned value (`a = b = c = 0`)\n\n**Statements** are instructions that *do something* but don't produce a value themselves:\n\n- `if`, `for`, `while`, `switch` — control flow\n- `function greet() {}` — declaration\n- `let x = 5` — variable declaration (different from assignment!)\n- `return`, `throw`, `break` — control transfer\n\n## Practical consequence\n\n```javascript\n// Ternary (expression) — works inside JSX, template literals, arguments\nconst label = isLoggedIn ? \"Logout\" : \"Login\";\nconst msg = `Hello, ${user ? user.name : \"guest\"}`;\n\n// if/else (statement) — cannot be inlined\n// const label = if (isLoggedIn) { 'Logout' } else { 'Login' }  // SyntaxError\n```\n\nThis is exactly why React JSX uses ternaries and `&&` instead of `if/else` — JSX `{}` slots expect an *expression*, not a statement."
     },
     {
@@ -50,6 +166,36 @@
         "iteration"
       ],
       "source": "user paste: senior frontend JS concepts",
+      "summary": {
+        "definition": "The array methods are JavaScript's built-in toolkit for working with lists. The useful split is between the ones that return something new and leave the original alone, and the ones that change the array in place.",
+        "api": [
+          {
+            "signature": "map / filter / reduce",
+            "note": "return a new array (or value); the original is untouched"
+          },
+          {
+            "signature": "find / findIndex / includes",
+            "note": "search; `findIndex` and `indexOf` return `-1` when there is no match, not `undefined`"
+          },
+          {
+            "signature": "some / every",
+            "note": "boolean tests; `every` on an empty array is `true`, which catches people"
+          },
+          {
+            "signature": "push / pop / splice / sort / reverse",
+            "note": "mutate in place — `sort` and `reverse` surprise people by changing the original"
+          },
+          {
+            "signature": "toSorted / toReversed / with",
+            "note": "the non-mutating versions of those, added in ES2023"
+          },
+          {
+            "signature": "flat / flatMap / at(-1)",
+            "note": "the modern conveniences — `at` takes negative indices, unlike bracket access"
+          }
+        ],
+        "useCase": "A sorted list that silently reorders the props array it came from — `sort` mutates, and `toSorted` is the one-word fix."
+      },
       "answer": "Quick reference for JavaScript array methods. For polyfill implementations, see the **polyfill** learnings batch in this app.\n\n## Iteration & Transformation\n\n| Method | Returns | Mutates? | Notes |\n| --- | --- | --- | --- |\n| `map(callback)` | New array | No | Transform each element |\n| `filter(callback)` | New array | No | Elements that pass test |\n| `reduce(callback, init)` | Single value | No | Accumulate left-to-right |\n| `reduceRight(callback, init)` | Single value | No | Accumulate right-to-left |\n| `forEach(callback)` | `undefined` | No | No return; can't break/continue |\n\n```javascript\n[1, 2, 3].map((x) => x * 2); // [2, 4, 6]\n[1, 2, 3, 4].filter((x) => x % 2 === 0); // [2, 4]\n[1, 2, 3].reduce((acc, x) => acc + x, 0); // 6\n```\n\n## Finding Elements\n\n| Method | Returns |\n| --- | --- |\n| `find(callback)` | First matching element or `undefined` |\n| `findIndex(callback)` | Index of first match or `-1` |\n| `findLast(callback)` | Last matching element (ES2023) |\n| `findLastIndex(callback)` | Last matching index (ES2023) |\n| `indexOf(value, fromIndex)` | First index of value or `-1` |\n| `lastIndexOf(value, fromIndex)` | Last index of value or `-1` |\n| `includes(value, fromIndex)` | `true` if value exists |\n\n## Boolean Tests\n\n| Method | Returns `true` when |\n| --- | --- |\n| `some(callback)` | Any element passes test |\n| `every(callback)` | All elements pass test |\n\n## Mutation (modify original)\n\n| Method | Effect |\n| --- | --- |\n| `push(...items)` | Add to end; returns new length |\n| `pop()` | Remove last; returns removed item |\n| `unshift(...items)` | Add to start; returns new length |\n| `shift()` | Remove first; returns removed item |\n| `splice(start, del, ...items)` | Remove/replace/insert in-place |\n| `reverse()` | Reverse in-place |\n| `sort(compareFn)` | Sort in-place (default: string comparison) |\n| `fill(value, start, end)` | Fill with static value |\n| `copyWithin(target, start, end)` | Copy slice to another position |\n\n## Non-Mutating (return new array)\n\n| Method | Effect |\n| --- | --- |\n| `slice(start, end)` | Shallow copy of portion |\n| `concat(...arrays)` | Combine into new array |\n| `join(separator)` | Join elements into string |\n| `flat(depth)` | Flatten nested arrays (default depth 1) |\n| `flatMap(callback)` | Map then flatten by depth 1 |\n| `toReversed()` | New reversed array (ES2023) |\n| `toSorted(compareFn)` | New sorted array (ES2023) |\n| `toSpliced(start, del, ...items)` | New array with splice applied (ES2023) |\n| `with(index, value)` | New array with element replaced (ES2023) |\n\n## Static Methods\n\n| Method | Effect |\n| --- | --- |\n| `Array.isArray(value)` | `true` if value is an array |\n| `Array.from(arrayLike, mapFn)` | Create array from iterable/array-like |\n| `Array.of(...items)` | Create from arguments (`Array.of(7)` → `[7]`) |\n| `Array.fromAsync(asyncIterable)` | From async iterable (ES2024) |\n\n## Iterator Methods\n\n| Method | Returns |\n| --- | --- |\n| `keys()` | Iterator of indices |\n| `values()` | Iterator of values |\n| `entries()` | Iterator of `[index, value]` pairs |\n| `at(index)` | Element at index (supports negative indexing) |\n\n```javascript\nconst arr = [1, 2, 3];\narr.at(-1); // 3\n[1, [2, [3]]].flat(2); // [1, 2, 3]\n[1, 2, 3].with(1, \"x\"); // [1, 'x', 3]\n```"
     },
     {
@@ -59,6 +205,36 @@
         "objects"
       ],
       "source": "user paste: senior frontend JS concepts",
+      "summary": {
+        "definition": "`Object` carries a set of static methods for inspecting and building objects — reading their keys, copying them, controlling their prototype, and freezing them. They are on `Object` itself rather than on each object you create.",
+        "api": [
+          {
+            "signature": "Object.keys / values / entries",
+            "note": "own enumerable properties only — inherited ones and symbols are left out"
+          },
+          {
+            "signature": "Object.fromEntries(pairs)",
+            "note": "the inverse of `entries`; turns a `Map` or a filtered pair list back into an object"
+          },
+          {
+            "signature": "Object.assign(target, ...sources)",
+            "note": "a shallow copy that *mutates* the target — the spread `{...a, ...b}` is usually what you want"
+          },
+          {
+            "signature": "Object.freeze(obj)",
+            "note": "shallow and silent — nested objects stay mutable, and a failed write throws only in strict mode"
+          },
+          {
+            "signature": "Object.create(proto)",
+            "note": "make an object with a chosen prototype; `Object.create(null)` gives one with none at all"
+          },
+          {
+            "signature": "Object.defineProperty(obj, key, desc)",
+            "note": "control `writable`, `enumerable` and `configurable` — how you make a hidden or read-only property"
+          }
+        ],
+        "useCase": "Turning a `Map` of form fields into a plain object for a JSON body — `Object.fromEntries(map)` in one line."
+      },
       "answer": "Quick reference for JavaScript `Object` static and instance methods.\n\n## Static Methods — Property Access\n\n| Method | Returns |\n| --- | --- |\n| `Object.keys(obj)` | Array of own enumerable string-keyed property names |\n| `Object.values(obj)` | Array of own enumerable property values |\n| `Object.entries(obj)` | Array of `[key, value]` pairs |\n| `Object.fromEntries(iterable)` | Object from `[key, value]` pairs |\n\n```javascript\nObject.keys({ a: 1, b: 2 }); // ['a', 'b']\nObject.values({ a: 1, b: 2 }); // [1, 2]\nObject.entries({ a: 1, b: 2 }); // [['a', 1], ['b', 2]]\nObject.fromEntries([\n  [\"a\", 1],\n  [\"b\", 2],\n]); // { a: 1, b: 2 }\n```\n\n## Static Methods — Creation & Copying\n\n| Method | Effect |\n| --- | --- |\n| `Object.assign(target, ...sources)` | Shallow copy enumerable own properties to target |\n| `Object.create(proto, props)` | New object with specified prototype |\n| `Object.defineProperty(obj, prop, desc)` | Define/modify property with descriptor |\n| `Object.defineProperties(obj, props)` | Define multiple properties |\n\n## Static Methods — Prototype & Descriptors\n\n| Method | Returns / Effect |\n| --- | --- |\n| `Object.getOwnPropertyDescriptor(obj, prop)` | Descriptor for own property |\n| `Object.getOwnPropertyDescriptors(obj)` | All own property descriptors |\n| `Object.getOwnPropertyNames(obj)` | All own property names (incl. non-enumerable) |\n| `Object.getOwnPropertySymbols(obj)` | All own symbol properties |\n| `Object.getPrototypeOf(obj)` | Object's prototype |\n| `Object.setPrototypeOf(obj, proto)` | Set prototype (slow — avoid in hot paths) |\n\n## Immutability & Protection\n\n| Method | Effect |\n| --- | --- |\n| `Object.freeze(obj)` | Immutable — no add/remove/change |\n| `Object.seal(obj)` | No add/delete; existing props can change |\n| `Object.preventExtensions(obj)` | No new properties |\n| `Object.isFrozen(obj)` / `isSealed` / `isExtensible` | Check respective state |\n\n## Comparison & Property Checks\n\n| Method | Effect |\n| --- | --- |\n| `Object.is(value1, value2)` | Like `===` but `NaN === NaN` and `-0 !== +0` |\n| `Object.hasOwn(obj, prop)` | Safer replacement for `hasOwnProperty` |\n| `obj.hasOwnProperty(prop)` | Instance method — can be shadowed |\n| `obj.propertyIsEnumerable(prop)` | Own and enumerable check |\n\n```javascript\nObject.is(NaN, NaN); // true (NaN === NaN → false)\nObject.is(-0, +0); // false (-0 === +0 → true)\nObject.hasOwn({ a: 1 }, \"a\"); // true\n```\n\n## Grouping (ES2024)\n\n```javascript\nObject.groupBy([1, 2, 3, 4], (x) => (x % 2 === 0 ? \"even\" : \"odd\"));\n// { odd: [1, 3], even: [2, 4] }\n```"
     }
   ]
